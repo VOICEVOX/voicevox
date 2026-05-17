@@ -773,6 +773,8 @@ const generateSingingVoiceSource = (
     phrase.startTime,
     track.volumeEditData,
     snapshot.editorFrameRate,
+    phrase.minNonPauseStartFrame,
+    phrase.maxNonPauseEndFrame,
   );
 
   shiftVolume(clonedQuery.volume, track.volumeRangeAdjustment);

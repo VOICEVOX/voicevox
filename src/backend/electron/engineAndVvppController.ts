@@ -16,37 +16,19 @@ import {
   type PackageInfo,
   fetchLatestDefaultEngineInfo,
 } from "@/domain/defaultEngine/latestDefaultEngine";
-import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import type {
+  EnginePackageEmbeddedInfo,
+  EnginePackageCurrentInfo,
+  EnginePackageLatestInfo,
+} from "@/domain/enginePackage";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
-import { assertNonNullable } from "@/type/utility";
 import { isLinux, isMac, isWindows } from "@/helpers/platform";
+import { assertNonNullable } from "@/type/utility";
 
 const log = createLogger("EngineAndVvppController");
-
-export type EnginePackageBase = {
-  engineName: string;
-  engineId: EngineId;
-};
-
-/** ローカルのパッケージインストール状況 */
-export type EnginePackageCurrentInfo = {
-  package: EnginePackageBase;
-  installed:
-    | { status: "notInstalled" }
-    | { status: "installed"; installedVersion: string };
-};
-
-/** オンラインで取得したパッケージ最新情報 */
-export type EnginePackageLatestInfo = {
-  package: EnginePackageBase;
-  availableRuntimeTargets: {
-    target: RuntimeTarget;
-    packageInfo: PackageInfo;
-  }[];
-};
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -210,7 +192,7 @@ export class EngineAndVvppController {
 
   private getInstalledEngineStatus(
     engineId: EngineId,
-  ): EnginePackageCurrentInfo["installed"] {
+  ): EnginePackageCurrentInfo {
     const isInstalled = this.engineInfoManager.hasEngineInfo(engineId);
     if (!isInstalled) {
       return { status: "notInstalled" };
@@ -225,67 +207,107 @@ export class EngineAndVvppController {
   }
 
   /**
-   * オフラインでデフォルトエンジンのインストール状況を取得する。
+   * ダウンロード式のデフォルトエンジンがインストール済みかどうかを確認する。
    */
-  getEnginePackageLocalInfos(): EnginePackageCurrentInfo[] {
-    return this.getDownloadableEnvEngineInfos().map((envEngineInfo) => ({
-      package: {
-        engineName: envEngineInfo.name,
-        engineId: envEngineInfo.uuid,
-      },
-      installed: this.getInstalledEngineStatus(envEngineInfo.uuid),
-    }));
+  hasInstalledDefaultEngine(): boolean {
+    return this.getDownloadableDefaultEnginePackageIds().some(
+      (engineId) =>
+        this.getEnginePackageCurrentInfo(engineId).status !== "notInstalled",
+    );
   }
 
   /**
-   * オンラインで最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する。
+   * ダウンロード式のデフォルトエンジンが存在するかどうかを確認する。
    */
-  async fetchLatestEnginePackageRemoteInfos(): Promise<
-    EnginePackageLatestInfo[]
-  > {
-    const statuses: EnginePackageLatestInfo[] = [];
+  hasDownloadableDefaultEngine(): boolean {
+    const downloadableEngines = this.getDownloadableEnvEngineInfos();
+    return downloadableEngines.length > 0;
+  }
 
-    for (const envEngineInfo of this.getDownloadableEnvEngineInfos()) {
-      const latestUrl = envEngineInfo.latestUrl;
-      assertNonNullable(
-        latestUrl,
-        `latestUrl is undefined for ${envEngineInfo.name}`,
+  /**
+   * ダウンロード式のデフォルトエンジンのIDを取得する。
+   */
+  getDownloadableDefaultEnginePackageIds(): EngineId[] {
+    return this.getDownloadableEnvEngineInfos().map(
+      (envEngineInfo) => envEngineInfo.uuid,
+    );
+  }
+
+  /**
+   * アプリに埋め込まれたエンジンの定義情報を取得する。
+   */
+  getEnginePackageEmbeddedInfo(engineId: EngineId): EnginePackageEmbeddedInfo {
+    const envEngineInfo = this.getDownloadableEnvEngineInfos().find(
+      (info) => info.uuid === engineId,
+    );
+    assertNonNullable(
+      envEngineInfo,
+      `Engine info not found for engineId: ${engineId}`,
+    );
+
+    return {
+      engineName: envEngineInfo.name,
+    };
+  }
+
+  /**
+   * オフラインでエンジンのインストール状況を取得する。
+   */
+  getEnginePackageCurrentInfo(engineId: EngineId): EnginePackageCurrentInfo {
+    const envEngineInfo = this.getDownloadableEnvEngineInfos().find(
+      (info) => info.uuid === engineId,
+    );
+    assertNonNullable(
+      envEngineInfo,
+      `Engine info not found for engineId: ${engineId}`,
+    );
+
+    return this.getInstalledEngineStatus(engineId);
+  }
+
+  /**
+   * オンラインでエンジンの最新パッケージ情報を取得する。
+   */
+  async fetchEnginePackageLatestInfo(
+    engineId: EngineId,
+  ): Promise<EnginePackageLatestInfo> {
+    const envEngineInfo = this.getDownloadableEnvEngineInfos().find(
+      (info) => info.uuid === engineId,
+    );
+    assertNonNullable(
+      envEngineInfo,
+      `Engine info not found for engineId: ${engineId}`,
+    );
+
+    const latestUrl = envEngineInfo.latestUrl;
+
+    const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
+    if (latestInfo.formatVersion !== 1) {
+      throw new Error(
+        `Unsupported format version: ${latestInfo.formatVersion}`,
       );
-
-      const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
-      if (latestInfo.formatVersion != 1) {
-        log.error(`Unsupported format version: ${latestInfo.formatVersion}`);
-        continue;
-      }
-
-      const availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"] =
-        Object.entries(latestInfo.packages)
-          .map(([target, packageInfo]) => ({ target, packageInfo }))
-          .filter((runtimeTargetInfo) =>
-            isSupportedTarget(runtimeTargetInfo.target),
-          )
-          .toSorted(
-            (a, b) =>
-              a.packageInfo.displayInfo.order - b.packageInfo.displayInfo.order,
-          );
-
-      if (availableRuntimeTargets.length === 0) {
-        log.error(
-          `No supported runtime targets were found for ${envEngineInfo.name}`,
-        );
-        continue;
-      }
-
-      statuses.push({
-        package: {
-          engineName: envEngineInfo.name,
-          engineId: envEngineInfo.uuid,
-        },
-        availableRuntimeTargets,
-      });
     }
 
-    return statuses;
+    const availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"] =
+      Object.entries(latestInfo.packages)
+        .map(([target, packageInfo]) => ({ target, packageInfo }))
+        .filter((runtimeTargetInfo) =>
+          isSupportedTarget(runtimeTargetInfo.target),
+        )
+        .toSorted(
+          (a, b) =>
+            a.packageInfo.displayInfo.order - b.packageInfo.displayInfo.order,
+        );
+
+    if (availableRuntimeTargets.length === 0) {
+      throw new Error(
+        `No supported runtime targets were found for ${envEngineInfo.name}`,
+      );
+    }
+
+    return {
+      availableRuntimeTargets,
+    };
   }
 
   /** VVPPパッケージをダウンロードし、インストールする */

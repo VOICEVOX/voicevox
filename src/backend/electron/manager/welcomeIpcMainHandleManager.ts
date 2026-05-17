@@ -6,6 +6,7 @@ import { getAppStateController } from "../appStateController";
 import { getWelcomeWindowManager } from "./windowManager/welcome";
 import type { WelcomeIpcIHData } from "@/welcome/backend/ipcType";
 import { createLogger } from "@/helpers/log";
+import { assertNonNullable } from "@/type/utility";
 
 const log = createLogger("WelcomeIpcMainHandle");
 
@@ -18,30 +19,21 @@ class WelcomeIpcMainHandleManager {
     return {
       INSTALL_ENGINE: async (_, obj) => {
         const welcomeWindowManager = getWelcomeWindowManager();
-        const packageStatuses =
-          await engineAndVvppController.fetchLatestEnginePackageRemoteInfos();
-        const status = packageStatuses.find(
-          (s) => s.package.engineId === obj.engineId,
-        );
-        if (!status) {
-          throw new Error(
-            `Engine package status not found for engineId: ${obj.engineId}`,
+        const status =
+          await engineAndVvppController.fetchEnginePackageLatestInfo(
+            obj.engineId,
           );
-        }
 
         // ダウンロードしてインストールする
         let lastUpdateTime = 0;
         let lastLogTime = 0;
-        const targetPackageInfo =
-          status.availableRuntimeTargets.find(
-            (targetInfo) => targetInfo.target === obj.target,
-          ) ?? status.availableRuntimeTargets[0];
-
-        if (!targetPackageInfo) {
-          throw new Error(
-            `Runtime target not found for engineId: ${obj.engineId}`,
-          );
-        }
+        const targetPackageInfo = status.availableRuntimeTargets.find(
+          (targetInfo) => targetInfo.target === obj.target,
+        );
+        assertNonNullable(
+          targetPackageInfo,
+          `Runtime target not found for engineId: ${obj.engineId}, target: ${obj.target}`,
+        );
 
         await engineAndVvppController.downloadAndInstallVvppEngine(
           app.getPath("downloads"),
@@ -65,11 +57,23 @@ class WelcomeIpcMainHandleManager {
           },
         );
       },
-      FETCH_ENGINE_PACKAGE_LOCAL_INFOS: () => {
-        return engineAndVvppController.getEnginePackageLocalInfos();
+      GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: () => {
+        return engineAndVvppController.getDownloadableDefaultEnginePackageIds();
       },
-      FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS: async () => {
-        return engineAndVvppController.fetchLatestEnginePackageRemoteInfos();
+      GET_ENGINE_PACKAGE_EMBEDDED_INFO: (_, obj) => {
+        return engineAndVvppController.getEnginePackageEmbeddedInfo(
+          obj.engineId,
+        );
+      },
+      GET_ENGINE_PACKAGE_CURRENT_INFO: (_, obj) => {
+        return engineAndVvppController.getEnginePackageCurrentInfo(
+          obj.engineId,
+        );
+      },
+      GET_ENGINE_PACKAGE_LATEST_INFO: async (_, obj) => {
+        return engineAndVvppController.fetchEnginePackageLatestInfo(
+          obj.engineId,
+        );
       },
       GET_CURRENT_THEME: async () => {
         return configManager.get("currentTheme");

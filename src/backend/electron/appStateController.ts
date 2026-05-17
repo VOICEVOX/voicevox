@@ -9,9 +9,7 @@ import { Mutex } from "@/helpers/mutex";
 
 const log = createLogger("AppStateController");
 
-/**
- * アプリの状態を管理するシングルトン。
- */
+/** アプリの状態を管理するシングルトン。 */
 export class AppStateController {
   /**
    * アプリの終了状態を表す。
@@ -29,47 +27,25 @@ export class AppStateController {
 
   /**
    * アプリ起動時の初期化処理を行う。
-   *
-   * 責務:
-   * - エンジンパッケージの状態を確認し、適切なウィンドウを起動する
-   *
-   * 副作用:
-   * - ウィンドウを起動する（`launchMainWindow()` または `launchWelcomeWindow()`）
+   * ウェルカムウィンドウまたはメインウィンドウのどちらかを起動する。
    */
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
-    const packageStatuses =
-      engineAndVvppController.getEnginePackageLocalInfos();
-
-    if (packageStatuses.length === 0) {
-      log.info("No downloadable engine packages found. Launching main window.");
-      await this.launchMainWindow();
-      return;
-    }
-
-    const anyDefaultEngineInstalled = packageStatuses.some((status) => {
-      return status.installed.status !== "notInstalled";
-    });
-    if (anyDefaultEngineInstalled) {
-      log.info("Default engine found. Launching main window.");
-      await this.launchMainWindow();
+    if (
+      !engineAndVvppController.hasDownloadableDefaultEngine() ||
+      engineAndVvppController.hasInstalledDefaultEngine()
+    ) {
+      log.info(
+        "Default engine found or no engine installation required. Launching main window.",
+      );
+      await this.launchEngineAndMainWindow();
     } else {
       log.info("No default engine found. Launching welcome window.");
       await this.launchWelcomeWindow();
     }
   }
 
-  /**
-   * メインウィンドウに切り替える。
-   *
-   * 責務:
-   * - ウェルカムウィンドウを破棄する（`welcomeWindowManager.destroyWindow()`）
-   * - メインウィンドウを起動する（`launchMainWindow()`）
-   *
-   * 副作用:
-   * - `quitState` を "switch" に設定して、切り替え中であることを示す
-   * - ウィンドウの切り替えが完了した後に `quitState` を "unconfirmed" にリセットする
-   */
+  /** メインウィンドウに切り替える。 */
   async switchToMainWindow() {
     log.info("Switching to main window");
     this.quitState = "switch";
@@ -80,21 +56,11 @@ export class AppStateController {
       welcomeWindowManager.destroyWindow();
     }
 
-    await this.launchMainWindow();
+    await this.launchEngineAndMainWindow();
     this.quitState = "unconfirmed";
   }
 
-  /**
-   * ウェルカムウィンドウに切り替える。
-   *
-   * 責務:
-   * - メインウィンドウを破棄し、必要なエンジンをクリーンアップする（`mainWindowManager.destroyWindow()` と `engineAndVvppController.cleanupEngines()`）
-   * - ウェルカムウィンドウを起動する（`launchWelcomeWindow()`）
-   *
-   *副作用:
-   * - `quitState` を "switch" に設定して、切り替え中であることを示す
-   * - ウィンドウの切り替えが完了した後に `quitState` を "unconfirmed" にリセットする
-   */
+  /** ウェルカムウィンドウに切り替える。 */
   async switchToWelcomeWindow() {
     log.info("Switching to welcome window");
     this.quitState = "switch";
@@ -118,7 +84,7 @@ export class AppStateController {
     await welcomeWindowManager.createWindow();
   }
 
-  private async launchMainWindow() {
+  private async launchEngineAndMainWindow() {
     this.activeWindow = "main";
 
     const engineAndVvppController = getEngineAndVvppController();

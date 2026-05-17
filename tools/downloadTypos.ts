@@ -2,15 +2,11 @@
  * OSに合ったtyposのバイナリをダウンロードするスクリプト。
  */
 import { exec } from "node:child_process";
-import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
-import type { ReadableStream } from "node:stream/web";
 import { promisify } from "node:util";
-import { retryFetch } from "./helper.js";
+import { retryFetch, verifySha256 } from "./helper.js";
 
 // OS名を定義するオブジェクト
 const OS = {
@@ -31,21 +27,6 @@ const TYPOS_DIRECTORY_PATH = path.join(BINARY_BASE_PATH, "typos");
 const TYPOS_VERSION_FILE_NAME = "version.txt";
 
 const TYPOS_VERSION = "v1.43.4";
-
-// 各OSとアーキテクチャに対応するtyposバイナリのターゲットトリプル
-const TYPOS_TARGET_TRIPLES = {
-  [OS.MACOS]: {
-    [CPU_ARCHITECTURE.ARM]: "aarch64-apple-darwin",
-    [CPU_ARCHITECTURE.X86_64]: "x86_64-apple-darwin",
-  },
-  [OS.LINUX]: {
-    [CPU_ARCHITECTURE.ARM]: "aarch64-unknown-linux-musl",
-    [CPU_ARCHITECTURE.X86_64]: "x86_64-unknown-linux-musl",
-  },
-  [OS.WINDOWS]: {
-    [CPU_ARCHITECTURE.X86_64]: "x86_64-pc-windows-msvc",
-  },
-};
 
 // 動作環境でのOSとCPUアーキテクチャ
 const currentOS = os.platform();
@@ -94,22 +75,56 @@ async function runCommand({
 }
 
 /**
- * 現在のOSとアーキテクチャに基づいてバイナリのダウンロード先URLを定数のオブジェクトから取得する関数
+ * 現在のOSとアーキテクチャに基づいてバイナリのダウンロード情報を返す関数
  */
-function getBinaryURL() {
-  const baseUrl = "https://github.com/crate-ci/typos/releases/download";
-  const targetTriple = TYPOS_TARGET_TRIPLES[currentOS][currentCpuArchitecture];
-  const extension = currentOS === OS.WINDOWS ? ".zip" : ".tar.gz";
+function getDownloadInfo(): { url: string; sha256: string } {
+  const downloadInfoMap: Record<
+    string,
+    Record<string, { triplet: string; sha256: string }>
+  > = {
+    [OS.MACOS]: {
+      [CPU_ARCHITECTURE.ARM]: {
+        triplet: "aarch64-apple-darwin",
+        sha256:
+          "bd5b1e04de8710813464cc510fd33a2e4a797320901d23f49042e1d1863ef023",
+      },
+      [CPU_ARCHITECTURE.X86_64]: {
+        triplet: "x86_64-apple-darwin",
+        sha256:
+          "24e104185f1522d1906f7e8299e43e39faefe527dbe73b163cfaadad8012a113",
+      },
+    },
+    [OS.LINUX]: {
+      [CPU_ARCHITECTURE.ARM]: {
+        triplet: "aarch64-unknown-linux-musl",
+        sha256:
+          "7eeb93b5dbd4590ef60f6a09ab94e0dae70d2f333c0447284f1cad0379786f5b",
+      },
+      [CPU_ARCHITECTURE.X86_64]: {
+        triplet: "x86_64-unknown-linux-musl",
+        sha256:
+          "f05f9da84ba714789271a2915060f8b7d329411b5c11e83b8d2c367ef592036c",
+      },
+    },
+    [OS.WINDOWS]: {
+      [CPU_ARCHITECTURE.X86_64]: {
+        triplet: "x86_64-pc-windows-msvc",
+        sha256:
+          "6f1e5688724d347bfbb6419cc76c364b54a97afef75cdbcf02cc838852dbb6cd",
+      },
+    },
+  };
 
-  const url = `${baseUrl}/${TYPOS_VERSION}/typos-${TYPOS_VERSION}-${targetTriple}${extension}`;
+  const info = downloadInfoMap[currentOS]?.[currentCpuArchitecture];
 
-  if (!url) {
+  if (!info) {
     throw new Error(
       `Unsupported OS or architecture: ${currentOS}, ${currentCpuArchitecture}`,
     );
   }
-
-  return url;
+  const extension = currentOS === OS.WINDOWS ? ".zip" : ".tar.gz";
+  const url = `https://github.com/crate-ci/typos/releases/download/${TYPOS_VERSION}/typos-${TYPOS_VERSION}-${info.triplet}${extension}`;
+  return { url, sha256: info.sha256 };
 }
 
 /**
@@ -161,7 +176,13 @@ async function prepareTyposDirectory() {
 /**
  * バイナリをダウンロードして解凍し、実行権限を付与する関数
  */
-async function downloadAndUnarchive({ url }: { url: string }) {
+async function downloadAndUnarchive({
+  url,
+  sha256,
+}: {
+  url: string;
+  sha256: string;
+}) {
   if (!(await shouldDownloadTypos())) {
     console.log("typos already downloaded");
     return;
@@ -174,10 +195,11 @@ async function downloadAndUnarchive({ url }: { url: string }) {
     throw new Error(`Failed to download binary: ${response.statusText}`);
   }
 
-  const responseStream = Readable.fromWeb(response.body as ReadableStream);
+  const buffer = await response.arrayBuffer();
+  verifySha256(buffer, sha256);
+
   const compressedFilePath = `${TYPOS_DIRECTORY_PATH}/typos${currentOS === OS.WINDOWS ? ".zip" : ".tar.gz"}`;
-  const fileStream = fsSync.createWriteStream(compressedFilePath);
-  await pipeline(responseStream, fileStream);
+  await fs.writeFile(compressedFilePath, Buffer.from(buffer));
 
   if (currentOS === OS.WINDOWS) {
     // Windows用のZIPファイルを解凍
@@ -246,8 +268,8 @@ async function removeTyposDocumentation() {
  * OSに応じてバイナリデータを処理する関数
  */
 async function main() {
-  const url = getBinaryURL();
-  await downloadAndUnarchive({ url });
+  const { url, sha256 } = getDownloadInfo();
+  await downloadAndUnarchive({ url, sha256 });
 
   // 不要なドキュメントを削除
   await removeTyposDocumentation();
