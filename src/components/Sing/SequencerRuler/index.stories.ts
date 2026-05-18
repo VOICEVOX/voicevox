@@ -30,12 +30,12 @@ const meta: Meta<StoryProps> = {
         // コンポーネントのプロパティからデータを取得
         const args = context.args as StoryProps;
         if (args.tempos) {
-          store.commit("SET_TEMPOS", {
+          store.mutations.SET_TEMPOS({
             tempos: args.tempos,
           });
         }
         if (args.timeSignatures) {
-          store.commit("SET_TIME_SIGNATURES", {
+          store.mutations.SET_TIME_SIGNATURES({
             timeSignatures: args.timeSignatures,
           });
         }
@@ -46,12 +46,12 @@ const meta: Meta<StoryProps> = {
           | undefined;
         if (setupState) {
           if (setupState.tempos) {
-            store.commit("SET_TEMPOS", {
+            store.mutations.SET_TEMPOS({
               tempos: setupState.tempos,
             });
           }
           if (setupState.timeSignatures) {
-            store.commit("SET_TIME_SIGNATURES", {
+            store.mutations.SET_TIME_SIGNATURES({
               timeSignatures: setupState.timeSignatures,
             });
           }

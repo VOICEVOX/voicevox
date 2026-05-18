@@ -202,13 +202,13 @@
           :sequencerPitchTool
           @update:sequencerNoteTool="
             (value) =>
-              store.dispatch('SET_SEQUENCER_NOTE_TOOL', {
+              store.actions.SET_SEQUENCER_NOTE_TOOL({
                 sequencerNoteTool: value,
               })
           "
           @update:sequencerPitchTool="
             (value) =>
-              store.dispatch('SET_SEQUENCER_PITCH_TOOL', {
+              store.actions.SET_SEQUENCER_PITCH_TOOL({
                 sequencerPitchTool: value,
               })
           "
