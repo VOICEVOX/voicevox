@@ -22,9 +22,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     async action({ state, mutations }) {
       let engineInfos = await window.backend.engineInfos();
       mutations.SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE({
-        hasDownloadableDefaultEngine: await window.backend
-          .getDownloadableDefaultEnginePackageIds()
-          .then((ids) => ids.length > 0),
+        hasDownloadableDefaultEngine:
+          await window.backend.hasDownloadableDefaultEngine(),
       });
 
       // マルチエンジンオフモード時はデフォルトエンジンだけにする。

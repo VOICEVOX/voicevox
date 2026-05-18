@@ -222,6 +222,9 @@ export const api: Sandbox = {
   getPathForFile(/* file: File */) {
     throw new Error(`Not supported on Browser version: getPathForFile`);
   },
+  hasDownloadableDefaultEngine() {
+    return Promise.resolve(false);
+  },
   getDownloadableDefaultEnginePackageIds() {
     return Promise.resolve([]);
   },

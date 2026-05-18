@@ -231,6 +231,11 @@ export type IpcIHData = {
     return: Result<Uint8Array>;
   };
 
+  HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
+    args: [];
+    return: boolean;
+  };
+
   GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: {
     args: [];
     return: EngineId[];
