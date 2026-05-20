@@ -411,7 +411,7 @@
       <template #after>
         <SequencerParameterPanel
           v-if="isParameterPanelOpen"
-          :offsetX="scrollX"
+          :viewportInfo
           :toolPaletteLayout
           @update:needsAutoScroll="
             (value) => (parameterPanelNeedsAutoScroll = value)

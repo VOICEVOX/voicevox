@@ -36,11 +36,19 @@ const api: WelcomeSandbox = {
   installEngine: (obj) => {
     return ipcRendererInvokeProxy.INSTALL_ENGINE(obj);
   },
-  fetchEnginePackageLocalInfos: () => {
-    return ipcRendererInvokeProxy.FETCH_ENGINE_PACKAGE_LOCAL_INFOS();
+  getDownloadableDefaultEnginePackageIds: () => {
+    return ipcRendererInvokeProxy.GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS();
   },
-  fetchLatestEnginePackageRemoteInfos: () => {
-    return ipcRendererInvokeProxy.FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS();
+  getEnginePackageEmbeddedInfo: (engineId) => {
+    return ipcRendererInvokeProxy.GET_ENGINE_PACKAGE_EMBEDDED_INFO({
+      engineId,
+    });
+  },
+  getEnginePackageCurrentInfo: (engineId) => {
+    return ipcRendererInvokeProxy.GET_ENGINE_PACKAGE_CURRENT_INFO({ engineId });
+  },
+  getEnginePackageLatestInfo: (engineId) => {
+    return ipcRendererInvokeProxy.GET_ENGINE_PACKAGE_LATEST_INFO({ engineId });
   },
   launchMainWindow: () => {
     return ipcRendererInvokeProxy.SWITCH_TO_MAIN_WINDOW();
@@ -49,9 +57,16 @@ const api: WelcomeSandbox = {
     return ipcRendererInvokeProxy.GET_CURRENT_THEME();
   },
   registerIpcHandler: (listeners) => {
-    if (listeners.updateEngineDownloadProgress) {
+    const {
+      updateEngineDownloadProgress,
+      detectMaximized,
+      detectUnmaximized,
+      detectEnterFullscreen,
+      detectLeaveFullscreen,
+    } = listeners;
+    if (updateEngineDownloadProgress) {
       ipcRenderer.on("UPDATE_ENGINE_DOWNLOAD_PROGRESS", (_, args) => {
-        listeners.updateEngineDownloadProgress?.(
+        updateEngineDownloadProgress(
           args as {
             engineId: EngineId;
             progress: number;
@@ -60,24 +75,24 @@ const api: WelcomeSandbox = {
         );
       });
     }
-    if (listeners.detectMaximized) {
+    if (detectMaximized) {
       ipcRenderer.on("DETECT_MAXIMIZED", () => {
-        listeners.detectMaximized?.();
+        detectMaximized();
       });
     }
-    if (listeners.detectUnmaximized) {
+    if (detectUnmaximized) {
       ipcRenderer.on("DETECT_UNMAXIMIZED", () => {
-        listeners.detectUnmaximized?.();
+        detectUnmaximized();
       });
     }
-    if (listeners.detectEnterFullscreen) {
+    if (detectEnterFullscreen) {
       ipcRenderer.on("DETECT_ENTER_FULLSCREEN", () => {
-        listeners.detectEnterFullscreen?.();
+        detectEnterFullscreen();
       });
     }
-    if (listeners.detectLeaveFullscreen) {
+    if (detectLeaveFullscreen) {
       ipcRenderer.on("DETECT_LEAVE_FULLSCREEN", () => {
-        listeners.detectLeaveFullscreen?.();
+        detectLeaveFullscreen();
       });
     }
   },

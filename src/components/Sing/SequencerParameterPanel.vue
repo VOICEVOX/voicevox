@@ -142,10 +142,13 @@
       </div>
     </div>
     <div class="edit-area">
-      <SequencerPhonemeTimingEditor v-if="editTarget === 'PHONEME_TIMING'" />
+      <SequencerPhonemeTimingEditor
+        v-if="editTarget === 'PHONEME_TIMING'"
+        :viewportInfo
+      />
       <SequencerVolumeEditor
         v-if="editTarget === 'VOLUME'"
-        :offsetX="props.offsetX"
+        :offsetX="viewportInfo.offsetX"
         @update:needsAutoScroll="
           (value) => emit('update:needsAutoScroll', value)
         "
@@ -163,9 +166,10 @@ import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEd
 import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimingEditor.vue";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
 import type { ToolPaletteLayout } from "@/components/Sing/toolPaletteLayout";
+import type { ViewportInfo } from "@/sing/viewHelper";
 
 const props = defineProps<{
-  offsetX: number;
+  viewportInfo: ViewportInfo;
   toolPaletteLayout: ToolPaletteLayout;
 }>();
 

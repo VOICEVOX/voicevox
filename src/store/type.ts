@@ -1772,11 +1772,16 @@ export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
   altPortInfos: AltPortInfos;
+  hasDownloadableDefaultEngine: boolean;
 };
 
 export type EngineStoreTypes = {
   PULL_AND_INIT_ENGINE_INFOS: {
     action(): void;
+  };
+
+  SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
+    mutation: { hasDownloadableDefaultEngine: boolean };
   };
 
   SET_ENGINE_INFO: {
