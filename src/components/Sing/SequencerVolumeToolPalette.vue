@@ -1,5 +1,9 @@
 <template>
-  <div class="tool-palette" aria-label="声量ツール">
+  <div
+    class="tool-palette"
+    :class="`orientation-${orientation}`"
+    aria-label="声量ツール"
+  >
     <button
       v-for="toolItem in toolItems"
       :key="toolItem.value"
@@ -20,9 +24,15 @@
 <script setup lang="ts">
 import type { VolumeEditTool } from "@/store/type";
 
-defineProps<{
-  sequencerVolumeTool: VolumeEditTool;
-}>();
+withDefaults(
+  defineProps<{
+    sequencerVolumeTool: VolumeEditTool;
+    orientation?: "vertical" | "horizontal";
+  }>(),
+  {
+    orientation: "vertical",
+  },
+);
 
 const emit = defineEmits<{
   (event: "update:sequencerVolumeTool", value: VolumeEditTool): void;
@@ -44,9 +54,7 @@ const toolItems: {
 <style scoped lang="scss">
 .tool-palette {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 34px;
   padding: 1px;
   border-radius: 7px;
   background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);
@@ -55,13 +63,23 @@ const toolItems: {
   pointer-events: auto;
 }
 
+.orientation-vertical {
+  flex-direction: column;
+  width: 34px;
+}
+
+.orientation-horizontal {
+  flex-direction: row;
+  width: auto;
+}
+
 .tool-palette-button {
   display: grid;
   place-items: center;
   width: 32px;
-  height: 22px;
+  height: 32px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   background: transparent;
   color: var(--scheme-color-on-surface-variant);
   cursor: pointer;

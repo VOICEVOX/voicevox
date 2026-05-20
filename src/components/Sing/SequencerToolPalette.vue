@@ -2,6 +2,7 @@
   <div
     v-if="editTarget === 'NOTE'"
     class="tool-palette"
+    :class="`orientation-${orientation}`"
     aria-label="ノートツール"
   >
     <button
@@ -28,6 +29,7 @@
   <div
     v-else-if="editTarget === 'PITCH'"
     class="tool-palette"
+    :class="`orientation-${orientation}`"
     aria-label="ピッチツール"
   >
     <button
@@ -60,11 +62,17 @@ import type {
   PitchEditTool,
 } from "@/store/type";
 
-defineProps<{
-  editTarget: SequencerEditTarget;
-  sequencerNoteTool: NoteEditTool;
-  sequencerPitchTool: PitchEditTool;
-}>();
+withDefaults(
+  defineProps<{
+    editTarget: SequencerEditTarget;
+    sequencerNoteTool: NoteEditTool;
+    sequencerPitchTool: PitchEditTool;
+    orientation?: "vertical" | "horizontal";
+  }>(),
+  {
+    orientation: "vertical",
+  },
+);
 const emit = defineEmits<{
   (event: "update:sequencerNoteTool", value: NoteEditTool): void;
   (event: "update:sequencerPitchTool", value: PitchEditTool): void;
@@ -74,9 +82,7 @@ const emit = defineEmits<{
 <style scoped lang="scss">
 .tool-palette {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 34px;
   padding: 1px;
   border-radius: 7px;
   background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);
@@ -85,11 +91,21 @@ const emit = defineEmits<{
   pointer-events: auto;
 }
 
+.orientation-vertical {
+  flex-direction: column;
+  width: 34px;
+}
+
+.orientation-horizontal {
+  flex-direction: row;
+  width: auto;
+}
+
 .tool-palette-button {
   display: grid;
   place-items: center;
   width: 32px;
-  height: 28px;
+  height: 32px;
   border: 0;
   border-radius: 6px;
   background: transparent;

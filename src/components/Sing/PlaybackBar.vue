@@ -109,7 +109,12 @@
         </div>
       </div>
       <div class="sing-volume-controls">
-        <QIcon name="volume_up" size="xs" class="sing-volume-icon" />
+        <span
+          class="material-symbols-rounded sing-volume-icon"
+          aria-hidden="true"
+        >
+          volume_up
+        </span>
         <QSlider v-model.number="volume" trackSize="2px" class="sing-volume" />
       </div>
     </div>
@@ -623,11 +628,16 @@ const volume = computed({
 }
 
 .sing-volume-icon {
+  display: block;
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 22px;
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 500,
+    "GRAD" 0,
+    "opsz" 24;
+  line-height: 1;
   margin-right: 8px;
-
-  :deep() {
-    color: var(--scheme-color-outline);
-  }
 }
 
 .sing-volume {

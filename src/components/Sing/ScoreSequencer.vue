@@ -1,5 +1,19 @@
 <template>
-  <div class="score-sequencer-shell">
+  <div
+    class="score-sequencer-shell"
+    :class="[
+      `tool-layout-${toolPaletteLayout}`,
+      { 'tool-layout-docked': isScoreDockLayout },
+      { 'tool-layout-header-rail': isScoreHeaderRailLayout },
+      { 'tool-layout-reserved-rail': isScoreReservedRailLayout },
+      { 'tool-layout-surface-strip': isScoreSurfaceStripLayout },
+      { 'tool-layout-command-bar': isScoreTrueCommandLayout },
+      { 'tool-layout-mode-context': isScoreModeContextLayout },
+      { 'tool-layout-context-hud': isScoreContextHudLayout },
+      { 'tool-layout-inspector-header': isScoreInspectorHeaderLayout },
+      { 'tool-layout-tool-chip': isScoreToolChipLayout },
+    ]"
+  >
     <QSplitter
       :modelValue="isParameterPanelOpen ? parameterPanelHeight : 0"
       reverse
@@ -18,6 +32,9 @@
       <template #before>
         <div class="score-sequencer full-height">
           <div class="piano-roll-toolbar" aria-label="ピアノロール操作">
+            <span v-if="isScoreTrueCommandLayout" class="surface-command-title">
+              ピアノロール
+            </span>
             <div class="piano-roll-mode-zone">
               <div
                 class="piano-roll-edit-target-tabs"
@@ -34,7 +51,12 @@
                   :aria-selected="editTarget === 'NOTE'"
                   @click="changeEditTarget('NOTE')"
                 >
-                  <span class="material-symbols-rounded" aria-hidden="true">
+                  <span v-if="usesPianoTextTabs">ノート</span>
+                  <span
+                    v-else
+                    class="material-symbols-rounded"
+                    aria-hidden="true"
+                  >
                     music_note
                   </span>
                 </button>
@@ -48,21 +70,144 @@
                   :aria-selected="editTarget === 'PITCH'"
                   @click="changeEditTarget('PITCH')"
                 >
-                  <span class="material-symbols-rounded" aria-hidden="true">
+                  <span v-if="usesPianoTextTabs">ピッチ</span>
+                  <span
+                    v-else
+                    class="material-symbols-rounded"
+                    aria-hidden="true"
+                  >
                     show_chart
                   </span>
                 </button>
               </div>
-            </div>
-            <div class="piano-roll-floating-tools">
               <SequencerToolPalette
+                v-if="
+                  isScoreInlineRailLayout ||
+                  isScoreInlineCommandToolLayout ||
+                  toolPaletteLayout === 'dock'
+                "
                 :editTarget
                 :sequencerNoteTool
                 :sequencerPitchTool
+                :orientation="
+                  isScoreInlineCommandToolLayout || toolPaletteLayout === 'dock'
+                    ? 'horizontal'
+                    : 'vertical'
+                "
                 @update:sequencerNoteTool="setSequencerNoteTool"
                 @update:sequencerPitchTool="setSequencerPitchTool"
               />
             </div>
+            <div
+              v-if="isScoreModeContextLayout"
+              class="piano-roll-context-strip"
+            >
+              <span class="context-strip-target">{{ pianoModeLabel }}</span>
+              <SequencerToolPalette
+                :editTarget
+                :sequencerNoteTool
+                :sequencerPitchTool
+                orientation="horizontal"
+                @update:sequencerNoteTool="setSequencerNoteTool"
+                @update:sequencerPitchTool="setSequencerPitchTool"
+              />
+            </div>
+            <div v-if="isScoreContextHudLayout" class="piano-roll-context-hud">
+              <span class="context-hud-label">{{ currentPianoToolLabel }}</span>
+              <SequencerToolPalette
+                :editTarget
+                :sequencerNoteTool
+                :sequencerPitchTool
+                orientation="horizontal"
+                @update:sequencerNoteTool="setSequencerNoteTool"
+                @update:sequencerPitchTool="setSequencerPitchTool"
+              />
+            </div>
+            <div
+              v-if="isScoreToolChipLayout"
+              class="piano-roll-current-tool-zone"
+            >
+              <button
+                class="current-tool-chip"
+                type="button"
+                :title="currentPianoToolLabel"
+              >
+                <span class="material-symbols-rounded" aria-hidden="true">
+                  {{ currentPianoToolIcon }}
+                </span>
+                <span>{{ currentPianoToolLabel }}</span>
+              </button>
+              <button
+                class="command-palette-button"
+                type="button"
+                title="コマンドを検索"
+              >
+                <span class="material-symbols-rounded" aria-hidden="true">
+                  keyboard_command_key
+                </span>
+              </button>
+              <div class="tool-chip-popover">
+                <SequencerToolPalette
+                  :editTarget
+                  :sequencerNoteTool
+                  :sequencerPitchTool
+                  orientation="horizontal"
+                  @update:sequencerNoteTool="setSequencerNoteTool"
+                  @update:sequencerPitchTool="setSequencerPitchTool"
+                />
+              </div>
+            </div>
+            <div
+              v-if="toolPaletteLayout === 'reservedRail'"
+              class="piano-roll-tool-zone"
+            >
+              <SequencerToolPalette
+                :editTarget
+                :sequencerNoteTool
+                :sequencerPitchTool
+                orientation="vertical"
+                @update:sequencerNoteTool="setSequencerNoteTool"
+                @update:sequencerPitchTool="setSequencerPitchTool"
+              />
+            </div>
+            <div
+              v-if="
+                toolPaletteLayout !== 'rail' &&
+                toolPaletteLayout !== 'proposalB' &&
+                toolPaletteLayout !== 'dock' &&
+                toolPaletteLayout !== 'proposalE' &&
+                toolPaletteLayout !== 'proposalF' &&
+                toolPaletteLayout !== 'proposalG' &&
+                toolPaletteLayout !== 'proposalH' &&
+                toolPaletteLayout !== 'proposalI' &&
+                toolPaletteLayout !== 'proposalJ' &&
+                toolPaletteLayout !== 'reservedRail'
+              "
+              class="piano-roll-floating-tools"
+              :class="[
+                `layout-${toolPaletteLayout}`,
+                { 'active-target-pitch': editTarget === 'PITCH' },
+              ]"
+            >
+              <SequencerToolPalette
+                :editTarget
+                :sequencerNoteTool
+                :sequencerPitchTool
+                :orientation="pianoToolPaletteOrientation"
+                @update:sequencerNoteTool="setSequencerNoteTool"
+                @update:sequencerPitchTool="setSequencerPitchTool"
+              />
+            </div>
+            <button
+              v-if="isScoreTrueCommandLayout"
+              class="piano-roll-command-button"
+              type="button"
+              title="その他"
+            >
+              <span class="material-symbols-rounded" aria-hidden="true">
+                more_horiz
+              </span>
+            </button>
             <label class="piano-roll-snap-control">
               <span class="piano-roll-snap-label">スナップ</span>
               <select
@@ -267,6 +412,7 @@
         <SequencerParameterPanel
           v-if="isParameterPanelOpen"
           :offsetX="scrollX"
+          :toolPaletteLayout
           @update:needsAutoScroll="
             (value) => (parameterPanelNeedsAutoScroll = value)
           "
@@ -277,9 +423,28 @@
       class="sequencer-full-playhead"
       data-testid="sequencer-full-playhead"
       :style="{
-        transform: `translateX(${playheadX - scrollX + 88 - 1}px)`,
+        transform: `translateX(${
+          playheadX - scrollX + fullPlayheadLeftOffset - 1
+        }px)`,
       }"
     ></div>
+    <div class="tool-layout-switcher" aria-label="ツール配置">
+      <div class="tool-layout-switcher-grip" aria-hidden="true"></div>
+      <div class="tool-layout-switcher-panel">
+        <button
+          v-for="option in TOOL_PALETTE_LAYOUT_OPTIONS"
+          :key="option.value"
+          class="tool-layout-switch"
+          :class="{ active: toolPaletteLayout === option.value }"
+          type="button"
+          :aria-pressed="toolPaletteLayout === option.value"
+          :title="option.label"
+          @click="toolPaletteLayout = option.value"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -348,6 +513,10 @@ import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
 import SequencerToolPalette from "@/components/Sing/SequencerToolPalette.vue";
+import {
+  TOOL_PALETTE_LAYOUT_OPTIONS,
+  type ToolPaletteLayout,
+} from "@/components/Sing/toolPaletteLayout";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -554,6 +723,69 @@ const setParameterPanelHeight = async (height: number) => {
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 const parameterPanelNeedsAutoScroll = ref(false);
+const toolPaletteLayout = ref<ToolPaletteLayout>("dock");
+const isScoreInlineRailLayout = computed(
+  () =>
+    toolPaletteLayout.value === "rail" ||
+    toolPaletteLayout.value === "proposalB",
+);
+const isScoreDockLayout = computed(
+  () =>
+    toolPaletteLayout.value === "dock" ||
+    toolPaletteLayout.value === "dockCenter",
+);
+const isScoreHeaderRailLayout = computed(
+  () => toolPaletteLayout.value === "proposalC",
+);
+const isScoreReservedRailLayout = computed(
+  () => toolPaletteLayout.value === "reservedRail",
+);
+const isScoreSurfaceStripLayout = computed(
+  () =>
+    toolPaletteLayout.value === "proposalE" ||
+    toolPaletteLayout.value === "proposalF" ||
+    toolPaletteLayout.value === "proposalI" ||
+    toolPaletteLayout.value === "proposalJ",
+);
+const isScoreInlineCommandToolLayout = computed(
+  () =>
+    toolPaletteLayout.value === "proposalE" ||
+    toolPaletteLayout.value === "proposalF" ||
+    toolPaletteLayout.value === "proposalI",
+);
+const isScoreTrueCommandLayout = computed(
+  () => toolPaletteLayout.value === "proposalF",
+);
+const isScoreModeContextLayout = computed(
+  () => toolPaletteLayout.value === "proposalG",
+);
+const isScoreContextHudLayout = computed(
+  () => toolPaletteLayout.value === "proposalH",
+);
+const isScoreInspectorHeaderLayout = computed(
+  () => toolPaletteLayout.value === "proposalI",
+);
+const isScoreToolChipLayout = computed(
+  () => toolPaletteLayout.value === "proposalJ",
+);
+const usesPianoTextTabs = computed(
+  () =>
+    isScoreDockLayout.value ||
+    isScoreHeaderRailLayout.value ||
+    isScoreSurfaceStripLayout.value,
+);
+const fullPlayheadLeftOffset = computed(() => {
+  if (isScoreDockLayout.value || isScoreSurfaceStripLayout.value) return 48;
+  if (isScoreReservedRailLayout.value) return 128;
+  return 88;
+});
+const pianoToolPaletteOrientation = computed<"vertical" | "horizontal">(() =>
+  toolPaletteLayout.value === "center" ||
+  toolPaletteLayout.value === "centerBottom" ||
+  toolPaletteLayout.value === "dockCenter"
+    ? "horizontal"
+    : "vertical",
+);
 
 // ステートマシン
 const {
@@ -614,6 +846,26 @@ const sequencerPitchTool = computed(() => state.sequencerPitchTool);
 const setSequencerPitchTool = (sequencerPitchTool: PitchEditTool) => {
   void store.actions.SET_SEQUENCER_PITCH_TOOL({ sequencerPitchTool });
 };
+
+const pianoModeLabel = computed(() =>
+  editTarget.value === "NOTE" ? "ノート" : "ピッチ",
+);
+const currentPianoToolLabel = computed(() => {
+  if (editTarget.value === "NOTE") {
+    return sequencerNoteTool.value === "SELECT_FIRST" ? "選択優先" : "編集優先";
+  }
+
+  return sequencerPitchTool.value === "DRAW" ? "ピッチ編集" : "ピッチ削除";
+});
+const currentPianoToolIcon = computed(() => {
+  if (editTarget.value === "NOTE") {
+    return sequencerNoteTool.value === "SELECT_FIRST"
+      ? "arrow_selector_tool"
+      : "stylus";
+  }
+
+  return sequencerPitchTool.value === "DRAW" ? "stylus" : "ink_eraser";
+});
 
 const sequencerSnapType = computed(() => state.sequencerSnapType);
 const snapTypeSelectOptions = computed(() => {
@@ -1341,12 +1593,45 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   z-index: calc(#{vars.$z-index-sing-playhead} + 1);
 }
 
+.tool-layout-docked .sequencer-full-playhead,
+.tool-layout-surface-strip .sequencer-full-playhead,
+.tool-layout-mode-context .sequencer-full-playhead,
+.tool-layout-header-rail .sequencer-full-playhead {
+  top: calc(36px + var(--sequencer-ruler-height));
+}
+
 .score-sequencer {
   backface-visibility: hidden;
   display: grid;
   grid-template-rows: var(--sequencer-ruler-height) 1fr;
   grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
   position: relative;
+}
+
+.tool-layout-reserved-rail .score-sequencer {
+  grid-template-columns:
+    var(--editor-tool-rail-width) var(--editor-tool-rail-width) 48px
+    minmax(0, 1fr);
+}
+
+.tool-layout-docked .score-sequencer,
+.tool-layout-surface-strip .score-sequencer {
+  --piano-roll-dock-height: 36px;
+
+  grid-template-rows:
+    var(--piano-roll-dock-height) var(--sequencer-ruler-height)
+    1fr;
+  grid-template-columns: 48px minmax(0, 1fr);
+}
+
+.tool-layout-header-rail .score-sequencer {
+  grid-template-rows: 36px var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
+}
+
+.tool-layout-mode-context .score-sequencer {
+  grid-template-rows: 36px var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
 }
 
 .piano-roll-toolbar {
@@ -1359,12 +1644,19 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   z-index: calc(#{vars.$z-index-sing-playhead} + 2);
 }
 
+.tool-layout-reserved-rail .piano-roll-toolbar {
+  grid-template-columns:
+    var(--editor-tool-rail-width) var(--editor-tool-rail-width) 48px
+    minmax(0, 1fr);
+}
+
 .piano-roll-mode-zone {
   grid-row: 1 / -1;
   grid-column: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
+  gap: 6px;
   padding-top: 6px;
   background: color-mix(
     in oklch,
@@ -1375,59 +1667,470 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
 }
 
-.piano-roll-mode-zone,
-.piano-roll-floating-tools {
-  pointer-events: auto;
-}
-
-.piano-roll-floating-tools {
+.piano-roll-tool-zone {
   grid-row: 1 / -1;
-  grid-column: 1 / -1;
-  align-self: start;
-  justify-self: start;
-  margin: 6px 0 0 calc(var(--editor-tool-rail-width) + 4px);
-}
-
-.piano-roll-edit-target-tabs {
+  grid-column: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 34px;
-  padding: 1px;
-  border-radius: 7px;
-  background: var(--scheme-color-surface);
-  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.14);
+  gap: 6px;
+  padding-top: 6px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-low) 44%,
+    transparent
+  );
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
   pointer-events: auto;
 }
 
-.piano-roll-edit-target-tab {
+.tool-layout-docked .piano-roll-toolbar {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 2px 8px 0 56px;
+}
+
+.tool-layout-surface-strip .piano-roll-toolbar {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 2px 12px 0 56px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 94%, transparent);
+  border-bottom: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 36%, transparent);
+}
+
+.tool-layout-header-rail .piano-roll-toolbar {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  grid-template-rows: 36px var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
+}
+
+.tool-layout-mode-context .piano-roll-toolbar {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  grid-template-rows: 36px var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
+}
+
+.surface-command-title {
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: auto;
+}
+
+.tool-layout-command-bar .surface-command-title {
   display: grid;
   place-items: center;
-  width: 32px;
   height: 24px;
-  padding: 0;
-  border: 0;
-  border-radius: 5px;
+  padding: 0 10px;
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 52%, transparent);
+}
+
+.tool-layout-docked .piano-roll-mode-zone {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding-top: 0;
   background: transparent;
+  border-right: 0;
+}
+
+.tool-layout-surface-strip .piano-roll-mode-zone {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding-top: 0;
+  background: transparent;
+  border-right: 0;
+}
+
+.tool-layout-header-rail .piano-roll-mode-zone {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px 0 88px;
+  background: transparent;
+  border-right: 0;
+}
+
+.tool-layout-mode-context .piano-roll-mode-zone {
+  grid-row: 1 / -1;
+  grid-column: 1;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding-top: 6px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-low) 74%,
+    transparent
+  );
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
+}
+
+.tool-layout-proposalB .piano-roll-mode-zone {
+  gap: 14px;
+}
+
+.piano-roll-mode-zone,
+.piano-roll-floating-tools,
+.piano-roll-tool-zone,
+.piano-roll-context-strip,
+.piano-roll-context-hud,
+.piano-roll-current-tool-zone,
+.piano-roll-command-button {
+  pointer-events: auto;
+}
+
+.piano-roll-context-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 7px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 94%, transparent);
+  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
+}
+
+.tool-layout-mode-context .piano-roll-context-strip {
+  grid-row: 1;
+  grid-column: 2 / -1;
+  align-self: center;
+  justify-self: start;
+  margin-left: 8px;
+}
+
+.context-strip-target,
+.context-hud-label {
   color: var(--scheme-color-on-surface-variant);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tool-layout-context-hud .piano-roll-toolbar {
+  position: relative;
+}
+
+.piano-roll-context-hud {
+  position: absolute;
+  top: 52px;
+  left: calc(var(--editor-tool-rail-width) + 48px + 12px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 1px 8px 1px 10px;
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 44%, transparent);
+  border-radius: 8px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 90%, transparent);
+  box-shadow: 0 6px 18px oklch(0% 0 0 / 0.16);
+  backdrop-filter: blur(6px);
+}
+
+.piano-roll-current-tool-zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.current-tool-chip,
+.command-palette-button,
+.piano-roll-command-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border: 0;
+  border-radius: 7px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 92%, transparent);
+  color: var(--scheme-color-on-surface-variant);
+  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
   cursor: pointer;
 
   &:hover {
     background: var(--scheme-color-surface-container-highest);
     color: var(--scheme-color-on-surface);
   }
+}
 
-  &.active {
+.current-tool-chip {
+  gap: 6px;
+  min-width: 104px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.command-palette-button,
+.piano-roll-command-button {
+  width: 32px;
+  padding: 0;
+}
+
+.current-tool-chip .material-symbols-rounded,
+.command-palette-button .material-symbols-rounded,
+.piano-roll-command-button .material-symbols-rounded {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.tool-chip-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition:
+    opacity 0.12s ease-out,
+    transform 0.12s ease-out;
+  z-index: 2;
+}
+
+.piano-roll-current-tool-zone:hover .tool-chip-popover,
+.piano-roll-current-tool-zone:focus-within .tool-chip-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.piano-roll-floating-tools {
+  pointer-events: auto;
+}
+
+.piano-roll-floating-tools.layout-center {
+  grid-row: 1;
+  grid-column: 3;
+  align-self: center;
+  justify-self: center;
+}
+
+.piano-roll-floating-tools.layout-centerBottom {
+  grid-row: 2;
+  grid-column: 3;
+  align-self: end;
+  justify-self: center;
+  margin-bottom: 12px;
+}
+
+.piano-roll-floating-tools.layout-proposalA,
+.piano-roll-floating-tools.layout-proposalD {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: start;
+  margin: 6px 0 0 calc(var(--editor-tool-rail-width) + 6px);
+}
+
+.piano-roll-floating-tools.layout-proposalA.active-target-pitch,
+.piano-roll-floating-tools.layout-proposalD.active-target-pitch {
+  margin-top: 40px;
+}
+
+.piano-roll-floating-tools.layout-proposalC {
+  grid-row: 2 / -1;
+  grid-column: 1;
+  align-self: start;
+  justify-self: center;
+  margin-top: 6px;
+}
+
+.tool-layout-proposalD .piano-roll-floating-tools {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.12s ease-out,
+    transform 0.12s ease-out;
+}
+
+.tool-layout-proposalD .piano-roll-mode-zone:hover ~ .piano-roll-floating-tools,
+.tool-layout-proposalD .piano-roll-floating-tools:hover,
+.tool-layout-proposalD
+  .piano-roll-mode-zone:focus-within
+  ~ .piano-roll-floating-tools,
+.tool-layout-proposalD .piano-roll-floating-tools:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.piano-roll-floating-tools.layout-dockCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.piano-roll-floating-tools.layout-side {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: end;
+  margin: 48px 12px 0 0;
+}
+
+.piano-roll-edit-target-tabs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  width: 40px;
+  padding: 2px 0;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.tool-layout-docked .piano-roll-edit-target-tabs,
+.tool-layout-surface-strip .piano-roll-edit-target-tabs,
+.tool-layout-header-rail .piano-roll-edit-target-tabs {
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  width: auto;
+  padding: 1px;
+  border-radius: 7px;
+  background: var(--scheme-color-surface);
+  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.14);
+}
+
+.tool-layout-docked .piano-roll-edit-target-tab,
+.tool-layout-surface-strip .piano-roll-edit-target-tab,
+.tool-layout-header-rail .piano-roll-edit-target-tab {
+  width: auto;
+  min-width: 50px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.tool-layout-docked .piano-roll-edit-target-tab,
+.tool-layout-surface-strip .piano-roll-edit-target-tab {
+  border: 0;
+  border-radius: 5px;
+}
+
+.tool-layout-docked .piano-roll-edit-target-tab.active,
+.tool-layout-surface-strip .piano-roll-edit-target-tab.active,
+.tool-layout-header-rail .piano-roll-edit-target-tab.active {
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-secondary-container) 72%,
+    var(--scheme-color-surface)
+  );
+  color: var(--scheme-color-on-secondary-container);
+  font-weight: 700;
+  box-shadow:
+    inset 0 0 0 1px
+      color-mix(in oklch, var(--scheme-color-secondary) 38%, transparent),
+    0 1px 2px oklch(0% 0 0 / 0.1);
+}
+
+.tool-layout-inspector-header .piano-roll-toolbar {
+  padding-left: 48px;
+  background: var(--scheme-color-surface-container-low);
+}
+
+.tool-layout-inspector-header .piano-roll-edit-target-tabs {
+  align-self: stretch;
+  gap: 6px;
+  height: 34px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tool-layout-inspector-header .piano-roll-edit-target-tab {
+  min-width: 68px;
+  height: 34px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tool-layout-inspector-header .piano-roll-edit-target-tab.active {
+  border-bottom: 2px solid var(--scheme-color-secondary);
+  background: transparent;
+  color: var(--scheme-color-on-surface);
+  box-shadow: none;
+}
+
+.tool-layout-command-bar .piano-roll-toolbar {
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 96%,
+    transparent
+  );
+}
+
+.tool-layout-command-bar .piano-roll-mode-zone {
+  padding-left: 2px;
+}
+
+.piano-roll-edit-target-tab {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px 0 0 7px;
+  background: transparent;
+  color: var(--scheme-color-on-surface-variant);
+  cursor: pointer;
+
+  &:hover {
     background: color-mix(
       in oklch,
-      var(--scheme-color-secondary-container) 72%,
-      var(--scheme-color-surface)
+      var(--scheme-color-surface-container-highest) 68%,
+      transparent
     );
-    color: var(--scheme-color-on-secondary-container);
-    box-shadow:
-      inset 0 0 0 1px
-        color-mix(in oklch, var(--scheme-color-secondary) 38%, transparent),
-      0 1px 2px oklch(0% 0 0 / 0.1);
+    color: var(--scheme-color-on-surface);
+  }
+
+  &.active {
+    z-index: 1;
+    border-color: color-mix(
+      in oklch,
+      var(--scheme-color-outline-variant) 70%,
+      transparent
+    );
+    border-right-color: var(--scheme-color-surface);
+    background: var(--scheme-color-surface);
+    color: var(--scheme-color-on-surface);
+    box-shadow: -1px 1px 3px oklch(0% 0 0 / 0.12);
   }
 
   .material-symbols-rounded {
@@ -1443,6 +2146,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   justify-self: end;
   align-self: center;
   margin-left: auto;
+  margin-right: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1459,6 +2163,42 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   &:hover {
     background: var(--scheme-color-surface-container-highest);
   }
+}
+
+.tool-layout-reserved-rail .piano-roll-snap-control {
+  grid-column: 4;
+}
+
+.tool-layout-docked .piano-roll-snap-control {
+  margin-left: auto;
+  margin-right: 4px;
+}
+
+.tool-layout-surface-strip .piano-roll-snap-control {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.tool-layout-command-bar .piano-roll-command-button {
+  margin-left: auto;
+}
+
+.tool-layout-command-bar .piano-roll-snap-control {
+  margin-left: 0;
+}
+
+.tool-layout-mode-context .piano-roll-snap-control {
+  grid-row: 1;
+  grid-column: 3;
+  margin-left: auto;
+  margin-right: 12px;
+}
+
+.tool-layout-header-rail .piano-roll-snap-control {
+  grid-row: 1;
+  grid-column: 3;
+  margin-left: auto;
+  margin-right: 12px;
 }
 
 .piano-roll-snap-label {
@@ -1479,14 +2219,116 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   cursor: pointer;
 }
 
+.tool-layout-switcher {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  display: flex;
+  align-items: center;
+  transform: translate(calc(100% - 10px), -50%);
+  opacity: 0;
+  transition: transform 0.12s ease-out;
+  z-index: calc(#{vars.$z-index-sing-playhead} + 4);
+
+  &:hover,
+  &:focus-within {
+    transform: translate(0, -50%);
+    opacity: 1;
+  }
+}
+
+.tool-layout-switcher-grip {
+  width: 10px;
+  height: 56px;
+  border-radius: 6px 0 0 6px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-secondary-container) 72%,
+    var(--scheme-color-surface)
+  );
+  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.14);
+}
+
+.tool-layout-switcher-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 7px 0 0 7px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 92%, transparent);
+  box-shadow: 0 2px 8px oklch(0% 0 0 / 0.14);
+}
+
+.tool-layout-switch {
+  min-width: 132px;
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--scheme-color-on-surface-variant);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--scheme-color-surface-container-highest);
+    color: var(--scheme-color-on-surface);
+  }
+
+  &.active {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary-container) 72%,
+      var(--scheme-color-surface)
+    );
+    color: var(--scheme-color-on-secondary-container);
+    box-shadow: inset 0 0 0 1px
+      color-mix(in oklch, var(--scheme-color-secondary) 34%, transparent);
+  }
+}
+
 .sequencer-corner {
   grid-row: 1;
   grid-column: 2;
   background: var(--scheme-color-sing-ruler-surface);
 }
 
+.tool-layout-reserved-rail .sequencer-corner {
+  grid-column: 3;
+}
+
+.tool-layout-docked .sequencer-corner,
+.tool-layout-surface-strip .sequencer-corner {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+.tool-layout-header-rail .sequencer-corner,
+.tool-layout-mode-context .sequencer-corner {
+  grid-row: 2;
+  grid-column: 2;
+}
+
 .sequencer-ruler {
   grid-row: 1;
+  grid-column: 3;
+}
+
+.tool-layout-reserved-rail .sequencer-ruler {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-ruler,
+.tool-layout-surface-strip .sequencer-ruler {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-ruler,
+.tool-layout-mode-context .sequencer-ruler {
+  grid-row: 2;
   grid-column: 3;
 }
 
@@ -1495,13 +2337,61 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-column: 2;
 }
 
+.tool-layout-reserved-rail .sequencer-keys {
+  grid-column: 3;
+}
+
+.tool-layout-docked .sequencer-keys,
+.tool-layout-surface-strip .sequencer-keys {
+  grid-row: 3;
+  grid-column: 1;
+}
+
+.tool-layout-header-rail .sequencer-keys,
+.tool-layout-mode-context .sequencer-keys {
+  grid-row: 3;
+  grid-column: 2;
+}
+
 .sequencer-grid {
   grid-row: 2;
   grid-column: 3;
 }
 
+.tool-layout-reserved-rail .sequencer-grid {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-grid,
+.tool-layout-surface-strip .sequencer-grid {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-grid,
+.tool-layout-mode-context .sequencer-grid {
+  grid-row: 3;
+  grid-column: 3;
+}
+
 .sequencer-character-portrait {
   grid-row: 2;
+  grid-column: 3;
+}
+
+.tool-layout-reserved-rail .sequencer-character-portrait {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-character-portrait,
+.tool-layout-surface-strip .sequencer-character-portrait {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-character-portrait,
+.tool-layout-mode-context .sequencer-character-portrait {
+  grid-row: 3;
   grid-column: 3;
 }
 
@@ -1511,6 +2401,22 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   position: relative;
   overflow: hidden;
   pointer-events: none;
+}
+
+.tool-layout-reserved-rail .sequencer-guideline-container {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-guideline-container,
+.tool-layout-surface-strip .sequencer-guideline-container {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-guideline-container,
+.tool-layout-mode-context .sequencer-guideline-container {
+  grid-row: 3;
+  grid-column: 3;
 }
 
 .sequencer-guideline {
@@ -1572,8 +2478,40 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   }
 }
 
+.tool-layout-reserved-rail .sequencer-body {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-body,
+.tool-layout-surface-strip .sequencer-body {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-body,
+.tool-layout-mode-context .sequencer-body {
+  grid-row: 3;
+  grid-column: 3;
+}
+
 .sequencer-pitch {
   grid-row: 2;
+  grid-column: 3;
+}
+
+.tool-layout-reserved-rail .sequencer-pitch {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-pitch,
+.tool-layout-surface-strip .sequencer-pitch {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-pitch,
+.tool-layout-mode-context .sequencer-pitch {
+  grid-row: 3;
   grid-column: 3;
 }
 
@@ -1583,6 +2521,22 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   position: relative;
   overflow: hidden;
   pointer-events: none;
+}
+
+.tool-layout-reserved-rail .sequencer-overlay {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-overlay,
+.tool-layout-surface-strip .sequencer-overlay {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-overlay,
+.tool-layout-mode-context .sequencer-overlay {
+  grid-row: 3;
+  grid-column: 3;
 }
 
 .sequencer-phrase-indicator {
