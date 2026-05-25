@@ -97,6 +97,7 @@ export const dictionaryManageDialogContextKey: InjectionKey<{
   wordEditing: Ref<boolean>;
   surfaceInput: Ref<typeof BaseTextField | undefined>;
   selectedId: Ref<string>;
+  isEditingNewWord: ComputedRef<boolean>;
   uiLocked: Ref<boolean>;
   userDict: Ref<Record<string, UserDictWord>>;
   isOnlyHiraOrKana: Ref<boolean>;
@@ -109,7 +110,7 @@ export const dictionaryManageDialogContextKey: InjectionKey<{
   surface: Ref<string>;
   yomi: Ref<string>;
   wordPriority: Ref<number>;
-  isWordChanged: ComputedRef<boolean>;
+  isWordEdited: ComputedRef<boolean>;
   setYomi: (text: string, changeWord?: boolean) => Promise<void>;
   createUILockAction: <T>(action: Promise<T>) => Promise<T>;
   loadingDictProcess: () => Promise<void>;
@@ -200,6 +201,9 @@ const selectedId = ref("");
 const surface = ref("");
 const yomi = ref("");
 
+// TODO: 新規単語を空文字IDで表現するのをやめる
+const isEditingNewWord = computed(() => selectedId.value === "");
+
 const voiceComputed = computed(() => {
   const userOrderedCharacterInfos =
     store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
@@ -248,7 +252,10 @@ const setYomi = async (text: string, changeWord?: boolean) => {
         }),
       )
     )[0];
-    if (selectedId.value && userDict.value[selectedId.value].yomi === text) {
+    if (
+      !isEditingNewWord.value &&
+      userDict.value[selectedId.value].yomi === text
+    ) {
       accentPhrase.value.accent = computeDisplayAccent();
     }
   } else {
@@ -266,10 +273,10 @@ const computeRegisteredAccent = () => {
   accent = accent === accentPhrase.value.moras.length ? 0 : accent;
   return accent;
 };
-// computeの逆
+// computeRegisteredAccentの逆。
 // 辞書から得たaccentが0の場合に、自動で追加される「ガ」の位置にアクセントを表示させるように処理する
 const computeDisplayAccent = () => {
-  if (!accentPhrase.value || !selectedId.value) throw new Error();
+  if (!accentPhrase.value) throw new Error();
   let accent = userDict.value[selectedId.value].accentType;
   accent = accent === 0 ? accentPhrase.value.moras.length : accent;
   return accent;
@@ -277,9 +284,11 @@ const computeDisplayAccent = () => {
 
 const wordPriority = ref(defaultDictPriority);
 
-// 操作（ステートの移動）
-const isWordChanged = computed(() => {
-  if (selectedId.value === "") {
+// 単語が編集されているかどうか。
+// - 新規単語の編集：surface, yomi, accentPhraseのいずれかが未入力でない場合は編集されているとみなす
+// - 既存単語の編集：surface, yomi, accentPhrase, priorityのいずれかが、選択されている単語のデータと異なる
+const isWordEdited = computed(() => {
+  if (isEditingNewWord.value) {
     return (
       surface.value != "" && yomi.value != "" && accentPhrase.value != undefined
     );
@@ -323,7 +332,7 @@ const deleteWord = async (id: string) => {
   }
 };
 const discardOrNotDialog = async (okCallback: () => void) => {
-  if (isWordChanged.value) {
+  if (isWordEdited.value) {
     const result = await store.actions.SHOW_WARNING_DIALOG({
       title: "単語の追加・変更を破棄しますか？",
       message: "変更を破棄すると、単語の追加・変更はリセットされます。",
@@ -382,6 +391,7 @@ provide(dictionaryManageDialogContextKey, {
   wordEditing,
   surfaceInput,
   selectedId,
+  isEditingNewWord,
   uiLocked,
   userDict,
   isOnlyHiraOrKana,
@@ -390,7 +400,7 @@ provide(dictionaryManageDialogContextKey, {
   surface,
   yomi,
   wordPriority,
-  isWordChanged,
+  isWordEdited,
   setYomi,
   createUILockAction,
   loadingDictProcess,

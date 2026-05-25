@@ -3,7 +3,9 @@
     <BaseScrollArea>
       <div class="inner">
         <h2 class="title">
-          {{ selectedId ? userDict[selectedId].surface : "新しい単語の追加" }}
+          {{
+            isEditingNewWord ? "新しい単語の追加" : userDict[selectedId].surface
+          }}
         </h2>
         <div class="form-row">
           <h3 class="headline">単語</h3>
@@ -15,7 +17,7 @@
             @change="
               () => {
                 setSurface(surface);
-                saveWord();
+                rewriteExistingWord();
               }
             "
             @enterkeydown="yomiInput?.focus()"
@@ -32,7 +34,7 @@
             @change="
               async () => {
                 await setYomi(yomi);
-                saveWord();
+                rewriteExistingWord();
               }
             "
           >
@@ -68,7 +70,7 @@
                   :onChangeAccent="
                     async (accentPhraseIndex: number, accent: number) => {
                       await changeAccent(accentPhraseIndex, accent);
-                      saveWord();
+                      rewriteExistingWord();
                     }
                   "
                 />
@@ -113,7 +115,7 @@
               :max="10"
               :step="1"
               showStepMarkers
-              @valueCommit="saveWord"
+              @valueCommit="rewriteExistingWord"
             />
             <div class="slider-label">
               <span>低い</span>
@@ -124,14 +126,14 @@
         </div>
       </div>
     </BaseScrollArea>
-    <footer v-if="!selectedId" class="footer">
+    <footer v-if="!isEditingNewWord" class="footer">
       <BaseButton
         :disabled="uiLocked"
         label="キャンセル"
         @click="discardOrNotDialog(cancel)"
       />
       <BaseButton
-        :disabled="uiLocked || !isWordChanged"
+        :disabled="uiLocked || !isWordEdited"
         variant="primary"
         label="追加"
         @click="addWord"
@@ -161,6 +163,7 @@ const {
   wordEditing,
   surfaceInput,
   selectedId,
+  isEditingNewWord,
   uiLocked,
   userDict,
   isOnlyHiraOrKana,
@@ -169,7 +172,7 @@ const {
   surface,
   yomi,
   wordPriority,
-  isWordChanged,
+  isWordEdited,
   setYomi,
   createUILockAction,
   loadingDictProcess,
@@ -243,8 +246,8 @@ const setSurface = (text: string) => {
   surface.value = convertHankakuToZenkaku(text);
 };
 
-const saveWord = debounce(async () => {
-  if (!selectedId.value || !accentPhrase.value) return;
+const rewriteExistingWord = debounce(async () => {
+  if (!isEditingNewWord.value || !accentPhrase.value) return;
   const accent = computeRegisteredAccent();
 
   const word = {
@@ -274,7 +277,7 @@ const saveWord = debounce(async () => {
 }, 300);
 
 const addWord = async () => {
-  if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
+  if (!accentPhrase.value) return;
   const accent = computeRegisteredAccent();
 
   try {
