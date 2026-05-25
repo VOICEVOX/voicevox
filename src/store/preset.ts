@@ -143,7 +143,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       mutations.SET_PRESET_ITEMS({
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
         // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
-        presetItems: presetConfig.items as Record<PresetKey, Preset>,
+        presetItems: presetConfig.items,
       });
       mutations.SET_PRESET_KEYS({
         presetKeys: presetConfig.keys,
@@ -175,7 +175,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       context.mutations.SET_PRESET_ITEMS({
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
         // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
-        presetItems: result.items as Record<PresetKey, Preset>,
+        presetItems: result.items,
       });
       context.mutations.SET_PRESET_KEYS({ presetKeys: result.keys });
     },
