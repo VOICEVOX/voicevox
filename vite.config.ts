@@ -238,6 +238,9 @@ export default defineConfig((options) => {
               vue: "vue/dist/vue.esm-bundler.js",
             },
           },
+          optimizeDeps: {
+            entries: [path.resolve(import.meta.dirname, "src/index.html")],
+          },
           test: {
             globals: true,
             name: "storybook",
@@ -251,6 +254,7 @@ export default defineConfig((options) => {
             },
             isolate: false,
             setupFiles: ["./.storybook/vitest.setup.ts"],
+            dir: path.resolve(import.meta.dirname, "src"),
           },
         },
       ],
