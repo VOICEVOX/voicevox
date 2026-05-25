@@ -1,6 +1,6 @@
 managePackageManagerVersions: true
 
-# minimumReleaseAge: 10080
+minimumReleaseAge: 10080
 
 onlyBuiltDependencies:
   - '@nestjs/core'
