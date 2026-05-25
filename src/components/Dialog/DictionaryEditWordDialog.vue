@@ -18,7 +18,7 @@
                 saveWord();
               }
             "
-            @keydown.enter="yomiInput?.focus()"
+            @enterkeydown="yomiInput?.focus()"
           />
         </div>
         <div class="form-row">

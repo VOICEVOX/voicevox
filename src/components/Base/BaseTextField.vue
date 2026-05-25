@@ -75,7 +75,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  keydown: [payload: KeyboardEvent];
+  enterkeydown: [payload: KeyboardEvent];
   change: [payload: Event];
   click: [payload: MouseEvent];
 }>();
@@ -218,7 +218,7 @@ const handlePaste = async (event: ClipboardEvent) => {
 
 const preventEnter = (event: KeyboardEvent) => {
   event.preventDefault();
-  emit("keydown", event);
+  emit("enterkeydown", event);
   emit("change", event);
 };
 
