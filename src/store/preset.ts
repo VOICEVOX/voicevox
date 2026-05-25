@@ -141,8 +141,6 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       )
         return;
       mutations.SET_PRESET_ITEMS({
-        // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
-        // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
         presetItems: presetConfig.items,
       });
       mutations.SET_PRESET_KEYS({
@@ -173,8 +171,6 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         keys: cloneWithUnwrapProxy(presetKeys),
       });
       context.mutations.SET_PRESET_ITEMS({
-        // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
-        // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
         presetItems: result.items,
       });
       context.mutations.SET_PRESET_KEYS({ presetKeys: result.keys });
