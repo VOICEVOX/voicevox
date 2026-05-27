@@ -55,7 +55,6 @@
     "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadAppimagetool.ts && tsx tools/downloadType2Runtime.ts",
     "postuninstall": "electron-builder install-app-deps"
   },
-  "// TODO: hotkeys-jsのメジャーバージョン更新は動作テストしてから https://github.com/VOICEVOX/voicevox/pull/2953#pullrequestreview-3819334546": "",
   "dependencies": {
     "@gtm-support/vue-gtm": "3.2.0",
     "@quasar/extras": "1.18.0",
