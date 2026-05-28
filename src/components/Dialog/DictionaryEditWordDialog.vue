@@ -126,7 +126,7 @@
         </div>
       </div>
     </BaseScrollArea>
-    <footer v-if="!isEditingNewWord" class="footer">
+    <footer v-if="isEditingNewWord" class="footer">
       <BaseButton
         :disabled="uiLocked"
         label="キャンセル"
