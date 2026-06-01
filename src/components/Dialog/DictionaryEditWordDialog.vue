@@ -4,7 +4,7 @@
       <div class="inner">
         <h2 class="title">
           {{
-            isEditingNewWord ? "新しい単語の追加" : userDict[selectedId].surface
+            isEditingNewWord ? "新しい単語の追加" : editingExistingWord.surface
           }}
         </h2>
         <div class="form-row">
@@ -143,7 +143,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject, ref } from "vue";
+import { computed, inject, ref } from "vue";
 import { dictionaryManageDialogContextKey } from "./DictionaryManageDialog.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSlider from "@/components/Base/BaseSlider.vue";
@@ -153,6 +153,7 @@ import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
 import { debounce } from "@/helpers/timer";
+import { UnreachableError } from "@/type/utility";
 
 const store = useStore();
 
@@ -162,7 +163,7 @@ if (context == undefined)
 const {
   wordEditing,
   surfaceInput,
-  selectedId,
+  editTarget,
   isEditingNewWord,
   uiLocked,
   userDict,
@@ -181,6 +182,11 @@ const {
   toInitialState,
   cancel,
 } = context;
+
+const editingExistingWord = computed(() => {
+  if (editTarget.value.type !== "existing") throw new UnreachableError();
+  return userDict.value[editTarget.value.id];
+});
 
 // 音声再生機構
 const nowGenerating = ref(false);
@@ -247,7 +253,9 @@ const setSurface = (text: string) => {
 };
 
 const rewriteExistingWord = debounce(async () => {
-  if (!isEditingNewWord.value || !accentPhrase.value) return;
+  if (isEditingNewWord.value || !accentPhrase.value) return;
+  if (editTarget.value.type !== "existing") throw new UnreachableError();
+
   const accent = computeRegisteredAccent();
 
   const word = {
@@ -259,11 +267,11 @@ const rewriteExistingWord = debounce(async () => {
   try {
     await store.actions.REWRITE_WORD({
       ...word,
-      wordUuid: selectedId.value,
+      wordUuid: editTarget.value.id,
       pronunciation: yomi.value,
     });
-    userDict.value[selectedId.value] = {
-      ...userDict.value[selectedId.value],
+    userDict.value[editTarget.value.id] = {
+      ...userDict.value[editTarget.value.id],
       ...word,
       yomi: yomi.value,
     };

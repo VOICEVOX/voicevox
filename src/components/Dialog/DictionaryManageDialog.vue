@@ -52,7 +52,9 @@
               <BaseListItem
                 v-for="(value, key) in userDict"
                 :key
-                :selected="selectedId === key"
+                :selected="
+                  editTarget.type === 'existing' && editTarget.id === key
+                "
                 @click="
                   discardOrNotDialog(() => {
                     editWord(key);
@@ -72,7 +74,10 @@
                   </div>
                   <BaseIconButton
                     v-if="
-                      !uiLocked && (hoveredKey === key || selectedId === key)
+                      !uiLocked &&
+                      (hoveredKey === key ||
+                        (editTarget.type === 'existing' &&
+                          editTarget.id === key))
                     "
                     icon="delete_outline"
                     label="削除"
@@ -93,10 +98,12 @@
 <script lang="ts">
 import type { Ref, ComputedRef, InjectionKey } from "vue";
 
+export type EditTarget = { type: "existing"; id: string } | { type: "new" };
+
 export const dictionaryManageDialogContextKey: InjectionKey<{
   wordEditing: Ref<boolean>;
   surfaceInput: Ref<typeof BaseTextField | undefined>;
-  selectedId: Ref<string>;
+  editTarget: Ref<EditTarget>;
   isEditingNewWord: ComputedRef<boolean>;
   uiLocked: Ref<boolean>;
   userDict: Ref<Record<string, UserDictWord>>;
@@ -197,12 +204,11 @@ watch(dialogOpened, async (newValue) => {
 
 const wordEditing = ref(false);
 const surfaceInput = ref<typeof BaseTextField>();
-const selectedId = ref("");
+const editTarget = ref<EditTarget>({ type: "new" });
 const surface = ref("");
 const yomi = ref("");
 
-// TODO: 新規単語を空文字IDで表現するのをやめる
-const isEditingNewWord = computed(() => selectedId.value === "");
+const isEditingNewWord = computed(() => editTarget.value.type === "new");
 
 const voiceComputed = computed(() => {
   const userOrderedCharacterInfos =
@@ -253,8 +259,8 @@ const setYomi = async (text: string, changeWord?: boolean) => {
       )
     )[0];
     if (
-      !isEditingNewWord.value &&
-      userDict.value[selectedId.value].yomi === text
+      editTarget.value.type === "existing" &&
+      userDict.value[editTarget.value.id].yomi === text
     ) {
       accentPhrase.value.accent = computeDisplayAccent();
     }
@@ -277,7 +283,9 @@ const computeRegisteredAccent = () => {
 // 辞書から得たaccentが0の場合に、自動で追加される「ガ」の位置にアクセントを表示させるように処理する
 const computeDisplayAccent = () => {
   if (!accentPhrase.value) throw new Error();
-  let accent = userDict.value[selectedId.value].accentType;
+  if (editTarget.value.type !== "existing")
+    throw new Error(`assert editTarget.value.type === "existing"`);
+  let accent = userDict.value[editTarget.value.id].accentType;
   accent = accent === 0 ? accentPhrase.value.moras.length : accent;
   return accent;
 };
@@ -295,7 +303,9 @@ const isWordEdited = computed(() => {
   }
   // 一旦代入することで、userDictそのものが更新された時もcomputedするようにする
   const dict = userDict.value;
-  const dictData = dict[selectedId.value];
+  if (editTarget.value.type !== "existing")
+    throw new Error(`assert editTarget.value.type === "existing"`);
+  const dictData = dict[editTarget.value.id];
   return (
     dictData &&
     (dictData.surface !== surface.value ||
@@ -348,14 +358,14 @@ const discardOrNotDialog = async (okCallback: () => void) => {
   }
 };
 const newWord = () => {
-  selectedId.value = "";
+  editTarget.value = { type: "new" };
   surface.value = "";
   void setYomi("");
   wordPriority.value = defaultDictPriority;
   toWordEditingState();
 };
 const editWord = (id: string) => {
-  selectedId.value = id;
+  editTarget.value = { type: "existing", id };
   surface.value = userDict.value[id].surface;
   void setYomi(userDict.value[id].yomi, true);
   wordPriority.value = userDict.value[id].priority;
@@ -372,7 +382,7 @@ const closeDialog = () => {
 // 初期状態
 const toInitialState = () => {
   wordEditing.value = false;
-  selectedId.value = "";
+  editTarget.value = { type: "new" };
   surface.value = "";
   void setYomi("");
   wordPriority.value = defaultDictPriority;
@@ -390,7 +400,7 @@ const toDialogClosedState = () => {
 provide(dictionaryManageDialogContextKey, {
   wordEditing,
   surfaceInput,
-  selectedId,
+  editTarget,
   isEditingNewWord,
   uiLocked,
   userDict,
