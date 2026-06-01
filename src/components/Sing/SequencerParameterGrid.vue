@@ -159,20 +159,28 @@ const render = () => {
   const style = gridLineStyles[currentTheme.value];
 
   // 小節線をまとめて描画
-  graphic.lineStyle(1, style.measure.color, style.measure.alpha);
   for (const x of measureLineXs) {
     const lineX = Math.round(x - props.viewportInfo.offsetX);
     graphic.moveTo(lineX - 0.5, 0);
     graphic.lineTo(lineX - 0.5, canvasHeight);
   }
+  graphic.stroke({
+    width: 1,
+    color: style.measure.color,
+    alpha: style.measure.alpha,
+  });
 
   // 拍線をまとめて描画
-  graphic.lineStyle(1, style.beat.color, style.beat.alpha);
   for (const x of beatLineXs) {
     const lineX = Math.round(x - props.viewportInfo.offsetX);
     graphic.moveTo(lineX - 0.5, 0);
     graphic.lineTo(lineX - 0.5, canvasHeight);
   }
+  graphic.stroke({
+    width: 1,
+    color: style.beat.color,
+    alpha: style.beat.alpha,
+  });
 
   renderer.render(stage);
 };
