@@ -90,7 +90,6 @@
   },
   "devDependencies": {
     "@chromatic-com/storybook": "5.2.1",
-    "@electron/fuses": "2.1.1",
     "@eslint/eslintrc": "3.3.5",
     "@eslint/js": "10.0.1",
     "@openapitools/openapi-generator-cli": "2.32.0",
