@@ -165,11 +165,11 @@ export const Dense: Story = {
         },
         {
           bpm: 120,
-          position: 400,
+          position: 300,
         },
         {
           bpm: 120,
-          position: 480,
+          position: 380,
         },
       ],
     },
