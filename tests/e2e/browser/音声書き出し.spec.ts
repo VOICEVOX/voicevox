@@ -1,4 +1,4 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { gotoHome, navigateToMain } from "../navigators";
 import { getQuasarMenu, getNewestQuasarDialog } from "../locators";
 import {
@@ -21,10 +21,12 @@ async function exportSelectedAudioAndSnapshot(page: Page, name: string) {
   });
 
   await test.step("書き出し完了の通知を確認して閉じる", async () => {
-    const notify = page.locator("#q-notify");
-    await expect(notify.getByText("音声を書き出しました")).toBeVisible();
+    const notify = page
+      .getByRole("alert")
+      .filter({ hasText: "音声を書き出しました" });
+    await expect(notify).toBeVisible();
     await notify.getByRole("button", { name: "閉じる" }).click();
-    await expect(notify).not.toBeVisible();
+    await expect(notify).toBeHidden();
   });
 
   await test.step("音声ファイルのバイナリをスナップショット", async () => {

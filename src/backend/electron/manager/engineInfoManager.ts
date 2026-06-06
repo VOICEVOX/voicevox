@@ -6,15 +6,15 @@ import { dialog } from "electron"; // FIXME: ここでelectronをimportするの
 
 import { getConfigManager } from "../electronConfig";
 import {
-  EngineInfo,
-  EngineDirValidationResult,
-  MinimumEngineManifestType,
-  EngineId,
+  type EngineInfo,
+  type EngineDirValidationResult,
+  type MinimumEngineManifestType,
+  type EngineId,
   minimumEngineManifestSchema,
 } from "@/type/preload";
-import { AltPortInfos } from "@/store/type";
+import type { AltPortInfos } from "@/store/type";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
-import { failure, Result, success } from "@/type/result";
+import { failure, type Result, success } from "@/type/result";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("EngineInfoManager");
@@ -92,7 +92,7 @@ export class EngineInfoManager {
   private fetchEnvEngineInfos(): EngineInfo[] {
     // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
     return this.envEngineInfos
-      .filter((engineInfo) => engineInfo.type != "downloadVvpp")
+      .filter((engineInfo) => engineInfo.type !== "downloadVvpp")
       .map((engineInfo) => {
         const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
         return {
@@ -132,6 +132,7 @@ export class EngineInfoManager {
         log.info(`Failed to load engine: ${result.code}, ${engineDir}`);
         continue;
       }
+      log.info(`Loaded VVPP engine: ${result.value.uuid}`);
       engineInfos.push(result.value);
     }
     return engineInfos;

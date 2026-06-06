@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { calculateAudioLength } from "@/store/audioGenerate";
-import { EditorAudioQuery } from "@/store/type";
+import type { EditorAudioQuery } from "@/store/type";
 
 const baseEditorAudioQuery: EditorAudioQuery = {
   accentPhrases: [],

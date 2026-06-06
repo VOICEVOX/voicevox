@@ -1,14 +1,16 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   Context,
   Input,
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
 import { getButton } from "@/sing/viewHelper";
 
-export class ErasePitchToolIdleState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class ErasePitchToolIdleState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "erasePitchToolIdle";
 
   onEnter(context: Context) {

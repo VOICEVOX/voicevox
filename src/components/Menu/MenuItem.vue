@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { MenuItemData } from "./type";
+import type { MenuItemData } from "./type";
 import { useStore } from "@/store";
 import { hotkeyActionNameSchema } from "@/domain/hotkeyAction";
 const props = withDefaults(

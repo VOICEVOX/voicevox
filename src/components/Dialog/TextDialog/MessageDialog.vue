@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
 import { computed } from "vue";
-import { DialogType, getColor, getIcon } from "./common";
+import { type DialogType, getColor, getIcon } from "./common";
 import BaseDialog from "@/components/Base/BaseDialog.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 

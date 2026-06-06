@@ -1,4 +1,4 @@
-import {
+import type {
   ConfigType,
   EngineDirValidationResult,
   EngineId,
@@ -9,9 +9,9 @@ import {
   TextAsset,
   ToolbarSettingType,
 } from "@/type/preload";
-import { AltPortInfos } from "@/store/type";
-import { Result } from "@/type/result";
-import { HotkeySettingType } from "@/domain/hotkeyAction";
+import type { AltPortInfos } from "@/store/type";
+import type { Result } from "@/type/result";
+import type { HotkeySettingType } from "@/domain/hotkeyAction";
 
 /**
  * invoke, handle
@@ -34,12 +34,12 @@ export type IpcIHData = {
 
   SHOW_SAVE_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
-    return?: string;
+    return: string | undefined;
   };
 
   SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
-    return?: string;
+    return: string | undefined;
   };
 
   SHOW_OPEN_FILE_DIALOG: {
@@ -51,7 +51,7 @@ export type IpcIHData = {
         defaultPath?: string;
       },
     ];
-    return?: string;
+    return: string | undefined;
   };
 
   SHOW_WARNING_DIALOG: {
@@ -83,7 +83,7 @@ export type IpcIHData = {
         extensions: string[];
       },
     ];
-    return?: string;
+    return: string | undefined;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -97,6 +97,11 @@ export type IpcIHData = {
   };
 
   CLOSE_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  SWITCH_TO_WELCOME_WINDOW: {
     args: [];
     return: void;
   };
@@ -225,7 +230,30 @@ export type IpcIHData = {
     args: [obj: { filePath: string }];
     return: Result<Uint8Array>;
   };
+
+  HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
+    args: [];
+    return: boolean;
+  };
+
+  GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: {
+    args: [];
+    return: EngineId[];
+  };
 };
+
+/**
+ * 使用例（簡易）:
+ * - 独自チャネルを追加する例:
+ *   export type MyIpc = IpcIHData & {
+ *     MY_SIMPLE_CHANNEL: { args: [n: number]; return: string };
+ *   };
+ * - メイン側で登録する例 (ipc.ts の `registerIpcMainHandle` を利用):
+ *   registerIpcMainHandle<MyIpc>(win, { MY_SIMPLE_CHANNEL: (evt, n) => n.toString() });
+ *
+ * 説明: 上記はあくまで短い使用例です。実際の定義では `IpcIHData` / `IpcSOData` を拡張して型安全に扱ってください。
+ * 関連実装: `ipc.ts` を参照してください。
+ */
 
 /**
  * send, on
@@ -274,7 +302,7 @@ export type IpcSOData = {
   CHECK_EDITED_AND_NOT_SAVE: {
     args: [
       obj: {
-        closeOrReload: "close" | "reload";
+        nextAction: "close" | "reload" | "switchToWelcome";
         isMultiEngineOffMode?: boolean;
       },
     ];

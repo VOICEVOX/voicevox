@@ -1,7 +1,7 @@
-import { Patch } from "immer";
+import type { Patch } from "immer";
 import { z } from "zod";
-import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
-import {
+import type { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
+import type {
   MutationTree,
   MutationsBase,
   GettersBase,
@@ -11,8 +11,8 @@ import {
   Store,
   DotNotationActionContext,
 } from "./vuex";
-import { createCommandMutationTree, PayloadRecipeTree } from "./command";
-import {
+import { createCommandMutationTree, type PayloadRecipeTree } from "./command";
+import type {
   AccentPhrase,
   AudioQuery,
   EngineManifest,
@@ -22,7 +22,7 @@ import {
   FrameAudioQuery,
   Note as NoteForRequestToEngine,
 } from "@/openapi";
-import {
+import type {
   CharacterInfo,
   DefaultStyleId,
   AcceptRetrieveTelemetryStatus,
@@ -55,28 +55,29 @@ import {
   CommandId,
   TrackId,
 } from "@/type/preload";
-import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
-import {
+import type { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
+import type {
   TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
   MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
 } from "@/components/Dialog/Dialog";
-import { HotkeySettingType } from "@/domain/hotkeyAction";
-import {
+import type { HotkeySettingType } from "@/domain/hotkeyAction";
+import type {
   MultiFileProjectFormat,
   SingleFileProjectFormat,
 } from "@/sing/utaformatixProject/utils";
 import type {
   Note,
+  PhonemeTimingEdit,
   Singer,
   Tempo,
   TimeSignature,
   Track,
 } from "@/domain/project/type";
-import { LatestProjectType } from "@/infrastructures/projectFile/type";
-import { WavFormat } from "@/helpers/fileDataGenerator";
+import type { LatestProjectType } from "@/infrastructures/projectFile/type";
+import type { WavFormat } from "@/helpers/fileDataGenerator";
 
 /**
  * エディタ用のAudioQuery
@@ -1027,6 +1028,14 @@ export type SingingStoreTypes = {
     action(payload: { noteId?: NoteId }): void;
   };
 
+  UPSERT_PHONEME_TIMING_EDIT: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    };
+  };
+
   SET_PITCH_EDIT_DATA: {
     mutation: { pitchArray: number[]; startFrame: number; trackId: TrackId };
     action(payload: {
@@ -1043,6 +1052,13 @@ export type SingingStoreTypes = {
       startFrame: number;
       trackId: TrackId;
     }): void;
+  };
+
+  ERASE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      targets: Array<{ noteId: NoteId; phonemeIndexInNote: number }>;
+      trackId: TrackId;
+    };
   };
 
   ERASE_PITCH_EDIT_DATA: {
@@ -1461,6 +1477,14 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
+  SYNC_LOOP_RANGE_TO_TRANSPORT: {
+    action(): void;
+  };
+
+  SYNC_PLAYHEAD_POSITION_TO_TRANSPORT: {
+    action(): void;
+  };
+
   APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
     action(payload: { device: string }): void;
   };
@@ -1555,6 +1579,30 @@ export type SingingCommandStoreTypes = {
     action(): void;
   };
 
+  COMMAND_UPSERT_PHONEME_TIMING_EDIT: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_ERASE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      targets: Array<{ noteId: NoteId; phonemeIndexInNote: number }>;
+      trackId: TrackId;
+    };
+    action(payload: {
+      targets: Array<{ noteId: NoteId; phonemeIndexInNote: number }>;
+      trackId: TrackId;
+    }): void;
+  };
+
   COMMAND_SET_PITCH_EDIT_DATA: {
     mutation: { pitchArray: number[]; startFrame: number; trackId: TrackId };
     action(payload: {
@@ -1602,6 +1650,10 @@ export type SingingCommandStoreTypes = {
 
   COMMAND_DELETE_TRACK: {
     mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
+  };
+
+  COMMAND_DUPLICATE_TRACK: {
     action(payload: { trackId: TrackId }): void;
   };
 
@@ -1715,11 +1767,16 @@ export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
   altPortInfos: AltPortInfos;
+  hasDownloadableDefaultEngine: boolean;
 };
 
 export type EngineStoreTypes = {
   PULL_AND_INIT_ENGINE_INFOS: {
     action(): void;
+  };
+
+  SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
+    mutation: { hasDownloadableDefaultEngine: boolean };
   };
 
   SET_ENGINE_INFO: {
@@ -2301,11 +2358,12 @@ export type UiStoreTypes = {
   CHECK_EDITED_AND_NOT_SAVE: {
     action(
       obj:
-        | { closeOrReload: "close" }
+        | { nextAction: "close" }
         | {
-            closeOrReload: "reload";
+            nextAction: "reload";
             isMultiEngineOffMode?: boolean;
-          },
+          }
+        | { nextAction: "switchToWelcome" },
     ): Promise<void>;
   };
 

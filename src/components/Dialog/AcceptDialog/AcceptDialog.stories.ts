@@ -1,6 +1,6 @@
 import { userEvent, within, expect, fn } from "storybook/test";
 
-import { Meta, StoryObj } from "@storybook/vue3-vite";
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
 import AcceptDialog from "./AcceptDialog.vue";
 
 const meta: Meta<typeof AcceptDialog> = {

@@ -23,7 +23,7 @@ import { snapTickToBeat } from "@/sing/rulerHelper";
 import { baseXToTick } from "@/sing/viewHelper";
 import { tickToMeasureNumber } from "@/sing/music";
 import type { Tempo, TimeSignature } from "@/domain/project/type";
-import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
+import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 import TempoChangeDialog from "@/components/Sing/ChangeValueDialog/TempoChangeDialog.vue";
 import TimeSignatureChangeDialog from "@/components/Sing/ChangeValueDialog/TimeSignatureChangeDialog.vue";
 

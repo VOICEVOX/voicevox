@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ParameterPanelEditTarget } from "@/store/type";
+import type { ParameterPanelEditTarget } from "@/store/type";
 
 defineProps<{
   editTarget: ParameterPanelEditTarget;

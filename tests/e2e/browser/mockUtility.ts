@@ -7,8 +7,8 @@
  * TODO: モックを戻せるようにする？
  */
 
-import { Page } from "@playwright/test";
-import { Brand } from "@/type/utility";
+import type { Page } from "@playwright/test";
+import type { Brand } from "@/type/utility";
 import { success } from "@/type/result";
 import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 

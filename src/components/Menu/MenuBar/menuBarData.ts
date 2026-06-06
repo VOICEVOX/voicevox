@@ -1,5 +1,5 @@
-import { MaybeRef, ComputedRef, unref } from "vue";
-import { MenuItemData } from "@/components/Menu/type";
+import { type MaybeRef, type ComputedRef, unref } from "vue";
+import type { MenuItemData } from "@/components/Menu/type";
 import { flatWithSeparator } from "@/helpers/arrayHelper";
 import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 

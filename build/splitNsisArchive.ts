@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { Target } from "electron-builder";
+import type { Target } from "electron-builder";
 
 const createIni = (sizes: number[], hashes: string[]) => {
   const ini = ["[files]", `n=${sizes.length}`];

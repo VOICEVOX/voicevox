@@ -1,12 +1,12 @@
 import * as diff from "fast-array-diff";
-import {
+import type {
   CharacterInfo,
   PresetSliderKey,
   StyleInfo,
   StyleType,
   ToolbarButtonTagType,
 } from "@/type/preload";
-import { AccentPhrase, Mora } from "@/openapi";
+import type { AccentPhrase, Mora } from "@/openapi";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { DEFAULT_TRACK_NAME, isVowel } from "@/sing/domain";
 import { isMac } from "@/helpers/platform";

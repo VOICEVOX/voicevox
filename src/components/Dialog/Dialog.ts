@@ -2,15 +2,15 @@ import { Dialog, Notify, Loading } from "quasar";
 import SaveAllResultDialog from "./SaveAllResultDialog.vue";
 import QuestionDialog from "./TextDialog/QuestionDialog.vue";
 import MessageDialog from "./TextDialog/MessageDialog.vue";
-import { DialogType } from "./TextDialog/common";
-import { AudioKey, ConfirmedTips } from "@/type/preload";
-import {
+import type { DialogType } from "./TextDialog/common";
+import type { AudioKey, ConfirmedTips } from "@/type/preload";
+import type {
   AllActions,
   SaveResultObject,
   SaveResult,
   ErrorTypeForSaveAllResultDialog,
 } from "@/store/type";
-import { DotNotationDispatch } from "@/store/vuex";
+import type { DotNotationDispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 import { errorToMessage } from "@/helpers/errorHelper";
 
