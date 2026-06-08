@@ -89,7 +89,6 @@
     "dmg-license": "1.0.11"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "5.2.1",
     "@eslint/eslintrc": "3.3.5",
     "@eslint/js": "10.0.1",
     "@openapitools/openapi-generator-cli": "2.32.0",
@@ -120,7 +119,6 @@
     "@vue/test-utils": "2.4.10",
     "acorn": "8.16.0",
     "acorn-walk": "8.3.5",
-    "chromatic": "16.10.1",
     "cross-env": "10.1.0",
     "dotenv": "17.4.2",
     "electron": "42.1.0",
