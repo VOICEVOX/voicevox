@@ -93,6 +93,7 @@
 
 <script setup lang="ts">
 import { nextTick, ref } from "vue";
+import { uiLocked } from "./common";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
@@ -103,7 +104,6 @@ const defaultDictPriority = 5;
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 
-const uiLocked = ref(false);
 const loadingDictState = ref<null | "loading" | "synchronizing">(null);
 const hoveredKey = ref<string | undefined>(undefined);
 const selectedWordId = ref<string | undefined>(undefined);

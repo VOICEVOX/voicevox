@@ -9,7 +9,7 @@
           <BaseTextField
             ref="surfaceInput"
             v-model="surface"
-            :disabled="isUiLocked"
+            :disabled="uiLocked"
             @enterkeydown="yomiInput?.focus()"
           />
         </div>
@@ -19,7 +19,7 @@
           <BaseTextField
             ref="yomiInput"
             v-model="yomi"
-            :disabled="isUiLocked"
+            :disabled="uiLocked"
             :hasError="!isOnlyHiraOrKana"
           >
             <template #error>
@@ -35,9 +35,7 @@
           <div>
             <BaseButton
               :label="nowPlaying ? '停止' : '再生'"
-              :disabled="
-                isUiLocked || nowGenerating || accentPhrase == undefined
-              "
+              :disabled="uiLocked || nowGenerating || accentPhrase == undefined"
               :icon="nowPlaying ? 'stop' : 'play_arrow'"
               @click="nowPlaying ? stop() : play()"
             />
@@ -52,7 +50,7 @@
                 <AudioAccent
                   :accentPhrase
                   :accentPhraseIndex="0"
-                  :uiLocked="isUiLocked"
+                  :uiLocked
                   :onChangeAccent="changeAccent"
                 />
                 <template
@@ -108,12 +106,12 @@
     </BaseScrollArea>
     <footer class="footer">
       <BaseButton
-        :disabled="isUiLocked"
+        :disabled="uiLocked"
         label="キャンセル"
         @click="resetInputs"
       />
       <BaseButton
-        :disabled="isUiLocked"
+        :disabled="uiLocked"
         variant="primary"
         label="追加"
         @click="resetInputs"
@@ -124,6 +122,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { lockUi, uiLocked } from "./common";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSlider from "@/components/Base/BaseSlider.vue";
 import BaseTextField from "@/components/Base/BaseTextField.vue";
@@ -140,10 +139,6 @@ import type { FetchAudioResult } from "@/store/type";
 import { UnreachableError } from "@/type/utility";
 
 const store = useStore();
-
-const props = defineProps<{
-  uiLocked: boolean;
-}>();
 
 const emit = defineEmits<{
   reset: [];
@@ -165,17 +160,6 @@ const voiceComputed = computed(() => {
   const { engineId, styleId } = characterInfo.styles[0];
   return { engineId, speakerId, styleId };
 });
-
-const localUiLockCount = ref(0);
-const isUiLocked = computed(() => props.uiLocked || localUiLockCount.value > 0);
-const createUILockAction = async <T,>(promise: Promise<T>) => {
-  localUiLockCount.value++;
-  try {
-    return await promise;
-  } finally {
-    localUiLockCount.value--;
-  }
-};
 
 const kanaRegex = createKanaRegex();
 const isOnlyHiraOrKana = ref(true);
@@ -206,15 +190,14 @@ const setYomi = async (text: string) => {
 
   if (isOnlyHiraOrKana.value && text.length) {
     const convertedYomi = convertLongVowel(convertHiraToKana(text));
+    using _lock = lockUi();
     const newAccentPhrase = (
-      await createUILockAction(
-        store.actions.FETCH_ACCENT_PHRASES({
-          text: convertedYomi + "ガ'",
-          engineId,
-          styleId,
-          isKana: true,
-        }),
-      )
+      await store.actions.FETCH_ACCENT_PHRASES({
+        text: convertedYomi + "ガ'",
+        engineId,
+        styleId,
+        isKana: true,
+      })
     )[0];
 
     if (requestId !== latestSetYomiRequest) return;
