@@ -77,34 +77,27 @@
             </div>
           </template>
 
-          <DictionaryEditWordDialog />
+          <WordEditor
+            ref="editWordDialog"
+            v-model:surface="surface"
+            v-model:yomi="yomi"
+            v-model:wordPriority="wordPriority"
+            :uiLocked
+            @reset="resetInputs"
+          />
         </BaseNavigationView>
       </QPageContainer>
     </QLayout>
   </QDialog>
 </template>
 
-<script lang="ts">
-import type { Ref, InjectionKey } from "vue";
-
-export const dictionaryManageDialogContextKey: InjectionKey<{
-  surfaceInput: Ref<typeof BaseTextField | undefined>;
-  uiLocked: Ref<boolean>;
-  surface: Ref<string>;
-  yomi: Ref<string>;
-  wordPriority: Ref<number>;
-  resetInputs: () => void;
-}> = Symbol("dictionaryManageDialogContextKey");
-</script>
-
 <script setup lang="ts">
-import { ref, provide } from "vue";
-import type BaseTextField from "../Base/BaseTextField.vue";
-import BaseListItem from "../Base/BaseListItem.vue";
-import BaseIconButton from "../Base/BaseIconButton.vue";
-import BaseNavigationView from "../Base/BaseNavigationView.vue";
-import BaseButton from "../Base/BaseButton.vue";
-import DictionaryEditWordDialog from "./DictionaryEditWordDialog.vue";
+import { nextTick, ref } from "vue";
+import BaseListItem from "@/components/Base/BaseListItem.vue";
+import BaseIconButton from "@/components/Base/BaseIconButton.vue";
+import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import WordEditor from "./WordEditor.vue";
 
 const defaultDictPriority = 5;
 
@@ -125,17 +118,19 @@ const userDict = ref({
   },
 });
 
-const surfaceInput = ref<typeof BaseTextField>();
 const surface = ref("");
 const yomi = ref("");
 const wordPriority = ref(defaultDictPriority);
+const editWordDialog = ref<InstanceType<typeof WordEditor>>();
 
 const resetInputs = () => {
   selectedWordId.value = undefined;
   surface.value = "";
   yomi.value = "";
   wordPriority.value = 5;
-  surfaceInput.value?.focus();
+  void nextTick(() => {
+    editWordDialog.value?.focusSurfaceInput();
+  });
 };
 const selectWord = (id: keyof typeof userDict.value) => {
   selectedWordId.value = id;
@@ -150,15 +145,6 @@ const deleteWord = (id: keyof typeof userDict.value) => {
 const closeDialog = () => {
   dialogOpened.value = false;
 };
-
-provide(dictionaryManageDialogContextKey, {
-  surfaceInput,
-  uiLocked,
-  surface,
-  yomi,
-  wordPriority,
-  resetInputs,
-});
 </script>
 
 <style lang="scss" scoped>
