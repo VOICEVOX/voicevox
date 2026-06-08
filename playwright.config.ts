@@ -53,7 +53,7 @@ const config: PlaywrightTestConfig = {
   // NOTE: Linux環境ではCIでGPU版をダウンロードしてしまい、かなりの時間がかかってしまうため、タイムアウトを長めに設定する。
   // TODO: CIでCPU版をダウンロードするように修正し、タイムアウトを元に戻す。
   timeout: isElectron ? 5 * 60 * 1000 : 60 * 1000,
-  globalTimeout: 15 * 60 * 1000,
+  globalTimeout: process.env.CI ? 15 * 60 * 1000 : 5 * 60 * 1000,
   globalSetup: isElectron ? "./tests/e2e/electron/setup.ts" : undefined,
   expect: {
     /**
