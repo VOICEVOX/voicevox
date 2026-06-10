@@ -5,6 +5,7 @@
     transitionShow="jump-up"
     transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
+    persistent
   >
     <QLayout>
       <QPageContainer>
@@ -55,7 +56,7 @@
                 :selected="
                   currentWord?.type === 'edit' && currentWord.id === key
                 "
-                @click="selectWord(key)"
+                @click="selectWordWithConfirmDialog(key)"
                 @mouseover="hoveredKey = key"
                 @mouseleave="hoveredKey = undefined"
               >
@@ -84,19 +85,22 @@
 
           <WordEditor
             v-if="currentWord?.type === 'edit'"
-            ref="editWordDialog"
+            ref="wordEditor"
             :key="currentWord.id"
             :initialSurface="currentWord.surface"
             :initialYomi="currentWord.yomi"
             :initialWordPriority="currentWord.wordPriority"
+            :initialAccentType="currentWord.accentType"
           />
           <WordEditor
             v-else-if="currentWord?.type === 'new'"
-            ref="editWordDialog"
+            ref="wordEditor"
             initialSurface=""
             initialYomi=""
             :initialWordPriority="5"
+            :initialAccentType="0"
             isNew
+            @saveNewWord="saveNewWord"
           />
         </BaseNavigationView>
       </QPageContainer>
@@ -105,15 +109,16 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import { lockUiWhile, uiLocked } from "./common";
+import WordEditor from "./WordEditor.vue";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
-import WordEditor from "./WordEditor.vue";
 import { useStore } from "@/store";
-import type { UserDictWord } from "@/openapi/models/UserDictWord";
+import type { UserDictWord } from "@/openapi";
+import { UnreachableError } from "@/type/utility";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const store = useStore();
@@ -126,6 +131,7 @@ const currentWord = ref<
       id: string;
       surface: string;
       yomi: string;
+      accentType: number;
       wordPriority: number;
     }
   | {
@@ -135,21 +141,137 @@ const currentWord = ref<
 >(null);
 const userDict = ref<Record<string, UserDictWord>>({});
 
+const saveEditedWord = async () => {
+  if (currentWord.value?.type !== "edit")
+    throw new UnreachableError("currentWord.value is not edit");
+  if (!wordEditor.value)
+    throw new UnreachableError("wordEditor is not defined");
+
+  const { editState } = wordEditor.value;
+  if (editState.type !== "valid") return;
+
+  try {
+    await lockUiWhile(
+      store.actions.REWRITE_WORD({
+        wordUuid: currentWord.value.id,
+        surface: editState.surface,
+        pronunciation: editState.yomi,
+        accentType: editState.accentType,
+        priority: editState.wordPriority,
+      }),
+    );
+    userDict.value[currentWord.value.id] = {
+      ...userDict.value[currentWord.value.id],
+      surface: editState.surface,
+      yomi: editState.yomi,
+      accentType: editState.accentType,
+      priority: editState.wordPriority,
+    };
+    currentWord.value = {
+      type: "edit",
+      id: currentWord.value.id,
+      surface: editState.surface,
+      yomi: editState.yomi,
+      accentType: editState.accentType,
+      wordPriority: editState.wordPriority,
+    };
+  } catch (e) {
+    void store.actions.SHOW_ALERT_DIALOG({
+      title: "単語の更新に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+    });
+    window.backend.logError(e);
+    return false;
+  }
+  return true;
+};
+
+const saveNewWord = async () => {
+  if (currentWord.value?.type !== "new")
+    throw new UnreachableError("currentWord.value is not new");
+  if (!wordEditor.value)
+    throw new UnreachableError("wordEditor is not defined");
+
+  const { editState } = wordEditor.value;
+  if (editState.type !== "valid") return;
+
+  try {
+    const wordUuid = await lockUiWhile(
+      store.actions.ADD_WORD({
+        surface: editState.surface,
+        pronunciation: editState.yomi,
+        accentType: editState.accentType,
+        priority: editState.wordPriority,
+      }),
+    );
+    await loadUserDict();
+    selectWord(wordUuid);
+  } catch (e) {
+    void store.actions.SHOW_ALERT_DIALOG({
+      title: "単語の登録に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+    });
+    window.backend.logError(e);
+    return;
+  }
+};
+
+const beforeMove = async (proceed: () => void) => {
+  if (currentWord.value == null) {
+    proceed();
+    return;
+  }
+  if (!wordEditor.value)
+    throw new UnreachableError("wordEditor is not defined");
+  if (wordEditor.value.editState.type === "unchanged") {
+    proceed();
+    return;
+  }
+
+  // 単語の追加時は手動保存のため警告を表示する。
+  // 単語の変更時は、変更内容が有効でない場合は破棄されるので警告を表示する。
+  if (
+    currentWord.value.type === "new" ||
+    wordEditor.value.editState.type === "invalid"
+  ) {
+    const result = await store.actions.SHOW_WARNING_DIALOG({
+      title: "単語の追加・変更を破棄しますか？",
+      message: "変更を破棄すると、単語の追加・変更はリセットされます。",
+      actionName: "破棄する",
+      cancel: "破棄しない",
+      isWarningColorButton: true,
+    });
+    if (result === "OK") {
+      proceed();
+    }
+  } else {
+    // 変更内容が有効であるなら自動保存する
+    const saved = await saveEditedWord();
+    if (!saved) return;
+    proceed();
+  }
+};
+
 const selectNewWord = () => {
-  // TODO: 新しい単語から遷移するときは変更検知して警告を出す、既存の単語のときは保存する
-  currentWord.value = {
-    type: "new",
-  };
+  void beforeMove(() => {
+    currentWord.value = {
+      type: "new",
+    };
+  });
+};
+const selectWordWithConfirmDialog = (id: string) => {
+  void beforeMove(() => {
+    selectWord(id);
+  });
 };
 const selectWord = (id: string) => {
-  // TODO: 新しい単語から遷移するときは変更検知して警告を出す、既存の単語のときは保存する
   const word = userDict.value[id];
-  if (!word) return;
   currentWord.value = {
     type: "edit",
     id,
     surface: word.surface,
     yomi: word.yomi,
+    accentType: word.accentType,
     wordPriority: word.priority,
   };
 };
@@ -182,18 +304,52 @@ const loadUserDict = async () => {
   loadingDictState.value = null;
 };
 
-watch(dialogOpened, async (newValue) => {
-  if (newValue) {
+watch(
+  dialogOpened,
+  async (newValue) => {
+    if (newValue) {
+      await loadUserDict();
+    }
+  },
+  {
+    immediate: true,
+  },
+);
+
+const wordEditor = ref<InstanceType<typeof WordEditor>>();
+
+const deleteWord = async (id: string) => {
+  const result = await store.actions.SHOW_WARNING_DIALOG({
+    title: "単語を削除しますか？",
+    message: "削除された単語は元に戻せません。",
+    actionName: "削除する",
+    isWarningColorButton: true,
+    cancel: "削除しない",
+  });
+  if (result === "OK") {
+    try {
+      await lockUiWhile(
+        store.actions.DELETE_WORD({
+          wordUuid: id,
+        }),
+      );
+      if (currentWord.value?.type === "edit" && currentWord.value.id === id) {
+        currentWord.value = null;
+      }
+    } catch {
+      void store.actions.SHOW_ALERT_DIALOG({
+        title: "単語の削除に失敗しました",
+        message: "エンジンの再起動をお試しください。",
+      });
+      return;
+    }
     await loadUserDict();
   }
-});
-
-
-const editWordDialog = ref<InstanceType<typeof WordEditor>>();
-
-const deleteWord = (id: keyof typeof userDict.value) => {};
+};
 const closeDialog = () => {
-  dialogOpened.value = false;
+  void beforeMove(() => {
+    dialogOpened.value = false;
+  });
 };
 </script>
 

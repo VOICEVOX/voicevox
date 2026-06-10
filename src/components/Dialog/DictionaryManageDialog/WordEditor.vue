@@ -2,7 +2,8 @@
   <div class="detail">
     <BaseScrollArea>
       <div class="inner">
-        <h2 class="title">新しい単語の追加</h2>
+        <h2 v-if="props.isNew" class="title">新しい単語の追加</h2>
+        <h2 v-else class="title">単語の編集</h2>
         <div class="form-row">
           <h3 class="headline">単語</h3>
           <div>単語は全角と半角は区別しません。</div>
@@ -10,19 +11,27 @@
             ref="surfaceInput"
             v-model="surface"
             :disabled="uiLocked"
+            :hasError="surface.length === 0"
+            @change="surface = convertHankakuToZenkaku(surface)"
             @enterkeydown="yomiInput?.focus()"
-          />
+          >
+            <template #error>単語は必須です。</template>
+          </BaseTextField>
         </div>
         <div class="form-row">
           <h3 class="headline">読み</h3>
           <div>読みに使える文字はひらがなとカタカナのみです。</div>
           <BaseTextField
             ref="yomiInput"
-            v-model="yomi"
+            v-model="temporaryYomi"
             :disabled="uiLocked"
-            :hasError="!isOnlyHiraOrKana"
+            :hasError="!isOnlyHiraOrKana || yomi.length === 0"
+            @change="setYomi(temporaryYomi)"
           >
-            <template #error>
+            <template v-if="yomi.length === 0" #error>
+              読みは必須です。
+            </template>
+            <template v-else-if="!isOnlyHiraOrKana" #error>
               ひらがなとカタカナ以外の文字が入力されています。
             </template>
           </BaseTextField>
@@ -107,18 +116,18 @@
     <footer v-if="props.isNew" class="footer">
       <BaseButton :disabled="uiLocked" label="リセット" @click="resetInputs" />
       <BaseButton
-        :disabled="uiLocked"
+        :disabled="uiLocked || !isValid"
         variant="primary"
         label="追加"
-        @click="save"
+        @click="saveNewWord"
       />
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { lockUi, uiLocked, lockUiWhile } from "./common";
+import { computed, onMounted, ref } from "vue";
+import { uiLocked } from "./common";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSlider from "@/components/Base/BaseSlider.vue";
 import BaseTextField from "@/components/Base/BaseTextField.vue";
@@ -142,18 +151,86 @@ const props = withDefaults(
     initialSurface: string;
     initialYomi: string;
     initialWordPriority: number;
+    initialAccentType: number;
   }>(),
   {
     isNew: false,
   },
 );
 const emit = defineEmits<{
-  save: [surface: string, yomi: string, wordPriority: number];
+  saveNewWord: [];
 }>();
 
 const surface = ref<string>(props.initialSurface);
+const temporaryYomi = ref<string>(props.initialYomi);
 const yomi = ref<string>(props.initialYomi);
 const wordPriority = ref<number>(props.initialWordPriority);
+
+const isValid = computed(() => {
+  return (
+    surface.value.length > 0 &&
+    yomi.value.length > 0 &&
+    isOnlyHiraOrKana.value &&
+    accentPhrase.value != undefined
+  );
+});
+
+const computeRegisteredAccent = () => {
+  if (accentPhrase.value == undefined)
+    throw new UnreachableError("assert accentPhrase.value != undefined");
+  const accent = accentPhrase.value.accent;
+  return accent === accentPhrase.value.moras.length ? 0 : accent;
+};
+
+const computeDisplayAccent = () => {
+  if (accentPhrase.value == undefined)
+    throw new UnreachableError("assert accentPhrase.value != undefined");
+  return props.initialAccentType === 0
+    ? accentPhrase.value.moras.length
+    : props.initialAccentType;
+};
+
+defineExpose({
+  editState: computed(
+    ():
+      | {
+          type: "invalid";
+        }
+      | {
+          type: "unchanged";
+        }
+      | {
+          type: "valid";
+          surface: string;
+          yomi: string;
+          accentType: number;
+          wordPriority: number;
+        } => {
+      const accentType =
+        accentPhrase.value == undefined ? undefined : computeRegisteredAccent();
+      if (
+        props.isNew
+          ? surface.value === "" && yomi.value === ""
+          : surface.value === props.initialSurface &&
+            yomi.value === props.initialYomi &&
+            accentType === props.initialAccentType &&
+            wordPriority.value === props.initialWordPriority
+      ) {
+        return { type: "unchanged" };
+      }
+      if (!isValid.value) {
+        return { type: "invalid" };
+      }
+      return {
+        type: "valid",
+        surface: surface.value,
+        yomi: yomi.value,
+        accentType: computeRegisteredAccent(),
+        wordPriority: wordPriority.value,
+      };
+    },
+  ),
+});
 
 const voiceComputed = computed(() => {
   const userOrderedCharacterInfos =
@@ -181,17 +258,21 @@ const resetInputs = () => {
   surface.value = props.initialSurface;
   yomi.value = props.initialYomi;
   wordPriority.value = props.initialWordPriority;
+  temporaryYomi.value = props.initialYomi;
 };
-const save = () => {
-  emit("save", surface.value, yomi.value, wordPriority.value);
+const saveNewWord = () => {
+  emit("saveNewWord");
 };
 
-const focusSurfaceInput = () => {
+const convertHankakuToZenkaku = (text: string) => {
+  text = text.replace(/\p{Z}/gu, () => String.fromCharCode(0x3000));
+  return text.replace(/[\u0021-\u007e]/g, (s) => {
+    return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
+  });
+};
+onMounted(() => {
   surfaceInput.value?.focus();
-};
-
-defineExpose({
-  focusSurfaceInput,
+  void setYomi(yomi.value);
 });
 
 const setYomi = async (text: string) => {
@@ -202,7 +283,6 @@ const setYomi = async (text: string) => {
 
   if (isOnlyHiraOrKana.value && text.length) {
     const convertedYomi = convertLongVowel(convertHiraToKana(text));
-    using _lock = lockUi();
     const newAccentPhrase = (
       await store.actions.FETCH_ACCENT_PHRASES({
         text: convertedYomi + "ガ'",
@@ -215,6 +295,13 @@ const setYomi = async (text: string) => {
     if (requestId !== latestSetYomiRequest) return;
 
     accentPhrase.value = newAccentPhrase;
+    if (
+      !props.isNew &&
+      props.initialAccentType != undefined &&
+      props.initialYomi === convertedYomi
+    ) {
+      accentPhrase.value.accent = computeDisplayAccent();
+    }
     if (yomi.value !== convertedYomi) {
       yomi.value = convertedYomi;
     }
@@ -223,10 +310,6 @@ const setYomi = async (text: string) => {
 
   accentPhrase.value = undefined;
 };
-
-watch(yomi, (newYomi) => {
-  void setYomi(newYomi);
-});
 
 const play = async () => {
   if (accentPhrase.value == undefined) return;
@@ -275,13 +358,11 @@ const changeAccent = async (_: number, accent: number) => {
 
   accentPhrase.value.accent = accent;
   accentPhrase.value = (
-    await lockUiWhile(
-      store.actions.FETCH_MORA_DATA({
-        accentPhrases: [accentPhrase.value],
-        engineId,
-        styleId,
-      }),
-    )
+    await store.actions.FETCH_MORA_DATA({
+      accentPhrases: [accentPhrase.value],
+      engineId,
+      styleId,
+    })
   )[0];
 };
 </script>
