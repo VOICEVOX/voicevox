@@ -231,13 +231,21 @@ const beforeMove = async (proceed: () => void) => {
 
   // 単語の追加時は手動保存のため警告を表示する。
   // 単語の変更時は、変更内容が有効でない場合は破棄されるので警告を表示する。
-  if (
-    currentWord.value.type === "new" ||
-    wordEditor.value.editState.type === "invalid"
-  ) {
+  if (currentWord.value.type === "new") {
     const result = await store.actions.SHOW_WARNING_DIALOG({
-      title: "単語の追加・変更を破棄しますか？",
-      message: "変更を破棄すると、単語の追加・変更はリセットされます。",
+      title: "単語の追加を破棄しますか？",
+      message: "変更を破棄すると、単語の追加はリセットされます。",
+      actionName: "破棄する",
+      cancel: "破棄しない",
+      isWarningColorButton: true,
+    });
+    if (result === "OK") {
+      proceed();
+    }
+  } else if (wordEditor.value.editState.type === "invalid") {
+    const result = await store.actions.SHOW_WARNING_DIALOG({
+      title: "単語の変更をキャンセルしますか？",
+      message: "変更を破棄すると、現在の編集内容はリセットされます。",
       actionName: "破棄する",
       cancel: "破棄しない",
       isWarningColorButton: true,

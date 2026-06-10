@@ -25,13 +25,15 @@
             ref="yomiInput"
             v-model="temporaryYomi"
             :disabled="uiLocked"
-            :hasError="!isOnlyHiraOrKana || yomi.length === 0"
+            :hasError="
+              temporaryYomi.length === 0 || !isOnlyHiraOrKana(temporaryYomi)
+            "
             @change="setYomi(temporaryYomi)"
           >
-            <template v-if="yomi.length === 0" #error>
+            <template v-if="temporaryYomi.length === 0" #error>
               読みは必須です。
             </template>
-            <template v-else-if="!isOnlyHiraOrKana" #error>
+            <template v-else-if="!isOnlyHiraOrKana(temporaryYomi)" #error>
               ひらがなとカタカナ以外の文字が入力されています。
             </template>
           </BaseTextField>
@@ -170,7 +172,7 @@ const isValid = computed(() => {
   return (
     surface.value.length > 0 &&
     yomi.value.length > 0 &&
-    isOnlyHiraOrKana.value &&
+    isOnlyHiraOrKana(yomi.value) &&
     accentPhrase.value != undefined
   );
 });
@@ -246,7 +248,6 @@ const voiceComputed = computed(() => {
 });
 
 const kanaRegex = createKanaRegex();
-const isOnlyHiraOrKana = ref(true);
 const accentPhrase = ref<AccentPhrase | undefined>();
 const nowGenerating = ref(false);
 const nowPlaying = ref(false);
@@ -275,13 +276,15 @@ onMounted(() => {
   void setYomi(yomi.value);
 });
 
+function isOnlyHiraOrKana(text: string): boolean {
+  return kanaRegex.test(text);
+}
+
 const setYomi = async (text: string) => {
   const requestId = ++latestSetYomiRequest;
   const { engineId, styleId } = voiceComputed.value;
 
-  isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
-
-  if (isOnlyHiraOrKana.value && text.length) {
+  if (isOnlyHiraOrKana(text)) {
     const convertedYomi = convertLongVowel(convertHiraToKana(text));
     const newAccentPhrase = (
       await store.actions.FETCH_ACCENT_PHRASES({
