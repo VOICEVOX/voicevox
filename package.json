@@ -51,7 +51,7 @@
     "// --- lifecycle ---": "",
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
-    "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
+    "postinstall:packages": "install-electron && electron-builder install-app-deps && playwright install chromium",
     "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadAppimagetool.ts && tsx tools/downloadType2Runtime.ts",
     "postuninstall": "electron-builder install-app-deps"
   },
@@ -89,8 +89,6 @@
     "dmg-license": "1.0.11"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "5.2.1",
-    "@electron/fuses": "2.1.1",
     "@eslint/eslintrc": "3.3.5",
     "@eslint/js": "10.0.1",
     "@openapitools/openapi-generator-cli": "2.32.0",
@@ -121,7 +119,6 @@
     "@vue/test-utils": "2.4.10",
     "acorn": "8.16.0",
     "acorn-walk": "8.3.5",
-    "chromatic": "16.10.1",
     "cross-env": "10.1.0",
     "dotenv": "17.4.2",
     "electron": "42.1.0",
