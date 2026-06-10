@@ -104,17 +104,13 @@
         </div>
       </div>
     </BaseScrollArea>
-    <footer class="footer">
-      <BaseButton
-        :disabled="uiLocked"
-        label="キャンセル"
-        @click="resetInputs"
-      />
+    <footer v-if="props.isNew" class="footer">
+      <BaseButton :disabled="uiLocked" label="リセット" @click="resetInputs" />
       <BaseButton
         :disabled="uiLocked"
         variant="primary"
         label="追加"
-        @click="resetInputs"
+        @click="save"
       />
     </footer>
   </div>
@@ -122,7 +118,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { lockUi, uiLocked } from "./common";
+import { lockUi, uiLocked, lockUiWhile } from "./common";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSlider from "@/components/Base/BaseSlider.vue";
 import BaseTextField from "@/components/Base/BaseTextField.vue";
@@ -140,13 +136,24 @@ import { UnreachableError } from "@/type/utility";
 
 const store = useStore();
 
+const props = withDefaults(
+  defineProps<{
+    isNew?: boolean;
+    initialSurface: string;
+    initialYomi: string;
+    initialWordPriority: number;
+  }>(),
+  {
+    isNew: false,
+  },
+);
 const emit = defineEmits<{
-  reset: [];
+  save: [surface: string, yomi: string, wordPriority: number];
 }>();
 
-const surface = defineModel<string>("surface", { required: true });
-const yomi = defineModel<string>("yomi", { required: true });
-const wordPriority = defineModel<number>("wordPriority", { required: true });
+const surface = ref<string>(props.initialSurface);
+const yomi = ref<string>(props.initialYomi);
+const wordPriority = ref<number>(props.initialWordPriority);
 
 const voiceComputed = computed(() => {
   const userOrderedCharacterInfos =
@@ -171,7 +178,12 @@ const yomiInput = ref<typeof BaseTextField>();
 let latestSetYomiRequest = 0;
 
 const resetInputs = () => {
-  emit("reset");
+  surface.value = props.initialSurface;
+  yomi.value = props.initialYomi;
+  wordPriority.value = props.initialWordPriority;
+};
+const save = () => {
+  emit("save", surface.value, yomi.value, wordPriority.value);
 };
 
 const focusSurfaceInput = () => {
@@ -263,7 +275,7 @@ const changeAccent = async (_: number, accent: number) => {
 
   accentPhrase.value.accent = accent;
   accentPhrase.value = (
-    await createUILockAction(
+    await lockUiWhile(
       store.actions.FETCH_MORA_DATA({
         accentPhrases: [accentPhrase.value],
         engineId,

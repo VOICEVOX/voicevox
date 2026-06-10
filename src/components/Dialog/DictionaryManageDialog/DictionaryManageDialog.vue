@@ -45,14 +45,16 @@
                 label="追加"
                 icon="add"
                 :disabled="uiLocked"
-                @click="resetInputs"
+                @click="selectNewWord"
               />
             </div>
             <div class="list">
               <BaseListItem
                 v-for="(value, key) in userDict"
                 :key
-                :selected="selectedWordId === key"
+                :selected="
+                  currentWord?.type === 'edit' && currentWord.id === key
+                "
                 @click="selectWord(key)"
                 @mouseover="hoveredKey = key"
                 @mouseleave="hoveredKey = undefined"
@@ -67,7 +69,10 @@
                     </span>
                   </div>
                   <BaseIconButton
-                    v-if="hoveredKey === key || selectedWordId === key"
+                    v-if="
+                      hoveredKey === key ||
+                      (currentWord?.type === 'edit' && currentWord.id === key)
+                    "
                     icon="delete_outline"
                     label="削除"
                     @click.stop="deleteWord(key)"
@@ -78,12 +83,20 @@
           </template>
 
           <WordEditor
+            v-if="currentWord?.type === 'edit'"
             ref="editWordDialog"
-            v-model:surface="surface"
-            v-model:yomi="yomi"
-            v-model:wordPriority="wordPriority"
-            :uiLocked
-            @reset="resetInputs"
+            :key="currentWord.id"
+            :initialSurface="currentWord.surface"
+            :initialYomi="currentWord.yomi"
+            :initialWordPriority="currentWord.wordPriority"
+          />
+          <WordEditor
+            v-else-if="currentWord?.type === 'new'"
+            ref="editWordDialog"
+            initialSurface=""
+            initialYomi=""
+            :initialWordPriority="5"
+            isNew
           />
         </BaseNavigationView>
       </QPageContainer>
@@ -92,56 +105,93 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref } from "vue";
-import { uiLocked } from "./common";
+import { nextTick, ref, watch } from "vue";
+import { lockUiWhile, uiLocked } from "./common";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import WordEditor from "./WordEditor.vue";
-
-const defaultDictPriority = 5;
+import { useStore } from "@/store";
+import type { UserDictWord } from "@/openapi/models/UserDictWord";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
+const store = useStore();
 
 const loadingDictState = ref<null | "loading" | "synchronizing">(null);
 const hoveredKey = ref<string | undefined>(undefined);
-const selectedWordId = ref<string | undefined>(undefined);
-const userDict = ref({
-  example1: {
-    surface: "アクセント",
-    yomi: "アクセント",
-  },
-  example2: {
-    surface: "読み方",
-    yomi: "ヨミカタ",
-  },
+const currentWord = ref<
+  | {
+      type: "edit";
+      id: string;
+      surface: string;
+      yomi: string;
+      wordPriority: number;
+    }
+  | {
+      type: "new";
+    }
+  | null
+>(null);
+const userDict = ref<Record<string, UserDictWord>>({});
+
+const selectNewWord = () => {
+  // TODO: 新しい単語から遷移するときは変更検知して警告を出す、既存の単語のときは保存する
+  currentWord.value = {
+    type: "new",
+  };
+};
+const selectWord = (id: string) => {
+  // TODO: 新しい単語から遷移するときは変更検知して警告を出す、既存の単語のときは保存する
+  const word = userDict.value[id];
+  if (!word) return;
+  currentWord.value = {
+    type: "edit",
+    id,
+    surface: word.surface,
+    yomi: word.yomi,
+    wordPriority: word.priority,
+  };
+};
+
+const loadUserDict = async () => {
+  if (store.state.engineIds.length === 0)
+    throw new Error(`assert engineId.length > 0`);
+
+  loadingDictState.value = "loading";
+  try {
+    userDict.value = await lockUiWhile(store.actions.LOAD_ALL_USER_DICT());
+  } catch {
+    const result = await store.actions.SHOW_ALERT_DIALOG({
+      title: "辞書の取得に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+    });
+    if (result === "OK") {
+      dialogOpened.value = false;
+    }
+  }
+  loadingDictState.value = "synchronizing";
+  try {
+    await lockUiWhile(store.actions.SYNC_ALL_USER_DICT());
+  } catch {
+    await store.actions.SHOW_ALERT_DIALOG({
+      title: "辞書の同期に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+    });
+  }
+  loadingDictState.value = null;
+};
+
+watch(dialogOpened, async (newValue) => {
+  if (newValue) {
+    await loadUserDict();
+  }
 });
 
-const surface = ref("");
-const yomi = ref("");
-const wordPriority = ref(defaultDictPriority);
+
 const editWordDialog = ref<InstanceType<typeof WordEditor>>();
 
-const resetInputs = () => {
-  selectedWordId.value = undefined;
-  surface.value = "";
-  yomi.value = "";
-  wordPriority.value = 5;
-  void nextTick(() => {
-    editWordDialog.value?.focusSurfaceInput();
-  });
-};
-const selectWord = (id: keyof typeof userDict.value) => {
-  selectedWordId.value = id;
-  surface.value = userDict.value[id].surface;
-  yomi.value = userDict.value[id].yomi;
-};
-const deleteWord = (id: keyof typeof userDict.value) => {
-  if (selectedWordId.value === id) {
-    resetInputs();
-  }
-};
+const deleteWord = (id: keyof typeof userDict.value) => {};
 const closeDialog = () => {
   dialogOpened.value = false;
 };
