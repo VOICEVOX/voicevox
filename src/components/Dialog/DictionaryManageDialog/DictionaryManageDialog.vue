@@ -76,6 +76,7 @@
                     "
                     icon="delete_outline"
                     label="削除"
+                    :disabled="uiLocked"
                     @click.stop="deleteWord(key)"
                   />
                 </div>
@@ -309,6 +310,7 @@ watch(
   async (newValue) => {
     if (newValue) {
       await loadUserDict();
+      currentWord.value = null;
     }
   },
   {
