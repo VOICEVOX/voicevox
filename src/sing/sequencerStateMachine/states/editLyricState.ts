@@ -1,17 +1,19 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   Context,
   IdleStateId,
   Input,
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
-import { NoteId, TrackId } from "@/type/preload";
+import type { NoteId, TrackId } from "@/type/preload";
 import type { Note } from "@/domain/project/type";
 import { splitLyricsByMoras } from "@/sing/domain";
 
-export class EditLyricState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class EditLyricState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "editNoteLyric";
 
   private readonly targetTrackId: TrackId;
@@ -86,6 +88,7 @@ export class EditLyricState
         ) {
           // タブキーで次のノート入力に移動
           // Enterキーで入力を確定
+          // Escキーで入力を破棄
           if (input.keyboardEvent.key === "Tab") {
             input.keyboardEvent.preventDefault();
 
@@ -113,6 +116,9 @@ export class EditLyricState
             });
           } else if (input.keyboardEvent.key === "Enter") {
             this.applyPreview = previewLyrics.size !== 0;
+            setNextState(this.returnStateId, undefined);
+          } else if (input.keyboardEvent.key === "Escape") {
+            this.applyPreview = false;
             setNextState(this.returnStateId, undefined);
           }
         }

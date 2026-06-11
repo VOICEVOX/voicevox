@@ -1,13 +1,16 @@
 // TODO: エクスポート機能を実装する
 
-import { Project as UfProject, UfData } from "@sevenc-nanashi/utaformatix-ts";
-import { VoicevoxScore } from "./common";
+import type {
+  Project as UfProject,
+  UfData,
+} from "@sevenc-nanashi/utaformatix-ts";
+import type { VoicevoxScore } from "./common";
 
 /** Voicevoxの楽譜データをUtaformatixのProjectに変換する */
-export const ufProjectFromVoicevox = (
+export const ufProjectFromVoicevox = async (
   { tracks, tpqn, tempos, timeSignatures }: VoicevoxScore,
   projectName: string,
-): UfProject => {
+): Promise<UfProject> => {
   const convertTicks = (ticks: number) => Math.round((ticks / tpqn) * 480);
   const ufData: UfData = {
     formatVersion: 1,
@@ -29,10 +32,11 @@ export const ufProjectFromVoicevox = (
           key: note.noteNumber,
           tickOn: convertTicks(note.position),
           tickOff: convertTicks(note.position + note.duration),
-          lyric: note.lyric,
+          lyric: note.lyric ?? "",
         })),
       })),
     },
   };
+  const { Project: UfProject } = await import("@sevenc-nanashi/utaformatix-ts");
   return new UfProject(ufData);
 };

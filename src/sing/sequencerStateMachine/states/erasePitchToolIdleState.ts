@@ -1,14 +1,16 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   Context,
   Input,
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
 import { getButton } from "@/sing/viewHelper";
 
-export class ErasePitchToolIdleState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class ErasePitchToolIdleState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "erasePitchToolIdle";
 
   onEnter(context: Context) {
@@ -24,12 +26,12 @@ export class ErasePitchToolIdleState
     context: Context;
     setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
-    if (input.type === "mouseEvent") {
-      const mouseButton = getButton(input.mouseEvent);
+    if (input.type === "pointerEvent") {
+      const mouseButton = getButton(input.pointerEvent);
       const selectedTrackId = context.selectedTrackId.value;
 
       if (
-        input.mouseEvent.type === "mousedown" &&
+        input.pointerEvent.type === "pointerdown" &&
         mouseButton === "LEFT_BUTTON" &&
         input.targetArea === "SequencerBody"
       ) {

@@ -75,6 +75,7 @@ const typeCheckedRules: Rules = {
       checksVoidReturn: false,
     },
   ],
+  "@typescript-eslint/no-import-type-side-effects": "error",
 };
 
 export default defineConfigWithVueTs(
@@ -120,7 +121,10 @@ export default defineConfigWithVueTs(
   {
     name: "voicevox/type-checked/typescript",
     files: ["**/*.ts", "**/*.mts"],
-    extends: [...tsConfigs.recommendedTypeChecked],
+    extends: [
+      ...tsConfigs.recommendedTypeChecked,
+      ...pluginConfig(voicevoxPlugin.configs.allTyped),
+    ],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -135,7 +139,10 @@ export default defineConfigWithVueTs(
   {
     name: "voicevox/type-checked/vue",
     files: ["**/*.vue"],
-    extends: [...tsConfigs.recommendedTypeChecked],
+    extends: [
+      ...tsConfigs.recommendedTypeChecked,
+      ...pluginConfig(voicevoxPlugin.configs.allTyped),
+    ],
     languageOptions: {
       parser: vueParser,
       parserOptions: {
@@ -168,6 +175,7 @@ export default defineConfigWithVueTs(
         process.env.NODE_ENV !== "production" ? "warn" : "error", // 開発時のみwarn
         {
           ignoreRestSiblings: true,
+          ignoreUsingDeclarations: true,
         },
       ],
       "import/order": "error",

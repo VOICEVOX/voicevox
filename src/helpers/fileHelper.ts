@@ -1,4 +1,4 @@
-import { ResultError } from "@/type/result";
+import type { ResultError } from "@/type/result";
 
 /** ファイル書き込み時のエラーメッセージを生成する */
 // instanceof ResultErrorで生まれるResultError<any>を受け取れるようにするため、anyを許容する

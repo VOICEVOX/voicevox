@@ -75,7 +75,7 @@ export const noteSchema = z.object({
   position: z.number(),
   duration: z.number(),
   noteNumber: z.number(),
-  lyric: z.string(),
+  lyric: z.union([z.string(), z.undefined()]), // 歌詞未入力のときはundefined
 });
 
 export const singerSchema = z.object({
@@ -95,6 +95,7 @@ export const trackSchema = z.object({
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
   pitchEditData: z.array(z.number()), // 値の単位はHzで、データが無いところはVALUE_INDICATING_NO_DATAの値
+  volumeEditData: z.array(z.number()), // 値は0以上の振幅、データが無いところはVALUE_INDICATING_NO_DATAの値
   phonemeTimingEditData: z.map(noteIdSchema, z.array(phonemeTimingEditSchema)), // 音素タイミングの編集データはノートと紐づけて保持
 
   solo: z.boolean(),

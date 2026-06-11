@@ -1,5 +1,5 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   Context,
   Input,
   SequencerStateDefinitions,
@@ -7,9 +7,11 @@ import {
 import { getButton } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
-export class DrawPitchToolIdleState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class DrawPitchToolIdleState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "drawPitchToolIdle";
 
   onEnter(context: Context) {
@@ -30,16 +32,16 @@ export class DrawPitchToolIdleState
         context,
         isOnCommandOrCtrlKeyDown(input.keyboardEvent),
       );
-    } else if (input.type === "mouseEvent") {
-      const mouseButton = getButton(input.mouseEvent);
+    } else if (input.type === "pointerEvent") {
+      const mouseButton = getButton(input.pointerEvent);
       const selectedTrackId = context.selectedTrackId.value;
 
       if (
-        input.mouseEvent.type === "mousedown" &&
+        input.pointerEvent.type === "pointerdown" &&
         mouseButton === "LEFT_BUTTON" &&
         input.targetArea === "SequencerBody"
       ) {
-        if (isOnCommandOrCtrlKeyDown(input.mouseEvent)) {
+        if (isOnCommandOrCtrlKeyDown(input.pointerEvent)) {
           setNextState("erasePitch", {
             cursorPosAtStart: input.cursorPos,
             targetTrackId: selectedTrackId,

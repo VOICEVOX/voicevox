@@ -1,4 +1,4 @@
-import { createPartialStore, DotNotationDispatch } from "../vuex";
+import { createPartialStore, type DotNotationDispatch } from "../vuex";
 import {
   executeWritePromiseOrDialog,
   promptProjectSaveFilePath,
@@ -6,7 +6,7 @@ import {
   writeProjectFile,
 } from "./saveProjectHelper";
 import { createUILockAction } from "@/store/ui";
-import {
+import type {
   AllActions,
   AudioItem,
   ProjectStoreState,
@@ -15,7 +15,7 @@ import {
 import { TrackId } from "@/type/preload";
 import path from "@/helpers/path";
 import { getValueOrThrow, ResultError } from "@/type/result";
-import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import type { LatestProjectType } from "@/infrastructures/projectFile/type";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import {
   createDefaultTempo,
@@ -23,17 +23,17 @@ import {
   createDefaultTrack,
   DEFAULT_TPQN,
 } from "@/sing/domain";
-import { EditorType } from "@/type/preload";
-import { IsEqual, UnreachableError } from "@/type/utility";
+import type { EditorType } from "@/type/preload";
+import { type IsEqual, UnreachableError } from "@/type/utility";
 import {
   showAlertDialog,
   showMessageDialog,
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
-import { recordToMap } from "@/sing/utility";
 import type { Track } from "@/domain/project/type";
 import { migrateProjectFileObject } from "@/infrastructures/projectFile/migration";
+import { toEditorTrack } from "@/infrastructures/projectFile/conversion";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -73,25 +73,12 @@ const applySongProjectToStore = async (
   await actions.SET_TRACKS({
     tracks: new Map(
       trackOrder.map((trackId): [TrackId, Track] => {
-        const track = tracks[trackId];
-        if (!track) throw new Error("track == undefined");
-        // TODO: トラックの変換処理を関数化する
-        return [
-          trackId,
-          {
-            name: track.name,
-            singer: track.singer,
-            keyRangeAdjustment: track.keyRangeAdjustment,
-            volumeRangeAdjustment: track.volumeRangeAdjustment,
-            notes: track.notes,
-            pitchEditData: track.pitchEditData,
-            phonemeTimingEditData: recordToMap(track.phonemeTimingEditData),
-            solo: track.solo,
-            mute: track.mute,
-            gain: track.gain,
-            pan: track.pan,
-          },
-        ];
+        const projectFileTrack = tracks[trackId];
+        if (projectFileTrack == undefined) {
+          throw new Error("projectFileTrack == undefined");
+        }
+        const track = toEditorTrack(projectFileTrack);
+        return [trackId, track];
       }),
     ),
   });
@@ -179,7 +166,23 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             styleId: style.styleId,
           })),
         ),
+        showNewerVersionWarningDialog: async () => {
+          const result = await showQuestionDialog({
+            type: "warning",
+            title:
+              "プロジェクトファイルが新しいバージョンのVOICEVOXで作成されています",
+            message:
+              "このプロジェクトファイルは新しいバージョンのVOICEVOXで作成されたため、一部の機能が正しく動作しない可能性があります。読み込みを続行しますか？",
+            buttons: ["いいえ", { text: "はい", color: "warning" }],
+            cancel: 0,
+          });
+          return result === 1;
+        },
       });
+
+      if (parsedProjectData === "projectCreatedByNewerVersion") {
+        return undefined;
+      }
 
       return parsedProjectData;
     },
@@ -229,6 +232,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const parsedProjectData = await actions.PARSE_PROJECT_FILE({
             projectJson: text,
           });
+
+          if (parsedProjectData == undefined) {
+            return false;
+          }
 
           if (getters.IS_EDITED) {
             const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({
@@ -305,13 +312,16 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       );
       if (!result) return false;
 
-      if (context.state.projectFilePath !== filePath) {
+      const previousFilePath = context.state.projectFilePath;
+      if (previousFilePath !== filePath) {
         context.mutations.SET_PROJECT_FILEPATH({ filePath });
-        await showMessageDialog({
-          type: "info",
-          title: "保存",
-          message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
-        });
+        if (previousFilePath != undefined) {
+          await showMessageDialog({
+            type: "info",
+            title: "保存",
+            message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+          });
+        }
       }
 
       await markCurrentProjectAsSaved(context, filePath);

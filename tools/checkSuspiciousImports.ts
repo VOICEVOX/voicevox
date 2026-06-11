@@ -37,17 +37,14 @@ export type CheckSuspiciousImportsOptions = {
   allowedInTryCatchModules?: string[];
   list?: boolean;
 };
+export type SourceFile = {
+  path: string;
+  content: string;
+};
 export function checkSuspiciousImports(
-  file: string,
-  jsContent: string,
+  files: SourceFile[],
   options: CheckSuspiciousImportsOptions = {},
 ): void {
-  console.log(`Checking suspicious imports in ${file}...`);
-  const ast = parse(jsContent, {
-    ecmaVersion: "latest",
-    sourceType: "module",
-  });
-
   const allImports: Import[] = [];
 
   const allowedModules = [
@@ -55,37 +52,52 @@ export function checkSuspiciousImports(
     ...(options.allowedModules ?? []),
   ];
   const allowedInTryCatchModules = options.allowedInTryCatchModules ?? [];
+  console.log(
+    `Checking suspicious imports in ${files.map((f) => f.path).join(", ")}`,
+  );
+  for (const { content } of files) {
+    const ast = parse(content, {
+      ecmaVersion: "latest",
+      sourceType: "module",
+    });
 
-  visitWithAncestor(ast, {
-    ImportDeclaration(node) {
-      const importPath = node.source.value;
-      if (typeof importPath === "string") {
-        allImports.push({
-          path: importPath,
-          isInsideTryCatch: false,
-        });
-      }
-    },
-    CallExpression(node, _, ancestors) {
-      const isInsideTryCatch = ancestors.some(
-        (ancestor) => ancestor.type === "TryStatement",
-      );
-      if (node.callee.type === "Identifier" && node.callee.name === "require") {
-        const importPath =
-          node.arguments[0].type === "Literal" && node.arguments[0].value;
+    visitWithAncestor(ast, {
+      ImportDeclaration(node) {
+        const importPath = node.source.value;
         if (typeof importPath === "string") {
           allImports.push({
             path: importPath,
-            isInsideTryCatch,
+            isInsideTryCatch: false,
           });
         }
-      }
-    },
-  });
+      },
+      CallExpression(node, _, ancestors) {
+        const isInsideTryCatch = ancestors.some(
+          (ancestor) => ancestor.type === "TryStatement",
+        );
+        if (
+          node.callee.type === "Identifier" &&
+          node.callee.name === "require"
+        ) {
+          const importPath =
+            node.arguments[0].type === "Literal" && node.arguments[0].value;
+          if (typeof importPath === "string") {
+            allImports.push({
+              path: importPath,
+              isInsideTryCatch,
+            });
+          }
+        }
+      },
+    });
+  }
 
   const normalizedImports: Import[] = [];
   for (const importInfo of allImports) {
     let path = importInfo.path;
+    if (path.startsWith("./") || path.startsWith("../")) {
+      continue;
+    }
     if (builtinModules.includes(path) && !path.startsWith("node:")) {
       path = `node:${path}`;
     }
@@ -191,19 +203,15 @@ if (import.meta.filename === process.argv[1]) {
     .demandCommand(1);
   const args = await parser.parse();
 
-  for (const rawFile of args._) {
-    const file = rawFile.toString();
-    fs.readFile(file, "utf-8")
-      .then((content) => {
-        checkSuspiciousImports(file, content, {
-          allowedModules: args.allowedModules,
-          allowedInTryCatchModules: args.allowedInTryCatchModules,
-          list: true,
-        });
-      })
-      .catch((e) => {
-        console.error(e);
-        process.exit(1);
-      });
-  }
+  const files = await Promise.all(
+    args._.map((f) => f.toString()).map(async (file) => ({
+      path: file,
+      content: await fs.readFile(file, "utf-8"),
+    })),
+  );
+  checkSuspiciousImports(files, {
+    allowedModules: args.allowedModules,
+    allowedInTryCatchModules: args.allowedInTryCatchModules,
+    list: true,
+  });
 }

@@ -1,15 +1,20 @@
 import { toRaw } from "vue";
 import { enablePatches, enableMapSet, Immer } from "immer";
 
-import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
+import type {
+  Command,
+  CommandStoreState,
+  CommandStoreTypes,
+  State,
+} from "./type";
 import { applyPatches } from "@/store/immerPatchUtility";
 import {
   createPartialStore,
-  Mutation,
-  MutationsBase,
-  MutationTree,
+  type Mutation,
+  type MutationsBase,
+  type MutationTree,
 } from "@/store/vuex";
-import { CommandId, EditorType } from "@/type/preload";
+import { CommandId, type EditorType } from "@/type/preload";
 import { uuid4 } from "@/helpers/random";
 import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 
@@ -108,13 +113,11 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.undoPatches);
       }
     },
-    action({ mutations, actions }, { editor }: { editor: EditorType }) {
+    action({ mutations }, { editor }: { editor: EditorType }) {
       mutations.UNDO({ editor });
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.RENDER();
       }
     },
   },
@@ -127,13 +130,11 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.redoPatches);
       }
     },
-    action({ mutations, actions }, { editor }: { editor: EditorType }) {
+    action({ mutations }, { editor }: { editor: EditorType }) {
       mutations.REDO({ editor });
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.RENDER();
       }
     },
   },

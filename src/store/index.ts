@@ -1,11 +1,11 @@
-import { InjectionKey } from "vue";
+import type { InjectionKey } from "vue";
 import {
   createStore,
-  Store as BaseStore,
+  type Store as BaseStore,
   useStore as baseUseStore,
 } from "./vuex";
 
-import {
+import type {
   AllActions,
   AllGetters,
   AllMutations,
@@ -25,6 +25,7 @@ import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
 import {
   singingStoreState,
   singingStore,
+  singingStorePlugins,
   singingCommandStoreState,
   singingCommandStore,
 } from "./singing";
@@ -38,11 +39,11 @@ import { createPartialStore } from "./vuex";
 import { engineStoreState, engineStore } from "./engine";
 import { filterCharacterInfosByStyleType } from "./utility";
 import {
-  DefaultStyleId,
+  type DefaultStyleId,
   EngineId,
   SpeakerId,
   StyleId,
-  Voice,
+  type Voice,
 } from "@/type/preload";
 import { isProduction } from "@/helpers/platform";
 
@@ -171,7 +172,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   GET_POLICY_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("PrivacyPolicy");
+      return await window.backend.getTextAsset("Policy");
     },
   },
 
@@ -412,6 +413,9 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...singingStore.actions,
     ...singingCommandStore.actions,
   },
+
+  plugins: [...singingStorePlugins],
+
   strict: !isProduction,
 });
 

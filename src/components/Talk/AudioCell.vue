@@ -83,8 +83,15 @@
         文章が長いと正常に動作しない可能性があります。
         句読点の位置で文章を分割してください。
       </template>
-      <template v-if="enableDeleteButton" #after>
+      <template #after>
+        <div
+          v-if="showAudioLength && audioDuration != undefined"
+          class="q-mr-sm audio-length"
+        >
+          {{ audioDuration.toFixed(2) }}s
+        </div>
         <QBtn
+          v-if="enableDeleteButton"
           round
           flat
           icon="delete_outline"
@@ -112,10 +119,10 @@
 import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
-import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
+import type { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
-import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
+import type { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import {
@@ -123,6 +130,7 @@ import {
   useCommandOrControlKey,
 } from "@/composables/useModifierKey";
 import { getDefaultStyle } from "@/domain/talk";
+import { calculateAudioLength } from "@/store/audioGenerate";
 
 const props = defineProps<{
   audioKey: AudioKey;
@@ -304,6 +312,18 @@ watch(
     }
   },
 );
+
+const showAudioLength = computed(() => store.state.showAudioLength);
+
+const audioDuration = computed(() => {
+  if (!audioItem.value?.query) return undefined;
+  const engineId = audioItem.value.voice.engineId;
+  const supportedFeatures =
+    store.state.engineManifests[engineId]?.supportedFeatures;
+  if (!supportedFeatures?.adjustPhonemeLength) return undefined;
+
+  return calculateAudioLength(audioItem.value.query);
+});
 
 const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
@@ -750,5 +770,13 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   background: none;
   z-index: 1;
   cursor: default;
+}
+
+.audio-length {
+  color: colors.$display;
+  opacity: 0.6;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  user-select: none;
 }
 </style>

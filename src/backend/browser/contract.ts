@@ -1,5 +1,5 @@
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
-import { type EngineInfo } from "@/type/preload";
+import type { EngineInfo } from "@/type/preload";
 
 const baseEngineInfo = loadEnvEngineInfos()[0];
 if (baseEngineInfo.type != "path") {
@@ -15,6 +15,7 @@ export const defaultEngine: EngineInfo = (() => {
     defaultPort: port,
     pathname: pathname === "/" ? "" : pathname,
     type: "path", // FIXME: ダミーで"path"にしているので、エンジンAPIのURLを設定できるようにし、type: "URL"にする
+    version: "999.999.999", // FIXME: ダミー値。type: "URL"にし、APIから取得する。
     isDefault: true,
   };
 })();

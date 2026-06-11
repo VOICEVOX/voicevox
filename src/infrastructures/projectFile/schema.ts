@@ -18,6 +18,7 @@ export const projectFileTrackSchema = z.object({
   volumeRangeAdjustment: z.number(),
   notes: z.array(noteSchema),
   pitchEditData: z.array(z.number()),
+  volumeEditData: z.array(z.number()),
   phonemeTimingEditData: z.record(
     noteIdSchema,
     z.array(phonemeTimingEditSchema),

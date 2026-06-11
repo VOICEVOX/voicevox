@@ -1,12 +1,12 @@
 import * as diff from "fast-array-diff";
-import {
+import type {
   CharacterInfo,
   PresetSliderKey,
   StyleInfo,
   StyleType,
   ToolbarButtonTagType,
 } from "@/type/preload";
-import { AccentPhrase, FramePhoneme, Mora } from "@/openapi";
+import type { AccentPhrase, Mora } from "@/openapi";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { DEFAULT_TRACK_NAME, isVowel } from "@/sing/domain";
 import { isMac } from "@/helpers/platform";
@@ -515,26 +515,28 @@ export const filterCharacterInfosByStyleType = (
   return withoutEmptyStyles;
 };
 
-export async function generateLabelFileDataFromFramePhonemes(
-  phonemes: FramePhoneme[],
-  frameRate: number,
-) {
+export type PhonemeTimingLabel = {
+  startTime: number;
+  endTime: number;
+  phoneme: string;
+};
+
+export async function generateLabelFileData(labels: PhonemeTimingLabel[]) {
   let labString = "";
-  let timestamp = 0;
 
-  const writeLine = (phonemeLengthSeconds: number, phoneme: string) => {
-    labString += timestamp.toFixed() + " ";
-    timestamp += phonemeLengthSeconds * 1e7; // 100ns単位に変換
-    labString += timestamp.toFixed() + " ";
-    labString += phoneme + "\n";
-  };
+  for (const label of labels) {
+    // NOTE: 時刻は100ns単位に変換する
+    const startTime = label.startTime * 1e7;
+    const endTime = label.endTime * 1e7;
 
-  for (const phoneme of phonemes) {
-    if (isVowel(phoneme.phoneme) && phoneme.phoneme !== "N") {
-      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme.toLowerCase());
-    } else {
-      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme);
+    let phoneme = label.phoneme;
+    if (isVowel(label.phoneme) && label.phoneme !== "N") {
+      phoneme = phoneme.toLowerCase();
     }
+
+    labString += startTime.toFixed() + " ";
+    labString += endTime.toFixed() + " ";
+    labString += phoneme + "\n";
   }
 
   return await generateTextFileData({ text: labString });

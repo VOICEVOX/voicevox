@@ -2,8 +2,11 @@ import path from "node:path";
 import fs from "node:fs";
 import { app } from "electron";
 import { writeFileSafely } from "./fileHelper";
-import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
-import { ConfigType } from "@/type/preload";
+import {
+  BaseConfigManager,
+  type Metadata,
+} from "@/backend/common/ConfigManager";
+import type { ConfigType } from "@/type/preload";
 import { isMac } from "@/helpers/platform";
 
 export class ElectronConfigManager extends BaseConfigManager {

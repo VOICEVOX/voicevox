@@ -24,9 +24,7 @@ export const base64ToUri = async (data: string, type: string) => {
     return cached;
   }
   const buffer = await toBytes(data);
-  const url = URL.createObjectURL(
-    new Blob([new Uint8Array(buffer.buffer)], { type }),
-  );
+  const url = URL.createObjectURL(new Blob([new Uint8Array(buffer)], { type }));
   cache.set(data, url);
   return url;
 };
