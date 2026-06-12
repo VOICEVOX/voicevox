@@ -90,8 +90,8 @@ eg: 常にホバー時は+5%明度上げるのであれば
   --secondary-c: 0.036;
   --tertiary-c: var(--primary-c);
   --error-c: 0.196;
-  --neutral-c: 0.003;
-  --neutral-variant-c: 0.006;
+  --neutral-c: 0;
+  --neutral-variant-c: 0;
   --link-c: 0.196;
 
   // 基準色相

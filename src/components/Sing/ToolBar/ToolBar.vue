@@ -1,246 +1,106 @@
 <template>
   <QToolbar class="sing-toolbar">
-    <!-- configs for entire song -->
-    <div class="sing-configs">
+    <div class="sing-track-lane">
       <QBtn
-        class="q-mr-sm"
+        class="sing-sidebar-button"
         :icon="isSidebarOpen ? 'menu_open' : 'menu'"
         round
         flat
         @click="toggleSidebar"
       />
-      <CharacterMenuButton />
-      <div class="sing-adjustment">
-        <QInput
-          type="number"
-          dense
-          :modelValue="keyRangeAdjustment"
-          label="音域"
-          hideBottomSpace
-          unelevated
-          class="key-range-adjustment"
-          @change="setKeyRangeAdjustment"
-        />
-        <QInput
-          type="number"
-          dense
-          :modelValue="volumeRangeAdjustment"
-          label="声量"
-          hideBottomSpace
-          unelevated
-          class="volume-range-adjustment"
-          @change="setVolumeRangeAdjustment"
-        />
+      <div class="sing-track-strip">
+        <div class="sing-track-header">
+          <CharacterMenuButton />
+          <button class="sing-track-parameter-summary" type="button">
+            <span class="sing-track-parameter-line">
+              <span class="sing-track-parameter-label">歌い方</span>
+              <span class="sing-track-parameter-value">{{
+                singingTeacherLabel
+              }}</span>
+            </span>
+            <span class="sing-track-parameter-line compact">
+              <span class="sing-track-parameter-pair">
+                <span class="sing-track-parameter-label">音域</span>
+                <span class="sing-track-parameter-value">{{
+                  keyRangeAdjustment
+                }}</span>
+              </span>
+              <span class="sing-track-parameter-pair">
+                <span class="sing-track-parameter-label">声量</span>
+                <span class="sing-track-parameter-value">{{
+                  volumeRangeAdjustment
+                }}</span>
+              </span>
+            </span>
+            <QMenu class="sing-track-parameter-menu" anchor="bottom left">
+              <div class="sing-track-parameter-menu-content" @click.stop>
+                <label class="sing-track-parameter-menu-row">
+                  <span>歌い方</span>
+                  <select
+                    class="sing-track-parameter-menu-control"
+                    :value="singingTeacherLabel"
+                    @change="setSingingTeacher"
+                  >
+                    <option
+                      v-for="option in singingTeacherOptions"
+                      :key="option"
+                      :value="option"
+                    >
+                      {{ option }}
+                    </option>
+                  </select>
+                </label>
+                <label class="sing-track-parameter-menu-row">
+                  <span>音域</span>
+                  <input
+                    class="sing-track-parameter-menu-control number"
+                    type="number"
+                    :value="keyRangeAdjustment"
+                    @change="setKeyRangeAdjustment"
+                  />
+                </label>
+                <label class="sing-track-parameter-menu-row">
+                  <span>声量</span>
+                  <input
+                    class="sing-track-parameter-menu-control number"
+                    type="number"
+                    :value="volumeRangeAdjustment"
+                    @change="setVolumeRangeAdjustment"
+                  />
+                </label>
+              </div>
+            </QMenu>
+          </button>
+        </div>
+        <div class="sing-track-preview" aria-hidden="true">
+          <div class="sing-track-preview-grid"></div>
+          <div class="sing-track-preview-viewport"></div>
+          <div
+            v-for="previewNote in previewNotes"
+            :key="previewNote.id"
+            class="sing-track-preview-note"
+            :style="{
+              left: `${previewNote.left}%`,
+              width: `${previewNote.width}%`,
+              top: `${previewNote.top}%`,
+            }"
+          ></div>
+        </div>
       </div>
-      <QInput
-        type="number"
-        :modelValue="currentBpm"
-        dense
-        hideBottomSpace
-        outlined
-        unelevated
-        label="テンポ"
-        class="sing-tempo"
-        padding="0"
-        @change="setBpm"
-      />
-      <QField
-        hideBottomSpace
-        dense
-        class="sing-time-signature-field"
-        label="拍子"
-        stackLabel
-        outlined
-      >
-        <template #control>
-          <div class="sing-beats">
-            <QSelect
-              :modelValue="currentTimeSignature.beats"
-              :options="beatsOptions"
-              hideBottomSpace
-              hideDropdownIcon
-              dense
-              userInputs
-              unelevated
-              optionsDense
-              transitionShow="none"
-              transitionHide="none"
-              class="sing-time-signature beats"
-              @update:modelValue="setBeats"
-            />
-            <div class="sing-beats-separator">/</div>
-            <QSelect
-              :modelValue="currentTimeSignature.beatType"
-              :options="beatTypeOptions"
-              hideBottomSpace
-              hideDropdownIcon
-              dense
-              userInputs
-              unelevated
-              optionsDense
-              transitionShow="none"
-              transitionHide="none"
-              class="sing-time-signature beat-type"
-              @update:modelValue="setBeatType"
-            />
-          </div>
-        </template>
-      </QField>
-    </div>
-    <!-- player -->
-    <div class="sing-player">
-      <QBtn
-        flat
-        round
-        class="sing-transport-button"
-        icon="skip_previous"
-        @click="goToZero"
-      />
-      <QBtn
-        v-if="!nowPlaying"
-        round
-        class="sing-playback-button sing-playback-play"
-        icon="play_arrow"
-        @click="play"
-      />
-      <QBtn
-        v-else
-        round
-        class="sing-playback-button sing-playback-stop"
-        icon="stop"
-        @click="stop"
-      />
-      <QBtn
-        flat
-        round
-        size="sm"
-        class="sing-playback-button sing-playback-loop"
-        :class="{ 'sing-playback-loop-enabled': isLoopEnabled }"
-        icon="loop"
-        @click="toggleLoop"
-      />
-      <PlayheadPositionDisplay class="sing-playhead-position" />
-    </div>
-    <!-- settings for edit controls -->
-    <div class="sing-controls">
-      <EditTargetSwitcher :editTarget :changeEditTarget />
-      <QBtn
-        flat
-        dense
-        round
-        class="sing-undo-button"
-        :disable="!canUndo"
-        @click="undo"
-      >
-        <QIcon name="undo" size="24px" />
-      </QBtn>
-      <QBtn
-        flat
-        dense
-        round
-        class="sing-redo-button"
-        :disable="!canRedo"
-        @click="redo"
-      >
-        <QIcon name="redo" size="24px" />
-      </QBtn>
-      <QIcon name="volume_up" size="xs" class="sing-volume-icon" />
-      <QSlider v-model.number="volume" trackSize="2px" class="sing-volume" />
-      <QSelect
-        v-model="snapTypeSelectModel"
-        :options="snapTypeSelectOptions"
-        dense
-        outlined
-        hideBottomSpace
-        optionsDense
-        hideDropdownIcon
-        unelevated
-        label="スナップ"
-        transitionShow="none"
-        transitionHide="none"
-        class="sing-snap"
-      />
     </div>
   </QToolbar>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
-import EditTargetSwitcher from "./EditTargetSwitcher.vue";
+import { computed, ref } from "vue";
 import { useStore } from "@/store";
-
 import {
-  BEAT_TYPES,
-  getMeasureDuration,
-  getNoteDuration,
-  getTimeSignaturePositions,
-  isTriplet,
-  isValidBeats,
-  isValidBeatType,
-  isValidBpm,
-} from "@/sing/music";
-import {
-  getSnapTypes,
   isValidKeyRangeAdjustment,
   isValidVolumeRangeAdjustment,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import type { SequencerEditTarget } from "@/store/type";
-import { UnreachableError } from "@/type/utility";
 
 const store = useStore();
-
-const uiLocked = computed(() => store.getters.UI_LOCKED);
-const editor = "song";
-const canUndo = computed(() => store.getters.CAN_UNDO(editor));
-const canRedo = computed(() => store.getters.CAN_REDO(editor));
-
-const { registerHotkeyWithCleanup } = useHotkeyManager();
-registerHotkeyWithCleanup({
-  editor,
-  name: "元に戻す",
-  callback: () => {
-    if (!uiLocked.value && canUndo.value) {
-      undo();
-    }
-  },
-});
-registerHotkeyWithCleanup({
-  editor,
-  name: "やり直す",
-  callback: () => {
-    if (!uiLocked.value && canRedo.value) {
-      redo();
-    }
-  },
-});
-
-registerHotkeyWithCleanup({
-  editor,
-  name: "再生/停止",
-  callback: () => {
-    if (nowPlaying.value) {
-      stop();
-    } else {
-      play();
-    }
-  },
-});
-
-const undo = () => {
-  void store.actions.UNDO({ editor });
-};
-const redo = () => {
-  void store.actions.REDO({ editor });
-};
-
-const editTarget = computed(() => store.state.sequencerEditTarget);
-
-const changeEditTarget = (editTarget: SequencerEditTarget) => {
-  void store.actions.SET_EDIT_TARGET({ editTarget });
-};
 
 const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
 const toggleSidebar = () => {
@@ -249,111 +109,64 @@ const toggleSidebar = () => {
   });
 };
 
-const tempos = computed(() => store.state.tempos);
-const timeSignatures = computed(() => store.state.timeSignatures);
 const keyRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.keyRangeAdjustment,
 );
 const volumeRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
+const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
-const tpqn = computed(() => store.state.tpqn);
-const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
+const singingTeacherLabel = ref("波音リツ");
+const singingTeacherOptions = ["波音リツ", "ずんだもん", "四国めたん"];
 
-const tsPositions = computed(() => {
-  return getTimeSignaturePositions(timeSignatures.value, tpqn.value);
-});
+const setSingingTeacher = (event: Event) => {
+  singingTeacherLabel.value = (event.target as HTMLSelectElement).value;
+};
 
-const snapTicks = computed(() => {
-  return getNoteDuration(store.state.sequencerSnapType, tpqn.value);
-});
+const previewNotes = computed(() => {
+  const notes = selectedTrack.value.notes;
+  if (notes.length === 0) {
+    return [];
+  }
 
-const beatsOptions = computed(() => {
-  return Array.from({ length: 32 }, (_, i) => ({
-    label: (i + 1).toString(),
-    value: i + 1,
+  const maxTick = Math.max(
+    ...notes.map((note) => note.position + note.duration),
+    1,
+  );
+  const minNoteNumber = Math.min(...notes.map((note) => note.noteNumber));
+  const maxNoteNumber = Math.max(...notes.map((note) => note.noteNumber));
+  const noteNumberRange = Math.max(maxNoteNumber - minNoteNumber, 12);
+
+  return notes.map((note) => ({
+    id: note.id,
+    left: (note.position / maxTick) * 100,
+    width: Math.max((note.duration / maxTick) * 100, 0.8),
+    top:
+      18 +
+      ((maxNoteNumber - note.noteNumber + noteNumberRange * 0.08) /
+        (noteNumberRange * 1.16)) *
+        64,
   }));
 });
 
-const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
-  label: beatType.toString(),
-  value: beatType,
-}));
-
-const currentTimeSignature = computed(() => {
-  const maybeTimeSignature = timeSignatures.value.findLast(
-    (_timeSignature, i) => tsPositions.value[i] <= playheadTicks.value,
+const setKeyRangeAdjustment = (event: Event) => {
+  const keyRangeAdjustmentValue = Number(
+    (event.target as HTMLInputElement).value,
   );
-  if (!maybeTimeSignature) {
-    throw new UnreachableError("assert: at least one time signature exists");
-  }
-  return maybeTimeSignature;
-});
-
-const setBeats = (beats: { label: string; value: number }) => {
-  if (!isValidBeats(beats.value)) {
-    return;
-  }
-
-  void store.actions.COMMAND_SET_TIME_SIGNATURE({
-    timeSignature: {
-      measureNumber: currentTimeSignature.value.measureNumber,
-      beats: beats.value,
-      beatType: currentTimeSignature.value.beatType,
-    },
-  });
-};
-
-const setBeatType = (beatType: { label: string; value: number }) => {
-  if (!isValidBeatType(beatType.value)) {
-    return;
-  }
-  void store.actions.COMMAND_SET_TIME_SIGNATURE({
-    timeSignature: {
-      measureNumber: currentTimeSignature.value.measureNumber,
-      beats: currentTimeSignature.value.beats,
-      beatType: beatType.value,
-    },
-  });
-};
-
-const setBpm = (bpm: string | number | null) => {
-  const bpmValue = Number(bpm);
-  if (!isValidBpm(bpmValue)) {
-    return;
-  }
-  const position = tempos.value.findLast(
-    (tempo) => tempo.position <= playheadTicks.value,
-  )?.position;
-  if (position == undefined) {
-    throw new UnreachableError("assert: at least one tempo exists");
-  }
-  void store.actions.COMMAND_SET_TEMPO({
-    tempo: {
-      position,
-      bpm: bpmValue,
-    },
-  });
-};
-
-const setKeyRangeAdjustment = (
-  KeyRangeAdjustmentStr: string | number | null,
-) => {
-  const KeyRangeAdjustmentValue = Number(KeyRangeAdjustmentStr);
-  if (!isValidKeyRangeAdjustment(KeyRangeAdjustmentValue)) {
+  if (!isValidKeyRangeAdjustment(keyRangeAdjustmentValue)) {
     return;
   }
   void store.actions.COMMAND_SET_KEY_RANGE_ADJUSTMENT({
-    keyRangeAdjustment: KeyRangeAdjustmentValue,
+    keyRangeAdjustment: keyRangeAdjustmentValue,
     trackId: selectedTrackId.value,
   });
 };
 
-const setVolumeRangeAdjustment = (
-  volumeRangeAdjustmentStr: string | number | null,
-) => {
-  const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
+const setVolumeRangeAdjustment = (event: Event) => {
+  const volumeRangeAdjustmentValue = Number(
+    (event.target as HTMLInputElement).value,
+  );
   if (!isValidVolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
     return;
   }
@@ -362,131 +175,6 @@ const setVolumeRangeAdjustment = (
     trackId: selectedTrackId.value,
   });
 };
-
-const currentBpm = computed(() => {
-  const currentTempo = tempos.value.findLast(
-    (tempo) => tempo.position <= playheadTicks.value,
-  );
-  if (!currentTempo) {
-    throw new UnreachableError("assert: at least one tempo exists");
-  }
-  return currentTempo.bpm;
-});
-
-const nowPlaying = computed(() => store.state.nowPlaying);
-
-const play = () => {
-  void store.actions.SING_PLAY_AUDIO();
-};
-
-const stop = () => {
-  void store.actions.SING_STOP_AUDIO();
-};
-
-const goToZero = () => {
-  void store.actions.SET_PLAYHEAD_POSITION({ position: 0 });
-};
-
-const isLoopEnabled = computed(() => store.state.isLoopEnabled);
-
-const toggleLoop = async () => {
-  // ループを有効にする場合
-  if (!isLoopEnabled.value) {
-    // ループ範囲が未設定の場合のみ、現在のplayheadが含まれる1小節をループ範囲とする
-    if (store.state.loopStartTick === 0 && store.state.loopEndTick === 0) {
-      // NOTE: LoopLaneのaddOneMeasureLoopと基本的なロジックは同じなものの、
-      // 開始位置の指定方法が異なるため共通化はしていない。
-      // Toolbar内はplayhead位置を基準に設定
-      // LoopLaneはユーザーのクリック位置を基準に設定
-      // 共通化の意味ではむしろ特定の位置の拍子記号を取得する関数を作った方がいいかもです
-
-      // 現在のplayhead位置のTimeSignature位置index
-      const playheadTsIndex = tsPositions.value.findIndex(
-        (pos) => pos > playheadTicks.value,
-      );
-      // 現在の拍子index
-      const currentTsIndex =
-        playheadTsIndex === -1
-          ? tsPositions.value.length - 1
-          : playheadTsIndex - 1;
-      // 現在のplayheadがある拍子
-      const currentTs = timeSignatures.value[currentTsIndex];
-
-      if (!currentTs) {
-        throw new Error("Could not find current time signature");
-      }
-
-      // 現在のplayheadがある小節の長さ
-      const oneMeasureTicks = getMeasureDuration(
-        currentTs.beats,
-        currentTs.beatType,
-        tpqn.value,
-      );
-
-      // 現在のplayheadがある位置をスナップ位置に調整
-      const currentMeasureStartTick =
-        Math.round(playheadTicks.value / snapTicks.value) * snapTicks.value;
-
-      // 現在のplayheadがある小節の終了位置
-      const currentMeasureEndTick = currentMeasureStartTick + oneMeasureTicks;
-
-      // 小節の頭から1小節分のループ範囲を設定
-      void store.actions.SET_LOOP_RANGE({
-        loopStartTick: currentMeasureStartTick,
-        loopEndTick: currentMeasureEndTick,
-      });
-    }
-    // ループ範囲が設定済みの場合は何もしない (SET_LOOP_ENABLED のみ実行される)
-  }
-
-  // ループをトグルする
-  void store.actions.SET_LOOP_ENABLED({
-    isLoopEnabled: !isLoopEnabled.value,
-  });
-};
-
-const volume = computed({
-  get() {
-    return store.state.volume * 100;
-  },
-  set(value: number) {
-    void store.actions.SET_VOLUME({ volume: value / 100 });
-  },
-});
-
-const snapTypeSelectOptions = computed(() => {
-  const tpqn = store.state.tpqn;
-  return getSnapTypes(tpqn)
-    .sort((a, b) => {
-      if (isTriplet(a) === isTriplet(b)) {
-        return a - b;
-      } else {
-        return isTriplet(a) ? 1 : -1;
-      }
-    })
-    .map((snapType) => {
-      if (isTriplet(snapType)) {
-        return { snapType, label: `1/${(snapType / 3) * 2} T` };
-      } else {
-        return { snapType, label: `1/${snapType}` };
-      }
-    });
-});
-const snapTypeSelectModel = computed({
-  get() {
-    const snapType = store.state.sequencerSnapType;
-    const selectOptions = snapTypeSelectOptions.value;
-    return (
-      selectOptions.find((value) => value.snapType === snapType) ??
-      selectOptions[0]
-    );
-  },
-  set(value) {
-    void store.actions.SET_SNAP_TYPE({
-      snapType: value.snapType,
-    });
-  },
-});
 </script>
 
 <style scoped lang="scss">
@@ -556,248 +244,253 @@ const snapTypeSelectModel = computed({
 }
 
 .sing-toolbar {
-  background: var(--scheme-color-sing-toolbar-container);
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container) 42%,
+    var(--scheme-color-surface-container-highest)
+  );
   align-items: center;
   display: flex;
   justify-content: space-between;
-  min-height: 64px;
-  padding: 8px 12px 8px 8px;
+  min-height: 76px;
+  padding: 10px 14px 10px 8px;
   width: 100%;
+  border-bottom: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 54%, transparent);
   letter-spacing: 0.01em;
 }
 
-.sing-configs {
+.sing-track-lane {
   align-items: center;
-  display: flex;
-  flex: 1;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 6px;
+  width: 100%;
 }
 
-.sing-player {
-  align-items: center;
-  justify-content: center;
-  display: flex;
-  flex: 1;
-}
-
-.sing-adjustment {
-  height: 40px;
-  border: 1px solid var(--scheme-color-outline-variant);
-  border-left: 0;
-  border-radius: 0 4px 4px 0;
-  padding: 0 0 0 8px;
-  display: flex;
-  align-items: center;
-}
-
-.key-range-adjustment {
-  margin-right: 0px;
-  width: 40px;
-
-  :deep(.q-field__control) {
-    height: 40px;
-
-    &:before {
-      border: 1px solid transparent;
-    }
-
-    &:hover:before {
-      border-color: transparent;
-      border-bottom: 1px solid var(--scheme-color-outline);
-    }
-  }
-}
-
-.volume-range-adjustment {
-  width: 40px;
-
-  :deep(.q-field__control) {
-    padding: 0 2px;
-    height: 40px;
-
-    &:before {
-      border: 1px solid transparent;
-    }
-
-    &:hover:before {
-      border-color: transparent;
-      border-bottom: 1px solid var(--scheme-color-outline);
-    }
-  }
-}
-
-.sing-tempo {
-  margin-left: 16px;
-  margin-right: 4px;
-  width: 60px;
-}
-
-.sing-time-signature-field {
-  height: 40px;
-
-  :deep(.q-field__control) {
-    height: 40px;
-    padding: 0 2px;
-  }
-
-  :deep(.q-field__label) {
-    font-size: 9px;
-    top: 5.5px;
-    margin-left: 6px;
-    transform: translateY(0) !important;
-    color: var(--scheme-color-on-surface-variant);
-    opacity: 0.9;
-  }
-
-  :deep(.q-field__native) {
-    padding-top: 4px;
-  }
-
-  :deep(.q-field__control:before) {
-    border-color: var(--scheme-color-outline-variant);
-  }
-
-  :deep(.q-field__control:hover:before) {
-    border-color: var(--scheme-color-outline);
-  }
-}
-
-.sing-time-signature.beats {
-  :deep(.q-field__control) {
-    padding: 0 4px 0 8px;
-  }
-}
-
-.sing-time-signature.beat-type {
-  :deep(.q-field__control) {
-    padding: 0 8px 0 4px;
-  }
-}
-
-.sing-beats {
-  display: flex;
-  align-items: center;
-  height: 40px;
-  margin-top: -14px;
-
-  &:deep(.q-field__control:before) {
-    border: 1px solid transparent;
-  }
-
-  &:deep(.q-field__control) {
-    background: transparent;
-    padding: 0 4px;
-  }
-
-  &:deep(.q-field__control:hover:before) {
-    border-color: transparent;
-  }
-}
-
-.sing-beats-separator {
-  font-weight: 400;
-  color: var(--scheme-color-outline);
-  pointer-events: none;
-  transform: translateY(6px);
-}
-
-.sing-transport-button {
+.sing-sidebar-button {
   color: var(--scheme-color-on-surface-variant);
-  margin-right: 0.25rem;
 }
 
-.sing-playback-button {
-  background: var(--scheme-color-sing-playback-button-container);
-  color: var(--scheme-color-sing-on-playback-button-container);
-  &:before {
-    box-shadow: none;
-  }
-
-  &.sing-playback-play .q-btn__wrapper .q-icon {
-    transform: translateX(-0.5px);
-  }
-
-  &.sing-playback-stop .q-btn__wrapper .q-icon {
-    transform: translateX(-0.5px);
-  }
+.sing-track-strip {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  height: 56px;
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 38%, transparent);
+  border-radius: 6px;
+  background: var(--scheme-color-surface-container-highest);
+  overflow: hidden;
 }
 
-.sing-playback-loop {
-  margin-left: 8px;
-  color: var(--scheme-color-on-surface-variant);
+.sing-track-header {
+  display: flex;
+  align-items: stretch;
+  flex: 0 0 296px;
+  min-width: 0;
+  padding: 0;
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 34%, transparent);
+  background: var(--scheme-color-surface-container-highest);
+}
+
+.sing-track-header :deep(.q-btn) {
+  height: 100%;
+  min-width: 0;
+  max-width: 164px;
+  border-radius: 0;
+}
+
+.sing-track-header :deep(.q-btn__content) {
+  height: 100%;
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.sing-track-parameter-summary {
+  appearance: none;
+  align-self: stretch;
+  border: 0;
+  border-radius: 0;
   background: transparent;
-
-  &-enabled {
-    color: var(--scheme-color-primary);
-    background: var(--scheme-color-secondary-container);
-  }
-}
-
-.sing-playhead-position {
-  margin-left: 16px;
-}
-
-.sing-controls {
-  align-items: center;
-  justify-content: flex-end;
+  color: var(--scheme-color-on-surface);
   display: flex;
-  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  justify-content: center;
+  height: 100%;
+  margin-left: 0;
+  min-width: 0;
+  padding: 5px 8px 5px 12px;
+  width: 136px;
+  border-left: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 38%, transparent);
+  font: inherit;
+  text-align: left;
+
+  &:hover {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-surface-container) 72%,
+      transparent
+    );
+  }
 }
 
-.sing-undo-button {
-  margin-left: 24px;
+.sing-track-parameter-line {
+  align-items: baseline;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  min-width: 0;
+
+  &.compact {
+    grid-template-columns: max-content max-content;
+    column-gap: 8px;
+  }
 }
 
-.sing-undo-button,
-.sing-redo-button {
+.sing-track-parameter-pair {
+  align-items: baseline;
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.sing-track-parameter-label {
   color: var(--scheme-color-on-surface-variant);
-  width: 40px;
-  height: 40px;
-  &.disabled {
-    opacity: 0.38 !important;
-  }
-}
-.sing-redo-button {
-  margin-right: 8px;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 15px;
+  white-space: nowrap;
 }
 
-.sing-volume-icon {
-  margin-right: 8px;
+.sing-track-parameter-value {
+  color: var(--scheme-color-on-surface);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  :deep() {
-    color: var(--scheme-color-outline);
+:global(.sing-track-parameter-menu) {
+  border-radius: 8px;
+  box-shadow: 0 10px 28px
+    color-mix(in oklch, var(--scheme-color-shadow) 14%, transparent);
+}
+
+:global(.sing-track-parameter-menu-content) {
+  display: grid;
+  gap: 8px;
+  min-width: 196px;
+  padding: 12px;
+}
+
+:global(.sing-track-parameter-menu-row) {
+  align-items: baseline;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 18px;
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+:global(.sing-track-parameter-menu-control) {
+  appearance: none;
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 68%, transparent);
+  border-radius: 5px;
+  background: var(--scheme-color-surface-container-highest);
+  color: var(--scheme-color-on-surface);
+  font: inherit;
+  font-weight: 500;
+  min-width: 0;
+  padding: 4px 8px;
+  width: 100%;
+
+  &:focus {
+    border-color: color-mix(
+      in oklch,
+      var(--scheme-color-outline) 72%,
+      transparent
+    );
+    outline: none;
+  }
+
+  &.number {
+    appearance: textfield;
+    text-align: right;
   }
 }
 
-.sing-volume {
-  margin-right: 16px;
-  width: 72px;
-
-  :deep(.q-slider__track) {
-    background-color: var(--scheme-color-surface-variant);
-    color: var(--scheme-color-primary-fixed-dim);
-  }
-
-  :deep(.q-slider__thumb) {
-    color: var(--scheme-color-primary-fixed-dim);
-  }
+.sing-track-preview {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  background:
+    linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 49%,
+      color-mix(in oklch, var(--scheme-color-outline-variant) 20%, transparent)
+        50%,
+      transparent 51%,
+      transparent 100%
+    ),
+    color-mix(
+      in oklch,
+      var(--scheme-color-surface-container-low) 58%,
+      var(--scheme-color-surface-container-high)
+    );
+  overflow: hidden;
 }
 
-.sing-snap {
-  min-width: 64px;
-  height: 40px;
+.sing-track-preview-grid {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--scheme-color-outline-variant) 30%, transparent) 0,
+    color-mix(in oklch, var(--scheme-color-outline-variant) 30%, transparent)
+      1px,
+    transparent 1px,
+    transparent 64px
+  );
+}
 
-  &:deep(.q-field__control:before) {
-    height: 40px;
-    border: 1px solid var(--scheme-color-outline-variant);
-  }
+.sing-track-preview-viewport {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 42%;
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline) 42%, transparent);
+  border-left: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline) 26%, transparent);
+  border-radius: 0;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-highest) 32%,
+    transparent
+  );
+  pointer-events: none;
+}
 
-  :deep(.q-field__control:hover:before) {
-    border-color: var(--scheme-color-outline);
-  }
-
-  :deep(.q-field__label) {
-    font-size: 12px;
-    color: var(--scheme-color-on-surface-variant);
-  }
+.sing-track-preview-note {
+  position: absolute;
+  z-index: 1;
+  height: 6px;
+  min-width: 4px;
+  border-radius: 999px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-secondary-container) 48%,
+    var(--scheme-color-outline-variant)
+  );
+  opacity: 0.72;
 }
 </style>

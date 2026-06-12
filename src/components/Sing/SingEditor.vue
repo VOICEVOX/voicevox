@@ -1,33 +1,37 @@
 <template>
-  <ToolBar />
-  <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpen }">
-    <EngineStartupOverlay :isCompletedInitialStartup />
-    <ExportOverlay />
+  <div class="sing-editor">
+    <ToolBar />
+    <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpen }">
+      <EngineStartupOverlay :isCompletedInitialStartup />
+      <ExportOverlay />
 
-    <QSplitter
-      :modelValue="isSidebarOpen ? sidebarWidth : 0"
-      unit="px"
-      class="full-width"
-      :limits="[200, 300]"
-      :disable="!isSidebarOpen"
-      :separatorStyle="{ display: isSidebarOpen ? 'block' : 'none' }"
-      emitImmediately
-      @update:modelValue="setSidebarWidth"
-    >
-      <template #before>
-        <SideBar v-if="isSidebarOpen" />
-      </template>
-      <template #after>
-        <!-- full-heightで高さをQSplitterの高さに揃える -->
-        <ScoreSequencer class="full-height" />
-      </template>
-    </QSplitter>
+      <QSplitter
+        :modelValue="isSidebarOpen ? sidebarWidth : 0"
+        unit="px"
+        class="full-width"
+        :limits="[200, 300]"
+        :disable="!isSidebarOpen"
+        :separatorStyle="{ display: isSidebarOpen ? 'block' : 'none' }"
+        emitImmediately
+        @update:modelValue="setSidebarWidth"
+      >
+        <template #before>
+          <SideBar v-if="isSidebarOpen" />
+        </template>
+        <template #after>
+          <!-- full-heightで高さをQSplitterの高さに揃える -->
+          <ScoreSequencer class="full-height" />
+        </template>
+      </QSplitter>
+    </div>
+    <PlaybackBar />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import ToolBar from "./ToolBar/ToolBar.vue";
+import PlaybackBar from "./PlaybackBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
@@ -111,11 +115,17 @@ onetimeWatch(
 @use "@/styles/variables" as vars;
 @use "@/styles/colors" as colors;
 
-.layout-container {
-  min-height: calc(100vh - #{vars.$menubar-height});
+.sing-editor {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - #{vars.$menubar-height});
+  min-height: 0;
 }
+
 .sing-main {
   display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
   position: relative;
 }

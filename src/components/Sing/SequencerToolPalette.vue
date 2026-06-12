@@ -1,79 +1,57 @@
 <template>
-  <div v-if="editTarget === 'NOTE'" class="tool-palette">
-    <QBtn
-      flat
-      round
-      :color="sequencerNoteTool === 'SELECT_FIRST' ? 'primary' : ''"
-      @click="$emit('update:sequencerNoteTool', 'SELECT_FIRST')"
+  <div
+    v-if="editTarget === 'NOTE'"
+    class="tool-palette"
+    :class="`orientation-${orientation}`"
+    aria-label="ノートツール"
+  >
+    <button
+      class="tool-palette-button"
+      :class="{ active: sequencerNoteTool === 'SELECT_FIRST' }"
+      type="button"
+      aria-label="選択優先"
+      title="選択優先"
+      @click="emit('update:sequencerNoteTool', 'SELECT_FIRST')"
     >
-      <i class="material-symbols-outlined">arrow_selector_tool</i>
-      <QTooltip
-        anchor="center right"
-        self="center left"
-        :offset="[8, 0]"
-        :delay="500"
-        transitionShow=""
-        transitionHide=""
-      >
-        選択優先
-      </QTooltip>
-    </QBtn>
-    <QBtn
-      flat
-      round
-      :color="sequencerNoteTool === 'EDIT_FIRST' ? 'primary' : ''"
-      @click="$emit('update:sequencerNoteTool', 'EDIT_FIRST')"
+      <span class="material-symbols-rounded">arrow_selector_tool</span>
+    </button>
+    <button
+      class="tool-palette-button"
+      :class="{ active: sequencerNoteTool === 'EDIT_FIRST' }"
+      type="button"
+      aria-label="編集優先"
+      title="編集優先"
+      @click="emit('update:sequencerNoteTool', 'EDIT_FIRST')"
     >
-      <i class="material-symbols-outlined">stylus</i>
-      <QTooltip
-        anchor="center right"
-        self="center left"
-        :offset="[8, 0]"
-        :delay="500"
-        transitionShow=""
-        transitionHide=""
-      >
-        編集優先
-      </QTooltip>
-    </QBtn>
+      <span class="material-symbols-rounded">stylus</span>
+    </button>
   </div>
-  <div v-else-if="editTarget === 'PITCH'" class="tool-palette">
-    <QBtn
-      flat
-      round
-      :color="sequencerPitchTool === 'DRAW' ? 'primary' : ''"
-      @click="$emit('update:sequencerPitchTool', 'DRAW')"
+  <div
+    v-else-if="editTarget === 'PITCH'"
+    class="tool-palette"
+    :class="`orientation-${orientation}`"
+    aria-label="ピッチツール"
+  >
+    <button
+      class="tool-palette-button"
+      :class="{ active: sequencerPitchTool === 'DRAW' }"
+      type="button"
+      aria-label="ピッチ編集"
+      title="ピッチ編集"
+      @click="emit('update:sequencerPitchTool', 'DRAW')"
     >
-      <i class="material-symbols-outlined">stylus</i>
-      <QTooltip
-        anchor="center right"
-        self="center left"
-        :offset="[8, 0]"
-        :delay="500"
-        transitionShow=""
-        transitionHide=""
-      >
-        ピッチ編集
-      </QTooltip>
-    </QBtn>
-    <QBtn
-      flat
-      round
-      :color="sequencerPitchTool === 'ERASE' ? 'primary' : ''"
-      @click="$emit('update:sequencerPitchTool', 'ERASE')"
+      <span class="material-symbols-rounded">stylus</span>
+    </button>
+    <button
+      class="tool-palette-button"
+      :class="{ active: sequencerPitchTool === 'ERASE' }"
+      type="button"
+      aria-label="ピッチ削除"
+      title="ピッチ削除"
+      @click="emit('update:sequencerPitchTool', 'ERASE')"
     >
-      <i class="material-symbols-outlined">ink_eraser</i>
-      <QTooltip
-        anchor="center right"
-        self="center left"
-        :offset="[8, 0]"
-        :delay="500"
-        transitionShow=""
-        transitionHide=""
-      >
-        ピッチ削除
-      </QTooltip>
-    </QBtn>
+      <span class="material-symbols-rounded">ink_eraser</span>
+    </button>
   </div>
 </template>
 
@@ -84,12 +62,18 @@ import type {
   PitchEditTool,
 } from "@/store/type";
 
-defineProps<{
-  editTarget: SequencerEditTarget;
-  sequencerNoteTool: NoteEditTool;
-  sequencerPitchTool: PitchEditTool;
-}>();
-defineEmits<{
+withDefaults(
+  defineProps<{
+    editTarget: SequencerEditTarget;
+    sequencerNoteTool: NoteEditTool;
+    sequencerPitchTool: PitchEditTool;
+    orientation?: "vertical" | "horizontal";
+  }>(),
+  {
+    orientation: "vertical",
+  },
+);
+const emit = defineEmits<{
   (event: "update:sequencerNoteTool", value: NoteEditTool): void;
   (event: "update:sequencerPitchTool", value: PitchEditTool): void;
 }>();
@@ -98,36 +82,58 @@ defineEmits<{
 <style scoped lang="scss">
 .tool-palette {
   display: flex;
-  flex-direction: column;
-  background: var(--scheme-color-surface);
-  outline: 1px solid var(--scheme-color-outline-variant);
-  position: absolute;
-  top: 56px;
-  left: 64px;
-  z-index: var(--z-index-sing-tool-palette);
-  padding: 2px;
-  border-radius: 24px;
-  gap: 0;
-  box-shadow:
-    0px 8px 16px -4px rgba(0, 0, 0, 0.1),
-    0px 4px 8px -4px rgba(0, 0, 0, 0.06);
+  align-items: center;
+  padding: 1px;
+  border-radius: 7px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);
+  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
+  gap: 2px;
+  pointer-events: auto;
+}
 
-  .material-symbols-outlined {
-    font-size: 20px;
-    max-width: 20px;
+.orientation-vertical {
+  flex-direction: column;
+  width: 34px;
+}
+
+.orientation-horizontal {
+  flex-direction: row;
+  width: auto;
+}
+
+.tool-palette-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--scheme-color-on-surface-variant);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--scheme-color-surface-container-highest);
+    color: var(--scheme-color-on-surface);
   }
 
-  .q-btn {
-    min-height: 40px;
-    min-width: 40px;
-    padding: 8px;
+  &.active {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary-container) 72%,
+      var(--scheme-color-surface)
+    );
+    color: var(--scheme-color-on-secondary-container);
+    box-shadow:
+      inset 0 0 0 1px
+        color-mix(in oklch, var(--scheme-color-secondary) 38%, transparent),
+      0 1px 2px oklch(0% 0 0 / 0.1);
+  }
 
-    &.text-primary {
-      background-color: var(--scheme-color-secondary-container);
-      .material-symbols-outlined {
-        color: var(--scheme-color-on-primary-container);
-      }
-    }
+  .material-symbols-rounded {
+    font-size: 18px;
+    font-variation-settings: "FILL" 1;
+    line-height: 1;
   }
 }
 </style>

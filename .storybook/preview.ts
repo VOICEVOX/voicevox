@@ -1,12 +1,13 @@
 import { setup, type Preview } from "@storybook/vue3-vite";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
-import iconSet from "quasar/icon-set/material-icons";
+import iconSet from "quasar/icon-set/material-symbols-rounded";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
 import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { store, storeKey } from "@/store";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { withMaterialSymbolsRoundedIconMap } from "@/plugins/quasarIconMap";
 
-import "@quasar/extras/material-icons/material-icons.css";
+import "@quasar/extras/material-symbols-rounded/material-symbols-rounded.css";
 import "quasar/dist/quasar.sass";
 import "@/styles/_index.scss";
 import { UnreachableError } from "@/type/utility";
@@ -15,13 +16,13 @@ import { themes } from "@/domain/theme";
 
 setup((app) => {
   app.use(Quasar, {
-    config: {
+    config: withMaterialSymbolsRoundedIconMap({
       brand: {
         primary: "#a5d4ad",
         secondary: "#212121",
         negative: "var(--color-warning)",
       },
-    },
+    }),
     iconSet,
     plugins: {
       Dialog,

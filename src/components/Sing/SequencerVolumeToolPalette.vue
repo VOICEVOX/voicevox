@@ -1,90 +1,111 @@
 <template>
-  <div class="tool-palette">
-    <QBtn
-      flat
-      round
-      :color="sequencerVolumeTool === 'DRAW' ? 'primary' : ''"
-      @click="$emit('update:sequencerVolumeTool', 'DRAW')"
+  <div
+    class="tool-palette"
+    :class="`orientation-${orientation}`"
+    aria-label="声量ツール"
+  >
+    <button
+      v-for="toolItem in toolItems"
+      :key="toolItem.value"
+      class="tool-palette-button"
+      :class="{ active: sequencerVolumeTool === toolItem.value }"
+      type="button"
+      :aria-label="toolItem.label"
+      :title="toolItem.label"
+      @click="emit('update:sequencerVolumeTool', toolItem.value)"
     >
-      <i class="material-symbols-outlined">stylus</i>
-      <QTooltip
-        anchor="center right"
-        self="center left"
-        :offset="[8, 0]"
-        :delay="500"
-        transitionShow=""
-        transitionHide=""
-      >
-        ボリューム描画
-      </QTooltip>
-    </QBtn>
-    <QBtn
-      flat
-      round
-      :color="sequencerVolumeTool === 'ERASE' ? 'primary' : ''"
-      @click="$emit('update:sequencerVolumeTool', 'ERASE')"
-    >
-      <i class="material-symbols-outlined">ink_eraser</i>
-      <QTooltip
-        anchor="center right"
-        self="center left"
-        :offset="[8, 0]"
-        :delay="500"
-        transitionShow=""
-        transitionHide=""
-      >
-        ボリューム削除
-      </QTooltip>
-    </QBtn>
+      <span class="material-symbols-rounded" aria-hidden="true">
+        {{ toolItem.icon }}
+      </span>
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { QBtn, QTooltip } from "quasar";
 import type { VolumeEditTool } from "@/store/type";
 
-defineProps<{
-  sequencerVolumeTool: VolumeEditTool;
-}>();
+withDefaults(
+  defineProps<{
+    sequencerVolumeTool: VolumeEditTool;
+    orientation?: "vertical" | "horizontal";
+  }>(),
+  {
+    orientation: "vertical",
+  },
+);
 
-defineEmits<{
+const emit = defineEmits<{
   (event: "update:sequencerVolumeTool", value: VolumeEditTool): void;
 }>();
+
+const toolItems: {
+  value: VolumeEditTool;
+  label: string;
+  icon: string;
+}[] = [
+  { value: "SELECT", label: "ボリューム選択", icon: "arrow_selector_tool" },
+  { value: "DRAW", label: "ボリューム描画", icon: "stylus" },
+  { value: "ERASE", label: "ボリューム削除", icon: "ink_eraser" },
+  { value: "CUT", label: "ボリューム分割", icon: "content_cut" },
+  { value: "SMOOTH", label: "ボリューム補正", icon: "auto_fix_high" },
+];
 </script>
 
 <style scoped lang="scss">
 .tool-palette {
   display: flex;
-  flex-direction: column;
-  background: var(--scheme-color-surface);
-  outline: 1px solid var(--scheme-color-outline-variant);
-  position: absolute;
-  top: 12px;
-  left: 64px;
-  z-index: var(--z-index-sing-tool-palette);
-  padding: 2px;
-  border-radius: 24px;
-  gap: 0;
-  box-shadow:
-    0px 8px 16px -4px rgba(0, 0, 0, 0.1),
-    0px 4px 8px -4px rgba(0, 0, 0, 0.06);
+  align-items: center;
+  padding: 1px;
+  border-radius: 7px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);
+  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
+  gap: 1px;
+  pointer-events: auto;
+}
 
-  .material-symbols-outlined {
-    font-size: 20px;
-    max-width: 20px;
+.orientation-vertical {
+  flex-direction: column;
+  width: 34px;
+}
+
+.orientation-horizontal {
+  flex-direction: row;
+  width: auto;
+}
+
+.tool-palette-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--scheme-color-on-surface-variant);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--scheme-color-surface-container-highest);
+    color: var(--scheme-color-on-surface);
   }
 
-  .q-btn {
-    min-height: 40px;
-    min-width: 40px;
-    padding: 8px;
+  &.active {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary-container) 72%,
+      var(--scheme-color-surface)
+    );
+    color: var(--scheme-color-on-secondary-container);
+    box-shadow:
+      inset 0 0 0 1px
+        color-mix(in oklch, var(--scheme-color-secondary) 38%, transparent),
+      0 1px 2px oklch(0% 0 0 / 0.1);
+  }
 
-    &.text-primary {
-      background-color: var(--scheme-color-secondary-container);
-      .material-symbols-outlined {
-        color: var(--scheme-color-on-primary-container);
-      }
-    }
+  .material-symbols-rounded {
+    font-size: 17px;
+    font-variation-settings: "FILL" 1;
+    line-height: 1;
   }
 }
 </style>

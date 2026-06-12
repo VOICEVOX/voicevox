@@ -1,14 +1,15 @@
 import { createApp } from "vue";
 import { createGtm } from "@gtm-support/vue-gtm";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
-import iconSet from "quasar/icon-set/material-icons";
+import iconSet from "quasar/icon-set/material-symbols-rounded";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
 import App from "@/components/App.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { withMaterialSymbolsRoundedIconMap } from "@/plugins/quasarIconMap";
 
-import "@quasar/extras/material-icons/material-icons.css";
+import "@quasar/extras/material-symbols-rounded/material-symbols-rounded.css";
 import "quasar/dist/quasar.sass";
 import "./styles/_index.scss";
 
@@ -26,13 +27,13 @@ createApp(App)
     }),
   )
   .use(Quasar, {
-    config: {
+    config: withMaterialSymbolsRoundedIconMap({
       brand: {
         primary: "#a5d4ad",
         secondary: "#212121",
         negative: "var(--color-warning)",
       },
-    },
+    }),
     iconSet,
     plugins: {
       Dialog,

@@ -274,10 +274,15 @@ img {
   max-width: 80vw;
 }
 
-.material-symbols-outlined {
-  font-family: "Material Symbols Outlined";
+.material-symbols-rounded {
+  font-family: "Material Symbols Rounded";
   font-weight: normal;
   font-style: normal;
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
   font-size: 24px; /* Preferred icon size */
   display: inline-block;
   line-height: 1;
@@ -286,4 +291,8 @@ img {
   word-wrap: normal;
   white-space: nowrap;
   direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "liga";
 }

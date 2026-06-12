@@ -78,31 +78,32 @@ const selectedStyleIconPath = computed(() => {
 @use "@/styles/variables" as vars;
 
 .selected-character {
-  border: 1px solid var(--scheme-color-outline-variant);
-  border-radius: 4px 0 0 4px;
   align-items: center;
   display: flex;
-  padding: 0 8px 0 4px;
+  gap: 10px;
+  padding: 0 8px 0 6px;
   position: relative;
-  height: 40px;
+  height: 100%;
+  min-width: 0;
   font-smooth: antialiased;
 
   &:hover {
-    border-color: var(--scheme-color-outline);
-    background: oklch(from var(--scheme-color-secondary-container) l c h / 0.1);
+    background: oklch(
+      from var(--scheme-color-secondary-container) l c h / 0.16
+    );
   }
 
   &:focus {
-    border-color: var(--scheme-color-primary);
+    background: oklch(from var(--scheme-color-primary-container) l c h / 0.2);
   }
 
   .character-avatar {
-    width: 36px;
-    height: 36px;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
   }
 
   .character-avatar-icon {
-    border: 1px solid var(--scheme-color-outline-variant);
     display: block;
     height: 100%;
     object-fit: cover;
@@ -113,7 +114,7 @@ const selectedStyleIconPath = computed(() => {
     align-items: start;
     display: flex;
     flex-direction: column;
-    margin-left: 8px;
+    min-width: 0;
     text-align: left;
     justify-content: center;
     white-space: nowrap;
@@ -123,11 +124,13 @@ const selectedStyleIconPath = computed(() => {
   .character-name {
     color: var(--scheme-color-on-surface);
     font-size: 14px;
-    font-weight: 400;
-    line-height: 24px;
-    padding-top: 12px;
+    font-weight: 500;
+    line-height: 18px;
     margin-bottom: 0;
     font-optical-sizing: auto;
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     &.skeleton {
       margin-top: 0;
@@ -137,16 +140,15 @@ const selectedStyleIconPath = computed(() => {
 
   .character-style {
     color: var(--scheme-color-on-surface-variant);
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 400;
-    line-height: 16px;
-    margin-bottom: 8px;
+    line-height: 14px;
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     &.skeleton {
-      transform: translateY(5px);
-    }
-    &:not(.skeleton) {
-      transform: translateY(-5px);
+      margin-top: 4px;
     }
   }
 

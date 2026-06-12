@@ -4,13 +4,10 @@
     class="volume-editor"
     :class="cursorClass"
     @pointerdown="onSurfacePointerDown"
+    @pointermove="onSurfacePointerMove"
+    @pointerleave="onSurfacePointerLeave"
   >
     <canvas ref="canvas" class="volume-editor-canvas"></canvas>
-    <SequencerVolumeToolPalette
-      class="volume-tool-palette"
-      :sequencerVolumeTool="tool"
-      @update:sequencerVolumeTool="setTool"
-    />
     <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
   </div>
 </template>
@@ -49,7 +46,13 @@ import { VolumeLine } from "@/sing/graphics/volumeLine";
 import type { VolumeSegment } from "@/sing/graphics/volumeLine";
 import { Color } from "@/sing/graphics/lineStrip";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
-import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
+import {
+  computeVolumeEditableFrameRanges,
+  getOverlappingVolumeEditableFrameRanges,
+  isFrameInVolumeEditableRange,
+  maskVolumeEditDataByEditableRanges,
+  type VolumeEditableFrameRange,
+} from "@/sing/volumeEditRanges";
 
 const props = defineProps<{
   offsetX: number;
@@ -70,7 +73,9 @@ const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わ�
 const { warn } = createLogger("SequencerVolumeEditor");
 const store = useStore();
 const { volumePreviewEdit, stateMachineProcess, previewMode, cursorState } =
-  useVolumeEditorStateMachine(store);
+  useVolumeEditorStateMachine(store, {
+    getEditableFrameRanges: () => editableFrameRanges.value,
+  });
 
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
@@ -105,7 +110,8 @@ const setTool = (value: VolumeEditTool) => {
 // Mapの中身更新も検知するためのシグネチャ
 const phraseSignature = computed(() =>
   [...store.state.phrases.values()].map(
-    (phrase) => `${phrase.trackId}:${phrase.startTime}:${phrase.notes.length}`,
+    (phrase) =>
+      `${phrase.trackId}:${phrase.startTime}:${phrase.notes.length}:${phrase.minNonPauseStartFrame}:${phrase.maxNonPauseEndFrame}`,
   ),
 );
 const phraseQuerySignature = computed(() =>
@@ -151,6 +157,9 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 ]);
 
 const cursorClass = computed(() => {
+  if (isPointerOnDisabledArea.value) {
+    return "cursor-not-allowed";
+  }
   switch (cursorState.value) {
     case "DRAW":
       return "cursor-draw";
@@ -171,6 +180,7 @@ let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let gridGraphics: PIXI.Graphics | undefined;
 let erasePreviewOverlay: PIXI.Graphics | undefined;
+let disabledOverlayGraphics: PIXI.Graphics | undefined;
 let originalVolumeLine: VolumeLine | undefined;
 let editedVolumeLine: VolumeLine | undefined;
 let requestId: number | undefined;
@@ -190,9 +200,9 @@ let originalFramewiseCache: number[] = [];
 let hasOriginalFramewiseCache = false;
 let originalFrameRateCache = 0;
 let originalTrackIdCache: TrackId | undefined;
-const previewEraseRange = ref<{ startBaseX: number; endBaseX: number } | null>(
-  null,
-);
+const editableFrameRanges = ref<VolumeEditableFrameRange[]>([]);
+const previewEraseRanges = ref<{ startBaseX: number; endBaseX: number }[]>([]);
+const hoveredFrame = ref<number | null>(null);
 
 const gridPatterns = useSequencerGrid({
   timeSignatures: toRef(() => timeSignatures.value),
@@ -222,6 +232,38 @@ const frameToBaseX = (frame: number, frameRate: number) => {
   const ticks = secondToTick(seconds, rawTempos, tpqn.value);
   return tickToBaseX(ticks, tpqn.value);
 };
+
+const timelineFrameLength = computed(() => {
+  const frameRate = editorFrameRate.value;
+  if (frameRate <= 0) {
+    return 1;
+  }
+  const totalTicks = getTotalTicks(
+    timeSignatures.value,
+    numMeasures.value,
+    tpqn.value,
+  );
+  const totalSeconds = tickToSecond(totalTicks, tempos.value, tpqn.value);
+  return Math.max(Math.round(totalSeconds * frameRate), 1);
+});
+
+const frameToScreenX = (frame: number, frameRate: number) => {
+  return (
+    frameToBaseX(frame, frameRate) * sequencerZoomX.value -
+    props.offsetX +
+    KEY_COLUMN_WIDTH_PX
+  );
+};
+
+const isPointerOnDisabledArea = computed(() => {
+  if (hoveredFrame.value == null) {
+    return false;
+  }
+  return !isFrameInVolumeEditableRange(
+    hoveredFrame.value,
+    editableFrameRanges.value,
+  );
+});
 
 const buildSegments = (framewiseData: number[], frameRate: number) => {
   const segments: VolumeSegment[] = [];
@@ -261,8 +303,12 @@ const updateGrid = () => {
   gridGraphics.clear();
   const height = viewportHeight.value;
   const width = viewportWidth.value;
-  const beatColor = isDark.value ? 0x4a4a4a : 0xc4c4c4;
-  const measureColor = isDark.value ? 0x6b6b6b : 0x8a8a8a;
+  // NOTE: ScoreSequencerのSVGグリッドは sing-colors.scss の CSS変数で色指定しているが、
+  // PIXI.GraphicsではCSS変数を参照できないため、対応する近似hex値をハードコードしている。
+  // sing-grid-beat-line: light oklch(lr-85), dark oklch(lr-4)
+  // sing-grid-measure-line: light oklch(lr-75), dark oklch(lr-40)
+  const beatColor = isDark.value ? 0x161616 : 0xc4c4c4;
+  const measureColor = isDark.value ? 0x585858 : 0xadadad;
 
   for (const pattern of gridPatterns.value) {
     const measuresInPattern = Math.round(pattern.width / pattern.patternWidth);
@@ -313,13 +359,59 @@ const render = () => {
     leftPadding: KEY_COLUMN_WIDTH_PX,
   };
 
+  // 編集不可区間のオーバーレイ
+  if (disabledOverlayGraphics) {
+    disabledOverlayGraphics.clear();
+    const overlayAlpha = isDark.value ? 0.35 : 0.08;
+    const frameRate = editorFrameRate.value;
+    if (frameRate > 0) {
+      let cursor = 0;
+      for (const range of editableFrameRanges.value) {
+        if (cursor < range.startFrame) {
+          const startX = frameToScreenX(cursor, frameRate);
+          const endX = frameToScreenX(range.startFrame, frameRate);
+          const clampedStart = Math.max(0, startX);
+          const clampedEnd = Math.min(viewInfo.viewportWidth, endX);
+          if (clampedEnd > clampedStart) {
+            disabledOverlayGraphics
+              .rect(
+                clampedStart,
+                0,
+                clampedEnd - clampedStart,
+                viewInfo.viewportHeight,
+              )
+              .fill({ color: 0x000000, alpha: overlayAlpha });
+          }
+        }
+        cursor = Math.max(cursor, range.endFrame);
+      }
+      // 最後の editable range 以降
+      const trailingStartX =
+        editableFrameRanges.value.length > 0
+          ? frameToScreenX(cursor, frameRate)
+          : 0;
+      if (trailingStartX < viewInfo.viewportWidth) {
+        disabledOverlayGraphics
+          .rect(
+            Math.max(0, trailingStartX),
+            0,
+            viewInfo.viewportWidth - Math.max(0, trailingStartX),
+            viewInfo.viewportHeight,
+          )
+          .fill({ color: 0x000000, alpha: overlayAlpha });
+      }
+    }
+  }
+
   updateGrid();
 
   // 削除中のプレビューオーバーレイ(半透明)
   if (erasePreviewOverlay) {
     erasePreviewOverlay.clear();
-    const range = previewEraseRange.value;
-    if (range && range.endBaseX > range.startBaseX) {
+    for (const range of previewEraseRanges.value) {
+      if (range.endBaseX <= range.startBaseX) {
+        continue;
+      }
       const startX =
         range.startBaseX * viewInfo.zoomX -
         viewInfo.offsetX +
@@ -361,13 +453,7 @@ const refreshOriginalVolumeSegments = () => {
   }
   const trackId = selectedTrackId.value;
 
-  const totalTicks = getTotalTicks(
-    timeSignatures.value,
-    numMeasures.value,
-    tpqn.value,
-  );
-  const totalSeconds = tickToSecond(totalTicks, tempos.value, tpqn.value);
-  const baseFrameLength = Math.max(Math.round(totalSeconds * frameRate), 1);
+  const baseFrameLength = timelineFrameLength.value;
 
   const originalFramewise = new Array<number>(baseFrameLength).fill(
     VALUE_INDICATING_NO_DATA,
@@ -411,8 +497,53 @@ const refreshOriginalVolumeSegments = () => {
   hasOriginalFramewiseCache = true;
   originalFrameRateCache = frameRate;
   originalTrackIdCache = trackId;
-  volumeOriginalSegmentsData = buildSegments(originalFramewise, frameRate);
+
+  // 編集可能区間のみ描画する（ポーズ区間のボリュームを非表示にする）
+  const maskedOriginal = maskVolumeEditDataByEditableRanges(
+    originalFramewise,
+    0,
+    editableFrameRanges.value,
+  );
+  volumeOriginalSegmentsData = buildSegments(maskedOriginal, frameRate);
   renderInNextFrame = true;
+};
+
+const refreshEditableFrameRanges = () => {
+  const frameRate = editorFrameRate.value;
+  if (frameRate <= 0) {
+    editableFrameRanges.value = [];
+    return;
+  }
+
+  const resolvedPhrases = [];
+  for (const phrase of store.state.phrases.values()) {
+    if (phrase.trackId !== selectedTrackId.value) {
+      continue;
+    }
+    if (phrase.queryKey == undefined) {
+      continue;
+    }
+    const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
+    if (phraseQuery?.volume == undefined) {
+      continue;
+    }
+    if (phraseQuery.frameRate !== frameRate) {
+      throw new Error(
+        `Frame rate mismatch: expected ${frameRate}, got ${phraseQuery.frameRate}. queryKey: ${phrase.queryKey}`,
+      );
+    }
+    resolvedPhrases.push({
+      startTime: phrase.startTime,
+      volumeLength: phraseQuery.volume.length,
+      minNonPauseStartFrame: phrase.minNonPauseStartFrame,
+      maxNonPauseEndFrame: phrase.maxNonPauseEndFrame,
+    });
+  }
+
+  editableFrameRanges.value = computeVolumeEditableFrameRanges(
+    resolvedPhrases,
+    frameRate,
+  );
 };
 
 const refreshEffectiveVolumeSegments = () => {
@@ -434,6 +565,7 @@ const refreshEffectiveVolumeSegments = () => {
   }
 
   const originalFramewise = originalFramewiseCache;
+  const editableRanges = editableFrameRanges.value;
   let maxFrame = Math.max(originalFramewise.length, 1);
 
   const baseEditData = selectedTrack.value?.volumeEditData ?? [];
@@ -456,12 +588,18 @@ const refreshEffectiveVolumeSegments = () => {
           ),
         );
       }
-      for (const [i, rawValue] of preview.data.entries()) {
-        const value = Math.min(Math.max(rawValue, 0), 1);
-        editFramewise[startFrame + i] = value;
+      // プレビューデータを editableRanges でマスクして適用
+      const maskedPreview = maskVolumeEditDataByEditableRanges(
+        preview.data,
+        preview.startFrame,
+        editableRanges,
+      );
+      for (const [i, rawValue] of maskedPreview.entries()) {
+        if (rawValue === VALUE_INDICATING_NO_DATA) continue;
+        editFramewise[startFrame + i] = Math.min(Math.max(rawValue, 0), 1);
       }
       maxFrame = Math.max(maxFrame, endFrame);
-      previewEraseRange.value = null;
+      previewEraseRanges.value = [];
     } else if (preview.type === "erase") {
       const start = Math.max(0, preview.startFrame);
       const end = start + preview.frameLength;
@@ -472,15 +610,27 @@ const refreshEffectiveVolumeSegments = () => {
           ),
         );
       }
-      editFramewise.fill(VALUE_INDICATING_NO_DATA, start, end);
+      const overlaps = getOverlappingVolumeEditableFrameRanges(
+        start,
+        preview.frameLength,
+        editableRanges,
+      );
+      for (const overlap of overlaps) {
+        editFramewise.fill(
+          VALUE_INDICATING_NO_DATA,
+          overlap.startFrame,
+          overlap.endFrame,
+        );
+      }
       maxFrame = Math.max(maxFrame, end);
-      const startBaseX = frameToBaseX(start, frameRate);
-      const endBaseX = frameToBaseX(end, frameRate);
-      previewEraseRange.value = { startBaseX, endBaseX };
+      previewEraseRanges.value = overlaps.map((overlap) => ({
+        startBaseX: frameToBaseX(overlap.startFrame, frameRate),
+        endBaseX: frameToBaseX(overlap.endFrame, frameRate),
+      }));
     }
   }
   if (preview == undefined) {
-    previewEraseRange.value = null;
+    previewEraseRanges.value = [];
   }
 
   const totalFrames = Math.max(
@@ -495,7 +645,6 @@ const refreshEffectiveVolumeSegments = () => {
       ),
     );
   }
-
   const effectiveFramewise = new Array<number>(totalFrames).fill(
     VALUE_INDICATING_NO_DATA,
   );
@@ -509,15 +658,22 @@ const refreshEffectiveVolumeSegments = () => {
     }
   }
 
-  volumeEffectiveSegmentsData = buildSegments(effectiveFramewise, frameRate);
+  // 編集不可区間のボリュームを非表示にする
+  const maskedEffective = maskVolumeEditDataByEditableRanges(
+    effectiveFramewise,
+    0,
+    editableRanges,
+  );
+
+  volumeEffectiveSegmentsData = buildSegments(maskedEffective, frameRate);
   renderInNextFrame = true;
 };
 
 const dispatchVolumeEditorEvent = (
   pointerEvent: PointerEvent,
   targetArea: "Editor" | "Window",
+  position = computeViewportPosition(pointerEvent),
 ) => {
-  const position = computeViewportPosition(pointerEvent);
   stateMachineProcess({
     type: "pointerEvent",
     targetArea,
@@ -555,6 +711,10 @@ const computeViewportPosition = (pointerEvent: PointerEvent) => {
   };
 };
 
+const updateHoveredFrame = (pointerEvent: PointerEvent) => {
+  hoveredFrame.value = computeViewportPosition(pointerEvent).frame;
+};
+
 const onSurfacePointerDown = (event: PointerEvent) => {
   if (event.button !== 0) {
     return;
@@ -568,12 +728,27 @@ const onSurfacePointerDown = (event: PointerEvent) => {
       height: rect.height,
     };
   }
+  const position = computeViewportPosition(event);
+  hoveredFrame.value = position.frame;
   if (store.state.parameterPanelEditTarget !== "VOLUME") {
     void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({
       editTarget: "VOLUME",
     });
   }
-  dispatchVolumeEditorEvent(event, "Editor");
+  if (
+    !isFrameInVolumeEditableRange(position.frame, editableFrameRanges.value)
+  ) {
+    return;
+  }
+  dispatchVolumeEditorEvent(event, "Editor", position);
+};
+
+const onSurfacePointerMove = (event: PointerEvent) => {
+  updateHoveredFrame(event);
+};
+
+const onSurfacePointerLeave = () => {
+  hoveredFrame.value = null;
 };
 
 const onWindowPointerMove = (event: PointerEvent) => {
@@ -622,6 +797,7 @@ watch(
     try {
       await using _lock = await refreshVolumeSegmentsLock.acquire();
       if (isMounted) {
+        refreshEditableFrameRanges();
         refreshOriginalVolumeSegments();
         refreshEffectiveVolumeSegments();
       }
@@ -684,6 +860,7 @@ onMounted(async () => {
     return;
   }
   stage = new PIXI.Container();
+  disabledOverlayGraphics = new PIXI.Graphics();
   erasePreviewOverlay = new PIXI.Graphics();
   gridGraphics = new PIXI.Graphics();
   originalVolumeLine = new VolumeLine({
@@ -700,6 +877,7 @@ onMounted(async () => {
     isVisible: true,
   });
 
+  stage.addChild(disabledOverlayGraphics); // 編集不可区間（最背面）
   stage.addChild(erasePreviewOverlay); // 下地
   stage.addChild(gridGraphics); // グリッドはオーバーレイの上に
   stage.addChild(originalVolumeLine.container);
@@ -753,6 +931,7 @@ onUnmounted(() => {
   originalVolumeLine?.destroy();
   editedVolumeLine?.destroy();
   gridGraphics?.destroy();
+  disabledOverlayGraphics?.destroy();
   stage?.destroy();
   renderer?.destroy({ removeView: true });
   resizeObserver?.disconnect();
@@ -775,5 +954,9 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed;
 }
 </style>
