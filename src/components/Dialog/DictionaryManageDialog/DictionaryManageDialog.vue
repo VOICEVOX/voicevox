@@ -87,7 +87,7 @@
           <WordEditor
             v-if="currentWord?.type === 'edit'"
             ref="wordEditor"
-            :key="currentWord.id"
+            :key="`${currentWord.id}-${wordEditorNonce}`"
             :initialSurface="currentWord.surface"
             :initialYomi="currentWord.yomi"
             :initialWordPriority="currentWord.wordPriority"
@@ -96,6 +96,7 @@
           <WordEditor
             v-else-if="currentWord?.type === 'new'"
             ref="wordEditor"
+            :key="`new-${wordEditorNonce}`"
             initialSurface=""
             initialYomi=""
             :initialWordPriority="5"
@@ -126,6 +127,9 @@ const store = useStore();
 
 const loadingDictState = ref<null | "loading" | "synchronizing">(null);
 const hoveredKey = ref<string | undefined>(undefined);
+
+// NOTE: 単語を移動したときにコンポーネントを作り直すために適当な数字をkeyに足す
+const wordEditorNonce = ref(0);
 const currentWord = ref<
   | {
       type: "edit";
@@ -240,6 +244,7 @@ const beforeMove = async (proceed: () => void) => {
       isWarningColorButton: true,
     });
     if (result === "OK") {
+      wordEditorNonce.value++;
       proceed();
     }
   } else if (wordEditor.value.editState.type === "invalid") {
@@ -251,6 +256,7 @@ const beforeMove = async (proceed: () => void) => {
       isWarningColorButton: true,
     });
     if (result === "OK") {
+      wordEditorNonce.value++;
       proceed();
     }
   } else {
@@ -293,6 +299,7 @@ const loadUserDict = async () => {
   try {
     userDict.value = await lockUiWhile(store.actions.LOAD_ALL_USER_DICT());
   } catch {
+    loadingDictState.value = null;
     const result = await store.actions.SHOW_ALERT_DIALOG({
       title: "辞書の取得に失敗しました",
       message: "エンジンの再起動をお試しください。",
@@ -300,6 +307,7 @@ const loadUserDict = async () => {
     if (result === "OK") {
       dialogOpened.value = false;
     }
+    return;
   }
   loadingDictState.value = "synchronizing";
   try {

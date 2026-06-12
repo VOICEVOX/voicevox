@@ -260,6 +260,7 @@ const resetInputs = () => {
   yomi.value = props.initialYomi;
   wordPriority.value = props.initialWordPriority;
   temporaryYomi.value = props.initialYomi;
+  void setYomi(props.initialYomi);
 };
 const saveNewWord = () => {
   emit("saveNewWord");
