@@ -3,12 +3,14 @@ import { gotoHome, navigateToMain } from "../navigators";
 
 test.beforeEach(gotoHome);
 
-let surfaceIndex = 0;
-
-function createSurface(label: string): string {
-  surfaceIndex++;
-  return `辞書${label}${"あ".repeat(surfaceIndex)}`;
+function createUniqueSurfaceCreator(): (label: string) => string {
+  let surfaceIndex = 0;
+  return (label: string) => {
+    surfaceIndex++;
+    return `辞書${label}${"あ".repeat(surfaceIndex)}`;
+  };
 }
+const createSurface = createUniqueSurfaceCreator();
 
 async function getYomi(page: Page, inputText: string): Promise<string> {
   const audioCellInput = page.getByRole("textbox", { name: "行目" }).last();
