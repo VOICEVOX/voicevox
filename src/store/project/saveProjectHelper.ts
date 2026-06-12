@@ -5,6 +5,7 @@ import type { LatestProjectType } from "@/infrastructures/projectFile/type";
 import { DisplayableError } from "@/helpers/errorHelper";
 import { ResultError } from "@/type/result";
 import { toProjectFileTrack } from "@/infrastructures/projectFile/conversion";
+import { mapToRecord } from "@/sing/utility";
 
 export async function promptProjectSaveFilePath(
   context: ActionContext,
@@ -35,7 +36,11 @@ export async function writeProjectFile(
     timeSignatures,
     tracks,
     trackOrder,
+    phraseQueries,
+    phraseSingingPitches,
+    phraseSingingVolumes,
   } = context.state;
+
   const projectData: LatestProjectType = {
     appVersion,
     talk: {
@@ -53,6 +58,9 @@ export async function writeProjectFile(
         }),
       ),
       trackOrder,
+      phraseQueries: mapToRecord(phraseQueries),
+      phraseSingingPitches: mapToRecord(phraseSingingPitches),
+      phraseSingingVolumes: mapToRecord(phraseSingingVolumes),
     },
   };
 

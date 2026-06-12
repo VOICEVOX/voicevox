@@ -301,6 +301,13 @@ export const migrateProjectFileObject = async (
     }
   }
 
+  if (semver.satisfies(projectAppVersion, "<0.26.0", semverSatisfiesOptions)) {
+    // フレーズのレンダリングデータの追加
+    projectData.song.phraseQueries = {};
+    projectData.song.phraseSingingPitches = {};
+    projectData.song.phraseSingingVolumes = {};
+  }
+
   // Validation check
   // トークはvalidateTalkProjectで検証する
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される

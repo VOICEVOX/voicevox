@@ -29,6 +29,22 @@ export const projectFileTrackSchema = z.object({
   pan: z.number(),
 });
 
+const framePhonemeSchema = z.object({
+  phoneme: z.string(),
+  frameLength: z.number(),
+  noteId: z.string().nullable().optional(),
+});
+
+const editorFrameAudioQuerySchema = z.object({
+  f0: z.array(z.number()),
+  volume: z.array(z.number()),
+  phonemes: z.array(framePhonemeSchema),
+  volumeScale: z.number(),
+  outputSamplingRate: z.number(),
+  outputStereo: z.boolean(),
+  frameRate: z.number(),
+});
+
 // プロジェクトファイルのスキーマ
 export const projectFileSchema = z.object({
   appVersion: z.string(),
@@ -44,5 +60,8 @@ export const projectFileSchema = z.object({
     timeSignatures: z.array(timeSignatureSchema),
     tracks: z.record(trackIdSchema, projectFileTrackSchema),
     trackOrder: z.array(trackIdSchema),
+    phraseQueries: z.record(z.string(), editorFrameAudioQuerySchema),
+    phraseSingingPitches: z.record(z.string(), z.array(z.number())),
+    phraseSingingVolumes: z.record(z.string(), z.array(z.number())),
   }),
 });

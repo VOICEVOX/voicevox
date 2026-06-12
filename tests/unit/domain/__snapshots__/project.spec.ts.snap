@@ -4,6 +4,9 @@ exports[`migrateProjectFileObject > v0.14.11 1`] = `
 {
   "appVersion": "999.999.999",
   "song": {
+    "phraseQueries": {},
+    "phraseSingingPitches": {},
+    "phraseSingingVolumes": {},
     "tempos": [
       {
         "bpm": 120,
