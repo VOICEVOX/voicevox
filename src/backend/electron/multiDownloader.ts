@@ -57,7 +57,7 @@ export class MultiDownloader {
           await res.body.pipeTo(
             new WritableStream({
               write: (chunk) => {
-                fileStream.write(chunk as Buffer);
+                fileStream.write(chunk);
                 downloadedBytes += chunk.length;
                 this.callbacks?.onProgress?.({
                   type: "download",

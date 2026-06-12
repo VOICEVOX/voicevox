@@ -28,7 +28,7 @@ const meta: Meta<StoryProps> = {
       setup() {
         const store = useStore();
         // コンポーネントのプロパティからデータを取得
-        const args = context.args as StoryProps;
+        const args = context.args;
         if (args.tempos) {
           store.commit("SET_TEMPOS", {
             tempos: args.tempos,
@@ -165,11 +165,11 @@ export const Dense: Story = {
         },
         {
           bpm: 120,
-          position: 400,
+          position: 300,
         },
         {
           bpm: 120,
-          position: 480,
+          position: 380,
         },
       ],
     },
