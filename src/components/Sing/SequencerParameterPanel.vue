@@ -16,6 +16,10 @@
         @update:needsAutoScroll="
           (value) => emit('update:needsAutoScroll', value)
         "
+        @panTimeline="(deltaX) => emit('panTimeline', deltaX)"
+        @zoomTimeline="
+          (anchorX, deltaY) => emit('zoomTimeline', anchorX, deltaY)
+        "
       />
     </div>
   </div>
@@ -34,6 +38,8 @@ defineProps<{ viewportInfo: ViewportInfo }>();
 
 const emit = defineEmits<{
   "update:needsAutoScroll": [value: boolean];
+  panTimeline: [deltaX: number];
+  zoomTimeline: [anchorX: number, deltaY: number];
 }>();
 
 const store = useStore();
