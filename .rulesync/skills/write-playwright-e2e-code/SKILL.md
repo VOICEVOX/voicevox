@@ -78,10 +78,10 @@ await page.waitForTimeout(5000); // エンジン読み込みを待機
 
 優先順位:
 
-1. **`getByRole`** 役割と名前で自然に取得できる場合に使う
-2. **他の `getBy...`** `getByLabel`・`getByText`・`getByPlaceholder`・`getByAltText`・`getByTitle` などから対象を自然に表せるものを使う
-3. **コンポーネント名のクラス** コンポーネントの名前と同じ CSS クラス、あるいはコンポーネント名とパーツ名を組み合わせた CSS クラスは使ってよい
-4. **`data-testid`** ここまでの方法で自然に取得するのが難しい場合に使う
+1. **`getByRole`**: 役割と名前で自然に取得できる場合に使う
+2. **他の `getBy...`**: `getByLabel`・`getByText`・`getByPlaceholder`・`getByAltText`・`getByTitle` などから対象を自然に表せるものを使う
+3. **コンポーネント名のクラス**: コンポーネントの名前と同じ CSS クラス、あるいはコンポーネント名とパーツ名を組み合わせた CSS クラスは使ってよい
+4. **`data-testid`**: ここまでの方法で自然に取得するのが難しい場合に使う
 
 Good 1:
 
