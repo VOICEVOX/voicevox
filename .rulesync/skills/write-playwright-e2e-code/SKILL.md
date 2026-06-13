@@ -72,7 +72,10 @@ await page.waitForTimeout(5000); // エンジン読み込みを待機
 
 ## locator の選択
 
-`locator` は、ユーザーから見える意味で取得できるものを優先する。適切な `locator` が書けない場合は、ソースコードの変更を検討する。
+- `locator` はユーザーから見える意味で取得できるものを優先する
+- 適切な `locator` が書けない場合は、ソースコードの変更を検討する
+- DOM 構造に依存するセレクターは原則使わず、他に取得方法がない場合だけ例外として使う
+- WCAG に準拠する
 
 優先順位:
 
@@ -81,9 +84,7 @@ await page.waitForTimeout(5000); // エンジン読み込みを待機
 3. **コンポーネント名のクラス** コンポーネントの名前と同じ CSS クラス、あるいはコンポーネント名とパーツ名を組み合わせた CSS クラスは使ってよい
 4. **`data-testid`** ここまでの方法で自然に取得するのが難しい場合に使う
 
-DOM 構造に依存するセレクターは原則使わない。他に取得方法がない場合だけ例外として使う。
-
-Good:
+Good 1:
 
 ```typescript
 // コード
@@ -92,7 +93,7 @@ Good:
 await page.getByRole("button", { name: "ダウンロード" }).click();
 ```
 
-Bad (不要なtestid):
+Bad 1 (不要なtestid):
 
 ```typescript
 // コード
@@ -101,15 +102,7 @@ Bad (不要なtestid):
 await page.getByTestId("download-button").click();
 ```
 
-### role と aria-label
-
-`<button>` や `<input>` などは `getByRole` でロールを取得できる。ロールが付かない要素には `role` 属性を付けることで、スクリーンリーダー等に役割を正しく認識され、`getByRole` で取得できる。
-
-アイコンだけのボタンなど見た目に名前がない要素には `aria-label` を付けることで、スクリーンリーダー等が読み上げられるようになり、テストでも `getByLabel` で取得できる。
-
-`role` 属性と `aria-label` はいずれも WCAG に合わせる。
-
-Good:
+Good 2:
 
 ```typescript
 // コード
@@ -118,7 +111,7 @@ Good:
 await page.getByLabel("閉じる").click();
 ```
 
-Bad (WCAGに準拠していない):
+Bad 2 (WCAGに準拠していない):
 
 ```typescript
 // コード
