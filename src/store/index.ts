@@ -44,7 +44,9 @@ import {
   SpeakerId,
   StyleId,
   type Voice,
+  type UpdateInfo,
 } from "@/type/preload";
+import { AssetTextFileNames } from "@/type/staticResources";
 import { isProduction } from "@/helpers/platform";
 
 export type Store = BaseStore<State, AllGetters, AllActions, AllMutations>;
@@ -55,6 +57,17 @@ export const indexStoreState: IndexStoreState = {
   userCharacterOrder: [],
   isMultiEngineOffMode: false,
 };
+
+const markdownAssets = import.meta.glob<string>("../../public/*.md", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+
+const jsonAssets = import.meta.glob<unknown>("../../public/*.json", {
+  import: "default",
+  eager: true,
+});
 
 export const indexStore = createPartialStore<IndexStoreTypes>({
   GET_ALL_CHARACTER_INFOS: {
@@ -154,49 +167,55 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   GET_HOW_TO_USE_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("HowToUse");
+      return markdownAssets[`../../public/${AssetTextFileNames.HowToUse}`];
     },
   },
 
   GET_CONTACT_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("Contact");
+      return markdownAssets[`../../public/${AssetTextFileNames.Contact}`];
     },
   },
 
   GET_Q_AND_A_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("QAndA");
+      return markdownAssets[`../../public/${AssetTextFileNames.QAndA}`];
     },
   },
 
   GET_POLICY_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("Policy");
+      return markdownAssets[`../../public/${AssetTextFileNames.Policy}`];
     },
   },
 
   GET_OSS_LICENSES: {
     async action() {
-      return await window.backend.getTextAsset("OssLicenses");
+      return jsonAssets[
+        `../../public/${AssetTextFileNames.OssLicenses}`
+      ] as Record<string, string>[];
     },
   },
 
   GET_UPDATE_INFOS: {
     async action() {
-      return await window.backend.getTextAsset("UpdateInfos");
+      return jsonAssets[
+        `../../public/${AssetTextFileNames.UpdateInfos}`
+      ] as UpdateInfo[];
     },
   },
 
   GET_OSS_COMMUNITY_INFOS: {
     async action() {
-      return await window.backend.getTextAsset("OssCommunityInfos");
+      return markdownAssets[
+        `../../public/${AssetTextFileNames.OssCommunityInfos}`
+      ];
     },
   },
 
   GET_PRIVACY_POLICY_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("PrivacyPolicy");
+      return markdownAssets[`../../public/${AssetTextFileNames.PrivacyPolicy}`];
     },
   },
 
