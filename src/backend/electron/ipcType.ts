@@ -6,7 +6,6 @@ import type {
   EngineSettingType,
   MessageBoxReturnValue,
   NativeThemeType,
-  TextAsset,
   ToolbarSettingType,
 } from "@/type/preload";
 import type { AltPortInfos } from "@/store/type";
@@ -17,11 +16,6 @@ import type { HotkeySettingType } from "@/domain/hotkeyAction";
  * invoke, handle
  */
 export type IpcIHData = {
-  GET_TEXT_ASSET: {
-    args: [textType: keyof TextAsset];
-    return: TextAsset[keyof TextAsset];
-  };
-
   GET_ALT_PORT_INFOS: {
     args: [];
     return: AltPortInfos;
