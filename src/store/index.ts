@@ -25,6 +25,7 @@ import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
 import {
   singingStoreState,
   singingStore,
+  singingStorePlugins,
   singingCommandStoreState,
   singingCommandStore,
 } from "./singing";
@@ -412,6 +413,9 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...singingStore.actions,
     ...singingCommandStore.actions,
   },
+
+  plugins: [...singingStorePlugins],
+
   strict: !isProduction,
 });
 

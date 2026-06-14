@@ -6,7 +6,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import { retryFetch } from "./helper";
+import { retryFetch, verifySha256 } from "./helper";
 
 const TYPE2_RUNTIME_VERSION = "20251108";
 
@@ -34,14 +34,34 @@ async function isDownloaded() {
   return true;
 }
 
-function getDownloadURL() {
-  const arch: Record<string, string> = {
-    arm: "armhf",
-    arm64: "aarch64",
-    ia32: "i686",
-    x64: "x86_64",
+function getDownloadInfo(): { url: string; sha256: string } {
+  const archInfoMap: Record<string, { archKey: string; sha256: string }> = {
+    arm: {
+      archKey: "armhf",
+      sha256:
+        "e9060d37577b8a29914ec12d8740add24e19ff29012fb1fa0f60daf62db0688d",
+    },
+    arm64: {
+      archKey: "aarch64",
+      sha256:
+        "00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444",
+    },
+    ia32: {
+      archKey: "i686",
+      sha256:
+        "e72ea0b140a0a16e680713238a6f30aad278b62c4ca17919c554864124515498",
+    },
+    x64: {
+      archKey: "x86_64",
+      sha256:
+        "2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d",
+    },
   };
-  return `https://github.com/AppImage/type2-runtime/releases/download/${TYPE2_RUNTIME_VERSION}/runtime-${arch[process.arch]}`;
+  const info = archInfoMap[process.arch];
+  return {
+    url: `https://github.com/AppImage/type2-runtime/releases/download/${TYPE2_RUNTIME_VERSION}/runtime-${info.archKey}`,
+    sha256: info.sha256,
+  };
 }
 
 async function main() {
@@ -50,9 +70,10 @@ async function main() {
     return;
   }
   await fs.mkdir(distDir, { recursive: true });
-  const url = getDownloadURL();
+  const { url, sha256 } = getDownloadInfo();
   const result = await retryFetch(url);
   const data = await result.bytes();
+  verifySha256(data, sha256);
   await fs.writeFile(runtimePath, data);
   await fs.writeFile(versionFilePath, TYPE2_RUNTIME_VERSION);
 }

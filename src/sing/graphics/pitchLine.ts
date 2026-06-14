@@ -35,11 +35,7 @@ export class PitchLine {
   pitchDataMap: Map<PitchDataHash, PitchData>;
 
   private readonly lineStripMap: Map<PitchDataHash, LineStrip>;
-  private readonly container: PIXI.Container;
-
-  get displayObject(): PIXI.DisplayObject {
-    return this.container;
-  }
+  readonly container: PIXI.Container;
 
   constructor(color: Color, width: number, isVisible: boolean) {
     this.color = color;
@@ -69,7 +65,7 @@ export class PitchLine {
         !lineStrip.color.equals(this.color) ||
         lineStrip.width !== this.width
       ) {
-        this.container.removeChild(lineStrip.displayObject);
+        this.container.removeChild(lineStrip.container);
         removedLineStrips.push(lineStrip);
         this.lineStripMap.delete(key);
       }
@@ -93,7 +89,7 @@ export class PitchLine {
         lineStrip = new LineStrip(pitchData.length, this.color, this.width);
       }
 
-      this.container.addChild(lineStrip.displayObject);
+      this.container.addChild(lineStrip.container);
       this.lineStripMap.set(key, lineStrip);
     }
 

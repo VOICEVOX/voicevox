@@ -144,6 +144,8 @@ export interface Sandbox {
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): Promise<string>;
+  hasDownloadableDefaultEngine(): Promise<boolean>;
+  getDownloadableDefaultEnginePackageIds(): Promise<EngineId[]>;
 }
 
 export type AppInfos = {
@@ -274,8 +276,7 @@ export type EngineInfo = {
   // エンジンの種類。
   // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  // downloadVvpp: VVPPをダウンロードして追加したエンジン
-  type: "vvpp" | "path" | "downloadVvpp";
+  type: "vvpp" | "path";
   isDefault: boolean; // デフォルトエンジンかどうか
 };
 

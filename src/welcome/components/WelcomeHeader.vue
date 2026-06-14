@@ -5,13 +5,13 @@
       <QSpace />
 
       <BaseTooltip
-        :label="launchEditorDisabledReason || ''"
-        :disabled="launchEditorDisabledReason == null"
+        :label="launchEditorState.enabled ? '' : launchEditorState.reason"
+        :disabled="launchEditorState.enabled"
       >
         <BaseButton
           label="エディタを起動"
-          :disabled="launchEditorDisabledReason != null"
-          @click="handleLaunchEditor"
+          :disabled="!launchEditorState.enabled"
+          @click="store.switchToMainWindow"
         />
       </BaseTooltip>
     </QToolbar>
@@ -21,18 +21,8 @@
 <script setup lang="ts">
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
+import { useStore } from "@/welcome/store";
 
-const props = defineProps<{
-  launchEditorDisabledReason: string | null;
-}>();
-const emit = defineEmits<{
-  (event: "launch-editor"): void;
-}>();
-
-const handleLaunchEditor = () => {
-  if (props.launchEditorDisabledReason) {
-    return;
-  }
-  emit("launch-editor");
-};
+const store = useStore();
+const { launchEditorState } = store;
 </script>

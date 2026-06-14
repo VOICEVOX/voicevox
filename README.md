@@ -66,7 +66,7 @@ pnpm run setup-agents
 `.env.production`をコピーして`.env`を作成し、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) 内の`vv-engine/run.exe`を指定すれば動きます。
 
-Windows でインストール先を変更していない場合は`C:/Users/(ユーザー名)/AppData/Local/Programs/VOICEVOX/vv-engine/run.exe`を指定してください。  
+Windows でインストール先を変更していない場合は`%LOCALAPPDATA%/Programs/VOICEVOX/vv-engine/run.exe`を指定してください。  
 パスの区切り文字は`\`ではなく`/`なのでご注意ください。
 
 macOS 向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Contents/Resources/vv-engine/run`を指定してください。
@@ -308,6 +308,18 @@ ShellScript の文法チェックを行います。
 ```bash
 shellcheck ./build/*.sh
 shellcheck ./tools/*.bash
+```
+
+## GitHub Actions のバージョン固定
+
+[pinact](https://github.com/suzuki-shunsuke/pinact) を使って GitHub Actions のバージョンを full-length commit SHA に固定しています。
+
+```bash
+# バージョンを固定する
+pinact run
+
+# バージョンを更新して固定する
+pinact run --update --min-age 7
 ```
 
 ## OpenAPI generator

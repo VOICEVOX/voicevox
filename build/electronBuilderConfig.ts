@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import type { Configuration as ElectronBuilderConfiguration } from "electron-builder";
 import { z } from "zod";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
-import afterPack from "./afterPack";
 import artifactBuildCompleted from "./artifactBuildCompleted";
 
 const rootDir = path.join(import.meta.dirname, "..");
@@ -111,8 +110,14 @@ const builderOptions: ElectronBuilderConfiguration = {
   appId: "jp.hiroshiba.voicevox",
   copyright: "Hiroshiba Kazuyuki",
   afterAllArtifactBuild,
-  afterPack,
   artifactBuildCompleted,
+  electronFuses: {
+    runAsNode: false,
+    enableNodeOptionsEnvironmentVariable: false,
+    enableNodeCliInspectArguments: false,
+    onlyLoadAppFromAsar: true,
+    grantFileProtocolExtraPrivileges: false,
+  },
   electronLanguages: ["en-US", "ja"],
   win: {
     icon: "public/icon.png",
