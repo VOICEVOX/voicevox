@@ -17,12 +17,6 @@ export type FramewiseVolumeData = {
 export const mergeVolumeEditableFrameRanges = (
   ranges: readonly VolumeEditableFrameRange[],
 ) => {
-  for (const range of ranges) {
-    if (range.endFrame <= range.startFrame) {
-      throw new Error("endFrame must be greater than startFrame.");
-    }
-  }
-
   const sorted = [...ranges].sort((a, b) => a.startFrame - b.startFrame);
 
   const merged: { startFrame: number; endFrame: number }[] = [];
