@@ -527,15 +527,10 @@ const refreshEditableFrameRanges = () => {
     }
     const phraseStartFrame = Math.round(phrase.startTime * frameRate);
     const phraseEndFrame = phraseStartFrame + phraseQuery.volume.length;
-    const startFrame = Math.max(
-      0,
-      phraseStartFrame + (phrase.minNonPauseStartFrame ?? 0),
-    );
-    const endFrame = Math.min(
-      phraseEndFrame,
-      phraseStartFrame +
-        (phrase.maxNonPauseEndFrame ?? phraseQuery.volume.length),
-    );
+    const startOffset = phrase.minNonPauseStartFrame ?? 0;
+    const endOffset = phrase.maxNonPauseEndFrame ?? phraseQuery.volume.length;
+    const startFrame = Math.max(0, phraseStartFrame + startOffset);
+    const endFrame = Math.min(phraseEndFrame, phraseStartFrame + endOffset);
     if (startFrame < endFrame) {
       ranges.push({ startFrame, endFrame });
     }
