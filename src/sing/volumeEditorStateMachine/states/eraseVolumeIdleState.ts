@@ -2,7 +2,9 @@ import type {
   VolumeEditorStateDefinitions,
   VolumeEditorInput,
   VolumeEditorContext,
+  PositionOnVolumeEditor,
 } from "../common";
+import { updateCursorStateForEditableRange } from "../common";
 import type { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
 
@@ -29,11 +31,24 @@ export class EraseVolumeIdleState implements State<
     if (input.type === "pointerEvent") {
       const mouseButton = getButton(input.pointerEvent);
       const trackId = context.selectedTrackId.value;
+      const isEditable =
+        input.targetArea === "Editor" &&
+        input.pointerEvent.type !== "pointerleave"
+          ? this.updateCursorState(context, input.position)
+          : false;
+
+      if (
+        input.targetArea === "Editor" &&
+        input.pointerEvent.type === "pointerleave"
+      ) {
+        context.cursorState.value = "ERASE";
+      }
 
       if (
         input.pointerEvent.type === "pointerdown" &&
         mouseButton === "LEFT_BUTTON" &&
-        input.targetArea === "Editor"
+        input.targetArea === "Editor" &&
+        isEditable
       ) {
         setNextState("eraseVolume", {
           startPosition: input.position,
@@ -46,5 +61,12 @@ export class EraseVolumeIdleState implements State<
 
   onExit(context: VolumeEditorContext) {
     context.cursorState.value = "UNSET";
+  }
+
+  private updateCursorState(
+    context: VolumeEditorContext,
+    position: PositionOnVolumeEditor,
+  ) {
+    return updateCursorStateForEditableRange(context, position, "ERASE");
   }
 }

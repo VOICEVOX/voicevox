@@ -3816,6 +3816,9 @@ export const singingCommandStore = transformCommandStore(
         });
       },
       action({ mutations }, { ranges, trackId }) {
+        if (ranges.length === 0) {
+          throw new Error("The ranges must not be empty.");
+        }
         for (const range of ranges) {
           if (range.startFrame < 0) {
             throw new Error("startFrame must be greater than or equal to 0.");

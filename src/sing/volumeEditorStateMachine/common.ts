@@ -2,7 +2,10 @@ import type { ComputedRef, Ref } from "vue";
 import type { Store } from "@/store";
 import type { StateDefinitions } from "@/sing/stateMachine";
 import type { CursorState } from "@/sing/viewHelper";
-import type { VolumeEditableFrameRange } from "@/sing/volumeEditRanges";
+import {
+  isFrameInVolumeEditableRange,
+  type VolumeEditableFrameRange,
+} from "@/sing/volumeEditRanges";
 import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
 
@@ -103,3 +106,16 @@ export type VolumeEditorStateDefinitions = StateDefinitions<
     },
   ]
 >;
+
+export const updateCursorStateForEditableRange = (
+  context: VolumeEditorContext,
+  position: PositionOnVolumeEditor,
+  editableCursorState: Extract<CursorState, "DRAW" | "ERASE">,
+) => {
+  const isEditable = isFrameInVolumeEditableRange(
+    position.frame,
+    context.getEditableFrameRanges(),
+  );
+  context.cursorState.value = isEditable ? editableCursorState : "NOT_ALLOWED";
+  return isEditable;
+};

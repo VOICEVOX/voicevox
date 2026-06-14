@@ -147,8 +147,10 @@ export class DrawVolumeState implements State<
 
     if (this.applyPreview) {
       const maskedPreviewData = maskVolumeEditDataByEditableRanges(
-        context.previewVolumeEdit.value.data,
-        context.previewVolumeEdit.value.startFrame,
+        {
+          values: context.previewVolumeEdit.value.data,
+          startFrame: context.previewVolumeEdit.value.startFrame,
+        },
         context.getEditableFrameRanges(),
       );
       if (countVolumeEditDataPoints(maskedPreviewData) >= 2) {

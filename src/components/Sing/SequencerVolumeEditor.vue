@@ -53,10 +53,9 @@ import { Color } from "@/sing/graphics/lineStrip";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
 import {
-  computeVolumeEditableFrameRanges,
   getOverlappingVolumeEditableFrameRanges,
-  isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
+  mergeVolumeEditableFrameRanges,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
 
@@ -163,14 +162,13 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 ]);
 
 const cursorClass = computed(() => {
-  if (isPointerOnDisabledArea.value) {
-    return "cursor-not-allowed";
-  }
   switch (cursorState.value) {
     case "DRAW":
       return "cursor-draw";
     case "ERASE":
       return "cursor-erase";
+    case "NOT_ALLOWED":
+      return "cursor-not-allowed";
     default:
       return "cursor-crosshair";
   }
@@ -208,7 +206,6 @@ let originalFrameRateCache = 0;
 let originalTrackIdCache: TrackId | undefined;
 const editableFrameRanges = ref<VolumeEditableFrameRange[]>([]);
 const previewEraseRanges = ref<{ startBaseX: number; endBaseX: number }[]>([]);
-const hoveredFrame = ref<number | null>(null);
 
 const gridPatterns = useSequencerGrid({
   timeSignatures: toRef(() => timeSignatures.value),
@@ -260,16 +257,6 @@ const frameToScreenX = (frame: number, frameRate: number) => {
     KEY_COLUMN_WIDTH_PX
   );
 };
-
-const isPointerOnDisabledArea = computed(() => {
-  if (hoveredFrame.value == null) {
-    return false;
-  }
-  return !isFrameInVolumeEditableRange(
-    hoveredFrame.value,
-    editableFrameRanges.value,
-  );
-});
 
 const buildSegments = (framewiseData: number[], frameRate: number) => {
   const segments: VolumeSegment[] = [];
@@ -507,8 +494,7 @@ const refreshOriginalVolumeSegments = () => {
 
   // 編集可能区間のみ描画する（ポーズ区間のボリュームを非表示にする）
   const maskedOriginal = maskVolumeEditDataByEditableRanges(
-    originalFramewise,
-    0,
+    { values: originalFramewise, startFrame: 0 },
     editableFrameRanges.value,
   );
   volumeOriginalSegmentsData = buildSegments(maskedOriginal, frameRate);
@@ -522,7 +508,7 @@ const refreshEditableFrameRanges = () => {
     return;
   }
 
-  const resolvedPhrases = [];
+  const ranges: VolumeEditableFrameRange[] = [];
   for (const phrase of store.state.phrases.values()) {
     if (phrase.trackId !== selectedTrackId.value) {
       continue;
@@ -539,18 +525,23 @@ const refreshEditableFrameRanges = () => {
         `Frame rate mismatch: expected ${frameRate}, got ${phraseQuery.frameRate}. queryKey: ${phrase.queryKey}`,
       );
     }
-    resolvedPhrases.push({
-      startTime: phrase.startTime,
-      volumeLength: phraseQuery.volume.length,
-      minNonPauseStartFrame: phrase.minNonPauseStartFrame,
-      maxNonPauseEndFrame: phrase.maxNonPauseEndFrame,
-    });
+    const phraseStartFrame = Math.round(phrase.startTime * frameRate);
+    const phraseEndFrame = phraseStartFrame + phraseQuery.volume.length;
+    const startFrame = Math.max(
+      0,
+      phraseStartFrame + (phrase.minNonPauseStartFrame ?? 0),
+    );
+    const endFrame = Math.min(
+      phraseEndFrame,
+      phraseStartFrame +
+        (phrase.maxNonPauseEndFrame ?? phraseQuery.volume.length),
+    );
+    if (startFrame < endFrame) {
+      ranges.push({ startFrame, endFrame });
+    }
   }
 
-  editableFrameRanges.value = computeVolumeEditableFrameRanges(
-    resolvedPhrases,
-    frameRate,
-  );
+  editableFrameRanges.value = mergeVolumeEditableFrameRanges(ranges);
 };
 
 const refreshEffectiveVolumeSegments = () => {
@@ -597,8 +588,7 @@ const refreshEffectiveVolumeSegments = () => {
       }
       // プレビューデータを editableRanges でマスクして適用
       const maskedPreview = maskVolumeEditDataByEditableRanges(
-        preview.data,
-        preview.startFrame,
+        { values: preview.data, startFrame: preview.startFrame },
         editableRanges,
       );
       for (const [i, rawValue] of maskedPreview.entries()) {
@@ -667,8 +657,7 @@ const refreshEffectiveVolumeSegments = () => {
 
   // 編集不可区間のボリュームを非表示にする
   const maskedEffective = maskVolumeEditDataByEditableRanges(
-    effectiveFramewise,
-    0,
+    { values: effectiveFramewise, startFrame: 0 },
     editableRanges,
   );
 
@@ -679,13 +668,12 @@ const refreshEffectiveVolumeSegments = () => {
 const dispatchVolumeEditorEvent = (
   pointerEvent: PointerEvent,
   targetArea: "Editor" | "Window",
-  position = computeViewportPosition(pointerEvent),
 ) => {
   stateMachineProcess({
     type: "pointerEvent",
     targetArea,
     pointerEvent,
-    position,
+    position: computeViewportPosition(pointerEvent),
   });
 };
 
@@ -718,10 +706,6 @@ const computeViewportPosition = (pointerEvent: PointerEvent) => {
   };
 };
 
-const updateHoveredFrame = (pointerEvent: PointerEvent) => {
-  hoveredFrame.value = computeViewportPosition(pointerEvent).frame;
-};
-
 const onSurfacePointerDown = (event: PointerEvent) => {
   if (event.button !== 0) {
     return;
@@ -735,27 +719,24 @@ const onSurfacePointerDown = (event: PointerEvent) => {
       height: rect.height,
     };
   }
-  const position = computeViewportPosition(event);
-  hoveredFrame.value = position.frame;
   if (store.state.parameterPanelEditTarget !== "VOLUME") {
     void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({
       editTarget: "VOLUME",
     });
   }
-  if (
-    !isFrameInVolumeEditableRange(position.frame, editableFrameRanges.value)
-  ) {
-    return;
-  }
-  dispatchVolumeEditorEvent(event, "Editor", position);
+  dispatchVolumeEditorEvent(event, "Editor");
 };
 
 const onSurfacePointerMove = (event: PointerEvent) => {
-  updateHoveredFrame(event);
+  if (previewMode.value === "IDLE") {
+    dispatchVolumeEditorEvent(event, "Editor");
+  }
 };
 
-const onSurfacePointerLeave = () => {
-  hoveredFrame.value = null;
+const onSurfacePointerLeave = (event: PointerEvent) => {
+  if (previewMode.value === "IDLE") {
+    dispatchVolumeEditorEvent(event, "Editor");
+  }
 };
 
 const onWindowPointerMove = (event: PointerEvent) => {
@@ -884,9 +865,9 @@ onMounted(async () => {
     isVisible: true,
   });
 
-  stage.addChild(disabledOverlayGraphics); // 編集不可区間（最背面）
-  stage.addChild(erasePreviewOverlay); // 下地
-  stage.addChild(gridGraphics); // グリッドはオーバーレイの上に
+  stage.addChild(disabledOverlayGraphics);
+  stage.addChild(erasePreviewOverlay);
+  stage.addChild(gridGraphics);
   stage.addChild(originalVolumeLine.container);
   stage.addChild(editedVolumeLine.container);
 
@@ -961,9 +942,5 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   display: block;
-}
-
-.cursor-not-allowed {
-  cursor: not-allowed;
 }
 </style>

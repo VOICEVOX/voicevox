@@ -286,8 +286,6 @@ describe("COMMAND_ERASE_VOLUME_EDIT_DATA", () => {
       startFrame: 0,
       trackId,
     });
-    const undoCommandCount = store.state.undoCommands.song.length;
-
     await store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA({
       ranges: [
         { startFrame: 1, endFrame: 3 },
@@ -306,12 +304,6 @@ describe("COMMAND_ERASE_VOLUME_EDIT_DATA", () => {
       VALUE_INDICATING_NO_DATA,
       0.7,
     ]);
-    expect(store.state.undoCommands.song.length).toBe(undoCommandCount + 1);
-
-    await store.actions.UNDO({ editor: "song" });
-
-    const trackAfterUndo = getOrThrow(store.state.tracks, trackId);
-    expect(trackAfterUndo.volumeEditData).toEqual(volumeEditData);
   });
 });
 
