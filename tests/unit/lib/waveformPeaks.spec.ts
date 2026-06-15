@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { generateWaveformPeaks, resamplePeaks } from "@/sing/waveformPeaks";
+import {
+  generateWaveformPeaksMipmap,
+  resamplePeaks,
+} from "@/sing/waveformPeaks";
 import { createArray } from "@/sing/utility";
 
 const MIN_BUCKET_SIZE = 16;
@@ -49,32 +52,32 @@ function expectFloat32ArrayCloseTo(actual: Float32Array, expected: number[]) {
   }
 }
 
-describe("generateWaveformPeaks", () => {
+describe("generateWaveformPeaksMipmap", () => {
   it("不正なminBucketSizeを渡すとエラーになる", () => {
     const buffer = makeAudioBuffer([0, 0.1, -0.1]);
 
     // 0以下はエラー
-    expect(() => generateWaveformPeaks(buffer, 0)).toThrow();
-    expect(() => generateWaveformPeaks(buffer, -1)).toThrow();
+    expect(() => generateWaveformPeaksMipmap(buffer, 0)).toThrow();
+    expect(() => generateWaveformPeaksMipmap(buffer, -1)).toThrow();
 
     // 非整数はエラー
-    expect(() => generateWaveformPeaks(buffer, 1.5)).toThrow();
-    expect(() => generateWaveformPeaks(buffer, NaN)).toThrow();
-    expect(() => generateWaveformPeaks(buffer, Infinity)).toThrow();
+    expect(() => generateWaveformPeaksMipmap(buffer, 1.5)).toThrow();
+    expect(() => generateWaveformPeaksMipmap(buffer, NaN)).toThrow();
+    expect(() => generateWaveformPeaksMipmap(buffer, Infinity)).toThrow();
 
     // 1以上の整数なら通る
-    expect(() => generateWaveformPeaks(buffer, 1)).not.toThrow();
+    expect(() => generateWaveformPeaksMipmap(buffer, 1)).not.toThrow();
   });
 
   it("minBucketSize以下のサンプル数ならバケツ1個のレベルが1つだけできる", () => {
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer([0.1, -0.2, 0.3]),
       MIN_BUCKET_SIZE,
     );
-    expect(peaks.length).toBe(1);
-    expect(peaks[0].bucketSize).toBe(MIN_BUCKET_SIZE);
-    expectFloat32ArrayCloseTo(peaks[0].minBuckets, [-0.2]);
-    expectFloat32ArrayCloseTo(peaks[0].maxBuckets, [0.3]);
+    expect(peaksMipmap.length).toBe(1);
+    expect(peaksMipmap[0].bucketSize).toBe(MIN_BUCKET_SIZE);
+    expectFloat32ArrayCloseTo(peaksMipmap[0].minBuckets, [-0.2]);
+    expectFloat32ArrayCloseTo(peaksMipmap[0].maxBuckets, [0.3]);
   });
 
   it("レベル0はminBucketSizeごとのバケツになり、各バケツがその範囲のmin/maxを持つ", () => {
@@ -95,14 +98,14 @@ describe("generateWaveformPeaks", () => {
       }
       return 0;
     });
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
 
-    expect(peaks[0].bucketSize).toBe(MIN_BUCKET_SIZE);
-    expectFloat32ArrayCloseTo(peaks[0].minBuckets, [-0.4, -0.7]);
-    expectFloat32ArrayCloseTo(peaks[0].maxBuckets, [0.6, 0.8]);
+    expect(peaksMipmap[0].bucketSize).toBe(MIN_BUCKET_SIZE);
+    expectFloat32ArrayCloseTo(peaksMipmap[0].minBuckets, [-0.4, -0.7]);
+    expectFloat32ArrayCloseTo(peaksMipmap[0].maxBuckets, [0.6, 0.8]);
   });
 
   it("サンプル数がminBucketSizeの倍数でないとき、最後のバケツは端数サンプルのみで計算される", () => {
@@ -114,14 +117,14 @@ describe("generateWaveformPeaks", () => {
       0.5,
       0.2,
     ];
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
 
     // ceil(20 / 16) = 2バケツで、バケツ1は [16, 20) の4サンプルのみ
-    expectFloat32ArrayCloseTo(peaks[0].minBuckets, [0, -0.3]);
-    expectFloat32ArrayCloseTo(peaks[0].maxBuckets, [0, 0.5]);
+    expectFloat32ArrayCloseTo(peaksMipmap[0].minBuckets, [0, -0.3]);
+    expectFloat32ArrayCloseTo(peaksMipmap[0].maxBuckets, [0, 0.5]);
   });
 
   it("バケツ数が1になるまで、隣接2バケツをmin/max統合したレベルが積まれる", () => {
@@ -134,27 +137,30 @@ describe("generateWaveformPeaks", () => {
       ],
       MIN_BUCKET_SIZE,
     );
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
 
-    expect(peaks.length).toBe(3);
+    expect(peaksMipmap.length).toBe(3);
 
     // レベル0: 入力そのままの4バケツ
-    expect(peaks[0].bucketSize).toBe(MIN_BUCKET_SIZE);
-    expectFloat32ArrayCloseTo(peaks[0].minBuckets, [-0.1, -0.4, -0.2, -0.3]);
-    expectFloat32ArrayCloseTo(peaks[0].maxBuckets, [0.1, 0.2, 0.8, 0.3]);
+    expect(peaksMipmap[0].bucketSize).toBe(MIN_BUCKET_SIZE);
+    expectFloat32ArrayCloseTo(
+      peaksMipmap[0].minBuckets,
+      [-0.1, -0.4, -0.2, -0.3],
+    );
+    expectFloat32ArrayCloseTo(peaksMipmap[0].maxBuckets, [0.1, 0.2, 0.8, 0.3]);
 
     // レベル1: 隣接2バケツの統合
-    expect(peaks[1].bucketSize).toBe(MIN_BUCKET_SIZE * 2);
-    expectFloat32ArrayCloseTo(peaks[1].minBuckets, [-0.4, -0.3]);
-    expectFloat32ArrayCloseTo(peaks[1].maxBuckets, [0.2, 0.8]);
+    expect(peaksMipmap[1].bucketSize).toBe(MIN_BUCKET_SIZE * 2);
+    expectFloat32ArrayCloseTo(peaksMipmap[1].minBuckets, [-0.4, -0.3]);
+    expectFloat32ArrayCloseTo(peaksMipmap[1].maxBuckets, [0.2, 0.8]);
 
     // レベル2: 全体のmin/max
-    expect(peaks[2].bucketSize).toBe(MIN_BUCKET_SIZE * 4);
-    expectFloat32ArrayCloseTo(peaks[2].minBuckets, [-0.4]);
-    expectFloat32ArrayCloseTo(peaks[2].maxBuckets, [0.8]);
+    expect(peaksMipmap[2].bucketSize).toBe(MIN_BUCKET_SIZE * 4);
+    expectFloat32ArrayCloseTo(peaksMipmap[2].minBuckets, [-0.4]);
+    expectFloat32ArrayCloseTo(peaksMipmap[2].maxBuckets, [0.8]);
   });
 
   it("バケツ数が奇数のとき、最後のバケツは単独で上位レベルに引き継がれる", () => {
@@ -166,41 +172,43 @@ describe("generateWaveformPeaks", () => {
       ],
       MIN_BUCKET_SIZE,
     );
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
 
     // レベル1: バケツ0と1の統合 + バケツ2の単独引き継ぎ
-    expectFloat32ArrayCloseTo(peaks[1].minBuckets, [-0.2, -0.5]);
-    expectFloat32ArrayCloseTo(peaks[1].maxBuckets, [0.2, 0.6]);
+    expectFloat32ArrayCloseTo(peaksMipmap[1].minBuckets, [-0.2, -0.5]);
+    expectFloat32ArrayCloseTo(peaksMipmap[1].maxBuckets, [0.2, 0.6]);
   });
 });
 
 describe("resamplePeaks", () => {
-  it("不正なpeaksを渡すとエラーになる", () => {
-    // 空のpeaks
+  it("不正なpeaksMipmapを渡すとエラーになる", () => {
+    // 空のpeaksMipmap
     expect(() => resamplePeaks([], [0, 16, 32])).toThrow();
 
     // バケツが0個のレベルを含む
-    const emptyBucketsPeaks = [
+    const emptyBucketsPeaksMipmap = [
       {
         bucketSize: 16,
         minBuckets: new Float32Array(0),
         maxBuckets: new Float32Array(0),
       },
     ];
-    expect(() => resamplePeaks(emptyBucketsPeaks, [0, 16, 32])).toThrow();
+    expect(() => resamplePeaks(emptyBucketsPeaksMipmap, [0, 16, 32])).toThrow();
 
     // minBucketsとmaxBucketsの長さが一致しない
-    const mismatchedLengthPeaks = [
+    const mismatchedLengthPeaksMipmap = [
       {
         bucketSize: 16,
         minBuckets: new Float32Array(2),
         maxBuckets: new Float32Array(1),
       },
     ];
-    expect(() => resamplePeaks(mismatchedLengthPeaks, [0, 16, 32])).toThrow();
+    expect(() =>
+      resamplePeaks(mismatchedLengthPeaksMipmap, [0, 16, 32]),
+    ).toThrow();
 
     // レベルがバケツサイズの昇順に並んでいない
     const samples = makeBucketSamples(
@@ -210,12 +218,12 @@ describe("resamplePeaks", () => {
       ],
       MIN_BUCKET_SIZE,
     );
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
-    const reversedPeaks = [...peaks].reverse();
-    expect(() => resamplePeaks(reversedPeaks, [0, 16, 32])).toThrow();
+    const reversedPeaksMipmap = [...peaksMipmap].reverse();
+    expect(() => resamplePeaks(reversedPeaksMipmap, [0, 16, 32])).toThrow();
   });
 
   it("不正なbinBoundarySamplesを渡すとエラーになる", () => {
@@ -226,17 +234,17 @@ describe("resamplePeaks", () => {
       ],
       MIN_BUCKET_SIZE,
     );
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
 
     // 長さが2未満
-    expect(() => resamplePeaks(peaks, [])).toThrow();
-    expect(() => resamplePeaks(peaks, [0])).toThrow();
+    expect(() => resamplePeaks(peaksMipmap, [])).toThrow();
+    expect(() => resamplePeaks(peaksMipmap, [0])).toThrow();
 
     // 減少している
-    expect(() => resamplePeaks(peaks, [0, 32, 16])).toThrow();
+    expect(() => resamplePeaks(peaksMipmap, [0, 32, 16])).toThrow();
   });
 
   it("幅0の区間は点として扱われ、その位置のサンプルを含むバケツの値になる", () => {
@@ -247,27 +255,27 @@ describe("resamplePeaks", () => {
       ],
       MIN_BUCKET_SIZE,
     );
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
 
     // 区間1はバケツ境界ちょうど（位置16）の幅0区間で、サンプル16を含むバケツ1の値になる
     // 区間3はバケツ1の内部（位置24）の幅0区間で、バケツ1の値になる
-    const result = resamplePeaks(peaks, [0, 16, 16, 24, 24, 32]);
+    const result = resamplePeaks(peaksMipmap, [0, 16, 16, 24, 24, 32]);
     expectFloat32ArrayCloseTo(result.minValues, [-0.3, -0.5, -0.5, -0.5, -0.5]);
     expectFloat32ArrayCloseTo(result.maxValues, [0.3, 0.5, 0.5, 0.5, 0.5]);
   });
 
   it("音声データ範囲外にある幅0の区間はゼロ埋めのままになる", () => {
     const samples = makeBucketSamples([[-0.3, 0.3]], MIN_BUCKET_SIZE);
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
 
     // 区間0は先頭より前（位置-8）、区間2は末尾（位置16）の幅0区間で、どちらもゼロ埋めになる
-    const result = resamplePeaks(peaks, [-8, -8, 16, 16]);
+    const result = resamplePeaks(peaksMipmap, [-8, -8, 16, 16]);
     expectFloat32ArrayCloseTo(result.minValues, [0, -0.3, 0]);
     expectFloat32ArrayCloseTo(result.maxValues, [0, 0.3, 0]);
   });
@@ -281,7 +289,7 @@ describe("resamplePeaks", () => {
       ],
       MIN_BUCKET_SIZE,
     );
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
@@ -289,7 +297,7 @@ describe("resamplePeaks", () => {
     // 8サンプル幅の区間3つにはレベル0（bucketSize 16）が使われるため、
     // バケツ0に属する区間0と1は -0.4/0.4、バケツ1に属する区間2は 0/0 になる
     // もし粗いレベル1（bucketSize 32、全体で1バケツ）が使われると区間2にも -0.4/0.4 が現れる
-    const result = resamplePeaks(peaks, [0, 8, 16, 24]);
+    const result = resamplePeaks(peaksMipmap, [0, 8, 16, 24]);
     expectFloat32ArrayCloseTo(result.minValues, [-0.4, -0.4, 0]);
     expectFloat32ArrayCloseTo(result.maxValues, [0.4, 0.4, 0]);
   });
@@ -305,14 +313,14 @@ describe("resamplePeaks", () => {
       ],
       MIN_BUCKET_SIZE,
     );
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
 
     // 32サンプル幅の区間2つには bucketSize 32 のレベルが選ばれるはず
     // もし粗いレベル（bucketSize 64）が選ばれると、区間0のmaxにも0.9が漏れる
-    const result = resamplePeaks(peaks, [0, 32, 64]);
+    const result = resamplePeaks(peaksMipmap, [0, 32, 64]);
     expectFloat32ArrayCloseTo(result.maxValues, [0, 0.9]);
   });
 
@@ -331,7 +339,7 @@ describe("resamplePeaks", () => {
       ],
       MIN_BUCKET_SIZE,
     );
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
@@ -339,7 +347,7 @@ describe("resamplePeaks", () => {
     // 区間0と1は32サンプル幅なので bucketSize 32 のレベル、
     // 区間2は64サンプル幅なので bucketSize 64 のレベルが使われる
     // どの区間もバケツ境界に揃っているため、結果は各区間の実min/maxと一致する
-    const result = resamplePeaks(peaks, [0, 32, 64, 128]);
+    const result = resamplePeaks(peaksMipmap, [0, 32, 64, 128]);
     expectFloat32ArrayCloseTo(result.minValues, [-0.2, -0.4, -0.8]);
     expectFloat32ArrayCloseTo(result.maxValues, [0.2, 0.4, 0.8]);
   });
@@ -353,21 +361,21 @@ describe("resamplePeaks", () => {
       ],
       MIN_BUCKET_SIZE,
     );
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
 
     // 区間 [8, 24) のサンプルはすべて0だが、バケツ0と1の両方に重なるため、
     // バケツ0のmin/max（-0.4/0.4）が結果に含まれる
-    const result = resamplePeaks(peaks, [8, 24]);
+    const result = resamplePeaks(peaksMipmap, [8, 24]);
     expectFloat32ArrayCloseTo(result.minValues, [-0.4]);
     expectFloat32ArrayCloseTo(result.maxValues, [0.4]);
   });
 
   it("音声データの範囲外にはみ出す区間は範囲内のみ反映され、完全に範囲外ならゼロになる", () => {
     const samples = createArray(64, () => 0.4);
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
@@ -376,7 +384,7 @@ describe("resamplePeaks", () => {
     // 区間1 [-16, 16): 負側にはみ出すが範囲内に 0.4 があるので 0.4/0.4
     // 区間2 [16, 80): 末尾側にはみ出すが範囲内に 0.4 があるので 0.4/0.4
     // 区間3 [80, 96): 完全に範囲外なので 0/0
-    const result = resamplePeaks(peaks, [-32, -16, 16, 80, 96]);
+    const result = resamplePeaks(peaksMipmap, [-32, -16, 16, 80, 96]);
     expectFloat32ArrayCloseTo(result.minValues, [0, 0.4, 0.4, 0]);
     expectFloat32ArrayCloseTo(result.maxValues, [0, 0.4, 0.4, 0]);
   });
@@ -390,12 +398,12 @@ describe("resamplePeaks", () => {
       ],
       MIN_BUCKET_SIZE,
     );
-    const peaks = generateWaveformPeaks(
+    const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer(samples),
       MIN_BUCKET_SIZE,
     );
 
-    const result = resamplePeaks(peaks, [0, 48]);
+    const result = resamplePeaks(peaksMipmap, [0, 48]);
     expectFloat32ArrayCloseTo(result.minValues, [-0.5]);
     expectFloat32ArrayCloseTo(result.maxValues, [0.6]);
   });

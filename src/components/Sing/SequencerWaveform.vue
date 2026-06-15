@@ -13,9 +13,9 @@ import { useMounted } from "@/composables/useMounted";
 import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
 import { secondToTick, tickToSecond } from "@/sing/music";
 import {
-  generateWaveformPeaks,
+  generateWaveformPeaksMipmap,
   resamplePeaks,
-  type WaveformPeaks,
+  type WaveformPeaksMipmap,
 } from "@/sing/waveformPeaks";
 import { Mutex } from "@/helpers/mutex";
 import { createLogger } from "@/helpers/log";
@@ -99,13 +99,15 @@ const audioEvents = computed<ReadonlyMap<AudioEventId, AudioEvent>>(() => {
   return events;
 });
 
-// AudioBufferから算出した波形ピークのMap
-const peaksMap = ref<ReadonlyMap<AudioEventId, WaveformPeaks>>(new Map());
+// AudioBufferから算出した波形ピークmipmapのMap
+const peaksMipmaps = ref<ReadonlyMap<AudioEventId, WaveformPeaksMipmap>>(
+  new Map(),
+);
 
-const updatePeaksMap = () => {
+const updatePeaksMipmaps = () => {
   const audioEventsValue = audioEvents.value;
 
-  const tempMap = new Map(peaksMap.value);
+  const tempMap = new Map(peaksMipmaps.value);
 
   // 不要なキーを削除
   for (const eventId of tempMap.keys()) {
@@ -114,16 +116,16 @@ const updatePeaksMap = () => {
     }
   }
 
-  // 新規キーについてpeaksを生成
+  // 新規キーについてpeaksMipmapを生成
   // NOTE: sequenceIdに対応するAudioBufferは不変なので、既存キーの再計算は不要
   for (const [eventId, event] of audioEventsValue) {
     if (!tempMap.has(eventId)) {
       // mipmapの最小のバケツサイズは、最大ズーム時にも解像度が足りる 16 を採用
-      tempMap.set(eventId, generateWaveformPeaks(event.buffer, 16));
+      tempMap.set(eventId, generateWaveformPeaksMipmap(event.buffer, 16));
     }
   }
 
-  peaksMap.value = tempMap;
+  peaksMipmaps.value = tempMap;
 };
 
 // 描画用の波形データのMap
@@ -136,7 +138,7 @@ const waveformDataMutex = new Mutex({ maxPending: 1 });
 
 const computeWaveformData = (
   event: AudioEvent,
-  peaks: WaveformPeaks,
+  peaksMipmap: WaveformPeaksMipmap,
   scaleXValue: number,
   temposValue: readonly Tempo[],
   tpqnValue: number,
@@ -167,7 +169,10 @@ const computeWaveformData = (
     );
   }
 
-  const { minValues, maxValues } = resamplePeaks(peaks, pixelBoundarySamples);
+  const { minValues, maxValues } = resamplePeaks(
+    peaksMipmap,
+    pixelBoundarySamples,
+  );
 
   return {
     startX: startScreenXAtZeroOffset,
@@ -179,7 +184,7 @@ const computeWaveformData = (
 
 const updateWaveformDataMap = async () => {
   const audioEventsValue = audioEvents.value;
-  const peaksMapValue = peaksMap.value;
+  const peaksMipmapsValue = peaksMipmaps.value;
   const scaleXValue = scaleX.value;
   // NOTE: Tempoが型レベルでイミュータブルになっていないので、cloneしている
   const temposValue = cloneWithUnwrapProxy(tempos.value);
@@ -212,10 +217,10 @@ const updateWaveformDataMap = async () => {
   // 新規キーについて描画用の波形データを計算
   for (const [key, { eventId, event }] of keyedEvents) {
     if (!tempMap.has(key)) {
-      const peaks = getOrThrow(peaksMapValue, eventId);
+      const peaksMipmap = getOrThrow(peaksMipmapsValue, eventId);
       const waveformData = computeWaveformData(
         event,
-        peaks,
+        peaksMipmap,
         scaleXValue,
         temposValue,
         tpqnValue,
@@ -232,13 +237,13 @@ const { mounted } = useMounted();
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
 watch([mounted, audioEvents], ([mountedValue]) => {
   if (mountedValue) {
-    updatePeaksMap();
+    updatePeaksMipmaps();
   }
 });
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
 watch(
-  [mounted, audioEvents, peaksMap, scaleX, tempos, tpqn],
+  [mounted, audioEvents, peaksMipmaps, scaleX, tempos, tpqn],
   async ([mountedValue]) => {
     if (mountedValue) {
       try {

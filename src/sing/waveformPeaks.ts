@@ -11,7 +11,7 @@ import { getLast } from "@/sing/utility";
 /**
  * mipmapのレベル。バケツサイズと、各バケツのmin/max値を保持する。
  */
-type WaveformMipmapLevel = {
+type WaveformPeaksMipmapLevel = {
   readonly bucketSize: number;
   readonly minBuckets: Float32Array;
   readonly maxBuckets: Float32Array;
@@ -21,7 +21,7 @@ type WaveformMipmapLevel = {
  * 波形ピークのmipmap。
  * 先頭のレベルが最も細かいレベルで、以降はバケツサイズの昇順に並ぶ。
  */
-export type WaveformPeaks = readonly WaveformMipmapLevel[];
+export type WaveformPeaksMipmap = readonly WaveformPeaksMipmapLevel[];
 
 /**
  * 波形ピークをリサンプルしたもの。
@@ -38,10 +38,10 @@ export type ResampledPeaks = {
  * @param minBucketSize 最小のバケツサイズ。1以上の整数でなければならない。
  * @returns 生成されたピークのmipmap。レベルはバケツサイズで昇順にソートされている。
  */
-export function generateWaveformPeaks(
+export function generateWaveformPeaksMipmap(
   audioBuffer: AudioBuffer,
   minBucketSize: number,
-): WaveformPeaks {
+): WaveformPeaksMipmap {
   if (!Number.isInteger(minBucketSize) || minBucketSize < 1) {
     throw new Error("minBucketSize must be a positive integer.");
   }
@@ -72,7 +72,7 @@ export function generateWaveformPeaks(
     baseMaxBuckets[bucketIndex] = max;
   }
 
-  const levels: WaveformMipmapLevel[] = [
+  const levels: WaveformPeaksMipmapLevel[] = [
     {
       bucketSize: minBucketSize,
       minBuckets: baseMinBuckets,
@@ -116,7 +116,7 @@ export function generateWaveformPeaks(
  * 各区間に対応するサンプル範囲を境界配列で指定して、ピークをリサンプルする。
  * 区間ごとに最適なmipmapレベルを選択するため、サンプル幅が不均等でも適切な解像度になる。
  *
- * @param peaks リサンプル元のピークmipmap。
+ * @param peaksMipmap リサンプル元のピークmipmap。
  *   レベルはバケツサイズで昇順にソートされていなければならない。
  * @param binBoundarySamples 各区間の境界をサンプル位置で表した配列。
  *   `binBoundarySamples[i]` 以上 `binBoundarySamples[i + 1]` 未満が区間 `i` のサンプル範囲。
@@ -127,13 +127,13 @@ export function generateWaveformPeaks(
  * @returns 各区間のmin/max値。
  */
 export function resamplePeaks(
-  peaks: WaveformPeaks,
+  peaksMipmap: WaveformPeaksMipmap,
   binBoundarySamples: number[],
 ): ResampledPeaks {
-  if (peaks.length === 0) {
-    throw new Error("peaks must have at least one level.");
+  if (peaksMipmap.length === 0) {
+    throw new Error("peaksMipmap must have at least one level.");
   }
-  for (const level of peaks) {
+  for (const level of peaksMipmap) {
     if (level.minBuckets.length !== level.maxBuckets.length) {
       throw new Error("minBuckets and maxBuckets must have the same length.");
     }
@@ -141,9 +141,11 @@ export function resamplePeaks(
       throw new Error("every level must have at least one bucket.");
     }
   }
-  for (let i = 1; i < peaks.length; i++) {
-    if (peaks[i].bucketSize <= peaks[i - 1].bucketSize) {
-      throw new Error("peaks levels must be in ascending order of bucketSize.");
+  for (let i = 1; i < peaksMipmap.length; i++) {
+    if (peaksMipmap[i].bucketSize <= peaksMipmap[i - 1].bucketSize) {
+      throw new Error(
+        "peaksMipmap levels must be in ascending order of bucketSize.",
+      );
     }
   }
   if (binBoundarySamples.length < 2) {
@@ -165,8 +167,8 @@ export function resamplePeaks(
     }
     // bucketSize <= samplesPerBin を満たす最大の bucketSize のレベルを選ぶ
     // どのレベルも条件を満たさないときは、最も細かいレベルを使う
-    let selectedLevel = peaks[0];
-    for (const level of peaks) {
+    let selectedLevel = peaksMipmap[0];
+    for (const level of peaksMipmap) {
       if (level.bucketSize > samplesPerBin) {
         break;
       }
