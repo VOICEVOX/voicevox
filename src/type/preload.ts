@@ -57,17 +57,6 @@ export const defaultToolbarButtonSetting: ToolbarSettingType = [
   "REDO",
 ];
 
-export type TextAsset = {
-  Contact: string;
-  HowToUse: string;
-  OssCommunityInfos: string;
-  Policy: string;
-  PrivacyPolicy: string;
-  QAndA: string;
-  OssLicenses: Record<string, string>[];
-  UpdateInfos: UpdateInfo[];
-};
-
 export interface Sandbox {
   getAltPortInfos(): Promise<AltPortInfos>;
   getInitialProjectFilePath(): Promise<string | undefined>;

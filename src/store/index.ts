@@ -46,7 +46,6 @@ import {
   type Voice,
   type UpdateInfo,
 } from "@/type/preload";
-import { AssetTextFileNames } from "@/type/staticResources";
 import { isProduction } from "@/helpers/platform";
 
 export type Store = BaseStore<State, AllGetters, AllActions, AllMutations>;
@@ -167,55 +166,52 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   GET_HOW_TO_USE_TEXT: {
     async action() {
-      return markdownAssets[`../../public/${AssetTextFileNames.HowToUse}`];
+      return markdownAssets["../../public/howtouse.md"];
     },
   },
 
   GET_CONTACT_TEXT: {
     async action() {
-      return markdownAssets[`../../public/${AssetTextFileNames.Contact}`];
+      return markdownAssets["../../public/contact.md"];
     },
   },
 
   GET_Q_AND_A_TEXT: {
     async action() {
-      return markdownAssets[`../../public/${AssetTextFileNames.QAndA}`];
+      return markdownAssets["../../public/qAndA.md"];
     },
   },
 
   GET_POLICY_TEXT: {
     async action() {
-      return markdownAssets[`../../public/${AssetTextFileNames.Policy}`];
+      return markdownAssets["../../public/policy.md"];
     },
   },
 
   GET_OSS_LICENSES: {
     async action() {
-      return jsonAssets[
-        `../../public/${AssetTextFileNames.OssLicenses}`
-      ] as Record<string, string>[];
+      return jsonAssets["../../public/licenses.json"] as Record<
+        string,
+        string
+      >[];
     },
   },
 
   GET_UPDATE_INFOS: {
     async action() {
-      return jsonAssets[
-        `../../public/${AssetTextFileNames.UpdateInfos}`
-      ] as UpdateInfo[];
+      return jsonAssets["../../public/updateInfos.json"] as UpdateInfo[];
     },
   },
 
   GET_OSS_COMMUNITY_INFOS: {
     async action() {
-      return markdownAssets[
-        `../../public/${AssetTextFileNames.OssCommunityInfos}`
-      ];
+      return markdownAssets["../../public/ossCommunityInfos.md"];
     },
   },
 
   GET_PRIVACY_POLICY_TEXT: {
     async action() {
-      return markdownAssets[`../../public/${AssetTextFileNames.PrivacyPolicy}`];
+      return markdownAssets["../../public/privacyPolicy.md"];
     },
   },
 
