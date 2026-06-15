@@ -8,6 +8,9 @@
 
 import { getLast } from "@/sing/utility";
 
+/**
+ * mipmapのレベル。バケツサイズと、各バケツのmin/max値を保持する。
+ */
 type WaveformMipmapLevel = {
   readonly bucketSize: number;
   readonly minBuckets: Float32Array;
@@ -16,7 +19,7 @@ type WaveformMipmapLevel = {
 
 /**
  * 波形ピークのmipmap。
- * levels[0]が最も細かいレベルで、以降はバケツサイズの昇順に並ぶ。
+ * 先頭のレベルが最も細かいレベルで、以降はバケツサイズの昇順に並ぶ。
  */
 export type WaveformPeaks = readonly WaveformMipmapLevel[];
 
@@ -28,25 +31,32 @@ export type ResampledPeaks = {
   readonly maxValues: Float32Array;
 };
 
-const BASE_BUCKET_SIZE = 16;
-
 /**
  * AudioBufferのch0からピークのmipmapを生成する。
- * 最も細かいレベルのバケツサイズは BASE_BUCKET_SIZE で、
- * 以降は2倍ずつ大きなバケツサイズのレベルを、バケツ数が1個になるまで積み上げる。
+ *
+ * @param audioBuffer ピークを計算する音声データ。ch0のみ使用される。
+ * @param minBucketSize 最小のバケツサイズ。1以上の整数でなければならない。
+ * @returns 生成されたピークのmipmap。レベルはバケツサイズで昇順にソートされている。
  */
-export function generateWaveformPeaks(audioBuffer: AudioBuffer): WaveformPeaks {
+export function generateWaveformPeaks(
+  audioBuffer: AudioBuffer,
+  minBucketSize: number,
+): WaveformPeaks {
+  if (!Number.isInteger(minBucketSize) || minBucketSize < 1) {
+    throw new Error("minBucketSize must be a positive integer.");
+  }
+
   const channel = audioBuffer.getChannelData(0);
   const numSamples = channel.length;
 
   // レベル0: サンプルから直接バケツ化
-  const baseNumBuckets = Math.ceil(numSamples / BASE_BUCKET_SIZE);
+  const baseNumBuckets = Math.ceil(numSamples / minBucketSize);
   const baseMinBuckets = new Float32Array(baseNumBuckets);
   const baseMaxBuckets = new Float32Array(baseNumBuckets);
 
   for (let bucketIndex = 0; bucketIndex < baseNumBuckets; bucketIndex++) {
-    const start = bucketIndex * BASE_BUCKET_SIZE;
-    const end = Math.min(start + BASE_BUCKET_SIZE, numSamples);
+    const start = bucketIndex * minBucketSize;
+    const end = Math.min(start + minBucketSize, numSamples);
     let min = channel[start];
     let max = channel[start];
     for (let i = start + 1; i < end; i++) {
@@ -64,13 +74,13 @@ export function generateWaveformPeaks(audioBuffer: AudioBuffer): WaveformPeaks {
 
   const levels: WaveformMipmapLevel[] = [
     {
-      bucketSize: BASE_BUCKET_SIZE,
+      bucketSize: minBucketSize,
       minBuckets: baseMinBuckets,
       maxBuckets: baseMaxBuckets,
     },
   ];
 
-  // 上位レベル: バケツ数が1個になるまで2バケツずつまとめる
+  // レベル1以降: バケツ数が1個になるまで2バケツずつまとめる
   while (getLast(levels).minBuckets.length > 1) {
     const prev = getLast(levels);
     const prevNumBuckets = prev.minBuckets.length;
@@ -106,12 +116,15 @@ export function generateWaveformPeaks(audioBuffer: AudioBuffer): WaveformPeaks {
  * 各区間に対応するサンプル範囲を境界配列で指定して、ピークをリサンプルする。
  * 区間ごとに最適なmipmapレベルを選択するため、サンプル幅が不均等でも適切な解像度になる。
  *
- * @param binBoundarySamples 長さ `numBins + 1` の配列。
+ * @param peaks リサンプル元のピークmipmap。
+ *   レベルはバケツサイズで昇順にソートされていなければならない。
+ * @param binBoundarySamples 各区間の境界をサンプル位置で表した配列。
  *   `binBoundarySamples[i]` 以上 `binBoundarySamples[i + 1]` 未満が区間 `i` のサンプル範囲。
+ *   配列の長さは 区間の数 + 1 で、2以上でなければならない。
  *   各値は音声データ先頭基準のサンプル位置で、単調非減少でなければならない。
- *   負の値や `numSamples` を超える値も許容され、範囲外は0埋めになる。
+ *   サンプル数を超える値や負の値も許容され、範囲外は0埋めになる。
  *   幅0の区間は点として扱い、その位置のサンプルを含むバケツの値になる。
- *   長さは2以上でなければならない。
+ * @returns 各区間のmin/max値。
  */
 export function resamplePeaks(
   peaks: WaveformPeaks,

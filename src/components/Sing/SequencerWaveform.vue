@@ -118,7 +118,8 @@ const updatePeaksMap = () => {
   // NOTE: sequenceIdに対応するAudioBufferは不変なので、既存キーの再計算は不要
   for (const [eventId, event] of audioEventsValue) {
     if (!tempMap.has(eventId)) {
-      tempMap.set(eventId, generateWaveformPeaks(event.buffer));
+      // mipmapの最小のバケツサイズは、最大ズーム時にも解像度が足りる 16 を採用
+      tempMap.set(eventId, generateWaveformPeaks(event.buffer, 16));
     }
   }
 
