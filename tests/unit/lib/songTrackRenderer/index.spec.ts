@@ -22,7 +22,7 @@ beforeEach(() => {
   resetMockMode();
 });
 
-describe("SongTrackRenderer", () => {
+describe("SongTrackRenderer", { timeout: 10000 }, () => {
   test("正しいレンダリング結果が返される", async () => {
     const trackId = TrackId(uuid4());
     const trackNotes = utility.toTrackNotes([
@@ -358,9 +358,6 @@ describe("SongTrackRenderer", () => {
 
   test(
     "トラックにシンガーが割り当てられていない場合、そのトラックのフレーズはレンダリングされない",
-    {
-      timeout: 10000, // テストが長くなる可能性があるため、タイムアウトを延長
-    },
     async () => {
       const trackId1 = TrackId(uuid4());
       const singer1 = undefined;
@@ -434,9 +431,6 @@ describe("SongTrackRenderer", () => {
 
   test(
     "再生ヘッド位置に近いフレーズから優先的にレンダリングされる",
-    {
-      timeout: 10000, // テストが長くなる可能性があるため、タイムアウトを延長
-    },
     async () => {
       const trackId = TrackId(uuid4());
       const trackNotes = utility.toTrackNotes([
