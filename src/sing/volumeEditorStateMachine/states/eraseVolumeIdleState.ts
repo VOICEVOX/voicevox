@@ -2,11 +2,11 @@ import type {
   VolumeEditorStateDefinitions,
   VolumeEditorInput,
   VolumeEditorContext,
-  PositionOnVolumeEditor,
 } from "../common";
 import { updateCursorStateForEditableRange } from "../common";
 import type { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
+import { isFrameInVolumeEditableRange } from "@/sing/volumeEditRanges";
 
 export class EraseVolumeIdleState implements State<
   VolumeEditorStateDefinitions,
@@ -28,45 +28,41 @@ export class EraseVolumeIdleState implements State<
     context: VolumeEditorContext;
     setNextState: SetNextState<VolumeEditorStateDefinitions>;
   }) {
-    if (input.type === "pointerEvent") {
-      const mouseButton = getButton(input.pointerEvent);
-      const trackId = context.selectedTrackId.value;
-      const isEditable =
-        input.targetArea === "Editor" &&
-        input.pointerEvent.type !== "pointerleave"
-          ? this.updateCursorState(context, input.position)
-          : false;
+    if (input.type !== "pointerEvent") {
+      return;
+    }
+    if (input.targetArea !== "Editor") {
+      return;
+    }
 
-      if (
-        input.targetArea === "Editor" &&
-        input.pointerEvent.type === "pointerleave"
-      ) {
-        context.cursorState.value = "ERASE";
-      }
+    const { pointerEvent, position } = input;
 
-      if (
-        input.pointerEvent.type === "pointerdown" &&
-        mouseButton === "LEFT_BUTTON" &&
-        input.targetArea === "Editor" &&
-        isEditable
-      ) {
-        setNextState("eraseVolume", {
-          startPosition: input.position,
-          targetTrackId: trackId,
-          returnStateId: this.id,
-        });
-      }
+    // エディタ外へ出たらカーソルを既定（削除）へ戻す
+    if (pointerEvent.type === "pointerleave") {
+      context.cursorState.value = "ERASE";
+      return;
+    }
+
+    const isEditable = isFrameInVolumeEditableRange(
+      position.frame,
+      context.getEditableFrameRanges(),
+    );
+    updateCursorStateForEditableRange(context, isEditable, "ERASE");
+
+    if (
+      pointerEvent.type === "pointerdown" &&
+      getButton(pointerEvent) === "LEFT_BUTTON" &&
+      isEditable
+    ) {
+      setNextState("eraseVolume", {
+        startPosition: position,
+        targetTrackId: context.selectedTrackId.value,
+        returnStateId: this.id,
+      });
     }
   }
 
   onExit(context: VolumeEditorContext) {
     context.cursorState.value = "UNSET";
-  }
-
-  private updateCursorState(
-    context: VolumeEditorContext,
-    position: PositionOnVolumeEditor,
-  ) {
-    return updateCursorStateForEditableRange(context, position, "ERASE");
   }
 }
