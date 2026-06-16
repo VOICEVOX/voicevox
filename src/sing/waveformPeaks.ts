@@ -34,6 +34,9 @@ export function generateWaveformPeaksMipmap(
   audioBuffer: AudioBuffer,
   minBucketSize: number,
 ): WaveformPeaksMipmap {
+  if (audioBuffer.length === 0) {
+    throw new Error("audioBuffer must have at least one sample.");
+  }
   if (!Number.isInteger(minBucketSize) || minBucketSize < 1) {
     throw new Error("minBucketSize must be a positive integer.");
   }
