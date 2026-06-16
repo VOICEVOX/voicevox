@@ -6,14 +6,15 @@ import {
 import { createArray } from "@/sing/utility";
 
 const MIN_BUCKET_SIZE = 16;
+const SAMPLE_RATE = 24000;
 
-function makeAudioBuffer(samples: number[], sampleRate = 24000): AudioBuffer {
+function makeAudioBuffer(samples: number[]): AudioBuffer {
   const channel = new Float32Array(samples);
   return {
     length: channel.length,
-    sampleRate,
+    sampleRate: SAMPLE_RATE,
     numberOfChannels: 1,
-    duration: channel.length / sampleRate,
+    duration: channel.length / SAMPLE_RATE,
     getChannelData: (ch: number) => {
       if (ch !== 0) {
         throw new Error("only ch0 supported in test");
