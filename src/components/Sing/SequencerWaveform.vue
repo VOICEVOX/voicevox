@@ -119,7 +119,7 @@ const updatePeaksMipmaps = () => {
   // 新規キーについてpeaksMipmapを生成
   for (const [eventId, event] of audioEventsValue) {
     if (!tempMap.has(eventId)) {
-      // NOTE: mipmapの最小のバケツサイズは、最大ズーム時にも解像度が足りる 16 を採用
+      // NOTE: mipmapの最小のバケットサイズは、最大ズーム時にも解像度が足りる 16 を採用
       tempMap.set(eventId, generateWaveformPeaksMipmap(event.buffer, 16));
     }
   }

@@ -1,7 +1,7 @@
 import { getLast } from "@/sing/utility";
 
 /**
- * mipmapのレベル。バケツサイズと、各バケツのmin/max値を保持する。
+ * mipmapのレベル。バケットサイズと、各バケットのmin/max値を保持する。
  */
 type WaveformPeaksMipmapLevel = {
   readonly bucketSize: number;
@@ -11,7 +11,7 @@ type WaveformPeaksMipmapLevel = {
 
 /**
  * 波形ピークのmipmap。
- * 先頭のレベルが最も細かいレベルで、以降はバケツサイズの昇順に並ぶ。
+ * 先頭のレベルが最も細かいレベルで、以降はバケットサイズの昇順に並ぶ。
  */
 export type WaveformPeaksMipmap = readonly WaveformPeaksMipmapLevel[];
 
@@ -27,8 +27,8 @@ export type ResampledPeaks = {
  * AudioBufferのch0からピークのmipmapを生成する。
  *
  * @param audioBuffer ピークを計算する音声データ。ch0のみ使用される。
- * @param minBucketSize 最小のバケツサイズ。1以上の整数でなければならない。
- * @returns 生成されたピークのmipmap。レベルはバケツサイズで昇順にソートされている。
+ * @param minBucketSize 最小のバケットサイズ。1以上の整数でなければならない。
+ * @returns 生成されたピークのmipmap。レベルはバケットサイズで昇順にソートされている。
  */
 export function generateWaveformPeaksMipmap(
   audioBuffer: AudioBuffer,
@@ -41,7 +41,7 @@ export function generateWaveformPeaksMipmap(
   const channel = audioBuffer.getChannelData(0);
   const numSamples = channel.length;
 
-  // レベル0: サンプルから直接バケツ化
+  // レベル0: サンプルから直接バケット化
   const baseNumBuckets = Math.ceil(numSamples / minBucketSize);
   const baseMinBuckets = new Float32Array(baseNumBuckets);
   const baseMaxBuckets = new Float32Array(baseNumBuckets);
@@ -72,7 +72,7 @@ export function generateWaveformPeaksMipmap(
     },
   ];
 
-  // レベル1以降: バケツ数が1個になるまで2バケツずつまとめる
+  // レベル1以降: バケット数が1個になるまで2バケットずつまとめる
   while (getLast(levels).minBuckets.length > 1) {
     const prev = getLast(levels);
     const prevNumBuckets = prev.minBuckets.length;
@@ -109,13 +109,13 @@ export function generateWaveformPeaksMipmap(
  * 区間ごとに最適なmipmapレベルを選択するため、サンプル幅が不均等でも適切な解像度になる。
  *
  * @param peaksMipmap リサンプル元のピークmipmap。
- *   レベルはバケツサイズで昇順にソートされていなければならない。
+ *   レベルはバケットサイズで昇順にソートされていなければならない。
  * @param binBoundarySamples 各区間の境界をサンプル位置で表した配列。
  *   `binBoundarySamples[i]` 以上 `binBoundarySamples[i + 1]` 未満が区間 `i` のサンプル範囲。
  *   配列の長さは 区間の数 + 1 で、2以上でなければならない。
  *   各値は音声データ先頭基準のサンプル位置で、単調非減少でなければならない。
  *   サンプル数を超える値や負の値も許容され、範囲外は0埋めになる。
- *   幅0の区間は点として扱い、その位置のサンプルを含むバケツの値になる。
+ *   幅0の区間は点として扱い、その位置のサンプルを含むバケットの値になる。
  * @returns 各区間のmin/max値。
  */
 export function resamplePeaks(

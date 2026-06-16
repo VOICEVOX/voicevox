@@ -24,9 +24,9 @@ function makeAudioBuffer(samples: number[], sampleRate = 24000): AudioBuffer {
 }
 
 /**
- * 指定したバケツサイズで区切ったときの各バケツのmin/maxからサンプル配列を作る。
- * 各バケツは、先頭サンプルがmin、2番目のサンプルがmax、残りが0になる。
- * 0埋め部分がそのバケツのmin/maxに影響しないよう、min <= 0 <= max でなければならない。
+ * 指定したバケットサイズで区切ったときの各バケットのmin/maxからサンプル配列を作る。
+ * 各バケットは、先頭サンプルがmin、2番目のサンプルがmax、残りが0になる。
+ * 0埋め部分がそのバケットのmin/maxに影響しないよう、min <= 0 <= max でなければならない。
  */
 function makeBucketSamples(
   bucketMinMaxList: [min: number, max: number][],
@@ -69,7 +69,7 @@ describe("generateWaveformPeaksMipmap", () => {
     expect(() => generateWaveformPeaksMipmap(buffer, 1)).not.toThrow();
   });
 
-  it("minBucketSize以下のサンプル数ならバケツ1個のレベルが1つだけできる", () => {
+  it("minBucketSize以下のサンプル数ならバケット1個のレベルが1つだけできる", () => {
     const peaksMipmap = generateWaveformPeaksMipmap(
       makeAudioBuffer([0.1, -0.2, 0.3]),
       MIN_BUCKET_SIZE,
@@ -80,9 +80,9 @@ describe("generateWaveformPeaksMipmap", () => {
     expectFloat32ArrayCloseTo(peaksMipmap[0].maxBuckets, [0.3]);
   });
 
-  it("レベル0はminBucketSizeごとのバケツになり、各バケツがその範囲のmin/maxを持つ", () => {
-    // バケツ0（[0, 16)）: min -0.4（i=3）, max 0.6（i=10）
-    // バケツ1（[16, 32)）: min -0.7（i=25）, max 0.8（i=20）
+  it("レベル0はminBucketSizeごとのバケットになり、各バケットがその範囲のmin/maxを持つ", () => {
+    // バケット0（[0, 16)）: min -0.4（i=3）, max 0.6（i=10）
+    // バケット1（[16, 32)）: min -0.7（i=25）, max 0.8（i=20）
     const samples = createArray(32, (i) => {
       if (i === 3) {
         return -0.4;
@@ -108,8 +108,8 @@ describe("generateWaveformPeaksMipmap", () => {
     expectFloat32ArrayCloseTo(peaksMipmap[0].maxBuckets, [0.6, 0.8]);
   });
 
-  it("サンプル数がminBucketSizeの倍数でないとき、最後のバケツは端数サンプルのみで計算される", () => {
-    // minBucketSizeサンプルの0埋めバケツ + 端数4サンプル
+  it("サンプル数がminBucketSizeの倍数でないとき、最後のバケットは端数サンプルのみで計算される", () => {
+    // minBucketSizeサンプルの0埋めバケット + 端数4サンプル
     const samples = [
       ...createArray(MIN_BUCKET_SIZE, () => 0),
       0.1,
@@ -122,12 +122,12 @@ describe("generateWaveformPeaksMipmap", () => {
       MIN_BUCKET_SIZE,
     );
 
-    // ceil(20 / 16) = 2バケツで、バケツ1は [16, 20) の4サンプルのみ
+    // ceil(20 / 16) = 2バケットで、バケット1は [16, 20) の4サンプルのみ
     expectFloat32ArrayCloseTo(peaksMipmap[0].minBuckets, [0, -0.3]);
     expectFloat32ArrayCloseTo(peaksMipmap[0].maxBuckets, [0, 0.5]);
   });
 
-  it("バケツ数が1になるまで、隣接2バケツをmin/max統合したレベルが積まれる", () => {
+  it("バケット数が1になるまで、隣接2バケットをmin/max統合したレベルが積まれる", () => {
     const samples = makeBucketSamples(
       [
         [-0.1, 0.1],
@@ -144,7 +144,7 @@ describe("generateWaveformPeaksMipmap", () => {
 
     expect(peaksMipmap.length).toBe(3);
 
-    // レベル0: 入力そのままの4バケツ
+    // レベル0: 入力そのままの4バケット
     expect(peaksMipmap[0].bucketSize).toBe(MIN_BUCKET_SIZE);
     expectFloat32ArrayCloseTo(
       peaksMipmap[0].minBuckets,
@@ -152,7 +152,7 @@ describe("generateWaveformPeaksMipmap", () => {
     );
     expectFloat32ArrayCloseTo(peaksMipmap[0].maxBuckets, [0.1, 0.2, 0.8, 0.3]);
 
-    // レベル1: 隣接2バケツの統合
+    // レベル1: 隣接2バケットの統合
     expect(peaksMipmap[1].bucketSize).toBe(MIN_BUCKET_SIZE * 2);
     expectFloat32ArrayCloseTo(peaksMipmap[1].minBuckets, [-0.4, -0.3]);
     expectFloat32ArrayCloseTo(peaksMipmap[1].maxBuckets, [0.2, 0.8]);
@@ -163,7 +163,7 @@ describe("generateWaveformPeaksMipmap", () => {
     expectFloat32ArrayCloseTo(peaksMipmap[2].maxBuckets, [0.8]);
   });
 
-  it("バケツ数が奇数のとき、最後のバケツは単独で上位レベルに引き継がれる", () => {
+  it("バケット数が奇数のとき、最後のバケットは単独で上位レベルに引き継がれる", () => {
     const samples = makeBucketSamples(
       [
         [-0.1, 0.1],
@@ -177,7 +177,7 @@ describe("generateWaveformPeaksMipmap", () => {
       MIN_BUCKET_SIZE,
     );
 
-    // レベル1: バケツ0と1の統合 + バケツ2の単独引き継ぎ
+    // レベル1: バケット0と1の統合 + バケット2の単独引き継ぎ
     expectFloat32ArrayCloseTo(peaksMipmap[1].minBuckets, [-0.2, -0.5]);
     expectFloat32ArrayCloseTo(peaksMipmap[1].maxBuckets, [0.2, 0.6]);
   });
@@ -188,7 +188,7 @@ describe("resamplePeaks", () => {
     // 空のpeaksMipmap
     expect(() => resamplePeaks([], [0, 16, 32])).toThrow();
 
-    // バケツが0個のレベルを含む
+    // バケットが0個のレベルを含む
     const emptyBucketsPeaksMipmap = [
       {
         bucketSize: 16,
@@ -210,7 +210,7 @@ describe("resamplePeaks", () => {
       resamplePeaks(mismatchedLengthPeaksMipmap, [0, 16, 32]),
     ).toThrow();
 
-    // レベルがバケツサイズの昇順に並んでいない
+    // レベルがバケットサイズの昇順に並んでいない
     const samples = makeBucketSamples(
       [
         [-0.1, 0.1],
@@ -247,7 +247,7 @@ describe("resamplePeaks", () => {
     expect(() => resamplePeaks(peaksMipmap, [0, 32, 16])).toThrow();
   });
 
-  it("幅0の区間は点として扱われ、その位置のサンプルを含むバケツの値になる", () => {
+  it("幅0の区間は点として扱われ、その位置のサンプルを含むバケットの値になる", () => {
     const samples = makeBucketSamples(
       [
         [-0.3, 0.3],
@@ -260,8 +260,8 @@ describe("resamplePeaks", () => {
       MIN_BUCKET_SIZE,
     );
 
-    // 区間1はバケツ境界ちょうど（位置16）の幅0区間で、サンプル16を含むバケツ1の値になる
-    // 区間3はバケツ1の内部（位置24）の幅0区間で、バケツ1の値になる
+    // 区間1はバケット境界ちょうど（位置16）の幅0区間で、サンプル16を含むバケット1の値になる
+    // 区間3はバケット1の内部（位置24）の幅0区間で、バケット1の値になる
     const result = resamplePeaks(peaksMipmap, [0, 16, 16, 24, 24, 32]);
     expectFloat32ArrayCloseTo(result.minValues, [-0.3, -0.5, -0.5, -0.5, -0.5]);
     expectFloat32ArrayCloseTo(result.maxValues, [0.3, 0.5, 0.5, 0.5, 0.5]);
@@ -281,7 +281,7 @@ describe("resamplePeaks", () => {
   });
 
   it("区間のサンプル幅がminBucketSize未満のときは最も細かいレベル0が使われる", () => {
-    // バケツ0にだけ非ゼロ値、バケツ1は全ゼロ
+    // バケット0にだけ非ゼロ値、バケット1は全ゼロ
     const samples = makeBucketSamples(
       [
         [-0.4, 0.4],
@@ -295,15 +295,15 @@ describe("resamplePeaks", () => {
     );
 
     // 8サンプル幅の区間3つにはレベル0（bucketSize 16）が使われるため、
-    // バケツ0に属する区間0と1は -0.4/0.4、バケツ1に属する区間2は 0/0 になる
-    // もし粗いレベル1（bucketSize 32、全体で1バケツ）が使われると区間2にも -0.4/0.4 が現れる
+    // バケット0に属する区間0と1は -0.4/0.4、バケット1に属する区間2は 0/0 になる
+    // もし粗いレベル1（bucketSize 32、全体で1バケット）が使われると区間2にも -0.4/0.4 が現れる
     const result = resamplePeaks(peaksMipmap, [0, 8, 16, 24]);
     expectFloat32ArrayCloseTo(result.minValues, [-0.4, -0.4, 0]);
     expectFloat32ArrayCloseTo(result.maxValues, [0.4, 0.4, 0]);
   });
 
   it("区間のサンプル幅より粗いレベルは選ばれない（隣の区間に値が漏れない）", () => {
-    // 64サンプル中、バケツ2（[32, 48)）にだけ非ゼロ値を置く
+    // 64サンプル中、バケット2（[32, 48)）にだけ非ゼロ値を置く
     const samples = makeBucketSamples(
       [
         [0, 0],
@@ -325,7 +325,7 @@ describe("resamplePeaks", () => {
   });
 
   it("サンプル幅の異なる区間ごとに適切なレベルが独立して選ばれる", () => {
-    // 128サンプルで、レベル0は8バケツ
+    // 128サンプルで、レベル0は8バケット
     const samples = makeBucketSamples(
       [
         [-0.1, 0.1],
@@ -346,14 +346,14 @@ describe("resamplePeaks", () => {
 
     // 区間0と1は32サンプル幅なので bucketSize 32 のレベル、
     // 区間2は64サンプル幅なので bucketSize 64 のレベルが使われる
-    // どの区間もバケツ境界に揃っているため、結果は各区間の実min/maxと一致する
+    // どの区間もバケット境界に揃っているため、結果は各区間の実min/maxと一致する
     const result = resamplePeaks(peaksMipmap, [0, 32, 64, 128]);
     expectFloat32ArrayCloseTo(result.minValues, [-0.2, -0.4, -0.8]);
     expectFloat32ArrayCloseTo(result.maxValues, [0.2, 0.4, 0.8]);
   });
 
-  it("区間境界がバケツ境界に揃っていない場合、区間と重なるバケツ全体のmin/maxになる", () => {
-    // バケツ0の先頭2サンプル（[0, 2)）にだけ非ゼロ値、バケツ1は全ゼロ
+  it("区間境界がバケット境界に揃っていない場合、区間と重なるバケット全体のmin/maxになる", () => {
+    // バケット0の先頭2サンプル（[0, 2)）にだけ非ゼロ値、バケット1は全ゼロ
     const samples = makeBucketSamples(
       [
         [-0.4, 0.4],
@@ -366,8 +366,8 @@ describe("resamplePeaks", () => {
       MIN_BUCKET_SIZE,
     );
 
-    // 区間 [8, 24) のサンプルはすべて0だが、バケツ0と1の両方に重なるため、
-    // バケツ0のmin/max（-0.4/0.4）が結果に含まれる
+    // 区間 [8, 24) のサンプルはすべて0だが、バケット0と1の両方に重なるため、
+    // バケット0のmin/max（-0.4/0.4）が結果に含まれる
     const result = resamplePeaks(peaksMipmap, [8, 24]);
     expectFloat32ArrayCloseTo(result.minValues, [-0.4]);
     expectFloat32ArrayCloseTo(result.maxValues, [0.4]);
