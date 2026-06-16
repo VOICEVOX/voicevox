@@ -1,11 +1,3 @@
-/**
- * 波形のピーク（min/max）データをmipmap形式で保持・参照するための純粋関数群。
- *
- * AudioBufferを一度だけ縮約し、複数解像度のピーク配列として保持する。
- * 描画時には表示解像度に応じたレベルを選択してリサンプルすることで、
- * ズーム連続変化時のO(audioBuffer.length)再計算を避ける。
- */
-
 import { getLast } from "@/sing/utility";
 
 /**

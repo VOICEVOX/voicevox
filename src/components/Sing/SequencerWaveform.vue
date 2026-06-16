@@ -117,10 +117,9 @@ const updatePeaksMipmaps = () => {
   }
 
   // 新規キーについてpeaksMipmapを生成
-  // NOTE: sequenceIdに対応するAudioBufferは不変なので、既存キーの再計算は不要
   for (const [eventId, event] of audioEventsValue) {
     if (!tempMap.has(eventId)) {
-      // mipmapの最小のバケツサイズは、最大ズーム時にも解像度が足りる 16 を採用
+      // NOTE: mipmapの最小のバケツサイズは、最大ズーム時にも解像度が足りる 16 を採用
       tempMap.set(eventId, generateWaveformPeaksMipmap(event.buffer, 16));
     }
   }
@@ -132,9 +131,6 @@ const updatePeaksMipmaps = () => {
 const waveformDataMap = ref<ReadonlyMap<WaveformDataKey, WaveformData>>(
   new Map(),
 );
-
-// 波形データの更新を直列化するMutex
-const waveformDataMutex = new Mutex({ maxPending: 1 });
 
 const computeWaveformData = (
   event: AudioEvent,
@@ -240,6 +236,8 @@ watch([mounted, audioEvents], ([mountedValue]) => {
     updatePeaksMipmaps();
   }
 });
+
+const waveformDataMutex = new Mutex({ maxPending: 1 });
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
 watch(
