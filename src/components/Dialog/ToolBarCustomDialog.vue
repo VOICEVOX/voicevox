@@ -38,6 +38,7 @@
               flat
               icon="close"
               color="display"
+              aria-label="ツールバーのカスタマイズを閉じる"
               @click="finishOrNotDialog"
             />
           </QToolbar>
