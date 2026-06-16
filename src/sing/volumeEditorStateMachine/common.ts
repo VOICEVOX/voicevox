@@ -104,7 +104,7 @@ export type VolumeEditorStateDefinitions = StateDefinitions<
   ]
 >;
 
-export const updateCursorStateForEditableRange = (
+export const applyEditableCursorState = (
   context: VolumeEditorContext,
   isEditable: boolean,
   editableCursorState: Extract<CursorState, "DRAW" | "ERASE">,
