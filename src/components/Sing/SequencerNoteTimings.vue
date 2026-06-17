@@ -115,8 +115,8 @@ const render = () => {
   let graphicsIndex = 0;
   let textIndex = 0;
 
-  // マスク計算で使うノートの位置情報
-  const notePositions: { screenStartX: number; text: PIXI.Text }[] = [];
+  // マスク計算で使うテキストの位置情報
+  const textPositions: { textX: number; text: PIXI.Text }[] = [];
 
   // 各ノートを描画
   for (const note of notes) {
@@ -184,21 +184,21 @@ const render = () => {
     textContainer.x = screenStartX + 3;
     textContainer.y = canvasHeight / 2;
 
-    notePositions.push({ screenStartX: textContainer.x, text });
+    textPositions.push({ textX: textContainer.x, text });
   }
 
   // 各テキストが次のテキストと重ならないようにマスクをかける
-  for (let i = 0; i < notePositions.length; i++) {
-    const { screenStartX, text } = notePositions[i];
+  for (let i = 0; i < textPositions.length; i++) {
+    const { textX, text } = textPositions[i];
     const textMask = getOrThrow(textMasksMap, text);
 
     // デフォルトのマスク幅
     let maskWidth = 36;
 
     // 次のテキストがある場合、その位置までに制限
-    if (i + 1 < notePositions.length) {
-      const nextScreenStartX = notePositions[i + 1].screenStartX;
-      maskWidth = clamp(nextScreenStartX - screenStartX, 0, maskWidth);
+    if (i + 1 < textPositions.length) {
+      const nextTextX = textPositions[i + 1].textX;
+      maskWidth = clamp(nextTextX - textX, 0, maskWidth);
     }
 
     const maskHeight = 36;
