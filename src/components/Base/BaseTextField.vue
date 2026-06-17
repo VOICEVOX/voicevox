@@ -6,6 +6,7 @@
         ref="inputRef"
         role="textbox"
         aria-multiline="false"
+        :aria-label
         spellcheck="false"
         class="input"
         :class="{ error: hasError, readonly, disabled }"
@@ -72,6 +73,7 @@ defineProps<{
   readonly?: boolean;
   disabled?: boolean;
   id?: string;
+  ariaLabel?: string;
 }>();
 
 const emit = defineEmits<{
