@@ -162,6 +162,7 @@ const render = () => {
       getDefaultLyric(rawNote.noteNumber, defaultLyricMode.value);
     if (textIndex >= texts.length) {
       const newText = new PIXI.Text({ text: "", style: currentTextStyle });
+      newText.anchor.set(0, 0.5);
       const container = new PIXI.Container();
       const mask = new PIXI.Graphics();
 
@@ -177,7 +178,6 @@ const render = () => {
     textIndex++;
 
     text.text = lyric;
-    text.anchor.set(0, 0.5);
 
     const textContainer = getOrThrow(textContainersMap, text);
     textContainer.renderable = true;
