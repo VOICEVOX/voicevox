@@ -224,22 +224,19 @@ const render = () => {
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
 watch(
-  [mounted, selectedTrackNotes, tpqn, defaultLyricMode],
+  [
+    mounted,
+    selectedTrackNotes,
+    tpqn,
+    defaultLyricMode,
+    isDark,
+    () => store.state.sequencerZoomX,
+    () => props.viewportInfo.offsetX,
+  ],
   ([mounted]) => {
     if (mounted) {
       renderInNextFrame = true;
     }
-  },
-);
-
-watch(isDark, () => {
-  renderInNextFrame = true;
-});
-
-watch(
-  () => [store.state.sequencerZoomX, props.viewportInfo.offsetX],
-  () => {
-    renderInNextFrame = true;
   },
 );
 
