@@ -9,11 +9,8 @@ import { ref, watch, computed, onUnmounted, onMounted, toRaw } from "vue";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
-import {
-  getDoremiFromNoteNumber,
-  tickToBaseX,
-  type ViewportInfo,
-} from "@/sing/viewHelper";
+import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
+import { getDefaultLyric } from "@/sing/domain";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { clamp } from "@/sing/utility";
 
@@ -24,6 +21,7 @@ const props = defineProps<{
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const isDark = computed(() => store.state.currentTheme === "Dark");
+const defaultLyricMode = computed(() => store.state.defaultLyricMode);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 
 type ColorStyle = {
@@ -159,7 +157,9 @@ const render = () => {
       .stroke({ width: 1, color: colors.noteBorder, alpha: 1 });
 
     // ノートの歌詞をテキストで描画
-    const lyric = rawNote.lyric ?? getDoremiFromNoteNumber(rawNote.noteNumber);
+    const lyric =
+      rawNote.lyric ??
+      getDefaultLyric(rawNote.noteNumber, defaultLyricMode.value);
     if (textIndex >= texts.length) {
       const newText = new PIXI.Text({ text: "", style: currentTextStyle });
       const container = new PIXI.Container();
@@ -223,11 +223,14 @@ const render = () => {
 };
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
-watch([mounted, selectedTrackNotes, tpqn], ([mounted]) => {
-  if (mounted) {
-    renderInNextFrame = true;
-  }
-});
+watch(
+  [mounted, selectedTrackNotes, tpqn, defaultLyricMode],
+  ([mounted]) => {
+    if (mounted) {
+      renderInNextFrame = true;
+    }
+  },
+);
 
 watch(isDark, () => {
   renderInNextFrame = true;
