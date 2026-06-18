@@ -10,6 +10,7 @@
           <BaseTextField
             ref="surfaceInput"
             v-model="surface"
+            ariaLabel="単語"
             :disabled="uiLocked"
             :hasError="surface.length === 0"
             @change="surface = convertHankakuToZenkaku(surface)"
@@ -24,6 +25,7 @@
           <BaseTextField
             ref="yomiInput"
             v-model="temporaryYomi"
+            ariaLabel="読み"
             :disabled="uiLocked"
             :hasError="
               temporaryYomi.length === 0 || !isOnlyHiraOrKana(temporaryYomi)
