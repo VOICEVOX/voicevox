@@ -44,7 +44,6 @@ import {
   SpeakerId,
   StyleId,
   type Voice,
-  type UpdateInfo,
 } from "@/type/preload";
 import { isProduction } from "@/helpers/platform";
 
@@ -56,17 +55,6 @@ export const indexStoreState: IndexStoreState = {
   userCharacterOrder: [],
   isMultiEngineOffMode: false,
 };
-
-const markdownAssets = import.meta.glob<string>("../../public/*.md", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-});
-
-const jsonAssets = import.meta.glob<unknown>("../../public/*.json", {
-  import: "default",
-  eager: true,
-});
 
 export const indexStore = createPartialStore<IndexStoreTypes>({
   GET_ALL_CHARACTER_INFOS: {
@@ -166,52 +154,57 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   GET_HOW_TO_USE_TEXT: {
     async action() {
-      return markdownAssets["../../public/howtouse.md"];
+      const markdown = await import("../../public/howtouse.md?raw");
+      return markdown.default;
     },
   },
 
   GET_CONTACT_TEXT: {
     async action() {
-      return markdownAssets["../../public/contact.md"];
+      const markdown = await import("../../public/contact.md?raw");
+      return markdown.default;
     },
   },
 
   GET_Q_AND_A_TEXT: {
     async action() {
-      return markdownAssets["../../public/qAndA.md"];
+      const markdown = await import("../../public/qAndA.md?raw");
+      return markdown.default;
     },
   },
 
   GET_POLICY_TEXT: {
     async action() {
-      return markdownAssets["../../public/policy.md"];
+      const markdown = await import("../../public/policy.md?raw");
+      return markdown.default;
     },
   },
 
   GET_OSS_LICENSES: {
     async action() {
-      return jsonAssets["../../public/licenses.json"] as Record<
-        string,
-        string
-      >[];
+      const json = await import("../../public/licenses.json");
+      return json.default;
     },
   },
 
   GET_UPDATE_INFOS: {
     async action() {
-      return jsonAssets["../../public/updateInfos.json"] as UpdateInfo[];
+      const json = await import("../../public/updateInfos.json");
+      return json.default;
     },
   },
 
   GET_OSS_COMMUNITY_INFOS: {
     async action() {
-      return markdownAssets["../../public/ossCommunityInfos.md"];
+      const markdown = await import("../../public/ossCommunityInfos.md?raw");
+      return markdown.default;
     },
   },
 
   GET_PRIVACY_POLICY_TEXT: {
     async action() {
-      return markdownAssets["../../public/privacyPolicy.md"];
+      const markdown = await import("../../public/privacyPolicy.md?raw");
+      return markdown.default;
     },
   },
 
