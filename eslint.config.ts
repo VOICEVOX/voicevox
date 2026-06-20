@@ -234,6 +234,14 @@ export default defineConfigWithVueTs(
     },
   },
 
+  {
+    name: "voicevox/playwright-fixtures",
+    files: ["tests/e2e/**/*.ts"],
+    rules: {
+      "no-empty-pattern": "off",
+    },
+  },
+
   // Electronのメインプロセス以外でelectronのimportを禁止する
   {
     name: "voicevox/restricted-electron-imports-outside-main-process",

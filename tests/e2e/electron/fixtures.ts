@@ -7,7 +7,7 @@ type ElectronFixtures = {
 
 /** Electron アプリの起動と終了を管理するフィクスチャ。 */
 export const test = base.extend<ElectronFixtures>({
-  launchElectronApp: async (_fixtures, use, testInfo) => {
+  launchElectronApp: async ({}, use, testInfo) => {
     let app: ElectronApplication | undefined;
 
     await use(async () => {
