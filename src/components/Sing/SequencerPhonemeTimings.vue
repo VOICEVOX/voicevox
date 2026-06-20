@@ -34,6 +34,7 @@ const tpqn = computed(() => store.state.tpqn);
 const isDark = computed(() => store.state.currentTheme === "Dark");
 const tempos = computed(() => store.state.tempos);
 const phonemeTimingInfos = computed(() => props.phonemeTimingInfos);
+const editorFrameRate = computed(() => store.state.editorFrameRate);
 
 type PhonemeTimingLineStyle = { color: number; alpha: number; width: number };
 const phonemeTimingLineStyles: Record<
@@ -98,8 +99,8 @@ const render = () => {
   const rawTempos = toRaw(tempos.value);
   const rawPhonemeTimingInfos = toRaw(phonemeTimingInfos.value);
   const viewportInfo = props.viewportInfo;
-  const editorFrameRate = store.state.editorFrameRate;
-  const oneFrameSeconds = 1 / editorFrameRate;
+  const editorFrameRateValue = editorFrameRate.value;
+  const oneFrameSeconds = 1 / editorFrameRateValue;
 
   const currentTextStyle = isDark.value
     ? phonemeTextStyles.dark
@@ -322,6 +323,7 @@ watch(
     phonemeTimingInfos,
     tempos,
     tpqn,
+    editorFrameRate,
     isDark,
     () => props.viewportInfo.scaleX,
     () => props.viewportInfo.offsetX,
