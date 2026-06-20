@@ -78,7 +78,9 @@ test("エディタウィンドウを起動できる", async ({ launchElectronApp
   });
 });
 
-test("Welcome画面でエンジンをアップデートできる", async ({ launchElectronApp }) => {
+test("Welcome画面でエンジンをアップデートできる", async ({
+  launchElectronApp,
+}) => {
   await test.step("古いエンジンを配置する", async () => {
     await installOldEngine();
   });

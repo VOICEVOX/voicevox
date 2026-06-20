@@ -18,7 +18,9 @@ test.describe(".env環境", () => {
     dotenv.config({ path: ".env", override: true, quiet: true });
   });
 
-  test("起動したら「利用規約に関するお知らせ」が表示される", async ({ launchElectronApp }) => {
+  test("起動したら「利用規約に関するお知らせ」が表示される", async ({
+    launchElectronApp,
+  }) => {
     const app = await launchElectronApp();
 
     const sut = await app.firstWindow({
