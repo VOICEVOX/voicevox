@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
-import { test } from "./fixtures";
 import dotenv from "dotenv";
+import { test } from "./fixtures";
 import { getUserTestDir } from "./helper";
 
 test.beforeEach(async () => {
