@@ -13,6 +13,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import DOMPurify from "dompurify";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
@@ -24,7 +25,7 @@ const props = defineProps<{
 const md = useMarkdownIt();
 
 const documentHtml = computed(() => {
-  return md.render(props.markdown);
+  return DOMPurify.sanitize(md.render(props.markdown));
 });
 </script>
 
