@@ -413,6 +413,16 @@ onUnmounted(() => {
     stage?.removeChild(graphic);
     graphic.destroy();
   }
+  for (const texts of textsMap.values()) {
+    for (const text of texts) {
+      const container = getOrThrow(textContainersMap, text);
+      stage?.removeChild(container);
+      container.destroy(true);
+    }
+  }
+  textsMap.clear();
+  textContainersMap.clear();
+  textMasksMap.clear();
   stage?.destroy(true);
   renderer?.destroy({ removeView: true });
   resizeObserver?.disconnect();
