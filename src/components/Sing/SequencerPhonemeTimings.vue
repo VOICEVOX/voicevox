@@ -50,13 +50,16 @@ const phonemeTimingLineStyles: Record<
   },
 };
 
-const phonemeTextStyles: {
-  light: PIXI.TextStyle;
-  dark: PIXI.TextStyle;
+const phonemeTextStyleSpecs: {
+  light: { fill: string };
+  dark: { fill: string };
 } = {
-  light: new PIXI.TextStyle({ fill: "#252E26", fontSize: 14 }),
-  dark: new PIXI.TextStyle({ fill: "#ccc8c9", fontSize: 14 }),
+  light: { fill: "#252E26" },
+  dark: { fill: "#ccc8c9" },
 };
+let phonemeTextStyles:
+  | { light: PIXI.TextStyle; dark: PIXI.TextStyle }
+  | undefined;
 
 const { mounted } = useMounted();
 
@@ -90,6 +93,7 @@ const render = () => {
   assertNonNullable(stage);
   assertNonNullable(canvasWidth);
   assertNonNullable(canvasHeight);
+  assertNonNullable(phonemeTextStyles);
 
   const rawTempos = toRaw(tempos.value);
   const rawPhonemeTimingInfos = toRaw(phonemeTimingInfos.value);
@@ -337,6 +341,23 @@ onMounted(async () => {
 
   canvasWidth = canvasContainerElement.clientWidth;
   canvasHeight = canvasContainerElement.clientHeight;
+
+  // アプリのフォントをPIXIのテキストスタイルに反映する
+  // NOTE: フォントの変更に対応していないが、基本的にフォントが変更されることは少ないので、
+  // 複雑性を下げるためにも対応しない
+  const fontFamily = window.getComputedStyle(canvasContainerElement).fontFamily;
+  phonemeTextStyles = {
+    light: new PIXI.TextStyle({
+      ...phonemeTextStyleSpecs.light,
+      fontFamily,
+      fontSize: 14,
+    }),
+    dark: new PIXI.TextStyle({
+      ...phonemeTextStyleSpecs.dark,
+      fontFamily,
+      fontSize: 14,
+    }),
+  };
 
   renderer = await PIXI.autoDetectRenderer({
     canvas: canvasElement,
