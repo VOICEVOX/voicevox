@@ -48,13 +48,14 @@ const noteColors = computed(() =>
   isDark.value ? noteColorStyles.dark : noteColorStyles.light,
 );
 
-const noteTextStyles: {
-  light: PIXI.TextStyle;
-  dark: PIXI.TextStyle;
+const noteTextStyleSpecs: {
+  light: { fill: string };
+  dark: { fill: string };
 } = {
-  light: new PIXI.TextStyle({ fill: "#423e3f", fontSize: 14 }),
-  dark: new PIXI.TextStyle({ fill: "#bfbbbc", fontSize: 14 }),
+  light: { fill: "#423e3f" },
+  dark: { fill: "#bfbbbc" },
 };
+let noteTextStyles: { light: PIXI.TextStyle; dark: PIXI.TextStyle } | undefined;
 
 const selectedTrackNotes = computed(() => selectedTrack.value.notes);
 
@@ -83,6 +84,7 @@ const render = () => {
   assertNonNullable(stage);
   assertNonNullable(canvasWidth);
   assertNonNullable(canvasHeight);
+  assertNonNullable(noteTextStyles);
 
   const notes = selectedTrackNotes.value;
   const scaleX = store.state.sequencerZoomX;
@@ -241,6 +243,23 @@ onMounted(async () => {
 
   canvasWidth = canvasContainerElement.clientWidth;
   canvasHeight = canvasContainerElement.clientHeight;
+
+  // アプリのフォントをPIXIのテキストスタイルに反映する
+  // NOTE: フォントの変更に対応していないが、基本的にフォントが変更されることは少ないので、
+  // 複雑性を下げるためにも対応しない
+  const fontFamily = window.getComputedStyle(canvasContainerElement).fontFamily;
+  noteTextStyles = {
+    light: new PIXI.TextStyle({
+      ...noteTextStyleSpecs.light,
+      fontFamily,
+      fontSize: 14,
+    }),
+    dark: new PIXI.TextStyle({
+      ...noteTextStyleSpecs.dark,
+      fontFamily,
+      fontSize: 14,
+    }),
+  };
 
   renderer = await PIXI.autoDetectRenderer({
     canvas: canvasElement,
