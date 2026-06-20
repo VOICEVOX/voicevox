@@ -7,6 +7,7 @@ type ElectronFixtures = {
 
 /** Electron アプリの起動と終了を管理するフィクスチャ。 */
 export const test = base.extend<ElectronFixtures>({
+  // eslint-disable-next-line no-empty-pattern
   launchElectronApp: async ({}, use, testInfo) => {
     let app: ElectronApplication | undefined;
 
