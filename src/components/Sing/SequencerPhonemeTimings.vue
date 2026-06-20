@@ -320,20 +320,20 @@ const render = () => {
 };
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
-watch([mounted, phonemeTimingInfos, tempos, tpqn], ([mounted]) => {
-  if (mounted) {
-    renderInNextFrame = true;
-  }
-});
-
-watch(isDark, () => {
-  renderInNextFrame = true;
-});
-
 watch(
-  () => [props.viewportInfo.scaleX, props.viewportInfo.offsetX],
-  () => {
-    renderInNextFrame = true;
+  [
+    mounted,
+    phonemeTimingInfos,
+    tempos,
+    tpqn,
+    isDark,
+    () => props.viewportInfo.scaleX,
+    () => props.viewportInfo.offsetX,
+  ],
+  ([mounted]) => {
+    if (mounted) {
+      renderInNextFrame = true;
+    }
   },
 );
 
