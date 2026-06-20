@@ -13,7 +13,7 @@ import { secondToTick } from "@/sing/music";
 import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
 import { clamp, getNext } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { UnreachableError } from "@/type/utility";
+import { UnreachableError, assertNonNullable } from "@/type/utility";
 import type { PhonemeTimingInfo } from "@/sing/phonemeTimingEditorStateMachine/common";
 
 type PhonemeDisplayState = "default" | "edited";
@@ -86,18 +86,10 @@ let requestId: number | undefined;
 let renderInNextFrame = false;
 
 const render = () => {
-  if (renderer == undefined) {
-    throw new Error("renderer is undefined.");
-  }
-  if (stage == undefined) {
-    throw new Error("stage is undefined.");
-  }
-  if (canvasWidth == undefined) {
-    throw new Error("canvasWidth is undefined.");
-  }
-  if (canvasHeight == undefined) {
-    throw new Error("canvasHeight is undefined.");
-  }
+  assertNonNullable(renderer);
+  assertNonNullable(stage);
+  assertNonNullable(canvasWidth);
+  assertNonNullable(canvasHeight);
 
   const rawTempos = toRaw(tempos.value);
   const rawPhonemeTimingInfos = toRaw(phonemeTimingInfos.value);
@@ -340,12 +332,8 @@ watch(
 onMounted(async () => {
   const canvasContainerElement = canvasContainer.value;
   const canvasElement = canvas.value;
-  if (canvasContainerElement == undefined) {
-    throw new Error("canvasContainerElement is null.");
-  }
-  if (canvasElement == undefined) {
-    throw new Error("canvasElement is null.");
-  }
+  assertNonNullable(canvasContainerElement);
+  assertNonNullable(canvasElement);
 
   canvasWidth = canvasContainerElement.clientWidth;
   canvasHeight = canvasContainerElement.clientHeight;
@@ -375,9 +363,7 @@ onMounted(async () => {
   requestId = window.requestAnimationFrame(callback);
 
   resizeObserver = new ResizeObserver(() => {
-    if (renderer == undefined) {
-      throw new Error("renderer is undefined.");
-    }
+    assertNonNullable(renderer);
 
     const newWidth = canvasContainerElement.clientWidth;
     const newHeight = canvasContainerElement.clientHeight;
