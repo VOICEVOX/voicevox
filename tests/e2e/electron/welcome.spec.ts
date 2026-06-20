@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { _electron as electron, expect, test } from "@playwright/test";
 import dotenv from "dotenv";
+import { expect, test } from "./fixtures";
 import { getUserTestDir } from "./helper";
 
 const defaultEngineId = "208cf94d-43d2-4cf5-abc0-9783cac36d29";
@@ -34,18 +34,11 @@ test.beforeEach(async () => {
   });
 });
 
-test("エディタウィンドウを起動できる", async () => {
-  const app = await electron.launch({
-    args: ["--no-sandbox", "."], // NOTE: --no-sandbox はUbuntu 24.04で動かすのに必要
-    timeout: process.env.CI ? 0 : 60000,
-  });
+test("エディタウィンドウを起動できる", async ({ launchElectronApp }) => {
+  const app = await launchElectronApp();
 
   const welcomePage =
     await test.step("デフォルトエンジンをインストールする", async () => {
-      app.on("console", (msg) => {
-        console.log(msg.text());
-      });
-
       const welcomePage = await app.firstWindow({
         timeout: process.env.CI ? 90000 : 60000,
       });
@@ -83,19 +76,14 @@ test("エディタウィンドウを起動できる", async () => {
       timeout: 60000,
     });
   });
-
-  await app.close();
 });
 
-test("Welcome画面でエンジンをアップデートできる", async () => {
+test("Welcome画面でエンジンをアップデートできる", async ({ launchElectronApp }) => {
   await test.step("古いエンジンを配置する", async () => {
     await installOldEngine();
   });
 
-  const app = await electron.launch({
-    args: ["--no-sandbox", "."], // NOTE: --no-sandbox はUbuntu 24.04で動かすのに必要
-    timeout: process.env.CI ? 0 : 60000,
-  });
+  const app = await launchElectronApp();
 
   // ダミーエンジンは起動できずに異常終了するため、エラーダイアログが表示される。
   // これをモックしてテストが失敗しないようにする。
@@ -110,10 +98,6 @@ test("Welcome画面でエンジンをアップデートできる", async () => {
 
       throw new Error(`Unexpected dialog: title=${title}, content=${content}`);
     };
-  });
-
-  app.on("console", (msg) => {
-    console.log(msg.text());
   });
 
   const welcomePage = await test.step("Welcome画面に移動する", async () => {
@@ -171,6 +155,4 @@ test("Welcome画面でエンジンをアップデートできる", async () => {
       timeout: 60000,
     });
   });
-
-  await app.close();
 });
