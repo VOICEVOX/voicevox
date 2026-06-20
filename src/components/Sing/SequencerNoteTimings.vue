@@ -13,6 +13,7 @@ import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
 import { getDefaultLyric } from "@/sing/domain";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { clamp } from "@/sing/utility";
+import { assertNonNullable } from "@/type/utility";
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
@@ -78,18 +79,10 @@ let requestId: number | undefined;
 let renderInNextFrame = false;
 
 const render = () => {
-  if (renderer == undefined) {
-    throw new Error("renderer is undefined.");
-  }
-  if (stage == undefined) {
-    throw new Error("stage is undefined.");
-  }
-  if (canvasWidth == undefined) {
-    throw new Error("canvasWidth is undefined.");
-  }
-  if (canvasHeight == undefined) {
-    throw new Error("canvasHeight is undefined.");
-  }
+  assertNonNullable(renderer);
+  assertNonNullable(stage);
+  assertNonNullable(canvasWidth);
+  assertNonNullable(canvasHeight);
 
   const notes = selectedTrackNotes.value;
   const scaleX = store.state.sequencerZoomX;
@@ -243,12 +236,8 @@ watch(
 onMounted(async () => {
   const canvasContainerElement = canvasContainer.value;
   const canvasElement = canvas.value;
-  if (canvasContainerElement == undefined) {
-    throw new Error("canvasContainerElement is null.");
-  }
-  if (canvasElement == undefined) {
-    throw new Error("canvasElement is null.");
-  }
+  assertNonNullable(canvasContainerElement);
+  assertNonNullable(canvasElement);
 
   canvasWidth = canvasContainerElement.clientWidth;
   canvasHeight = canvasContainerElement.clientHeight;
@@ -278,9 +267,7 @@ onMounted(async () => {
   requestId = window.requestAnimationFrame(callback);
 
   resizeObserver = new ResizeObserver(() => {
-    if (renderer == undefined) {
-      throw new Error("renderer is undefined.");
-    }
+    assertNonNullable(renderer);
     const canvasContainerWidth = canvasContainerElement.clientWidth;
     const canvasContainerHeight = canvasContainerElement.clientHeight;
 
