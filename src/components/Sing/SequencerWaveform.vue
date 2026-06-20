@@ -36,7 +36,7 @@ const tpqn = computed(() => store.state.tpqn);
 const tempos = computed(() => store.state.tempos);
 const isDark = computed(() => store.state.currentTheme === "Dark");
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
-const scaleX = computed(() => store.state.sequencerZoomX);
+const scaleX = computed(() => props.viewportInfo.scaleX);
 
 type AudioEventId = SequenceId;
 

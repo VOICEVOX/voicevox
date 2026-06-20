@@ -87,7 +87,7 @@ const render = () => {
   assertNonNullable(noteTextStyles);
 
   const notes = selectedTrackNotes.value;
-  const scaleX = store.state.sequencerZoomX;
+  const scaleX = props.viewportInfo.scaleX;
   const offsetXValue = props.viewportInfo.offsetX;
   const colors = noteColors.value;
   const currentTextStyle = isDark.value
@@ -225,7 +225,7 @@ watch(
     tpqn,
     defaultLyricMode,
     isDark,
-    () => store.state.sequencerZoomX,
+    () => props.viewportInfo.scaleX,
     () => props.viewportInfo.offsetX,
   ],
   ([mounted]) => {
