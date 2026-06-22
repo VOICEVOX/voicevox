@@ -27,6 +27,7 @@ type PhonemeDisplayInfo = {
 const props = defineProps<{
   viewportInfo: ViewportInfo;
   phonemeTimingInfos: PhonemeTimingInfo[];
+  phonemeTextY: number;
 }>();
 
 const store = useStore();
@@ -280,7 +281,7 @@ const render = () => {
 
       textContainer.renderable = true;
       textContainer.x = phonemeStartX + 3; // 線から少し右にずらす
-      textContainer.y = 50;
+      textContainer.y = props.phonemeTextY;
 
       // マスク幅の計算
       let maskWidth = 36;

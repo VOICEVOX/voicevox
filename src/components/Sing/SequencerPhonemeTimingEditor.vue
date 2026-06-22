@@ -9,6 +9,7 @@
         class="phoneme-timings"
         :viewportInfo
         :phonemeTimingInfos
+        :phonemeTextY
       />
     </div>
   </div>
@@ -50,6 +51,18 @@ const phonemeTimingInfos = computed(() => {
     phonemeTimingEditData.value,
   );
 });
+
+// parameter-areaの各行の高さ
+const TOP_ROW_HEIGHT = 12;
+const NOTES_ROW_HEIGHT = 26;
+const PHONEME_TEXTS_ROW_HEIGHT = 28;
+
+// 音素文字行内での音素文字の上端オフセット
+const PHONEME_TEXT_TOP_OFFSET_IN_ROW = 12;
+
+// SequencerPhonemeTimingsの音素文字のY座標
+const phonemeTextY =
+  TOP_ROW_HEIGHT + NOTES_ROW_HEIGHT + PHONEME_TEXT_TOP_OFFSET_IN_ROW;
 </script>
 
 <style scoped lang="scss">
@@ -75,7 +88,11 @@ const phonemeTimingInfos = computed(() => {
   position: relative;
 
   display: grid;
-  grid-template-rows: 12px 26px 28px 1fr;
+  grid-template-rows:
+    v-bind("`${TOP_ROW_HEIGHT}px`")
+    v-bind("`${NOTES_ROW_HEIGHT}px`")
+    v-bind("`${PHONEME_TEXTS_ROW_HEIGHT}px`")
+    1fr;
 }
 
 .parameter-grid {
