@@ -445,8 +445,7 @@ onMounted(async () => {
       canvasWidth = canvasContainerWidth;
       canvasHeight = canvasContainerHeight;
       renderer.resize(canvasWidth, canvasHeight);
-      // 次フレームに描画を持ち越すとリサイズ直後の空canvasが一瞬表示されて点滅するため、
-      // ペイント前のResizeObserverコールバック内で同期的に描画する
+      // NOTE: 次フレームで再描画するとちらついてしまうため、同期的に再描画する
       renderInNextFrame = false;
       render();
     }

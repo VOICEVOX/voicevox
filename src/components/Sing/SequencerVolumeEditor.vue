@@ -733,8 +733,9 @@ onMounted(async () => {
       viewportWidth.value = width;
       viewportHeight.value = height;
       renderer.resize(width, height);
-      render();
+      // NOTE: 次フレームで再描画するとちらついてしまうため、同期的に再描画する
       renderInNextFrame = false;
+      render();
     }
   });
   resizeObserver.observe(containerEl);
