@@ -3,6 +3,8 @@
     <div class="axis-area"></div>
     <div class="parameter-area">
       <SequencerParameterGrid class="parameter-grid" :viewportInfo />
+      <SequencerWaveform class="waveform" :viewportInfo />
+      <SequencerNoteTimings class="note-timings" :viewportInfo />
     </div>
   </div>
 </template>
@@ -10,6 +12,8 @@
 <script setup lang="ts">
 import type { ViewportInfo } from "@/sing/viewHelper";
 import SequencerParameterGrid from "@/components/Sing/SequencerParameterGrid.vue";
+import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
+import SequencerNoteTimings from "@/components/Sing/SequencerNoteTimings.vue";
 
 defineProps<{
   viewportInfo: ViewportInfo;
@@ -45,5 +49,15 @@ defineProps<{
 .parameter-grid {
   grid-column: 1;
   grid-row: 1 / 5;
+}
+
+.waveform {
+  grid-column: 1;
+  grid-row: 4 / 5;
+}
+
+.note-timings {
+  grid-column: 1;
+  grid-row: 2 / 3;
 }
 </style>

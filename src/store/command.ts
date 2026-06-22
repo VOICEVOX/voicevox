@@ -57,14 +57,7 @@ export const createCommandMutation =
     editor: EditorType,
   ): Mutation<S, M, K> =>
   (state: S, payload: M[K]): void => {
-    // HACK: コマンド履歴を除外してproduceWithPatchesを高速化
-    // ref: https://github.com/VOICEVOX/voicevox/issues/2143
-    const { undoCommands, redoCommands, ...stateWithoutHistory } = toRaw(state);
-    const command = recordPatches(payloadRecipe)(
-      stateWithoutHistory as S,
-      payload,
-    );
-
+    const command = recordPatches(payloadRecipe)(state, payload);
     applyPatches(state, command.redoPatches);
     state.undoCommands[editor].push(command);
     state.redoCommands[editor].splice(0);
@@ -78,7 +71,7 @@ const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
-      state,
+      toRaw(state),
       (draft: S) => recipe(draft, payload),
     );
     return {
