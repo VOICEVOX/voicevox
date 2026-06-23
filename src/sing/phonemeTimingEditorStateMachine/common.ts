@@ -170,7 +170,7 @@ export function computePhonemeTimingInfos(
         phraseKey,
         noteId,
         phonemeIndexInNote: effectivePhonemeIndexInNote,
-        phoneme: editedPhoneme.phoneme,
+        phoneme: phoneme.phoneme,
         isEdited,
         originalStartTimeSeconds,
         editedStartTimeSeconds,
