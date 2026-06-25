@@ -25,14 +25,9 @@ export const test = base.extend<ElectronFixtures>({
     if (app != null) {
       if (testInfo.status !== testInfo.expectedStatus) {
         // テスト失敗時は通常の終了シーケンスを経由せず強制終了させる。
-        await app
-          .evaluate(({ app }) => {
-            app.exit(0);
-          })
-          .catch((error: unknown) => {
-            // app.exit() でプロセスが即座に終了するため CDP エラーが発生する
-            console.log("強制終了後の CDP エラー:", error);
-          });
+        await app.evaluate(({ app }) => {
+          app.exit(0);
+        });
       } else {
         await app.close();
       }
