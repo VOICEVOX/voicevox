@@ -75,7 +75,7 @@ export const noteSchema = z.object({
   position: z.number(),
   duration: z.number(),
   noteNumber: z.number(),
-  lyric: z.string().nullable(),
+  lyric: z.string().nullable(), // 歌詞未入力のときはnull
 });
 
 export const singerSchema = z.object({
