@@ -55,7 +55,7 @@ export class AddNoteState implements State<
       position: Math.max(0, guideLineTicks),
       duration: context.snapTicks.value,
       noteNumber: clamp(this.cursorPosAtStart.noteNumber, 0, 127),
-      lyric: undefined,
+      lyric: null,
     };
     const noteEndPos = noteToAdd.position + noteToAdd.duration;
 
