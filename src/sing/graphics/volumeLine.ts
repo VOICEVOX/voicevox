@@ -42,13 +42,9 @@ export class VolumeLine {
   areaAlpha: number;
   isVisible: boolean;
 
-  private readonly container: PIXI.Container;
+  readonly container: PIXI.Container;
   private readonly area: PIXI.Graphics;
   private readonly line: PIXI.Graphics;
-
-  get displayObject(): PIXI.DisplayObject {
-    return this.container;
-  }
 
   constructor(options: VolumeLineOptions) {
     this.color = options.color;
@@ -75,12 +71,13 @@ export class VolumeLine {
 
     this.area.clear();
     this.line.clear();
-    this.line.lineStyle({
+
+    const strokeStyle = {
       width: this.width,
       color: colorToHex(this.color),
       alpha,
       alignment: 0.5,
-    });
+    };
 
     for (const segment of segments) {
       if (segment.length < 2) continue;
@@ -109,16 +106,16 @@ export class VolumeLine {
       }));
 
       if (this.showArea) {
-        this.area.beginFill(colorToHex(this.color), this.areaAlpha);
-        this.area.moveTo(screenPoints[0].x, viewInfo.viewportHeight);
-        for (const p of screenPoints) {
-          this.area.lineTo(p.x, p.y);
-        }
-        this.area.lineTo(
-          screenPoints[screenPoints.length - 1].x,
-          viewInfo.viewportHeight,
-        );
-        this.area.endFill();
+        this.area
+          .poly([
+            { x: screenPoints[0].x, y: viewInfo.viewportHeight },
+            ...screenPoints,
+            {
+              x: screenPoints[screenPoints.length - 1].x,
+              y: viewInfo.viewportHeight,
+            },
+          ])
+          .fill({ color: colorToHex(this.color), alpha: this.areaAlpha });
       }
 
       if (this.dashed) {
@@ -167,6 +164,8 @@ export class VolumeLine {
         }
       }
     }
+
+    this.line.stroke(strokeStyle);
   }
 
   destroy() {

@@ -87,7 +87,7 @@ test("エディタウィンドウを起動できる", async () => {
   await app.close();
 });
 
-test("Welcome画面でエンジンを更新できる", async () => {
+test("Welcome画面でエンジンをアップデートできる", async () => {
   await test.step("古いエンジンを配置する", async () => {
     await installOldEngine();
   });
@@ -142,15 +142,15 @@ test("Welcome画面でエンジンを更新できる", async () => {
     return welcomePage;
   });
 
-  await test.step("更新を実行する", async () => {
-    const updateButton = welcomePage.getByText(/更新（.+?）/);
+  await test.step("アップデートを実行する", async () => {
+    const updateButton = welcomePage.getByText(/アップデート（.+?）/);
     await updateButton.waitFor({
       timeout: 60000,
     });
     await updateButton.click();
   });
 
-  await test.step("更新後の状態に切り替わる", async () => {
+  await test.step("アップデート後の状態に切り替わる", async () => {
     const reinstallButton = welcomePage.getByText(/再インストール（.+?）/);
     await reinstallButton.waitFor({
       timeout: 60000,

@@ -5,7 +5,6 @@ import {
   Store as BaseStore,
   useStore as baseUseStore,
   type ModuleTree,
-  type Plugin,
   type StoreOptions as OriginalStoreOptions,
   type GetterTree as OriginalGetterTree,
   type ActionTree as OriginalActionTree,
@@ -36,9 +35,16 @@ export class Store<
   M extends MutationsBase,
 > extends BaseStore<S> {
   constructor(options: StoreOptions<S, G, A, M>) {
-    super(options as OriginalStoreOptions<S>);
+    // Vuexはデフォルトでpluginsをコンストラクタ内（resetStoreState直後）で呼ぶが、
+    // その時点ではVV独自のactionsとmutationsがまだ設定されていない。
+    // そのため、pluginsをoptionsから除いてVuexに渡し、
+    // actions/mutations設定後に手動で呼ぶ形にしている。
+    // なお、Vuexはメンテナンスモードであり今後この動作が変わることはないと考えられる。
+    const { plugins, ...restOptions } = options;
+    super(restOptions as OriginalStoreOptions<S>);
     this.actions = dotNotationDispatchProxy(this.dispatch.bind(this));
     this.mutations = dotNotationCommitProxy(this.commit.bind(this));
+    plugins?.forEach((plugin) => plugin(this));
   }
 
   declare readonly getters: G;
@@ -175,7 +181,7 @@ export interface StoreOptions<
   actions: ActionTree<S, S, A, SG, SA, SM>;
   mutations: MutationTree<S, M>;
   modules?: ModuleTree<S>;
-  plugins?: Plugin<S>[];
+  plugins?: ((store: Store<S, SG, SA, SM>) => void)[];
   strict?: boolean;
   devtools?: boolean;
 }
@@ -403,6 +409,10 @@ export type MutationTree<S, M> = M extends MutationsBase
 export type CustomMutationTree<S, M extends MutationsBase> = {
   [K in keyof M]: Mutation<S, M, K>;
 };
+
+export type StorePlugins = ((
+  store: Store<State, AllGetters, AllActions, AllMutations>,
+) => void)[];
 
 type StoreTypesBase = Record<
   string,

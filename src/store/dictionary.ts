@@ -71,7 +71,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
 
       if (engineId == undefined)
         throw new Error(`No such engine registered: index == 0`);
-      await actions
+      const wordUuid = await actions
         .INSTANTIATE_ENGINE_CONNECTOR({
           engineId,
         })
@@ -85,6 +85,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
         );
 
       await actions.SYNC_ALL_USER_DICT();
+      return wordUuid;
     },
   },
 

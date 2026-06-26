@@ -180,6 +180,7 @@ const canvas = ref<HTMLCanvasElement | null>(null);
 const viewportWidth = ref<number>();
 const viewportHeight = ref<number>();
 
+// TODO: pixi.js関連の変数をまとめてモジュール化し、isUnmountedなどのフラグを無くす
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let gridGraphics: PIXI.Graphics | undefined;
@@ -189,6 +190,7 @@ let editedVolumeLine: VolumeLine | undefined;
 let requestId: number | undefined;
 let resizeObserver: ResizeObserver | undefined;
 let renderInNextFrame = false;
+let isUnmounted = false;
 let viewportRectCache:
   | { left: number; top: number; width: number; height: number }
   | undefined;
@@ -287,9 +289,10 @@ const updateGrid = () => {
       if (measureX < -1 || measureX > width + 1) {
         continue;
       }
-      gridGraphics.lineStyle(1, measureColor, 0.35);
-      gridGraphics.moveTo(measureX, 0);
-      gridGraphics.lineTo(measureX, height);
+      gridGraphics
+        .moveTo(measureX, 0)
+        .lineTo(measureX, height)
+        .stroke({ width: 1, color: measureColor, alpha: 0.35 });
 
       if (m === measuresInPattern) {
         continue;
@@ -299,9 +302,10 @@ const updateGrid = () => {
         if (beatX < -1 || beatX > width + 1) {
           continue;
         }
-        gridGraphics.lineStyle(1, beatColor, 0.22);
-        gridGraphics.moveTo(beatX, 0);
-        gridGraphics.lineTo(beatX, height);
+        gridGraphics
+          .moveTo(beatX, 0)
+          .lineTo(beatX, height)
+          .stroke({ width: 1, color: beatColor, alpha: 0.22 });
       }
     }
   }
@@ -341,14 +345,14 @@ const render = () => {
       const clampedStart = Math.max(0, startX);
       const clampedEnd = Math.min(viewInfo.viewportWidth, endX);
       if (clampedEnd > clampedStart) {
-        erasePreviewOverlay.beginFill(0x000000, 0.12);
-        erasePreviewOverlay.drawRect(
-          clampedStart,
-          0,
-          clampedEnd - clampedStart,
-          viewInfo.viewportHeight,
-        );
-        erasePreviewOverlay.endFill();
+        erasePreviewOverlay
+          .rect(
+            clampedStart,
+            0,
+            clampedEnd - clampedStart,
+            viewInfo.viewportHeight,
+          )
+          .fill({ color: 0x000000, alpha: 0.12 });
       }
     }
   }
@@ -657,7 +661,7 @@ watch(
   },
 );
 
-onMounted(() => {
+onMounted(async () => {
   const containerEl = canvasContainer.value;
   const canvasEl = canvas.value;
   if (!containerEl || !canvasEl) {
@@ -680,8 +684,8 @@ onMounted(() => {
   viewportWidth.value = containerEl.clientWidth;
   viewportHeight.value = containerEl.clientHeight;
 
-  renderer = new PIXI.Renderer({
-    view: canvasEl,
+  renderer = await PIXI.autoDetectRenderer({
+    canvas: canvasEl,
     backgroundAlpha: 0,
     antialias: true,
     resolution: window.devicePixelRatio || 1,
@@ -689,6 +693,10 @@ onMounted(() => {
     width: viewportWidth.value,
     height: viewportHeight.value,
   });
+  if (isUnmounted) {
+    renderer.destroy({ removeView: true });
+    return;
+  }
   stage = new PIXI.Container();
   erasePreviewOverlay = new PIXI.Graphics();
   gridGraphics = new PIXI.Graphics();
@@ -708,8 +716,8 @@ onMounted(() => {
 
   stage.addChild(erasePreviewOverlay); // 下地
   stage.addChild(gridGraphics); // グリッドはオーバーレイの上に
-  stage.addChild(originalVolumeLine.displayObject);
-  stage.addChild(editedVolumeLine.displayObject);
+  stage.addChild(originalVolumeLine.container);
+  stage.addChild(editedVolumeLine.container);
 
   const callback = () => {
     if (renderInNextFrame) {
@@ -739,8 +747,9 @@ onMounted(() => {
       viewportWidth.value = width;
       viewportHeight.value = height;
       renderer.resize(width, height);
-      render();
+      // NOTE: 次フレームで再描画するとちらついてしまうため、同期的に再描画する
       renderInNextFrame = false;
+      render();
     }
   });
   resizeObserver.observe(containerEl);
@@ -752,6 +761,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  isUnmounted = true;
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
@@ -759,7 +769,7 @@ onUnmounted(() => {
   editedVolumeLine?.destroy();
   gridGraphics?.destroy();
   stage?.destroy();
-  renderer?.destroy(true);
+  renderer?.destroy({ removeView: true });
   resizeObserver?.disconnect();
   window.removeEventListener("pointermove", onWindowPointerMove);
   window.removeEventListener("pointerup", onWindowPointerUp);

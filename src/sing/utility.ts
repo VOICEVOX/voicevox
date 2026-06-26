@@ -93,18 +93,18 @@ export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function getLast<T>(array: T[]) {
+export function getLast<T>(array: readonly T[]) {
   if (array.length === 0) {
     throw new Error("array.length is 0.");
   }
   return array[array.length - 1];
 }
 
-export function getPrev<T>(array: T[], currentIndex: number) {
+export function getPrev<T>(array: readonly T[], currentIndex: number) {
   return currentIndex !== 0 ? array[currentIndex - 1] : undefined;
 }
 
-export function getNext<T>(array: T[], currentIndex: number) {
+export function getNext<T>(array: readonly T[], currentIndex: number) {
   return currentIndex !== array.length - 1
     ? array[currentIndex + 1]
     : undefined;
