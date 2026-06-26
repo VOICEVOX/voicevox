@@ -89,7 +89,7 @@ export class ErasePhonemeTimingToolIdleState implements State<
 
       if (isHitEditedPhonemeTiming) {
         if (isPointerMove) {
-          context.cursorState.value = "CROSSHAIR";
+          context.cursorState.value = "ERASE";
         } else {
           setNextState("erasePhonemeTiming", {
             targetTrackId: selectedTrackId,

@@ -93,6 +93,10 @@ const cursorStyle = computed(() => {
   switch (cursorState.value) {
     case "EW_RESIZE":
       return "ew-resize";
+    case "ERASE":
+      // NOTE: 消しゴム用のカーソル・画像がないため、一旦defaultにしている
+      // TODO: 消しゴム用のカーソル・画像を用意して差し替える
+      return "default";
     default:
       return "default";
   }

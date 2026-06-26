@@ -54,7 +54,7 @@ export class ErasePhonemeTimingState implements State<
       targets: [],
     };
     context.previewMode.value = "ERASE_PHONEME_TIMING";
-    context.cursorState.value = "CROSSHAIR";
+    context.cursorState.value = "ERASE";
 
     // 初期位置での当たり判定
     this.updateEraseTargets(context);
