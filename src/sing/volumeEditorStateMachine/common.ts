@@ -103,3 +103,11 @@ export type VolumeEditorStateDefinitions = StateDefinitions<
     },
   ]
 >;
+
+export const applyEditableCursorState = (
+  context: VolumeEditorContext,
+  isEditable: boolean,
+  editableCursorState: Extract<CursorState, "DRAW" | "ERASE">,
+) => {
+  context.cursorState.value = isEditable ? editableCursorState : "NOT_ALLOWED";
+};

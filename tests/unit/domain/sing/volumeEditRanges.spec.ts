@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import {
-  computeVolumeEditableFrameRanges,
   getOverlappingVolumeEditableFrameRanges,
   isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
@@ -38,8 +37,7 @@ describe("volumeEditRanges", () => {
 
   it("編集可能区間外のデータをマスクする", () => {
     const actual = maskVolumeEditDataByEditableRanges(
-      [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
-      8,
+      { values: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6], startFrame: 8 },
       [
         { startFrame: 9, endFrame: 11 },
         { startFrame: 13, endFrame: 14 },
@@ -92,39 +90,15 @@ describe("volumeEditRanges", () => {
   });
 
   it("編集可能区間が空の場合は全データがマスクされる", () => {
-    const actual = maskVolumeEditDataByEditableRanges([0.1, 0.2, 0.3], 0, []);
-
-    expect(actual).toEqual([
-      VALUE_INDICATING_NO_DATA,
-      VALUE_INDICATING_NO_DATA,
-      VALUE_INDICATING_NO_DATA,
-    ]);
-  });
-
-  it("解決済みフレーズ情報から編集可能区間を計算しマージする", () => {
-    const actual = computeVolumeEditableFrameRanges(
-      [
-        {
-          startTime: 1.0,
-          volumeLength: 100,
-          minNonPauseStartFrame: 10,
-          maxNonPauseEndFrame: 80,
-        },
-        {
-          startTime: 2.0,
-          volumeLength: 50,
-          // minNonPauseStartFrame/maxNonPauseEndFrame が未設定の場合は
-          // フレーズ全体が編集可能
-        },
-      ],
-      100, // frameRate
+    const actual = maskVolumeEditDataByEditableRanges(
+      { values: [0.1, 0.2, 0.3], startFrame: 0 },
+      [],
     );
 
-    // phrase1: phraseStart=100, startFrame=100+10=110, endFrame=min(200, 100+80)=180
-    // phrase2: phraseStart=200, startFrame=200+0=200, endFrame=min(250, 200+50)=250
     expect(actual).toEqual([
-      { startFrame: 110, endFrame: 180 },
-      { startFrame: 200, endFrame: 250 },
+      VALUE_INDICATING_NO_DATA,
+      VALUE_INDICATING_NO_DATA,
+      VALUE_INDICATING_NO_DATA,
     ]);
   });
 
@@ -135,7 +109,10 @@ describe("volumeEditRanges", () => {
       { startFrame: 5, endFrame: 6 },
     ];
 
-    const actual = maskVolumeEditDataByEditableRanges(editData, 0, ranges);
+    const actual = maskVolumeEditDataByEditableRanges(
+      { values: editData, startFrame: 0 },
+      ranges,
+    );
 
     expect(actual).toEqual([
       VALUE_INDICATING_NO_DATA,
