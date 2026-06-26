@@ -3999,6 +3999,15 @@ export const singingCommandStore = transformCommandStore(
         { state, mutations, getters, actions },
         { tpqn, tempos, timeSignatures, tracks },
       ) {
+        if (!isValidTpqn(tpqn)) {
+          throw new Error("The tpqn is invalid.");
+        }
+        if (!isValidTempos(tempos)) {
+          throw new Error("The tempos are invalid.");
+        }
+        if (!isValidTimeSignatures(timeSignatures)) {
+          throw new Error("The time signatures are invalid.");
+        }
         if (transport == undefined) {
           throw new Error("transport is undefined.");
         }
