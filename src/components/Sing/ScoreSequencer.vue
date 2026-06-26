@@ -222,6 +222,8 @@
         @update:needsAutoScroll="
           (value) => (parameterPanelNeedsAutoScroll = value)
         "
+        @panTimeline="panTimelineBy"
+        @zoomTimeline="zoomTimelineAt"
       />
     </template>
   </QSplitter>
@@ -296,6 +298,7 @@ import type {
   ViewportInfo,
 } from "@/sing/sequencerStateMachine/common";
 import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
+import { assertNonNullable } from "@/type/utility";
 
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
@@ -894,30 +897,36 @@ const setZoomY = (value: number | null) => {
   });
 };
 
+const panTimelineBy = (deltaX: number) => {
+  const el = sequencerBody.value;
+  assertNonNullable(el);
+  el.scrollBy(deltaX, 0);
+};
+
+const zoomTimelineAt = (anchorX: number, deltaY: number) => {
+  const el = sequencerBody.value;
+  assertNonNullable(el);
+  const oldZoomX = zoomX.value;
+  let newZoomX = oldZoomX - deltaY * (ZOOM_X_STEP * 0.01);
+  newZoomX = Math.min(ZOOM_X_MAX, newZoomX);
+  newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
+  const scrollLeft = el.scrollLeft;
+  const scrollTop = el.scrollTop;
+
+  void store.actions.SET_ZOOM_X({ zoomX: newZoomX }).then(() => {
+    const cursorBaseX = (scrollLeft + anchorX) / oldZoomX;
+    const newScrollLeft = cursorBaseX * newZoomX - anchorX;
+    el.scrollTo(newScrollLeft, scrollTop);
+  });
+};
+
 const onWheel = (event: WheelEvent) => {
-  const sequencerBodyElement = sequencerBody.value;
-  if (!sequencerBodyElement) {
-    throw new Error("sequencerBodyElement is null.");
-  }
   if (isOnCommandOrCtrlKeyDown(event)) {
-    // scrollイベントの発火を阻止する
     event.preventDefault();
-
+    const sequencerBodyElement = sequencerBody.value;
+    assertNonNullable(sequencerBodyElement);
     const cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-    // マウスカーソル位置を基準に水平方向のズームを行う
-    const oldZoomX = zoomX.value;
-    let newZoomX = zoomX.value;
-    newZoomX -= event.deltaY * (ZOOM_X_STEP * 0.01);
-    newZoomX = Math.min(ZOOM_X_MAX, newZoomX);
-    newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
-    const scrollLeft = sequencerBodyElement.scrollLeft;
-    const scrollTop = sequencerBodyElement.scrollTop;
-
-    void store.actions.SET_ZOOM_X({ zoomX: newZoomX }).then(() => {
-      const cursorBaseX = (scrollLeft + cursorX) / oldZoomX;
-      const newScrollLeft = cursorBaseX * newZoomX - cursorX;
-      sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
-    });
+    zoomTimelineAt(cursorX, event.deltaY);
   }
 };
 

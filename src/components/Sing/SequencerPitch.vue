@@ -413,7 +413,9 @@ onMounted(async () => {
       canvasWidth = canvasContainerWidth;
       canvasHeight = canvasContainerHeight;
       renderer.resize(canvasWidth, canvasHeight);
-      renderInNextFrame = true;
+      // NOTE: 次フレームで再描画するとちらついてしまうため、同期的に再描画する
+      renderInNextFrame = false;
+      render();
     }
   });
   resizeObserver.observe(canvasContainerElement);
