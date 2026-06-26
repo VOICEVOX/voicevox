@@ -222,8 +222,7 @@ export class MovePhonemeTimingState implements State<
     const originalStartTimeSeconds = targetInfo.originalStartTimeSeconds;
     const editedStartTimeSeconds = targetInfo.editedStartTimeSeconds;
 
-    // 新しいoffsetSecondsを計算
-    // initialStartTimeSeconds + timeDelta が minTimeSeconds と maxTimeSeconds の間になるようにclamp
+    // 前後の音素タイミングとフレーズ範囲端を越えないようclampする
     const newStartTime = clamp(
       editedStartTimeSeconds + timeDeltaSeconds,
       minTimeSeconds,
