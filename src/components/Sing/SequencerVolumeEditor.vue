@@ -710,7 +710,7 @@ const render = () => {
   // 編集不可区間のオーバーレイ
   if (disabledOverlayGraphics) {
     disabledOverlayGraphics.clear();
-    const overlayAlpha = isDark.value ? 0.35 : 0.08;
+    const overlayAlpha = 0;
     const frameRate = editorFrameRate.value;
     if (frameRate > 0) {
       let cursor = 0;
