@@ -20,9 +20,7 @@ const isMaterialIconLigatureName = (iconName: string) => {
 export const materialSymbolsRoundedIconMap: GlobalQuasarIconMapFn = (
   iconName,
 ) => {
-  if (
-    MATERIAL_SYMBOLS_PREFIXES.some((prefix) => iconName.startsWith(prefix))
-  ) {
+  if (MATERIAL_SYMBOLS_PREFIXES.some((prefix) => iconName.startsWith(prefix))) {
     return;
   }
 
