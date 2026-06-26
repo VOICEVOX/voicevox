@@ -9,6 +9,7 @@ import type { Tempo } from "@/domain/project/type";
 export type PositionOnVolumeEditor = {
   readonly frame: number;
   readonly value: number;
+  readonly relativeDb?: number;
 };
 
 export type VolumeEditorInput =
@@ -70,6 +71,10 @@ export type VolumeEditorPartialStore = {
 export type VolumeEditorContext = VolumeEditorRefs &
   VolumeEditorComputedRefs & {
     readonly getEditableFrameRanges: () => readonly VolumeEditableFrameRange[];
+    readonly getAbsoluteVolumeFromRelativeDb?: (
+      frame: number,
+      relativeDb: number,
+    ) => number;
     readonly store: VolumeEditorPartialStore;
   };
 

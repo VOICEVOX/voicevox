@@ -15,6 +15,9 @@ export type ToolPaletteLayout =
   | "center"
   | "centerBottom"
   | "side"
+  | "sideLeft"
+  | "sideRight"
+  | "sideLeftToolbarRight"
   | "reservedRail";
 
 export const TOOL_PALETTE_LAYOUT_OPTIONS: {
@@ -25,6 +28,8 @@ export const TOOL_PALETTE_LAYOUT_OPTIONS: {
   { value: "dockCenter", label: "Dock - center" },
   { value: "rail", label: "Rail - inline" },
   { value: "centerBottom", label: "Rail - Center bottom" },
-  { value: "side", label: "Rail - Side" },
+  { value: "sideLeft", label: "Rail - Left side" },
+  { value: "sideLeftToolbarRight", label: "Rail - Left rail, right tools" },
+  { value: "sideRight", label: "Rail - Right side" },
   { value: "reservedRail", label: "Rail - Reserved" },
 ];

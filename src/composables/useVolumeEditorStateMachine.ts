@@ -17,6 +17,10 @@ export const useVolumeEditorStateMachine = (
   store: VolumeEditorPartialStore,
   options: {
     getEditableFrameRanges: () => readonly VolumeEditableFrameRange[];
+    getAbsoluteVolumeFromRelativeDb?: (
+      frame: number,
+      relativeDb: number,
+    ) => number;
   },
 ) => {
   const refs = {
@@ -48,6 +52,7 @@ export const useVolumeEditorStateMachine = (
       ...refs,
       ...computedRefs,
       getEditableFrameRanges: options.getEditableFrameRanges,
+      getAbsoluteVolumeFromRelativeDb: options.getAbsoluteVolumeFromRelativeDb,
       store,
     },
     idleStateId.value,

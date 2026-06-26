@@ -53,12 +53,19 @@ const toolItems: {
 
 <style scoped lang="scss">
 .tool-palette {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   padding: 1px;
   border-radius: 7px;
-  background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);
-  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 94%,
+    transparent
+  );
+  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
   gap: 1px;
   pointer-events: auto;
 }
@@ -81,24 +88,28 @@ const toolItems: {
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--scheme-color-on-surface-variant);
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 78%,
+    var(--scheme-color-primary)
+  );
   cursor: pointer;
 
   &:hover {
-    background: var(--scheme-color-surface-container-highest);
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-surface-container-highest) 74%,
+      transparent
+    );
     color: var(--scheme-color-on-surface);
   }
 
   &.active {
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-secondary-container) 72%,
-      var(--scheme-color-surface)
-    );
-    color: var(--scheme-color-on-secondary-container);
+    background: var(--scheme-color-surface);
+    color: var(--scheme-color-on-surface);
     box-shadow:
       inset 0 0 0 1px
-        color-mix(in oklch, var(--scheme-color-secondary) 38%, transparent),
+        color-mix(in oklch, var(--scheme-color-primary) 34%, transparent),
       0 1px 2px oklch(0% 0 0 / 0.1);
   }
 

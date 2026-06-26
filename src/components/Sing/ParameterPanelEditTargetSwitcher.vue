@@ -18,8 +18,11 @@
       @click="changeEditTarget(option.value)"
     >
       <span v-if="props.displayMode === 'text'">{{ option.text }}</span>
-      <span v-else class="material-symbols-rounded" aria-hidden="true">
-        {{ option.icon }}
+      <span v-else class="edit-target-button-content">
+        <span class="material-symbols-rounded" aria-hidden="true">
+          {{ option.icon }}
+        </span>
+        <span class="edit-target-button-label">{{ option.shortText }}</span>
       </span>
     </button>
   </div>
@@ -44,12 +47,14 @@ const targetOptions = computed(() => {
   const volume = {
     value: "VOLUME" as const,
     text: "ボリューム",
+    shortText: "声量",
     ariaLabel: "ボリューム",
     icon: "volume_up",
   };
   const phonemeTiming = {
     value: "PHONEME_TIMING" as const,
     text: "音素位置",
+    shortText: "音素",
     ariaLabel: "音素位置",
     icon: "timer",
   };
@@ -68,9 +73,9 @@ const targetOptions = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
-  width: 40px;
-  padding: 2px 0;
+  gap: 0;
+  width: 48px;
+  padding: 0;
   background: transparent;
   pointer-events: auto;
 }
@@ -80,13 +85,17 @@ const targetOptions = computed(() => {
   display: grid;
   place-items: center;
   position: relative;
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 7px 0 0 7px;
+  border-radius: 0;
   background: transparent;
-  color: var(--scheme-color-on-surface-variant);
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 78%,
+    var(--scheme-color-primary)
+  );
   cursor: pointer;
 
   &:hover {
@@ -102,20 +111,41 @@ const targetOptions = computed(() => {
     z-index: 1;
     border-color: color-mix(
       in oklch,
-      var(--scheme-color-outline-variant) 70%,
+      var(--scheme-color-outline-variant) 62%,
       transparent
     );
-    border-right-color: var(--scheme-color-surface);
-    background: var(--scheme-color-surface);
-    color: var(--scheme-color-on-surface);
+    border-right-color: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 34%,
+      transparent
+    );
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary-container) 72%,
+      var(--scheme-color-surface)
+    );
+    color: var(--scheme-color-on-secondary-container);
     box-shadow: -1px 1px 3px oklch(0% 0 0 / 0.12);
   }
 
   .material-symbols-rounded {
-    font-size: 17px;
+    font-size: 20px;
     font-variation-settings: "FILL" 1;
     line-height: 1;
   }
+}
+
+.edit-target-button-content {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.edit-target-button-label {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .text-mode {
@@ -125,8 +155,14 @@ const targetOptions = computed(() => {
   width: auto;
   padding: 1px;
   border-radius: 7px;
-  background: var(--scheme-color-surface);
-  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.14);
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 94%,
+    transparent
+  );
+  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
 }
 
 .text-mode .segment-switch {

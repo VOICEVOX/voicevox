@@ -12,6 +12,18 @@
       class="volume-editor-canvas"
       @wheel="handleWheel"
     ></canvas>
+    <div
+      v-if="volumeValueTooltip != undefined"
+      class="volume-value-guide-line"
+      :style="volumeValueGuideLineStyle"
+    ></div>
+    <div
+      v-if="volumeValueTooltip != undefined"
+      class="volume-value-tooltip"
+      :style="volumeValueTooltipStyle"
+    >
+      {{ volumeValueTooltip.label }}
+    </div>
     <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
   </div>
 </template>
@@ -57,9 +69,12 @@ import {
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
 import { useTimelineWheel } from "@/composables/useTimelineWheel";
+import type { VolumeEditValueMode } from "@/components/Sing/parameterPanelViewMode";
+import type { PositionOnVolumeEditor } from "@/sing/volumeEditorStateMachine/common";
 
 const props = defineProps<{
   offsetX: number;
+  valueMode: VolumeEditValueMode;
 }>();
 
 const emit = defineEmits<{
@@ -74,13 +89,21 @@ const emit = defineEmits<{
 // 最小値: -36dB程度以下はエンジンの出力がノイズっぽいのと、オリジナルボリューム(エンジン出力デフォルト)の典型的な範囲で見やすい程度の高さにするため
 const MIN_DISPLAY_DB = -36.5;
 const MAX_DISPLAY_DB = -0.5;
+const MIN_RELATIVE_DISPLAY_DB = -12;
+const MAX_RELATIVE_DISPLAY_DB = 12;
 const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
+const VOLUME_VALUE_TOOLTIP_WIDTH_PX = 54;
+const VOLUME_VALUE_TOOLTIP_HEIGHT_PX = 22;
+const VOLUME_VALUE_TOOLTIP_OFFSET_PX = 10;
+const VOLUME_VALUE_TOOLTIP_PADDING_PX = 4;
 
 const { warn } = createLogger("SequencerVolumeEditor");
 const store = useStore();
 const { volumePreviewEdit, stateMachineProcess, previewMode, cursorState } =
   useVolumeEditorStateMachine(store, {
     getEditableFrameRanges: () => editableFrameRanges.value,
+    getAbsoluteVolumeFromRelativeDb: (frame, relativeDb) =>
+      getOriginalVolumeAtFrame(frame) * decibelToLinear(relativeDb),
   });
 
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
@@ -95,16 +118,6 @@ const isDark = computed(() => store.state.currentTheme === "Dark");
 
 const numMeasuresContext = inject(numMeasuresInjectionKey, null);
 const numMeasures = computed(() => numMeasuresContext?.numMeasures.value ?? 0);
-
-watch(previewMode, (mode) => {
-  emit("update:needsAutoScroll", mode !== "IDLE");
-});
-
-onBeforeUnmount(() => {
-  if (previewMode.value !== "IDLE") {
-    emit("update:needsAutoScroll", false);
-  }
-});
 
 const setTool = (value: VolumeEditTool) => {
   if (value === tool.value) return;
@@ -132,6 +145,34 @@ const originalVolumeLineColorLight = new Color(156, 158, 156, 255);
 const originalVolumeLineColorDark = new Color(114, 116, 114, 255);
 const editedVolumeLineColorLight = new Color(0, 167, 63, 255);
 const editedVolumeLineColorDark = new Color(95, 188, 117, 255);
+const absoluteVolumeMajorGridDbValues = [
+  MAX_DISPLAY_DB,
+  -6,
+  -12,
+  -18,
+  -24,
+  -30,
+  -36,
+] as const;
+const absoluteVolumeMinorGridDbValues = [-3, -9, -15, -21, -27, -33] as const;
+const relativeVolumeMajorGridDbValues = [12, 6, 0, -6, -12] as const;
+const relativeVolumeMinorGridDbValues = [9, 3, -3, -9] as const;
+
+type VolumePointerInfo = {
+  readonly position: PositionOnVolumeEditor;
+  readonly db: number;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+};
+
+type VolumeValueTooltip = {
+  readonly label: string;
+  readonly x: number;
+  readonly y: number;
+  readonly guideY: number;
+};
 
 const originalVolumeLineColor = computed(() =>
   isDark.value ? originalVolumeLineColorDark : originalVolumeLineColorLight,
@@ -191,6 +232,10 @@ const viewportHeight = ref<number>();
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let gridGraphics: PIXI.Graphics | undefined;
+let volumeDbLabelContainer: PIXI.Container | undefined;
+let volumeDbLabelTextStyles:
+  | { light: PIXI.TextStyle; dark: PIXI.TextStyle }
+  | undefined;
 let erasePreviewOverlay: PIXI.Graphics | undefined;
 let disabledOverlayGraphics: PIXI.Graphics | undefined;
 let originalVolumeLine: VolumeLine | undefined;
@@ -214,6 +259,48 @@ let originalFrameRateCache = 0;
 let originalTrackIdCache: TrackId | undefined;
 const editableFrameRanges = ref<VolumeEditableFrameRange[]>([]);
 const previewEraseRanges = ref<{ startBaseX: number; endBaseX: number }[]>([]);
+const volumeDbLabelTexts: PIXI.Text[] = [];
+const volumeValueTooltip = ref<VolumeValueTooltip>();
+const volumeValueTooltipStyle = computed(() => {
+  const tooltip = volumeValueTooltip.value;
+  if (tooltip == undefined) {
+    return undefined;
+  }
+  return {
+    left: `${tooltip.x}px`,
+    top: `${tooltip.y}px`,
+  };
+});
+const volumeValueGuideLineStyle = computed(() => {
+  const tooltip = volumeValueTooltip.value;
+  if (tooltip == undefined) {
+    return undefined;
+  }
+  return {
+    left: `${KEY_COLUMN_WIDTH_PX}px`,
+    top: `${tooltip.guideY}px`,
+  };
+});
+
+watch(previewMode, (mode) => {
+  emit("update:needsAutoScroll", mode !== "IDLE");
+  if (mode !== "VOLUME_DRAW") {
+    volumeValueTooltip.value = undefined;
+  }
+});
+
+watch(tool, (currentTool) => {
+  if (currentTool !== "DRAW" && previewMode.value !== "VOLUME_DRAW") {
+    volumeValueTooltip.value = undefined;
+  }
+});
+
+onBeforeUnmount(() => {
+  if (previewMode.value !== "IDLE") {
+    emit("update:needsAutoScroll", false);
+  }
+  volumeValueTooltip.value = undefined;
+});
 
 const gridPatterns = useSequencerGrid({
   timeSignatures: toRef(() => timeSignatures.value),
@@ -235,6 +322,114 @@ const dbToNormalizedY = (db: number) => {
 const linearToNormalizedY = (linear: number) => {
   const db = linearToDecibel(Math.max(linear, 0));
   return dbToNormalizedY(db);
+};
+
+const relativeDbToNormalizedY = (db: number) => {
+  const clampedDb = clamp(db, MIN_RELATIVE_DISPLAY_DB, MAX_RELATIVE_DISPLAY_DB);
+  return (
+    (clampedDb - MIN_RELATIVE_DISPLAY_DB) /
+    (MAX_RELATIVE_DISPLAY_DB - MIN_RELATIVE_DISPLAY_DB)
+  );
+};
+
+const normalizedYToRelativeDb = (y: number) => {
+  const clampedY = clamp(y, 0, 1);
+  return (
+    MIN_RELATIVE_DISPLAY_DB +
+    clampedY * (MAX_RELATIVE_DISPLAY_DB - MIN_RELATIVE_DISPLAY_DB)
+  );
+};
+
+const valueModeDbToNormalizedY = (db: number) =>
+  props.valueMode === "relative"
+    ? relativeDbToNormalizedY(db)
+    : dbToNormalizedY(db);
+
+const formatVolumeDbLabel = (db: number) => {
+  if (props.valueMode === "relative") {
+    if (db === 0) return "0";
+    return db > 0 ? `+${db}` : `${db}`;
+  }
+  return db === MAX_DISPLAY_DB ? "0" : `${db}`;
+};
+
+const formatVolumeTooltipLabel = (db: number) => {
+  const roundedDb =
+    Math.round(
+      clamp(
+        db,
+        props.valueMode === "relative"
+          ? MIN_RELATIVE_DISPLAY_DB
+          : MIN_DISPLAY_DB,
+        props.valueMode === "relative"
+          ? MAX_RELATIVE_DISPLAY_DB
+          : MAX_DISPLAY_DB,
+      ) * 10,
+    ) / 10;
+  const prefix = props.valueMode === "relative" && roundedDb > 0 ? "+" : "";
+  return `${prefix}${roundedDb.toFixed(1)} dB`;
+};
+
+const resolveVolumeValueTooltipPosition = (pointerInfo: VolumePointerInfo) => {
+  const rightX =
+    pointerInfo.x +
+    VOLUME_VALUE_TOOLTIP_OFFSET_PX +
+    VOLUME_VALUE_TOOLTIP_WIDTH_PX;
+  const x =
+    rightX <= pointerInfo.width
+      ? pointerInfo.x + VOLUME_VALUE_TOOLTIP_OFFSET_PX
+      : pointerInfo.x -
+        VOLUME_VALUE_TOOLTIP_OFFSET_PX -
+        VOLUME_VALUE_TOOLTIP_WIDTH_PX;
+  const y =
+    pointerInfo.y -
+      VOLUME_VALUE_TOOLTIP_OFFSET_PX -
+      VOLUME_VALUE_TOOLTIP_HEIGHT_PX >=
+    0
+      ? pointerInfo.y -
+        VOLUME_VALUE_TOOLTIP_OFFSET_PX -
+        VOLUME_VALUE_TOOLTIP_HEIGHT_PX
+      : pointerInfo.y + VOLUME_VALUE_TOOLTIP_OFFSET_PX;
+  const maxX = Math.max(
+    VOLUME_VALUE_TOOLTIP_PADDING_PX,
+    pointerInfo.width -
+      VOLUME_VALUE_TOOLTIP_WIDTH_PX -
+      VOLUME_VALUE_TOOLTIP_PADDING_PX,
+  );
+  const maxY = Math.max(
+    VOLUME_VALUE_TOOLTIP_PADDING_PX,
+    pointerInfo.height -
+      VOLUME_VALUE_TOOLTIP_HEIGHT_PX -
+      VOLUME_VALUE_TOOLTIP_PADDING_PX,
+  );
+  return {
+    x: clamp(x, VOLUME_VALUE_TOOLTIP_PADDING_PX, maxX),
+    y: clamp(y, VOLUME_VALUE_TOOLTIP_PADDING_PX, maxY),
+  };
+};
+
+const updateVolumeValueTooltip = (
+  pointerInfo: VolumePointerInfo,
+  targetArea: "Editor" | "Window",
+  pointerEventType: PointerEvent["type"],
+) => {
+  const isHoveringDrawTool =
+    previewMode.value === "IDLE" &&
+    tool.value === "DRAW" &&
+    targetArea === "Editor" &&
+    pointerEventType !== "pointerleave";
+  const isDrawing = previewMode.value === "VOLUME_DRAW";
+  if (!isHoveringDrawTool && !isDrawing) {
+    volumeValueTooltip.value = undefined;
+    return;
+  }
+  const position = resolveVolumeValueTooltipPosition(pointerInfo);
+  volumeValueTooltip.value = {
+    label: formatVolumeTooltipLabel(pointerInfo.db),
+    x: position.x,
+    y: position.y,
+    guideY: pointerInfo.y,
+  };
 };
 
 const frameToBaseX = (frame: number, frameRate: number) => {
@@ -297,8 +492,96 @@ const buildSegments = (framewiseData: number[], frameRate: number) => {
   return segments;
 };
 
+const buildRelativeBaselineSegments = (
+  originalFramewiseData: number[],
+  frameRate: number,
+) => {
+  const segments: VolumeSegment[] = [];
+  let current: VolumeSegment | undefined;
+
+  for (const [frame, value] of originalFramewiseData.entries()) {
+    if (value === VALUE_INDICATING_NO_DATA) {
+      if (current != undefined && current.length >= 2) {
+        segments.push(current);
+      }
+      current = undefined;
+      continue;
+    }
+
+    const baseX = frameToBaseX(frame, frameRate);
+    if (!Number.isFinite(baseX)) {
+      continue;
+    }
+
+    if (current == undefined) {
+      current = [];
+    }
+    current.push({ baseX, normalizedY: relativeDbToNormalizedY(0) });
+  }
+
+  if (current != undefined && current.length >= 2) {
+    segments.push(current);
+  }
+  return segments;
+};
+
+const getRelativeDb = (editedLinear: number, originalLinear: number) => {
+  if (originalLinear <= 0) {
+    return editedLinear <= 0 ? 0 : MAX_RELATIVE_DISPLAY_DB;
+  }
+  if (editedLinear <= 0) {
+    return MIN_RELATIVE_DISPLAY_DB;
+  }
+  return linearToDecibel(editedLinear) - linearToDecibel(originalLinear);
+};
+
+const buildRelativeSegments = (
+  effectiveFramewiseData: number[],
+  originalFramewiseData: number[],
+  frameRate: number,
+) => {
+  const segments: VolumeSegment[] = [];
+  let current: VolumeSegment | undefined;
+
+  for (const [frame, value] of effectiveFramewiseData.entries()) {
+    const originalValue =
+      originalFramewiseData.at(frame) ?? VALUE_INDICATING_NO_DATA;
+    if (
+      value === VALUE_INDICATING_NO_DATA ||
+      originalValue === VALUE_INDICATING_NO_DATA
+    ) {
+      if (current != undefined && current.length >= 2) {
+        segments.push(current);
+      }
+      current = undefined;
+      continue;
+    }
+
+    const baseX = frameToBaseX(frame, frameRate);
+    if (!Number.isFinite(baseX)) {
+      continue;
+    }
+    const relativeDb = getRelativeDb(
+      Math.max(value, 0),
+      Math.max(originalValue, 0),
+    );
+
+    if (current == undefined) {
+      current = [];
+    }
+    current.push({ baseX, normalizedY: relativeDbToNormalizedY(relativeDb) });
+  }
+
+  if (current != undefined && current.length >= 2) {
+    segments.push(current);
+  }
+  return segments;
+};
+
 const updateGrid = () => {
   assertNonNullable(gridGraphics);
+  assertNonNullable(volumeDbLabelContainer);
+  assertNonNullable(volumeDbLabelTextStyles);
   assertNonNullable(viewportHeight.value);
   assertNonNullable(viewportWidth.value);
   gridGraphics.clear();
@@ -310,6 +593,70 @@ const updateGrid = () => {
   // sing-grid-measure-line: light oklch(lr-75), dark oklch(lr-40)
   const beatColor = isDark.value ? 0x161616 : 0xc4c4c4;
   const measureColor = isDark.value ? 0x585858 : 0xadadad;
+  const volumeGridColor = isDark.value ? 0x6a6a6a : 0x9a9a9a;
+  const labelStyle = isDark.value
+    ? volumeDbLabelTextStyles.dark
+    : volumeDbLabelTextStyles.light;
+  const majorGridDbValues =
+    props.valueMode === "relative"
+      ? relativeVolumeMajorGridDbValues
+      : absoluteVolumeMajorGridDbValues;
+  const minorGridDbValues =
+    props.valueMode === "relative"
+      ? relativeVolumeMinorGridDbValues
+      : absoluteVolumeMinorGridDbValues;
+  const spacingFromZero =
+    props.valueMode === "relative"
+      ? Math.abs(relativeDbToNormalizedY(0) - relativeDbToNormalizedY(3)) *
+        height
+      : Math.abs(dbToNormalizedY(-6) - dbToNormalizedY(-3)) * height;
+  const majorGridSpacingPx =
+    props.valueMode === "relative"
+      ? Math.abs(relativeDbToNormalizedY(6) - relativeDbToNormalizedY(0)) *
+        height
+      : Math.abs(dbToNormalizedY(-12) - dbToNormalizedY(-6)) * height;
+  const showMinorGrid = spacingFromZero >= 12;
+  const showLabels = width >= 64 && height >= 40 && majorGridSpacingPx >= 16;
+
+  volumeDbLabelContainer.renderable = showLabels;
+
+  if (showMinorGrid) {
+    for (const db of minorGridDbValues) {
+      const y = Math.round((1 - valueModeDbToNormalizedY(db)) * height) + 0.5;
+      gridGraphics
+        .moveTo(KEY_COLUMN_WIDTH_PX, y)
+        .lineTo(width, y)
+        .stroke({ width: 1, color: volumeGridColor, alpha: 0.09 });
+    }
+  }
+
+  for (const [index, db] of majorGridDbValues.entries()) {
+    const y = Math.round((1 - valueModeDbToNormalizedY(db)) * height) + 0.5;
+    const isBaseline =
+      props.valueMode === "relative" ? db === 0 : db === MAX_DISPLAY_DB;
+    gridGraphics
+      .moveTo(KEY_COLUMN_WIDTH_PX, y)
+      .lineTo(width, y)
+      .stroke({
+        width: 1,
+        color: volumeGridColor,
+        alpha: isBaseline ? 0.32 : 0.18,
+      });
+
+    const label = volumeDbLabelTexts[index];
+    if (label == undefined) {
+      continue;
+    }
+    label.renderable = true;
+    label.text = formatVolumeDbLabel(db);
+    label.style = labelStyle;
+    label.anchor.set(1, 0.5);
+    label.x = KEY_COLUMN_WIDTH_PX - 6;
+    label.y = height >= 16 ? clamp(y, 8, height - 8) : y;
+  }
+  for (let i = majorGridDbValues.length; i < volumeDbLabelTexts.length; i++) {
+    volumeDbLabelTexts[i].renderable = false;
+  }
 
   for (const pattern of gridPatterns.value) {
     const measuresInPattern = Math.round(pattern.width / pattern.patternWidth);
@@ -438,7 +785,9 @@ const render = () => {
   }
 
   originalVolumeLine.color = originalVolumeLineColor.value;
+  originalVolumeLine.showArea = false;
   editedVolumeLine.color = editedVolumeLineColor.value;
+  editedVolumeLine.showArea = props.valueMode === "absolute";
 
   originalVolumeLine.update(volumeOriginalSegmentsData, viewInfo);
   editedVolumeLine.update(volumeEffectiveSegmentsData, viewInfo);
@@ -505,7 +854,10 @@ const refreshOriginalVolumeSegments = () => {
     { values: originalFramewise, startFrame: 0 },
     editableFrameRanges.value,
   );
-  volumeOriginalSegmentsData = buildSegments(maskedOriginal, frameRate);
+  volumeOriginalSegmentsData =
+    props.valueMode === "relative"
+      ? buildRelativeBaselineSegments(maskedOriginal, frameRate)
+      : buildSegments(maskedOriginal, frameRate);
   renderInNextFrame = true;
 };
 
@@ -596,7 +948,7 @@ const refreshEffectiveVolumeSegments = () => {
       );
       for (const [i, rawValue] of maskedPreview.entries()) {
         if (rawValue === VALUE_INDICATING_NO_DATA) continue;
-        editFramewise[startFrame + i] = Math.min(Math.max(rawValue, 0), 1);
+        editFramewise[startFrame + i] = Math.max(rawValue, 0);
       }
       maxFrame = Math.max(maxFrame, endFrame);
       previewEraseRanges.value = [];
@@ -651,7 +1003,7 @@ const refreshEffectiveVolumeSegments = () => {
   for (const [i] of effectiveFramewise.entries()) {
     const edited = editFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
     if (edited !== VALUE_INDICATING_NO_DATA) {
-      effectiveFramewise[i] = Math.min(Math.max(edited, 0), 1);
+      effectiveFramewise[i] = Math.max(edited, 0);
     } else {
       effectiveFramewise[i] =
         originalFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
@@ -664,23 +1016,37 @@ const refreshEffectiveVolumeSegments = () => {
     editableRanges,
   );
 
-  volumeEffectiveSegmentsData = buildSegments(maskedEffective, frameRate);
+  volumeEffectiveSegmentsData =
+    props.valueMode === "relative"
+      ? buildRelativeSegments(maskedEffective, originalFramewise, frameRate)
+      : buildSegments(maskedEffective, frameRate);
   renderInNextFrame = true;
+};
+
+const getOriginalVolumeAtFrame = (frame: number) => {
+  const originalValue =
+    originalFramewiseCache.at(frame) ?? VALUE_INDICATING_NO_DATA;
+  if (originalValue === VALUE_INDICATING_NO_DATA) {
+    return 0;
+  }
+  return Math.max(originalValue, 0);
 };
 
 const dispatchVolumeEditorEvent = (
   pointerEvent: PointerEvent,
   targetArea: "Editor" | "Window",
 ) => {
+  const pointerInfo = computeViewportPointerInfo(pointerEvent);
   stateMachineProcess({
     type: "pointerEvent",
     targetArea,
     pointerEvent,
-    position: computeViewportPosition(pointerEvent),
+    position: pointerInfo.position,
   });
+  updateVolumeValueTooltip(pointerInfo, targetArea, pointerEvent.type);
 };
 
-const computeViewportPosition = (pointerEvent: PointerEvent) => {
+const computeViewportPointerInfo = (pointerEvent: PointerEvent) => {
   const rect =
     viewportRectCache ?? canvasContainer.value?.getBoundingClientRect();
   if (rect == undefined) {
@@ -700,12 +1066,29 @@ const computeViewportPosition = (pointerEvent: PointerEvent) => {
   const frame = Math.max(0, Math.round(seconds * editorFrameRate.value));
 
   const normalizedY = 1 - clampedY / height;
-  const db = normalizedYToDb(clamp(normalizedY, 0, 1));
-  const linearValue = Math.min(decibelToLinear(db), 1);
+  let linearValue: number;
+  let relativeDb: number | undefined;
+  let db: number;
+  if (props.valueMode === "relative") {
+    relativeDb = normalizedYToRelativeDb(normalizedY);
+    db = relativeDb;
+    linearValue = getOriginalVolumeAtFrame(frame) * decibelToLinear(relativeDb);
+  } else {
+    db = normalizedYToDb(clamp(normalizedY, 0, 1));
+    linearValue = Math.min(decibelToLinear(db), 1);
+  }
 
   return {
-    frame,
-    value: linearValue,
+    position: {
+      frame,
+      value: linearValue,
+      relativeDb,
+    },
+    db,
+    x: clampedX,
+    y: clampedY,
+    width,
+    height,
   };
 };
 
@@ -758,6 +1141,7 @@ watch(
   [
     () => store.state.sequencerZoomX,
     () => props.offsetX,
+    () => props.valueMode,
     isDark,
     () => viewportWidth.value,
     () => viewportHeight.value,
@@ -783,6 +1167,7 @@ watch(
     tpqn,
     numMeasures,
     editorFrameRate,
+    () => props.valueMode,
   ],
   async ([isMounted]) => {
     try {
@@ -803,6 +1188,7 @@ watch(
     selectedTrackId,
     () => selectedTrack.value?.volumeEditData,
     volumePreviewEdit,
+    () => props.valueMode,
   ],
   async () => {
     try {
@@ -854,6 +1240,31 @@ onMounted(async () => {
   disabledOverlayGraphics = new PIXI.Graphics();
   erasePreviewOverlay = new PIXI.Graphics();
   gridGraphics = new PIXI.Graphics();
+  volumeDbLabelContainer = new PIXI.Container();
+  const fontFamily = window.getComputedStyle(containerEl).fontFamily;
+  volumeDbLabelTextStyles = {
+    light: new PIXI.TextStyle({
+      fill: "#626a64",
+      fontFamily,
+      fontSize: 10,
+    }),
+    dark: new PIXI.TextStyle({
+      fill: "#b9b5b6",
+      fontFamily,
+      fontSize: 10,
+    }),
+  };
+  volumeDbLabelTexts.length = 0;
+  for (const db of absoluteVolumeMajorGridDbValues) {
+    const text = new PIXI.Text({
+      text: formatVolumeDbLabel(db),
+      style: isDark.value
+        ? volumeDbLabelTextStyles.dark
+        : volumeDbLabelTextStyles.light,
+    });
+    volumeDbLabelContainer.addChild(text);
+    volumeDbLabelTexts.push(text);
+  }
   originalVolumeLine = new VolumeLine({
     color: originalVolumeLineColor.value,
     width: 1.25,
@@ -871,6 +1282,7 @@ onMounted(async () => {
   stage.addChild(disabledOverlayGraphics); // 編集不可区間（最背面）
   stage.addChild(erasePreviewOverlay); // 下地
   stage.addChild(gridGraphics); // グリッドはオーバーレイの上に
+  stage.addChild(volumeDbLabelContainer);
   stage.addChild(originalVolumeLine.container);
   stage.addChild(editedVolumeLine.container);
 
@@ -923,6 +1335,8 @@ onUnmounted(() => {
   originalVolumeLine?.destroy();
   editedVolumeLine?.destroy();
   gridGraphics?.destroy();
+  volumeDbLabelContainer?.destroy({ children: true });
+  volumeDbLabelTexts.length = 0;
   disabledOverlayGraphics?.destroy();
   stage?.destroy();
   renderer?.destroy({ removeView: true });
@@ -934,6 +1348,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/v2/variables" as vars;
+
 .volume-editor {
   width: 100%;
   height: 100%;
@@ -946,5 +1362,35 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.volume-value-guide-line {
+  position: absolute;
+  right: 0;
+  height: 0;
+  border-top: 1px solid rgba(0, 167, 63, 0.45);
+  transform: translateY(-0.5px);
+  z-index: calc(#{vars.$z-index-sing-tool-palette} - 1);
+  pointer-events: none;
+}
+
+.volume-value-tooltip {
+  position: absolute;
+  z-index: calc(#{vars.$z-index-sing-tool-palette} + 1);
+  box-sizing: border-box;
+  width: 54px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: rgba(32, 34, 32, 0.88);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 22px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
 }
 </style>

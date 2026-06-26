@@ -141,22 +141,46 @@
         />
       </div>
     </div>
-    <div class="edit-area">
-      <SequencerPhonemeTimingEditor
-        v-if="editTarget === 'PHONEME_TIMING'"
-        :viewportInfo
-      />
-      <SequencerVolumeEditor
-        v-if="editTarget === 'VOLUME'"
-        :offsetX="viewportInfo.offsetX"
-        @update:needsAutoScroll="
-          (value) => emit('update:needsAutoScroll', value)
-        "
-        @panTimeline="(deltaX) => emit('panTimeline', deltaX)"
-        @zoomTimeline="
-          (anchorX, deltaY) => emit('zoomTimeline', anchorX, deltaY)
-        "
-      />
+    <div
+      class="edit-area"
+      :class="{ 'parameter-view-stack': parameterPanelLayoutMode === 'stack' }"
+    >
+      <template v-if="parameterPanelLayoutMode === 'stack'">
+        <div class="parameter-stack-editor">
+          <SequencerPhonemeTimingEditor :viewportInfo />
+        </div>
+        <div class="parameter-stack-editor">
+          <SequencerVolumeEditor
+            :offsetX="viewportInfo.offsetX"
+            :valueMode="volumeEditValueMode"
+            @update:needsAutoScroll="
+              (value) => emit('update:needsAutoScroll', value)
+            "
+            @panTimeline="(deltaX) => emit('panTimeline', deltaX)"
+            @zoomTimeline="
+              (anchorX, deltaY) => emit('zoomTimeline', anchorX, deltaY)
+            "
+          />
+        </div>
+      </template>
+      <template v-else>
+        <SequencerPhonemeTimingEditor
+          v-if="editTarget === 'PHONEME_TIMING'"
+          :viewportInfo
+        />
+        <SequencerVolumeEditor
+          v-if="editTarget === 'VOLUME'"
+          :offsetX="viewportInfo.offsetX"
+          :valueMode="volumeEditValueMode"
+          @update:needsAutoScroll="
+            (value) => emit('update:needsAutoScroll', value)
+          "
+          @panTimeline="(deltaX) => emit('panTimeline', deltaX)"
+          @zoomTimeline="
+            (anchorX, deltaY) => emit('zoomTimeline', anchorX, deltaY)
+          "
+        />
+      </template>
     </div>
   </div>
 </template>
@@ -170,11 +194,17 @@ import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEd
 import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimingEditor.vue";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
 import type { ToolPaletteLayout } from "@/components/Sing/toolPaletteLayout";
+import type {
+  ParameterPanelLayoutMode,
+  VolumeEditValueMode,
+} from "@/components/Sing/parameterPanelViewMode";
 import type { ViewportInfo } from "@/sing/viewHelper";
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
   toolPaletteLayout: ToolPaletteLayout;
+  parameterPanelLayoutMode: ParameterPanelLayoutMode;
+  volumeEditValueMode: VolumeEditValueMode;
 }>();
 
 const emit = defineEmits<{
@@ -297,7 +327,7 @@ const currentParameterToolIcon = computed(() => {
 
 <style scoped lang="scss">
 .parameter-panel {
-  --editor-tool-rail-width: 40px;
+  --editor-tool-rail-width: 48px;
 
   position: relative;
   width: 100%;
@@ -331,6 +361,10 @@ const currentParameterToolIcon = computed(() => {
     minmax(0, 1fr);
 }
 
+.parameter-panel.tool-layout-sideRight {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .tool-area {
   grid-column: 1;
   grid-row: 1;
@@ -338,8 +372,8 @@ const currentParameterToolIcon = computed(() => {
   flex-direction: column;
   align-items: flex-end;
   justify-content: flex-start;
-  gap: 6px;
-  padding-top: 6px;
+  gap: 0;
+  padding-top: 0;
   background: color-mix(
     in oklch,
     var(--scheme-color-surface-container-low) 74%,
@@ -347,6 +381,42 @@ const currentParameterToolIcon = computed(() => {
   );
   border-right: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
+}
+
+.tool-layout-sideRight .tool-area {
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--editor-tool-rail-width);
+  align-items: flex-start;
+  z-index: 3;
+  border-right: 0;
+  border-left: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
+}
+
+.tool-layout-sideRight .tool-area :deep(.edit-target-switcher) {
+  align-items: flex-start;
+}
+
+.tool-layout-sideRight .tool-area :deep(.segment-switch) {
+  border-radius: 0 7px 7px 0;
+}
+
+.tool-layout-sideRight .tool-area :deep(.segment-switch.active) {
+  border-right-color: color-mix(
+    in oklch,
+    var(--scheme-color-secondary) 34%,
+    transparent
+  );
+  border-left-color: color-mix(
+    in oklch,
+    var(--scheme-color-secondary) 34%,
+    transparent
+  );
+  box-shadow: 1px 1px 3px oklch(0% 0 0 / 0.12);
 }
 
 .parameter-panel-tool-zone {
@@ -434,8 +504,8 @@ const currentParameterToolIcon = computed(() => {
   flex-direction: column;
   align-items: flex-end;
   justify-content: flex-start;
-  gap: 6px;
-  padding-top: 6px;
+  gap: 0;
+  padding-top: 0;
   background: color-mix(
     in oklch,
     var(--scheme-color-surface-container-low) 74%,
@@ -522,15 +592,28 @@ const currentParameterToolIcon = computed(() => {
   align-items: center;
   justify-content: center;
   height: 32px;
-  border: 0;
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
   border-radius: 7px;
-  background: color-mix(in oklch, var(--scheme-color-surface) 92%, transparent);
-  color: var(--scheme-color-on-surface-variant);
-  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 94%,
+    transparent
+  );
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 78%,
+    var(--scheme-color-primary)
+  );
+  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
   cursor: pointer;
 
   &:hover {
-    background: var(--scheme-color-surface-container-highest);
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-surface-container-highest) 74%,
+      transparent
+    );
     color: var(--scheme-color-on-surface);
   }
 }
@@ -679,6 +762,27 @@ const currentParameterToolIcon = computed(() => {
   margin: 6px 12px 0 0;
 }
 
+.parameter-panel-floating-tools.layout-sideRight {
+  position: absolute;
+  top: 6px;
+  right: calc(var(--editor-tool-rail-width) + 12px);
+  margin: 0;
+}
+
+.parameter-panel-floating-tools.layout-sideLeftToolbarRight {
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: end;
+  margin: 6px 12px 0 0;
+}
+
+.parameter-panel-floating-tools.layout-sideLeft {
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: start;
+  margin: 6px 0 0 calc(var(--editor-tool-rail-width) + 54px);
+}
+
 .parameter-panel-tool-palette :deep(.tool-palette) {
   pointer-events: auto;
 }
@@ -688,6 +792,25 @@ const currentParameterToolIcon = computed(() => {
   grid-row: 1;
   position: relative;
   overflow: hidden;
+}
+
+.edit-area.parameter-view-stack {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.parameter-stack-editor {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.parameter-stack-editor + .parameter-stack-editor {
+  border-top: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 44%, transparent);
+}
+
+.tool-layout-sideRight .edit-area {
+  grid-column: 1;
 }
 
 .tool-layout-reserved-rail .edit-area {

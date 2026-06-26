@@ -52,12 +52,11 @@
                   @click="changeEditTarget('NOTE')"
                 >
                   <span v-if="usesPianoTextTabs">ノート</span>
-                  <span
-                    v-else
-                    class="material-symbols-rounded"
-                    aria-hidden="true"
-                  >
-                    music_note
+                  <span v-else class="edit-target-button-content">
+                    <span class="material-symbols-rounded" aria-hidden="true">
+                      edit_note
+                    </span>
+                    <span class="edit-target-button-label">ノート</span>
                   </span>
                 </button>
                 <button
@@ -71,12 +70,11 @@
                   @click="changeEditTarget('PITCH')"
                 >
                   <span v-if="usesPianoTextTabs">ピッチ</span>
-                  <span
-                    v-else
-                    class="material-symbols-rounded"
-                    aria-hidden="true"
-                  >
-                    show_chart
+                  <span v-else class="edit-target-button-content">
+                    <span class="material-symbols-rounded" aria-hidden="true">
+                      timeline
+                    </span>
+                    <span class="edit-target-button-label">ピッチ</span>
                   </span>
                 </button>
               </div>
@@ -413,6 +411,8 @@
           v-if="isParameterPanelOpen"
           :viewportInfo
           :toolPaletteLayout
+          :parameterPanelLayoutMode
+          :volumeEditValueMode
           @update:needsAutoScroll="
             (value) => (parameterPanelNeedsAutoScroll = value)
           "
@@ -433,6 +433,7 @@
     <div class="tool-layout-switcher" aria-label="ツール配置">
       <div class="tool-layout-switcher-grip" aria-hidden="true"></div>
       <div class="tool-layout-switcher-panel">
+        <div class="tool-layout-switcher-section-label">Tools</div>
         <button
           v-for="option in TOOL_PALETTE_LAYOUT_OPTIONS"
           :key="option.value"
@@ -442,6 +443,45 @@
           :aria-pressed="toolPaletteLayout === option.value"
           :title="option.label"
           @click="toolPaletteLayout = option.value"
+        >
+          {{ option.label }}
+        </button>
+        <div class="tool-layout-switcher-section-label">Parameter Panel</div>
+        <button
+          v-for="option in PARAMETER_PANEL_LAYOUT_OPTIONS"
+          :key="option.value"
+          class="tool-layout-switch"
+          :class="{ active: parameterPanelLayoutMode === option.value }"
+          type="button"
+          :aria-pressed="parameterPanelLayoutMode === option.value"
+          :title="option.label"
+          @click="parameterPanelLayoutMode = option.value"
+        >
+          {{ option.label }}
+        </button>
+        <div class="tool-layout-switcher-section-label">Volume</div>
+        <button
+          v-for="option in VOLUME_EDIT_VALUE_MODE_OPTIONS"
+          :key="option.value"
+          class="tool-layout-switch"
+          :class="{ active: volumeEditValueMode === option.value }"
+          type="button"
+          :aria-pressed="volumeEditValueMode === option.value"
+          :title="option.label"
+          @click="volumeEditValueMode = option.value"
+        >
+          {{ option.label }}
+        </button>
+        <div class="tool-layout-switcher-section-label">Reference</div>
+        <button
+          v-for="option in REFERENCE_OVERLAY_MODE_OPTIONS"
+          :key="option.value"
+          class="tool-layout-switch"
+          :class="{ active: referenceOverlayMode === option.value }"
+          type="button"
+          :aria-pressed="referenceOverlayMode === option.value"
+          :title="option.label"
+          @click="referenceOverlayMode = option.value"
         >
           {{ option.label }}
         </button>
@@ -519,6 +559,14 @@ import {
   TOOL_PALETTE_LAYOUT_OPTIONS,
   type ToolPaletteLayout,
 } from "@/components/Sing/toolPaletteLayout";
+import {
+  PARAMETER_PANEL_LAYOUT_OPTIONS,
+  REFERENCE_OVERLAY_MODE_OPTIONS,
+  VOLUME_EDIT_VALUE_MODE_OPTIONS,
+  type ParameterPanelLayoutMode,
+  type ReferenceOverlayMode,
+  type VolumeEditValueMode,
+} from "@/components/Sing/parameterPanelViewMode";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -726,7 +774,10 @@ const setParameterPanelHeight = async (height: number) => {
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 const parameterPanelNeedsAutoScroll = ref(false);
-const toolPaletteLayout = ref<ToolPaletteLayout>("dock");
+const toolPaletteLayout = ref<ToolPaletteLayout>("sideLeft");
+const parameterPanelLayoutMode = ref<ParameterPanelLayoutMode>("single");
+const volumeEditValueMode = ref<VolumeEditValueMode>("absolute");
+const referenceOverlayMode = ref<ReferenceOverlayMode>("none");
 const isScoreInlineRailLayout = computed(
   () =>
     toolPaletteLayout.value === "rail" ||
@@ -779,8 +830,9 @@ const usesPianoTextTabs = computed(
 );
 const fullPlayheadLeftOffset = computed(() => {
   if (isScoreDockLayout.value || isScoreSurfaceStripLayout.value) return 48;
-  if (isScoreReservedRailLayout.value) return 128;
-  return 88;
+  if (isScoreReservedRailLayout.value) return 144;
+  if (toolPaletteLayout.value === "sideRight") return 48;
+  return 96;
 });
 const pianoToolPaletteOrientation = computed<"vertical" | "horizontal">(() =>
   toolPaletteLayout.value === "center" ||
@@ -1582,12 +1634,14 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 @use "@/styles/colors" as colors;
 
 .score-sequencer-shell {
-  --editor-tool-rail-width: 40px;
+  --editor-tool-rail-width: 48px;
   --sequencer-ruler-height: 40px;
 
   position: relative;
+  width: 100%;
   height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
 .sequencer-full-playhead {
@@ -1615,6 +1669,12 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-template-rows: var(--sequencer-ruler-height) 1fr;
   grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
   position: relative;
+}
+
+.tool-layout-sideRight .score-sequencer {
+  min-width: 0;
+  grid-template-columns: 48px minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .tool-layout-reserved-rail .score-sequencer {
@@ -1653,6 +1713,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   z-index: calc(#{vars.$z-index-sing-playhead} + 2);
 }
 
+.tool-layout-sideRight .piano-roll-toolbar {
+  min-width: 0;
+  grid-template-columns: 48px minmax(0, 1fr);
+}
+
 .tool-layout-reserved-rail .piano-roll-toolbar {
   grid-template-columns:
     var(--editor-tool-rail-width) var(--editor-tool-rail-width) 48px
@@ -1665,14 +1730,28 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
-  padding-top: 6px;
+  gap: 0;
+  padding-top: 0;
   background: color-mix(
     in oklch,
     var(--scheme-color-surface-container-low) 74%,
     transparent
   );
   border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
+}
+
+.tool-layout-sideRight .piano-roll-mode-zone {
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--editor-tool-rail-width);
+  align-items: flex-start;
+  z-index: 3;
+  border-right: 0;
+  border-left: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
 }
 
@@ -1786,8 +1865,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-column: 1;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
-  padding-top: 6px;
+  gap: 0;
+  padding-top: 0;
   background: color-mix(
     in oklch,
     var(--scheme-color-surface-container-low) 74%,
@@ -1874,15 +1953,28 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   align-items: center;
   justify-content: center;
   height: 32px;
-  border: 0;
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
   border-radius: 7px;
-  background: color-mix(in oklch, var(--scheme-color-surface) 92%, transparent);
-  color: var(--scheme-color-on-surface-variant);
-  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 94%,
+    transparent
+  );
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 78%,
+    var(--scheme-color-primary)
+  );
+  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
   cursor: pointer;
 
   &:hover {
-    background: var(--scheme-color-surface-container-highest);
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-surface-container-highest) 74%,
+      transparent
+    );
     color: var(--scheme-color-on-surface);
   }
 }
@@ -2005,13 +2097,36 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   margin: 48px 12px 0 0;
 }
 
+.piano-roll-floating-tools.layout-sideRight {
+  position: absolute;
+  top: 48px;
+  right: calc(var(--editor-tool-rail-width) + 12px);
+  margin: 0;
+}
+
+.piano-roll-floating-tools.layout-sideLeftToolbarRight {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: end;
+  margin: 48px 12px 0 0;
+}
+
+.piano-roll-floating-tools.layout-sideLeft {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: start;
+  margin: 48px 0 0 calc(var(--editor-tool-rail-width) + 54px);
+}
+
 .piano-roll-edit-target-tabs {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 0;
   width: 40px;
-  padding: 2px 0;
+  padding: 0;
   background: transparent;
   pointer-events: auto;
 }
@@ -2034,6 +2149,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .tool-layout-header-rail .piano-roll-edit-target-tab {
   width: auto;
   min-width: 50px;
+  height: 32px;
   padding: 0 10px;
   border: 0;
   border-radius: 5px;
@@ -2111,13 +2227,17 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   display: grid;
   place-items: center;
   position: relative;
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 7px 0 0 7px;
+  border-radius: 0;
   background: transparent;
-  color: var(--scheme-color-on-surface-variant);
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 78%,
+    var(--scheme-color-primary)
+  );
   cursor: pointer;
 
   &:hover {
@@ -2133,19 +2253,58 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     z-index: 1;
     border-color: color-mix(
       in oklch,
-      var(--scheme-color-outline-variant) 70%,
+      var(--scheme-color-outline-variant) 62%,
       transparent
     );
-    border-right-color: var(--scheme-color-surface);
-    background: var(--scheme-color-surface);
-    color: var(--scheme-color-on-surface);
+    border-right-color: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 34%,
+      transparent
+    );
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary-container) 72%,
+      var(--scheme-color-surface)
+    );
+    color: var(--scheme-color-on-secondary-container);
     box-shadow: -1px 1px 3px oklch(0% 0 0 / 0.12);
   }
 
   .material-symbols-rounded {
-    font-size: 18px;
+    font-size: 20px;
     font-variation-settings: "FILL" 1;
     line-height: 1;
+  }
+}
+
+.edit-target-button-content {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.edit-target-button-label {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tool-layout-sideRight .piano-roll-edit-target-tab {
+  border-radius: 0 7px 7px 0;
+
+  &.active {
+    border-right-color: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 34%,
+      transparent
+    );
+    border-left-color: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 34%,
+      transparent
+    );
+    box-shadow: 1px 1px 3px oklch(0% 0 0 / 0.12);
   }
 }
 
@@ -2166,7 +2325,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   font-size: 12px;
   font-weight: 500;
   background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);
-  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
+  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
   pointer-events: auto;
 
   &:hover {
@@ -2176,6 +2335,12 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .tool-layout-reserved-rail .piano-roll-snap-control {
   grid-column: 4;
+}
+
+.tool-layout-sideRight .piano-roll-snap-control {
+  grid-column: 2;
+  margin-right: 12px;
+  transform: translateX(calc(-1 * var(--editor-tool-rail-width)));
 }
 
 .tool-layout-docked .piano-roll-snap-control {
@@ -2252,10 +2417,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   border-radius: 6px 0 0 6px;
   background: color-mix(
     in oklch,
-    var(--scheme-color-secondary-container) 72%,
+    var(--scheme-color-outline-variant) 54%,
     var(--scheme-color-surface)
   );
-  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.14);
+  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
 }
 
 .tool-layout-switcher-panel {
@@ -2263,9 +2428,29 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   flex-direction: column;
   gap: 2px;
   padding: 4px;
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
   border-radius: 7px 0 0 7px;
-  background: color-mix(in oklch, var(--scheme-color-surface) 92%, transparent);
-  box-shadow: 0 2px 8px oklch(0% 0 0 / 0.14);
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 94%,
+    transparent
+  );
+  box-shadow: 0 4px 12px oklch(0% 0 0 / 0.12);
+}
+
+.tool-layout-switcher-section-label {
+  padding: 4px 6px 2px;
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tool-layout-switcher-section-label:not(:first-child) {
+  margin-top: 4px;
+  border-top: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 40%, transparent);
 }
 
 .tool-layout-switch {
@@ -2275,7 +2460,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   border: 0;
   border-radius: 5px;
   background: transparent;
-  color: var(--scheme-color-on-surface-variant);
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 82%,
+    var(--scheme-color-primary)
+  );
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
@@ -2287,14 +2476,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   }
 
   &.active {
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-secondary-container) 72%,
-      var(--scheme-color-surface)
-    );
-    color: var(--scheme-color-on-secondary-container);
+    background: var(--scheme-color-surface);
+    color: var(--scheme-color-on-surface);
     box-shadow: inset 0 0 0 1px
-      color-mix(in oklch, var(--scheme-color-secondary) 34%, transparent);
+      color-mix(in oklch, var(--scheme-color-primary) 34%, transparent);
   }
 }
 
@@ -2302,6 +2487,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-row: 1;
   grid-column: 2;
   background: var(--scheme-color-sing-ruler-surface);
+}
+
+.tool-layout-sideRight .sequencer-corner {
+  grid-column: 1;
 }
 
 .tool-layout-reserved-rail .sequencer-corner {
@@ -2325,6 +2514,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-column: 3;
 }
 
+.tool-layout-sideRight .sequencer-ruler {
+  grid-column: 2;
+}
+
 .tool-layout-reserved-rail .sequencer-ruler {
   grid-column: 4;
 }
@@ -2344,6 +2537,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-keys {
   grid-row: 2;
   grid-column: 2;
+}
+
+.tool-layout-sideRight .sequencer-keys {
+  grid-column: 1;
 }
 
 .tool-layout-reserved-rail .sequencer-keys {
@@ -2367,6 +2564,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-column: 3;
 }
 
+.tool-layout-sideRight .sequencer-grid {
+  grid-column: 2;
+  margin-right: 0 !important;
+}
+
 .tool-layout-reserved-rail .sequencer-grid {
   grid-column: 4;
 }
@@ -2386,6 +2588,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-character-portrait {
   grid-row: 2;
   grid-column: 3;
+}
+
+.tool-layout-sideRight .sequencer-character-portrait {
+  grid-column: 2;
+  margin-right: 0 !important;
 }
 
 .tool-layout-reserved-rail .sequencer-character-portrait {
@@ -2410,6 +2617,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   position: relative;
   overflow: hidden;
   pointer-events: none;
+}
+
+.tool-layout-sideRight .sequencer-guideline-container {
+  grid-column: 2;
+  margin-right: 0 !important;
 }
 
 .tool-layout-reserved-rail .sequencer-guideline-container {
@@ -2491,6 +2703,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-column: 4;
 }
 
+.tool-layout-sideRight .sequencer-body {
+  grid-column: 2;
+}
+
 .tool-layout-docked .sequencer-body,
 .tool-layout-surface-strip .sequencer-body {
   grid-row: 3;
@@ -2506,6 +2722,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-pitch {
   grid-row: 2;
   grid-column: 3;
+}
+
+.tool-layout-sideRight .sequencer-pitch {
+  grid-column: 2;
+  margin-right: 0 !important;
 }
 
 .tool-layout-reserved-rail .sequencer-pitch {
@@ -2530,6 +2751,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   position: relative;
   overflow: hidden;
   pointer-events: none;
+}
+
+.tool-layout-sideRight .sequencer-overlay {
+  grid-column: 2;
+  margin-right: 0 !important;
 }
 
 .tool-layout-reserved-rail .sequencer-overlay {
@@ -2589,12 +2815,24 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   width: 80px;
 
   :deep(.q-slider__track) {
-    background: var(--scheme-color-outline-variant);
-    color: var(--scheme-color-primary-fixed-dim);
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-outline-variant) 62%,
+      transparent
+    );
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 86%,
+      var(--scheme-color-on-surface)
+    );
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--scheme-color-primary-fixed-dim);
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 86%,
+      var(--scheme-color-on-surface)
+    );
   }
 }
 
@@ -2605,12 +2843,24 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   height: 80px;
 
   :deep(.q-slider__track) {
-    background: var(--scheme-color-outline-variant);
-    color: var(--scheme-color-primary-fixed-dim);
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-outline-variant) 62%,
+      transparent
+    );
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 86%,
+      var(--scheme-color-on-surface)
+    );
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--scheme-color-primary-fixed-dim);
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 86%,
+      var(--scheme-color-on-surface)
+    );
   }
 }
 </style>

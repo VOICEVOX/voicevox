@@ -374,8 +374,10 @@ const volume = computed({
 .sing-playback-bar {
   min-height: 64px;
   padding: 8px 16px;
-  background: #fff;
-  border-top: 1px solid var(--scheme-color-outline-variant);
+  background: var(--scheme-color-sing-toolbar-container);
+  border-top: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 58%, transparent);
+  color: var(--scheme-color-on-surface);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   column-gap: 20px;
@@ -561,7 +563,7 @@ const volume = computed({
   appearance: none;
   border: 0;
   border-radius: 999px;
-  background: #fff;
+  background: transparent;
   color: var(--scheme-color-on-surface-variant);
   cursor: pointer;
   display: inline-grid;
@@ -606,6 +608,11 @@ const volume = computed({
   width: 44px;
   height: 44px;
   color: var(--scheme-color-on-surface-variant);
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 82%,
+    var(--scheme-color-sing-toolbar-container)
+  );
   box-shadow: inset 0 0 0 1px
     color-mix(in oklch, var(--scheme-color-outline-variant) 52%, transparent);
 }
@@ -644,12 +651,24 @@ const volume = computed({
   width: 96px;
 
   :deep(.q-slider__track) {
-    background-color: var(--scheme-color-surface-variant);
-    color: var(--scheme-color-primary-fixed-dim);
+    background-color: color-mix(
+      in oklch,
+      var(--scheme-color-outline-variant) 58%,
+      transparent
+    );
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 86%,
+      var(--scheme-color-on-surface)
+    );
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--scheme-color-primary-fixed-dim);
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 86%,
+      var(--scheme-color-on-surface)
+    );
   }
 }
 </style>

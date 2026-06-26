@@ -49,10 +49,45 @@ export class DrawVolumeState implements State<
     this.applyPreview = false;
   }
 
+  private getPreviewValue(
+    context: VolumeEditorContext,
+    position: PositionOnVolumeEditor,
+  ) {
+    if (
+      position.relativeDb != undefined &&
+      context.getAbsoluteVolumeFromRelativeDb != undefined
+    ) {
+      return context.getAbsoluteVolumeFromRelativeDb(
+        position.frame,
+        position.relativeDb,
+      );
+    }
+    return position.value;
+  }
+
+  private getInterpolationDb(position: PositionOnVolumeEditor) {
+    return position.relativeDb ?? linearToDecibel(position.value);
+  }
+
+  private getInterpolatedValue(
+    context: VolumeEditorContext,
+    frame: number,
+    db: number,
+    isRelativeInterpolation: boolean,
+  ) {
+    if (
+      isRelativeInterpolation &&
+      context.getAbsoluteVolumeFromRelativeDb != undefined
+    ) {
+      return context.getAbsoluteVolumeFromRelativeDb(frame, db);
+    }
+    return decibelToLinear(db);
+  }
+
   onEnter(context: VolumeEditorContext) {
     context.previewVolumeEdit.value = {
       type: "draw",
-      data: [this.cursorPosAtStart.value],
+      data: [this.getPreviewValue(context, this.cursorPosAtStart)],
       startFrame: this.cursorPosAtStart.frame,
     };
     context.cursorState.value = "UNSET";
@@ -180,9 +215,15 @@ export class DrawVolumeState implements State<
     }
 
     const cursorFrame = this.currentCursorPos.frame;
-    const cursorValue = this.currentCursorPos.value;
+    const cursorValue = this.getPreviewValue(context, this.currentCursorPos);
     const prevCursorFrame = this.innerContext.prevCursorPos.frame;
-    const prevCursorValue = this.innerContext.prevCursorPos.value;
+    const cursorDb = this.getInterpolationDb(this.currentCursorPos);
+    const prevCursorDb = this.getInterpolationDb(
+      this.innerContext.prevCursorPos,
+    );
+    const isRelativeInterpolation =
+      this.currentCursorPos.relativeDb != undefined &&
+      this.innerContext.prevCursorPos.relativeDb != undefined;
     const tempPreviewEdit = {
       ...context.previewVolumeEdit.value,
       data: [...context.previewVolumeEdit.value.data],
@@ -214,32 +255,28 @@ export class DrawVolumeState implements State<
       const i = cursorFrame - tempPreviewEdit.startFrame;
       tempPreviewEdit.data[i] = cursorValue;
     } else if (cursorFrame < prevCursorFrame) {
-      const cursorDb = linearToDecibel(cursorValue);
-      const prevCursorDb = linearToDecibel(prevCursorValue);
       for (let i = cursorFrame; i <= prevCursorFrame; i++) {
-        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] = decibelToLinear(
-          linearInterpolation(
-            cursorFrame,
-            cursorDb,
-            prevCursorFrame,
-            prevCursorDb,
-            i,
-          ),
+        const db = linearInterpolation(
+          cursorFrame,
+          cursorDb,
+          prevCursorFrame,
+          prevCursorDb,
+          i,
         );
+        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] =
+          this.getInterpolatedValue(context, i, db, isRelativeInterpolation);
       }
     } else {
-      const prevCursorDb = linearToDecibel(prevCursorValue);
-      const cursorDb = linearToDecibel(cursorValue);
       for (let i = prevCursorFrame; i <= cursorFrame; i++) {
-        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] = decibelToLinear(
-          linearInterpolation(
-            prevCursorFrame,
-            prevCursorDb,
-            cursorFrame,
-            cursorDb,
-            i,
-          ),
+        const db = linearInterpolation(
+          prevCursorFrame,
+          prevCursorDb,
+          cursorFrame,
+          cursorDb,
+          i,
         );
+        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] =
+          this.getInterpolatedValue(context, i, db, isRelativeInterpolation);
       }
     }
     context.previewVolumeEdit.value = tempPreviewEdit;
