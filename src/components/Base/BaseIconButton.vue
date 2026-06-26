@@ -2,6 +2,7 @@
   <BaseTooltip :label>
     <button
       class="button"
+      :aria-label="label"
       :disabled
       @click="(payload) => $emit('click', payload)"
     >

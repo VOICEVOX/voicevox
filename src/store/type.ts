@@ -2487,7 +2487,7 @@ export type DictionaryStoreTypes = {
       pronunciation: string;
       accentType: number;
       priority: number;
-    }): Promise<void>;
+    }): Promise<string>;
   };
   REWRITE_WORD: {
     action(payload: {

@@ -4,8 +4,9 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { spawn } from "node:child_process";
-import MultiStream from "multistream";
 import { app } from "electron";
 import { ExtractedEngineFiles } from "./ExtractedEngineFiles";
 import {
@@ -149,17 +150,14 @@ export class VvppFileExtractor {
   ) {
     log.info(`Concatenating ${archiveFileParts.length} files...`);
 
-    await new Promise<void>((resolve, reject) => {
-      const inputStreams = archiveFileParts.map((f) => fs.createReadStream(f));
-      const outputStream = fs.createWriteStream(outputFilePath);
-      new MultiStream(inputStreams)
-        .pipe(outputStream)
-        .on("close", () => {
-          outputStream.close();
-          resolve();
-        })
-        .on("error", reject);
-    });
+    async function* inputGenerator() {
+      for (const archiveFilePart of archiveFileParts) {
+        yield* fs.createReadStream(archiveFilePart);
+      }
+    }
+    const inputStream = Readable.from(inputGenerator());
+    const outputStream = fs.createWriteStream(outputFilePath);
+    await pipeline(inputStream, outputStream);
     log.info("Concatenated");
   }
 

@@ -327,7 +327,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       };
 
       void actions.SET_CONFIRMED_TIPS({
-        confirmedTips: confirmedTips as ConfirmedTips,
+        confirmedTips: confirmedTips,
       });
     },
   },
