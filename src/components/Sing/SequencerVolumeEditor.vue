@@ -252,9 +252,6 @@ const frameToBaseX = (frame: number, frameRate: number) => {
 
 const timelineFrameLength = computed(() => {
   const frameRate = editorFrameRate.value;
-  if (frameRate <= 0) {
-    return 1;
-  }
   const totalTicks = getTotalTicks(
     timeSignatures.value,
     numMeasures.value,
@@ -371,43 +368,41 @@ const render = () => {
     disabledOverlayGraphics.clear();
     const overlayAlpha = isDark.value ? 0.35 : 0.08;
     const frameRate = editorFrameRate.value;
-    if (frameRate > 0) {
-      let cursor = 0;
-      for (const range of editableFrameRanges.value) {
-        if (cursor < range.startFrame) {
-          const startX = frameToScreenX(cursor, frameRate);
-          const endX = frameToScreenX(range.startFrame, frameRate);
-          const clampedStart = Math.max(0, startX);
-          const clampedEnd = Math.min(viewInfo.viewportWidth, endX);
-          if (clampedEnd > clampedStart) {
-            disabledOverlayGraphics
-              .rect(
-                clampedStart,
-                0,
-                clampedEnd - clampedStart,
-                viewInfo.viewportHeight,
-              )
-              .fill({ color: 0x000000, alpha: overlayAlpha });
-          }
+    let cursor = 0;
+    for (const range of editableFrameRanges.value) {
+      if (cursor < range.startFrame) {
+        const startX = frameToScreenX(cursor, frameRate);
+        const endX = frameToScreenX(range.startFrame, frameRate);
+        const clampedStart = Math.max(0, startX);
+        const clampedEnd = Math.min(viewInfo.viewportWidth, endX);
+        if (clampedEnd > clampedStart) {
+          disabledOverlayGraphics
+            .rect(
+              clampedStart,
+              0,
+              clampedEnd - clampedStart,
+              viewInfo.viewportHeight,
+            )
+            .fill({ color: 0x000000, alpha: overlayAlpha });
         }
-        cursor = Math.max(cursor, range.endFrame);
       }
-      // 最後の editable range 以降
-      const trailingStartX =
-        editableFrameRanges.value.length > 0
-          ? frameToScreenX(cursor, frameRate)
-          : 0;
-      if (trailingStartX < viewInfo.viewportWidth) {
-        const clampedStart = Math.max(0, trailingStartX);
-        disabledOverlayGraphics
-          .rect(
-            clampedStart,
-            0,
-            viewInfo.viewportWidth - clampedStart,
-            viewInfo.viewportHeight,
-          )
-          .fill({ color: 0x000000, alpha: overlayAlpha });
-      }
+      cursor = Math.max(cursor, range.endFrame);
+    }
+    // 最後の editable range 以降
+    const trailingStartX =
+      editableFrameRanges.value.length > 0
+        ? frameToScreenX(cursor, frameRate)
+        : 0;
+    if (trailingStartX < viewInfo.viewportWidth) {
+      const clampedStart = Math.max(0, trailingStartX);
+      disabledOverlayGraphics
+        .rect(
+          clampedStart,
+          0,
+          viewInfo.viewportWidth - clampedStart,
+          viewInfo.viewportHeight,
+        )
+        .fill({ color: 0x000000, alpha: overlayAlpha });
     }
   }
 
@@ -456,9 +451,6 @@ const refreshVolumeSegmentsLock = new Mutex();
 
 const refreshOriginalVolumeSegments = () => {
   const frameRate = editorFrameRate.value;
-  if (frameRate <= 0) {
-    return;
-  }
   const trackId = selectedTrackId.value;
 
   const baseFrameLength = timelineFrameLength.value;
@@ -517,10 +509,6 @@ const refreshOriginalVolumeSegments = () => {
 
 const refreshEditableFrameRanges = () => {
   const frameRate = editorFrameRate.value;
-  if (frameRate <= 0) {
-    editableFrameRanges.value = [];
-    return;
-  }
 
   const ranges: VolumeEditableFrameRange[] = [];
   for (const phrase of store.state.phrases.values()) {
@@ -555,9 +543,6 @@ const refreshEditableFrameRanges = () => {
 
 const refreshEffectiveVolumeSegments = () => {
   const frameRate = editorFrameRate.value;
-  if (frameRate <= 0) {
-    return;
-  }
 
   if (!hasOriginalFramewiseCache) {
     throw new Error("Original framewise cache is not available.");
