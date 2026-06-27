@@ -39,6 +39,16 @@ import { createPartialStore } from "./vuex";
 import { engineStoreState, engineStore } from "./engine";
 import { filterCharacterInfosByStyleType } from "./utility";
 import {
+  loadContactText,
+  loadHowToUseText,
+  loadOssCommunityInfos,
+  loadOssLicenses,
+  loadPolicyText,
+  loadPrivacyPolicyText,
+  loadQAndAText,
+  loadUpdateInfos,
+} from "@/domain/staticAssets";
+import {
   type DefaultStyleId,
   EngineId,
   SpeakerId,
@@ -154,57 +164,49 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   GET_HOW_TO_USE_TEXT: {
     async action() {
-      const markdown = await import("../../public/howtouse.md?raw");
-      return markdown.default;
+      return await loadHowToUseText();
     },
   },
 
   GET_CONTACT_TEXT: {
     async action() {
-      const markdown = await import("../../public/contact.md?raw");
-      return markdown.default;
+      return await loadContactText();
     },
   },
 
   GET_Q_AND_A_TEXT: {
     async action() {
-      const markdown = await import("../../public/qAndA.md?raw");
-      return markdown.default;
+      return await loadQAndAText();
     },
   },
 
   GET_POLICY_TEXT: {
     async action() {
-      const markdown = await import("../../public/policy.md?raw");
-      return markdown.default;
+      return await loadPolicyText();
     },
   },
 
   GET_OSS_LICENSES: {
     async action() {
-      const json = await import("../../public/licenses.json");
-      return json.default;
+      return await loadOssLicenses();
     },
   },
 
   GET_UPDATE_INFOS: {
     async action() {
-      const json = await import("../../public/updateInfos.json");
-      return json.default;
+      return await loadUpdateInfos();
     },
   },
 
   GET_OSS_COMMUNITY_INFOS: {
     async action() {
-      const markdown = await import("../../public/ossCommunityInfos.md?raw");
-      return markdown.default;
+      return await loadOssCommunityInfos();
     },
   },
 
   GET_PRIVACY_POLICY_TEXT: {
     async action() {
-      const markdown = await import("../../public/privacyPolicy.md?raw");
-      return markdown.default;
+      return await loadPrivacyPolicyText();
     },
   },
 
