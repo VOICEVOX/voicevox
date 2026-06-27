@@ -292,36 +292,28 @@ const currentParameterToolLabel = computed(() => {
 
   switch (sequencerVolumeTool.value) {
     case "SELECT":
-      return "選択";
+      return "範囲選択";
     case "DRAW":
-      return "描画";
+      return "編集";
     case "ERASE":
-      return "消去";
-    case "CUT":
-      return "分割";
-    case "SMOOTH":
-      return "補正";
+      return "消しゴム";
   }
 
-  return "選択";
+  return "範囲選択";
 });
 const currentParameterToolIcon = computed(() => {
   if (editTarget.value === "PHONEME_TIMING") return "timer";
 
   switch (sequencerVolumeTool.value) {
     case "SELECT":
-      return "arrow_selector_tool";
+      return "select_all";
     case "DRAW":
-      return "stylus";
+      return "edit";
     case "ERASE":
       return "ink_eraser";
-    case "CUT":
-      return "content_cut";
-    case "SMOOTH":
-      return "auto_fix_high";
   }
 
-  return "arrow_selector_tool";
+  return "select_all";
 });
 </script>
 

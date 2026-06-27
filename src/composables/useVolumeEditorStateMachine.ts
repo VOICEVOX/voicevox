@@ -41,11 +41,17 @@ export const useVolumeEditorStateMachine = (
     nowPlaying: computed<boolean>(() => store.state.nowPlaying),
   };
 
-  const idleStateId = computed<VolumeEditorIdleStateId>(() =>
-    store.state.sequencerVolumeTool === "ERASE"
-      ? "eraseVolumeIdle"
-      : "drawVolumeIdle",
-  );
+  const idleStateId = computed<VolumeEditorIdleStateId>(() => {
+    switch (store.state.sequencerVolumeTool) {
+      case "SELECT":
+        return "selectVolumeIdle";
+      case "ERASE":
+        return "eraseVolumeIdle";
+      case "DRAW":
+        return "drawVolumeIdle";
+    }
+    return "drawVolumeIdle";
+  });
 
   const stateMachine = createVolumeEditorStateMachine(
     {

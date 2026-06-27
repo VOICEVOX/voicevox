@@ -43,11 +43,9 @@ const toolItems: {
   label: string;
   icon: string;
 }[] = [
-  { value: "SELECT", label: "ボリューム選択", icon: "arrow_selector_tool" },
-  { value: "DRAW", label: "ボリューム描画", icon: "stylus" },
-  { value: "ERASE", label: "ボリューム削除", icon: "ink_eraser" },
-  { value: "CUT", label: "ボリューム分割", icon: "content_cut" },
-  { value: "SMOOTH", label: "ボリューム補正", icon: "auto_fix_high" },
+  { value: "SELECT", label: "範囲選択", icon: "select_all" },
+  { value: "DRAW", label: "編集", icon: "edit" },
+  { value: "ERASE", label: "消しゴム", icon: "ink_eraser" },
 ];
 </script>
 

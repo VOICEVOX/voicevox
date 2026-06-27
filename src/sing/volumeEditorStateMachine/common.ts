@@ -78,10 +78,17 @@ export type VolumeEditorContext = VolumeEditorRefs &
     readonly store: VolumeEditorPartialStore;
   };
 
-export type VolumeEditorIdleStateId = "drawVolumeIdle" | "eraseVolumeIdle";
+export type VolumeEditorIdleStateId =
+  | "selectVolumeIdle"
+  | "drawVolumeIdle"
+  | "eraseVolumeIdle";
 
 export type VolumeEditorStateDefinitions = StateDefinitions<
   [
+    {
+      id: "selectVolumeIdle";
+      factoryArgs: undefined;
+    },
     {
       id: "drawVolumeIdle";
       factoryArgs: undefined;

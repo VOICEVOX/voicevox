@@ -780,7 +780,7 @@ const setParameterPanelHeight = async (height: number) => {
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 const parameterPanelNeedsAutoScroll = ref(false);
-const toolPaletteLayout = ref<ToolPaletteLayout>("sideLeft");
+const toolPaletteLayout = ref<ToolPaletteLayout>("sideRight");
 const parameterPanelLayoutMode = ref<ParameterPanelLayoutMode>("single");
 const volumeEditValueMode = ref<VolumeEditValueMode>("absolute");
 const referenceOverlayMode = ref<ReferenceOverlayMode>("none");
