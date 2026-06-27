@@ -89,6 +89,7 @@ const emit = defineEmits<{
 // 最小値: -36dB程度以下はエンジンの出力がノイズっぽいのと、オリジナルボリューム(エンジン出力デフォルト)の典型的な範囲で見やすい程度の高さにするため
 const MIN_DISPLAY_DB = -36.5;
 const MAX_DISPLAY_DB = -0.5;
+const ABSOLUTE_VOLUME_LEVEL_BASE_DB = -36;
 const MIN_RELATIVE_DISPLAY_DB = -12;
 const MAX_RELATIVE_DISPLAY_DB = 12;
 const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
@@ -232,6 +233,7 @@ const viewportHeight = ref<number>();
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let gridGraphics: PIXI.Graphics | undefined;
+let volumeDbLabelBackground: PIXI.Graphics | undefined;
 let volumeDbLabelContainer: PIXI.Container | undefined;
 let volumeDbLabelTextStyles:
   | { light: PIXI.TextStyle; dark: PIXI.TextStyle }
@@ -350,7 +352,8 @@ const formatVolumeDbLabel = (db: number) => {
     if (db === 0) return "0";
     return db > 0 ? `+${db}` : `${db}`;
   }
-  return db === MAX_DISPLAY_DB ? "0" : `${db}`;
+  const levelDb = Math.round(clamp(db - ABSOLUTE_VOLUME_LEVEL_BASE_DB, 0, 36));
+  return levelDb === 0 ? "0" : `+${levelDb}`;
 };
 
 const formatVolumeTooltipLabel = (db: number) => {
@@ -366,8 +369,15 @@ const formatVolumeTooltipLabel = (db: number) => {
           : MAX_DISPLAY_DB,
       ) * 10,
     ) / 10;
-  const prefix = props.valueMode === "relative" && roundedDb > 0 ? "+" : "";
-  return `${prefix}${roundedDb.toFixed(1)} dB`;
+  if (props.valueMode === "relative") {
+    const prefix = roundedDb > 0 ? "+" : "";
+    return `${prefix}${roundedDb.toFixed(1)} dB`;
+  }
+  const absoluteLevelDb =
+    Math.round(clamp(roundedDb - ABSOLUTE_VOLUME_LEVEL_BASE_DB, 0, 36) * 10) /
+    10;
+  const prefix = absoluteLevelDb > 0 ? "+" : "";
+  return `${prefix}${absoluteLevelDb.toFixed(1)}`;
 };
 
 const resolveVolumeValueTooltipPosition = (pointerInfo: VolumePointerInfo) => {
@@ -580,20 +590,24 @@ const buildRelativeSegments = (
 
 const updateGrid = () => {
   assertNonNullable(gridGraphics);
+  assertNonNullable(volumeDbLabelBackground);
   assertNonNullable(volumeDbLabelContainer);
   assertNonNullable(volumeDbLabelTextStyles);
   assertNonNullable(viewportHeight.value);
   assertNonNullable(viewportWidth.value);
   gridGraphics.clear();
+  volumeDbLabelBackground.clear();
   const height = viewportHeight.value;
   const width = viewportWidth.value;
   // NOTE: ScoreSequencerのSVGグリッドは sing-colors.scss の CSS変数で色指定しているが、
   // PIXI.GraphicsではCSS変数を参照できないため、対応する近似hex値をハードコードしている。
+  // ピアノロール側とつながって見えるように、時間方向の縦線は不透明で描画する。
   // sing-grid-beat-line: light oklch(lr-85), dark oklch(lr-4)
   // sing-grid-measure-line: light oklch(lr-75), dark oklch(lr-40)
-  const beatColor = isDark.value ? 0x161616 : 0xc4c4c4;
-  const measureColor = isDark.value ? 0x585858 : 0xadadad;
+  const beatColor = isDark.value ? 0x020202 : 0xd3d3d3;
+  const measureColor = isDark.value ? 0x595959 : 0xb7b7b7;
   const volumeGridColor = isDark.value ? 0x6a6a6a : 0x9a9a9a;
+  const labelBackgroundColor = isDark.value ? 0x1a1a1a : 0xf1f1f1;
   const labelStyle = isDark.value
     ? volumeDbLabelTextStyles.dark
     : volumeDbLabelTextStyles.light;
@@ -618,6 +632,11 @@ const updateGrid = () => {
   const showMinorGrid = spacingFromZero >= 12;
   const showLabels = width >= 64 && height >= 40 && majorGridSpacingPx >= 16;
 
+  if (width > 0 && height > 0) {
+    volumeDbLabelBackground
+      .rect(0, 0, Math.min(KEY_COLUMN_WIDTH_PX, width), height)
+      .fill({ color: labelBackgroundColor, alpha: 1 });
+  }
   volumeDbLabelContainer.renderable = showLabels;
 
   if (showMinorGrid) {
@@ -672,7 +691,7 @@ const updateGrid = () => {
       gridGraphics
         .moveTo(measureX, 0)
         .lineTo(measureX, height)
-        .stroke({ width: 1, color: measureColor, alpha: 0.35 });
+        .stroke({ width: 1, color: measureColor, alpha: 1 });
 
       if (m === measuresInPattern) {
         continue;
@@ -685,7 +704,7 @@ const updateGrid = () => {
         gridGraphics
           .moveTo(beatX, 0)
           .lineTo(beatX, height)
-          .stroke({ width: 1, color: beatColor, alpha: 0.22 });
+          .stroke({ width: 1, color: beatColor, alpha: 1 });
       }
     }
   }
@@ -1240,6 +1259,7 @@ onMounted(async () => {
   disabledOverlayGraphics = new PIXI.Graphics();
   erasePreviewOverlay = new PIXI.Graphics();
   gridGraphics = new PIXI.Graphics();
+  volumeDbLabelBackground = new PIXI.Graphics();
   volumeDbLabelContainer = new PIXI.Container();
   const fontFamily = window.getComputedStyle(containerEl).fontFamily;
   volumeDbLabelTextStyles = {
@@ -1282,6 +1302,7 @@ onMounted(async () => {
   stage.addChild(disabledOverlayGraphics); // 編集不可区間（最背面）
   stage.addChild(erasePreviewOverlay); // 下地
   stage.addChild(gridGraphics); // グリッドはオーバーレイの上に
+  stage.addChild(volumeDbLabelBackground); // dBラベルの固定背景
   stage.addChild(volumeDbLabelContainer);
   stage.addChild(originalVolumeLine.container);
   stage.addChild(editedVolumeLine.container);
@@ -1335,6 +1356,7 @@ onUnmounted(() => {
   originalVolumeLine?.destroy();
   editedVolumeLine?.destroy();
   gridGraphics?.destroy();
+  volumeDbLabelBackground?.destroy();
   volumeDbLabelContainer?.destroy({ children: true });
   volumeDbLabelTexts.length = 0;
   disabledOverlayGraphics?.destroy();

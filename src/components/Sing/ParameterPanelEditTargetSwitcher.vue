@@ -73,9 +73,9 @@ const targetOptions = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0;
+  gap: 4px;
   width: 48px;
-  padding: 0;
+  padding: 4px;
   background: transparent;
   pointer-events: auto;
 }
@@ -85,17 +85,13 @@ const targetOptions = computed(() => {
   display: grid;
   place-items: center;
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 0;
+  border: 0;
+  border-radius: 4px;
   background: transparent;
-  color: color-mix(
-    in oklch,
-    var(--scheme-color-on-surface-variant) 78%,
-    var(--scheme-color-primary)
-  );
+  color: var(--scheme-color-on-surface-variant);
   cursor: pointer;
 
   &:hover {
@@ -109,23 +105,9 @@ const targetOptions = computed(() => {
 
   &.active {
     z-index: 1;
-    border-color: color-mix(
-      in oklch,
-      var(--scheme-color-outline-variant) 62%,
-      transparent
-    );
-    border-right-color: color-mix(
-      in oklch,
-      var(--scheme-color-secondary) 34%,
-      transparent
-    );
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-secondary-container) 72%,
-      var(--scheme-color-surface)
-    );
+    background: var(--scheme-color-secondary-container);
     color: var(--scheme-color-on-secondary-container);
-    box-shadow: -1px 1px 3px oklch(0% 0 0 / 0.12);
+    box-shadow: none;
   }
 
   .material-symbols-rounded {

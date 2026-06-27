@@ -402,21 +402,11 @@ const currentParameterToolIcon = computed(() => {
 }
 
 .tool-layout-sideRight .tool-area :deep(.segment-switch) {
-  border-radius: 0 7px 7px 0;
+  border-radius: 4px;
 }
 
 .tool-layout-sideRight .tool-area :deep(.segment-switch.active) {
-  border-right-color: color-mix(
-    in oklch,
-    var(--scheme-color-secondary) 34%,
-    transparent
-  );
-  border-left-color: color-mix(
-    in oklch,
-    var(--scheme-color-secondary) 34%,
-    transparent
-  );
-  box-shadow: 1px 1px 3px oklch(0% 0 0 / 0.12);
+  box-shadow: none;
 }
 
 .parameter-panel-tool-zone {

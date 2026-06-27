@@ -422,14 +422,20 @@
       </template>
     </QSplitter>
     <div
-      class="sequencer-full-playhead"
-      data-testid="sequencer-full-playhead"
+      class="sequencer-full-playhead-layer"
       :style="{
-        transform: `translateX(${
-          playheadX - scrollX + fullPlayheadLeftOffset - 1
-        }px)`,
+        left: `${fullPlayheadLeftOffset}px`,
+        right: `${fullPlayheadRightInset}px`,
       }"
-    ></div>
+    >
+      <div
+        class="sequencer-full-playhead"
+        data-testid="sequencer-full-playhead"
+        :style="{
+          transform: `translateX(${playheadX - scrollX - 1}px)`,
+        }"
+      ></div>
+    </div>
     <div class="tool-layout-switcher" aria-label="ツール配置">
       <div class="tool-layout-switcher-grip" aria-hidden="true"></div>
       <div class="tool-layout-switcher-panel">
@@ -834,6 +840,9 @@ const fullPlayheadLeftOffset = computed(() => {
   if (toolPaletteLayout.value === "sideRight") return 48;
   return 96;
 });
+const fullPlayheadRightInset = computed(() =>
+  toolPaletteLayout.value === "sideRight" ? 48 : 0,
+);
 const pianoToolPaletteOrientation = computed<"vertical" | "horizontal">(() =>
   toolPaletteLayout.value === "center" ||
   toolPaletteLayout.value === "centerBottom" ||
@@ -1644,22 +1653,30 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   overflow: hidden;
 }
 
-.sequencer-full-playhead {
+.sequencer-full-playhead-layer {
   position: absolute;
   top: var(--sequencer-ruler-height);
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: calc(#{vars.$z-index-sing-ruler} - 1);
+}
+
+.sequencer-full-playhead {
+  position: absolute;
+  top: 0;
   bottom: 0;
   left: 0;
   width: 2px;
   background: var(--scheme-color-inverse-surface);
   pointer-events: none;
   will-change: transform;
-  z-index: calc(#{vars.$z-index-sing-playhead} + 1);
 }
 
-.tool-layout-docked .sequencer-full-playhead,
-.tool-layout-surface-strip .sequencer-full-playhead,
-.tool-layout-mode-context .sequencer-full-playhead,
-.tool-layout-header-rail .sequencer-full-playhead {
+.tool-layout-docked .sequencer-full-playhead-layer,
+.tool-layout-surface-strip .sequencer-full-playhead-layer,
+.tool-layout-mode-context .sequencer-full-playhead-layer,
+.tool-layout-header-rail .sequencer-full-playhead-layer {
   top: calc(36px + var(--sequencer-ruler-height));
 }
 
@@ -1933,7 +1950,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   padding: 1px 8px 1px 10px;
   border: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 44%, transparent);
-  border-radius: 8px;
+  border-radius: 4px;
   background: color-mix(in oklch, var(--scheme-color-surface) 90%, transparent);
   box-shadow: 0 6px 18px oklch(0% 0 0 / 0.16);
   backdrop-filter: blur(6px);
@@ -2124,9 +2141,9 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0;
-  width: 40px;
-  padding: 0;
+  gap: 4px;
+  width: 48px;
+  padding: 4px;
   background: transparent;
   pointer-events: auto;
 }
@@ -2227,17 +2244,13 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   display: grid;
   place-items: center;
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 0;
+  border: 0;
+  border-radius: 4px;
   background: transparent;
-  color: color-mix(
-    in oklch,
-    var(--scheme-color-on-surface-variant) 78%,
-    var(--scheme-color-primary)
-  );
+  color: var(--scheme-color-on-surface-variant);
   cursor: pointer;
 
   &:hover {
@@ -2251,23 +2264,9 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
   &.active {
     z-index: 1;
-    border-color: color-mix(
-      in oklch,
-      var(--scheme-color-outline-variant) 62%,
-      transparent
-    );
-    border-right-color: color-mix(
-      in oklch,
-      var(--scheme-color-secondary) 34%,
-      transparent
-    );
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-secondary-container) 72%,
-      var(--scheme-color-surface)
-    );
+    background: var(--scheme-color-secondary-container);
     color: var(--scheme-color-on-secondary-container);
-    box-shadow: -1px 1px 3px oklch(0% 0 0 / 0.12);
+    box-shadow: none;
   }
 
   .material-symbols-rounded {
@@ -2291,20 +2290,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .tool-layout-sideRight .piano-roll-edit-target-tab {
-  border-radius: 0 7px 7px 0;
+  border-radius: 8px;
 
   &.active {
-    border-right-color: color-mix(
-      in oklch,
-      var(--scheme-color-secondary) 34%,
-      transparent
-    );
-    border-left-color: color-mix(
-      in oklch,
-      var(--scheme-color-secondary) 34%,
-      transparent
-    );
-    box-shadow: 1px 1px 3px oklch(0% 0 0 / 0.12);
+    box-shadow: none;
   }
 }
 
@@ -2486,7 +2475,9 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-corner {
   grid-row: 1;
   grid-column: 2;
+  position: relative;
   background: var(--scheme-color-sing-ruler-surface);
+  z-index: vars.$z-index-sing-ruler;
 }
 
 .tool-layout-sideRight .sequencer-corner {
@@ -2537,6 +2528,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-keys {
   grid-row: 2;
   grid-column: 2;
+  position: relative;
+  z-index: vars.$z-index-sing-ruler;
 }
 
 .tool-layout-sideRight .sequencer-keys {
@@ -2750,6 +2743,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-column: 3;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
   pointer-events: none;
 }
 
@@ -2791,7 +2785,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   background: var(--scheme-color-inverse-surface);
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  z-index: vars.$z-index-sing-playhead;
+  z-index: calc(#{vars.$z-index-sing-tool-palette} - 1);
 }
 
 .rect-select-preview {
