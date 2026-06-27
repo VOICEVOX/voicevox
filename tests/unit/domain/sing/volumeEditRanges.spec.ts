@@ -8,7 +8,7 @@ import {
 } from "@/sing/volumeEditRanges";
 
 describe("volumeEditRanges", () => {
-  it("重なり合う編集可能区間をマージする", () => {
+  it("重なり・隣接する編集可能区間をマージする", () => {
     const actual = mergeVolumeEditableFrameRanges([
       { startFrame: 20, endFrame: 30 },
       { startFrame: 5, endFrame: 10 },
@@ -70,15 +70,6 @@ describe("volumeEditRanges", () => {
     const actual = mergeVolumeEditableFrameRanges([]);
 
     expect(actual).toEqual([]);
-  });
-
-  it("隣接する区間を1つにマージする", () => {
-    const actual = mergeVolumeEditableFrameRanges([
-      { startFrame: 5, endFrame: 10 },
-      { startFrame: 10, endFrame: 15 },
-    ]);
-
-    expect(actual).toEqual([{ startFrame: 5, endFrame: 15 }]);
   });
 
   it("操作範囲と編集可能区間が重ならない場合は空を返す", () => {
