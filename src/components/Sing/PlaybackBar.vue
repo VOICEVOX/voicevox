@@ -20,49 +20,51 @@
         <span class="material-symbols-rounded" aria-hidden="true">redo</span>
       </button>
     </div>
-    <div class="sing-playback-group">
-      <button
-        type="button"
-        class="sing-transport-button"
-        aria-label="先頭へ移動"
-        @click="goToZero"
-      >
-        <span class="material-symbols-rounded" aria-hidden="true">
-          skip_previous
-        </span>
-      </button>
-      <button
-        v-if="!nowPlaying"
-        type="button"
-        class="sing-playback-button sing-playback-play"
-        aria-label="再生"
-        @click="play"
-      >
-        <span class="material-symbols-rounded" aria-hidden="true">
-          play_arrow
-        </span>
-      </button>
-      <button
-        v-else
-        type="button"
-        class="sing-playback-button sing-playback-stop"
-        aria-label="停止"
-        @click="stop"
-      >
-        <span class="material-symbols-rounded" aria-hidden="true">stop</span>
-      </button>
-      <button
-        type="button"
-        class="sing-transport-button sing-playback-loop"
-        :class="{ 'sing-playback-loop-enabled': isLoopEnabled }"
-        :aria-pressed="isLoopEnabled"
-        aria-label="ループ"
-        @click="toggleLoop"
-      >
-        <span class="material-symbols-rounded" aria-hidden="true">repeat</span>
-      </button>
-    </div>
-    <div class="sing-playback-side">
+    <div class="sing-playback-center">
+      <div class="sing-playback-group">
+        <button
+          type="button"
+          class="sing-transport-button"
+          aria-label="先頭へ移動"
+          @click="goToZero"
+        >
+          <span class="material-symbols-rounded" aria-hidden="true">
+            skip_previous
+          </span>
+        </button>
+        <button
+          v-if="!nowPlaying"
+          type="button"
+          class="sing-playback-button sing-playback-play"
+          aria-label="再生"
+          @click="play"
+        >
+          <span class="material-symbols-rounded" aria-hidden="true">
+            play_arrow
+          </span>
+        </button>
+        <button
+          v-else
+          type="button"
+          class="sing-playback-button sing-playback-stop"
+          aria-label="停止"
+          @click="stop"
+        >
+          <span class="material-symbols-rounded" aria-hidden="true">stop</span>
+        </button>
+        <button
+          type="button"
+          class="sing-transport-button sing-playback-loop"
+          :class="{ 'sing-playback-loop-enabled': isLoopEnabled }"
+          :aria-pressed="isLoopEnabled"
+          aria-label="ループ"
+          @click="toggleLoop"
+        >
+          <span class="material-symbols-rounded" aria-hidden="true">
+            repeat
+          </span>
+        </button>
+      </div>
       <div class="sing-playback-status">
         <PlayheadPositionDisplay class="sing-playhead-position" />
         <div class="sing-song-settings" aria-label="曲設定">
@@ -108,15 +110,15 @@
           </div>
         </div>
       </div>
-      <div class="sing-volume-controls">
-        <span
-          class="material-symbols-rounded sing-volume-icon"
-          aria-hidden="true"
-        >
-          volume_up
-        </span>
-        <QSlider v-model.number="volume" trackSize="2px" class="sing-volume" />
-      </div>
+    </div>
+    <div class="sing-volume-controls">
+      <span
+        class="material-symbols-rounded sing-volume-icon"
+        aria-hidden="true"
+      >
+        volume_up
+      </span>
+      <QSlider v-model.number="volume" trackSize="2px" class="sing-volume" />
     </div>
   </QToolbar>
 </template>
@@ -528,21 +530,20 @@ const volume = computed({
   padding: 0;
 }
 
-.sing-playback-group {
+.sing-playback-center {
   grid-column: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 18px;
+  min-width: 0;
 }
 
-.sing-playback-side {
-  grid-column: 3;
+.sing-playback-group {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  min-width: 0;
+  justify-content: center;
+  gap: 4px;
 }
 
 .sing-playback-status {
@@ -552,6 +553,8 @@ const volume = computed({
 }
 
 .sing-volume-controls {
+  grid-column: 3;
+  justify-self: end;
   display: flex;
   align-items: center;
   justify-content: flex-end;

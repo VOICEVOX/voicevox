@@ -244,7 +244,7 @@
             :offsetY="scrollY"
             :style="{
               marginRight: `${scrollBarWidth}px`,
-              marginBottom: `${scrollBarWidth}px`,
+              marginBottom: 0,
             }"
           />
           <!-- キャラクター全身 -->
@@ -252,7 +252,7 @@
             class="sequencer-character-portrait"
             :style="{
               marginRight: `${scrollBarWidth}px`,
-              marginBottom: `${scrollBarWidth}px`,
+              marginBottom: `${sequencerBottomInset}px`,
             }"
           />
           <!-- ノート入力のための補助線 -->
@@ -261,7 +261,7 @@
             class="sequencer-guideline-container"
             :style="{
               marginRight: `${scrollBarWidth}px`,
-              marginBottom: `${scrollBarWidth}px`,
+              marginBottom: `${sequencerBottomInset}px`,
             }"
           >
             <div
@@ -330,7 +330,7 @@
             class="sequencer-pitch"
             :style="{
               marginRight: `${scrollBarWidth}px`,
-              marginBottom: `${scrollBarWidth}px`,
+              marginBottom: `${sequencerBottomInset}px`,
             }"
             :offsetX="scrollX"
             :offsetY="scrollY"
@@ -340,7 +340,7 @@
             class="sequencer-overlay"
             :style="{
               marginRight: `${scrollBarWidth}px`,
-              marginBottom: `${scrollBarWidth}px`,
+              marginBottom: `${sequencerBottomInset}px`,
             }"
           >
             <div
@@ -383,26 +383,70 @@
               }"
             ></div>
           </div>
-          <QSlider
-            :modelValue="zoomX"
-            :min="ZOOM_X_MIN"
-            :max="ZOOM_X_MAX"
-            :step="ZOOM_X_STEP"
-            class="zoom-x-slider"
-            trackSize="2px"
-            @update:modelValue="setZoomX"
-          />
-          <QSlider
-            :modelValue="zoomY"
-            :min="ZOOM_Y_MIN"
-            :max="ZOOM_Y_MAX"
-            :step="ZOOM_Y_STEP"
-            vertical
-            reverse
-            class="zoom-y-slider"
-            trackSize="2px"
-            @update:modelValue="setZoomY"
-          />
+          <div
+            class="sequencer-horizontal-controls"
+            :style="{
+              '--sequencer-scrollbar-width': `${scrollBarWidth}px`,
+            }"
+          >
+            <div
+              ref="sequencerScrollbarRef"
+              class="sequencer-horizontal-scrollbar-shell"
+              :class="{ dragging: isSequencerScrollbarDragging }"
+              role="slider"
+              tabindex="0"
+              aria-label="シーケンサの横スクロール"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              :aria-valuenow="Math.round(sequencerScrollRatio * 100)"
+              @pointerdown="onSequencerScrollbarPointerDown"
+              @keydown.left.prevent="scrollSequencerByKeyboard(-1)"
+              @keydown.right.prevent="scrollSequencerByKeyboard(1)"
+              @keydown.home.prevent="scrollSequencerToEdge(0)"
+              @keydown.end.prevent="scrollSequencerToEdge(1)"
+            >
+              <div
+                class="sequencer-horizontal-scrollbar-rail"
+                aria-hidden="true"
+              >
+                <div
+                  class="sequencer-horizontal-scrollbar-window"
+                  :style="{
+                    left: `${sequencerVisibleRange.left}%`,
+                    width: `${sequencerVisibleRange.width}%`,
+                  }"
+                ></div>
+              </div>
+            </div>
+            <div class="sequencer-horizontal-zoom" @click.stop>
+              <button
+                class="sequencer-horizontal-zoom-button"
+                type="button"
+                aria-label="シーケンサを縮小"
+                @click="decreaseSequencerZoomX"
+              >
+                -
+              </button>
+              <input
+                class="sequencer-horizontal-zoom-slider"
+                type="range"
+                :min="ZOOM_X_MIN"
+                :max="ZOOM_X_MAX"
+                :step="ZOOM_X_STEP"
+                :value="zoomX"
+                aria-label="シーケンサの横ズーム"
+                @input="setZoomXFromInput"
+              />
+              <button
+                class="sequencer-horizontal-zoom-button"
+                type="button"
+                aria-label="シーケンサを拡大"
+                @click="increaseSequencerZoomX"
+              >
+                +
+              </button>
+            </div>
+          </div>
           <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
         </div>
       </template>
@@ -503,6 +547,18 @@ import type { InjectionKey } from "vue";
 export const numMeasuresInjectionKey: InjectionKey<{
   numMeasures: ComputedRef<number>;
 }> = Symbol("sequencerNumMeasures");
+
+export type SequencerViewportState = {
+  clientWidth: number;
+  scrollLeft: number;
+  scrollWidth: number;
+  zoomX: number;
+};
+
+export type SequencerNavigationRequest = {
+  id: number;
+  scrollLeft: number;
+};
 </script>
 
 <script setup lang="ts">
@@ -511,6 +567,7 @@ import {
   ref,
   nextTick,
   onMounted,
+  onBeforeUnmount,
   onActivated,
   onDeactivated,
   watch,
@@ -544,9 +601,6 @@ import {
   ZOOM_X_MIN,
   ZOOM_X_MAX,
   ZOOM_X_STEP,
-  ZOOM_Y_MIN,
-  ZOOM_Y_MAX,
-  ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
   SEQUENCER_MIN_NUM_MEASURES,
 } from "@/sing/viewHelper";
@@ -743,6 +797,7 @@ const phraseInfosInOtherTracks = computed(() => {
 const DEFAULT_PARAMETER_PANEL_HEIGHT = 200;
 const MIN_PARAMETER_PANEL_HEIGHT = 100;
 const MAX_PARAMETER_PANEL_HEIGHT = 500;
+const SEQUENCER_HORIZONTAL_CONTROLS_HEIGHT = 18;
 
 const splitterPosition = computed(() => store.state.splitterPosition);
 const parameterPanelHeight = ref(DEFAULT_PARAMETER_PANEL_HEIGHT);
@@ -779,11 +834,43 @@ const setParameterPanelHeight = async (height: number) => {
 
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
+const sequencerScrollbarRef = ref<HTMLElement>();
+const sequencerClientWidth = ref(0);
+const sequencerScrollWidth = ref(1);
+const isSequencerScrollbarDragging = ref(false);
 const parameterPanelNeedsAutoScroll = ref(false);
-const toolPaletteLayout = ref<ToolPaletteLayout>("sideRight");
+const toolPaletteLayout = defineModel<ToolPaletteLayout>("toolPaletteLayout", {
+  required: true,
+});
+const sequencerViewport = defineModel<SequencerViewportState>(
+  "sequencerViewport",
+  {
+    required: true,
+  },
+);
+const sequencerNavigationRequest = defineModel<
+  SequencerNavigationRequest | undefined
+>("sequencerNavigationRequest");
 const parameterPanelLayoutMode = ref<ParameterPanelLayoutMode>("single");
 const volumeEditValueMode = ref<VolumeEditValueMode>("absolute");
 const referenceOverlayMode = ref<ReferenceOverlayMode>("none");
+let sequencerBodyResizeObserver: ResizeObserver | undefined;
+const updateSequencerViewport = () => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (sequencerBodyElement == undefined) return;
+
+  sequencerClientWidth.value = sequencerBodyElement.clientWidth;
+  sequencerScrollWidth.value = Math.max(sequencerBodyElement.scrollWidth, 1);
+  sequencerViewport.value = {
+    clientWidth: sequencerBodyElement.clientWidth,
+    scrollLeft: sequencerBodyElement.scrollLeft,
+    scrollWidth: sequencerBodyElement.scrollWidth,
+    zoomX: zoomX.value,
+  };
+};
+const sequencerBottomInset = computed(() =>
+  Math.max(scrollBarWidth.value, SEQUENCER_HORIZONTAL_CONTROLS_HEIGHT),
+);
 const isScoreInlineRailLayout = computed(
   () =>
     toolPaletteLayout.value === "rail" ||
@@ -1263,6 +1350,69 @@ const handleKeyUp = (event: KeyboardEvent) => {
   });
 };
 
+const sequencerScrollMax = computed(() =>
+  Math.max(sequencerScrollWidth.value - sequencerClientWidth.value, 0),
+);
+const sequencerScrollRatio = computed(() =>
+  sequencerScrollMax.value === 0 ? 0 : scrollX.value / sequencerScrollMax.value,
+);
+const sequencerVisibleRange = computed(() => {
+  const contentWidth = Math.max(sequencerScrollWidth.value, 1);
+
+  return {
+    left: clamp((scrollX.value / contentWidth) * 100, 0, 100),
+    width: clamp((sequencerClientWidth.value / contentWidth) * 100, 0, 100),
+  };
+});
+const setSequencerScrollLeft = (value: number) => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (sequencerBodyElement == undefined) return;
+
+  sequencerBodyElement.scrollTo(
+    clamp(value, 0, sequencerScrollMax.value),
+    sequencerBodyElement.scrollTop,
+  );
+  updateSequencerViewport();
+};
+const setSequencerScrollFromClientX = (clientX: number) => {
+  const railElement = sequencerScrollbarRef.value?.querySelector<HTMLElement>(
+    ".sequencer-horizontal-scrollbar-rail",
+  );
+  if (railElement == undefined || sequencerScrollMax.value === 0) return;
+
+  const rect = railElement.getBoundingClientRect();
+  const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
+  setSequencerScrollLeft(ratio * sequencerScrollMax.value);
+};
+const onSequencerScrollbarPointerMove = (event: PointerEvent) => {
+  event.preventDefault();
+  setSequencerScrollFromClientX(event.clientX);
+};
+const stopSequencerScrollbarDrag = () => {
+  isSequencerScrollbarDragging.value = false;
+  window.removeEventListener("pointermove", onSequencerScrollbarPointerMove);
+  window.removeEventListener("pointerup", stopSequencerScrollbarDrag);
+  window.removeEventListener("pointercancel", stopSequencerScrollbarDrag);
+};
+const onSequencerScrollbarPointerDown = (event: PointerEvent) => {
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+
+  event.preventDefault();
+  isSequencerScrollbarDragging.value = true;
+  setSequencerScrollFromClientX(event.clientX);
+  window.addEventListener("pointermove", onSequencerScrollbarPointerMove);
+  window.addEventListener("pointerup", stopSequencerScrollbarDrag);
+  window.addEventListener("pointercancel", stopSequencerScrollbarDrag);
+};
+const scrollSequencerByKeyboard = (direction: -1 | 1) => {
+  setSequencerScrollLeft(
+    scrollX.value + direction * Math.max(sequencerClientWidth.value * 0.8, 1),
+  );
+};
+const scrollSequencerToEdge = (ratio: 0 | 1) => {
+  setSequencerScrollLeft(sequencerScrollMax.value * ratio);
+};
+
 // X軸ズーム
 const setZoomX = (value: number | null) => {
   if (value == null) {
@@ -1283,30 +1433,18 @@ const setZoomX = (value: number | null) => {
     const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
     const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
     sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
+    updateSequencerViewport();
   });
 };
 
-// Y軸ズーム
-const setZoomY = (value: number | null) => {
-  if (value == null) {
-    return;
-  }
-  const sequencerBodyElement = sequencerBody.value;
-  if (!sequencerBodyElement) {
-    throw new Error("sequencerBodyElement is null.");
-  }
-  // 画面の中央を基準に垂直方向のズームを行う
-  const oldZoomY = zoomY.value;
-  const newZoomY = value;
-  const scrollLeft = sequencerBodyElement.scrollLeft;
-  const scrollTop = sequencerBodyElement.scrollTop;
-  const clientHeight = sequencerBodyElement.clientHeight;
-
-  void store.actions.SET_ZOOM_Y({ zoomY: newZoomY }).then(() => {
-    const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
-    const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
-    sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
-  });
+const setZoomXFromInput = (event: Event) => {
+  setZoomX(Number((event.target as HTMLInputElement).value));
+};
+const increaseSequencerZoomX = () => {
+  setZoomX(Number(Math.min(zoomX.value + ZOOM_X_STEP, ZOOM_X_MAX).toFixed(2)));
+};
+const decreaseSequencerZoomX = () => {
+  setZoomX(Number(Math.max(zoomX.value - ZOOM_X_STEP, ZOOM_X_MIN).toFixed(2)));
 };
 
 const panTimelineBy = (deltaX: number) => {
@@ -1329,6 +1467,7 @@ const zoomTimelineAt = (anchorX: number, deltaY: number) => {
     const cursorBaseX = (scrollLeft + anchorX) / oldZoomX;
     const newScrollLeft = cursorBaseX * newZoomX - anchorX;
     el.scrollTo(newScrollLeft, scrollTop);
+    updateSequencerViewport();
   });
 };
 
@@ -1348,6 +1487,7 @@ const onScroll = (event: Event) => {
   }
   scrollX.value = event.currentTarget.scrollLeft;
   scrollY.value = event.currentTarget.scrollTop;
+  updateSequencerViewport();
 
   stateMachineProcess({
     type: "scrollEvent",
@@ -1384,6 +1524,34 @@ watch(playheadTicks, (newPlayheadPosition) => {
   }
 });
 
+watch(zoomX, () => {
+  void nextTick(updateSequencerViewport);
+});
+
+watch(numMeasures, () => {
+  void nextTick(updateSequencerViewport);
+});
+
+watch(sequencerNavigationRequest, (request) => {
+  if (request == undefined) return;
+
+  const sequencerBodyElement = sequencerBody.value;
+  if (sequencerBodyElement == undefined) return;
+
+  sequencerBodyElement.scrollTo(
+    clamp(
+      request.scrollLeft,
+      0,
+      Math.max(
+        sequencerBodyElement.scrollWidth - sequencerBodyElement.clientWidth,
+        0,
+      ),
+    ),
+    sequencerBodyElement.scrollTop,
+  );
+  updateSequencerViewport();
+});
+
 // スクロールバーの幅を取得する
 onMounted(() => {
   const sequencerBodyElement = sequencerBody.value;
@@ -1393,6 +1561,14 @@ onMounted(() => {
   const clientWidth = sequencerBodyElement.clientWidth;
   const offsetWidth = sequencerBodyElement.offsetWidth;
   scrollBarWidth.value = offsetWidth - clientWidth;
+  updateSequencerViewport();
+  sequencerBodyResizeObserver = new ResizeObserver(updateSequencerViewport);
+  sequencerBodyResizeObserver.observe(sequencerBodyElement);
+});
+
+onBeforeUnmount(() => {
+  sequencerBodyResizeObserver?.disconnect();
+  stopSequencerScrollbarDrag();
 });
 
 // 最初のonActivatedか判断するためのフラグ
@@ -1424,6 +1600,7 @@ onActivated(() => {
   // 実際にスクロールする
   void nextTick(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
+    updateSequencerViewport();
   });
 });
 
@@ -2653,6 +2830,14 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     background-color: transparent;
   }
 
+  &::-webkit-scrollbar:horizontal {
+    height: 0;
+  }
+
+  &::-webkit-scrollbar:vertical {
+    width: #{vars.$size-scrollbar};
+  }
+
   &::-webkit-scrollbar-thumb {
     background-color: color-mix(
       in oklch,
@@ -2768,6 +2953,187 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-column: 3;
 }
 
+.sequencer-horizontal-controls {
+  --sequencer-scrollbar-width: 0px;
+
+  grid-row: 2;
+  grid-column: 3;
+  align-self: end;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 136px;
+  align-items: center;
+  height: 18px;
+  margin-right: var(--sequencer-scrollbar-width);
+  min-width: 0;
+  pointer-events: auto;
+  z-index: calc(#{vars.$z-index-scrollbar} + 1);
+}
+
+.tool-layout-sideRight .sequencer-horizontal-controls {
+  grid-column: 2;
+  margin-right: var(--editor-tool-rail-width);
+}
+
+.tool-layout-reserved-rail .sequencer-horizontal-controls {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-horizontal-controls,
+.tool-layout-surface-strip .sequencer-horizontal-controls {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-horizontal-controls,
+.tool-layout-mode-context .sequencer-horizontal-controls {
+  grid-row: 3;
+  grid-column: 3;
+}
+
+.sequencer-horizontal-scrollbar-shell {
+  position: relative;
+  height: 18px;
+  min-width: 0;
+  padding: 0 6px;
+  cursor: grab;
+  outline: none;
+
+  &.dragging {
+    cursor: grabbing;
+  }
+
+  &:hover .sequencer-horizontal-scrollbar-window,
+  &.dragging .sequencer-horizontal-scrollbar-window,
+  &:focus-visible .sequencer-horizontal-scrollbar-window {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-on-surface-variant) 36%,
+      transparent
+    );
+  }
+
+  &:focus-visible .sequencer-horizontal-scrollbar-rail {
+    box-shadow: 0 0 0 1px
+      color-mix(in oklch, var(--scheme-color-primary) 36%, transparent);
+  }
+}
+
+.sequencer-horizontal-scrollbar-rail {
+  position: absolute;
+  right: 6px;
+  left: 6px;
+  top: 3px;
+  height: 12px;
+  background: color-mix(in oklch, var(--scheme-color-scrim) 7%, transparent);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sequencer-horizontal-scrollbar-window {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  z-index: 1;
+  min-width: 18px;
+  border-radius: 999px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 20%,
+    transparent
+  );
+}
+
+.sequencer-horizontal-zoom {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 0 0 7px;
+}
+
+.sequencer-horizontal-zoom-button {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--scheme-color-on-surface-variant);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+
+  &:hover {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-surface-container-highest) 72%,
+      transparent
+    );
+    color: var(--scheme-color-on-surface);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--scheme-color-secondary);
+    outline-offset: -1px;
+  }
+}
+
+.sequencer-horizontal-zoom-slider {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+
+  &::-webkit-slider-runnable-track {
+    height: 3px;
+    border-radius: 999px;
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-outline) 36%,
+      transparent
+    );
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -4.5px;
+    border: 1px solid
+      color-mix(in oklch, var(--scheme-color-outline) 36%, transparent);
+    border-radius: 50%;
+    background: var(--scheme-color-surface-container-highest);
+  }
+
+  &::-moz-range-track {
+    height: 3px;
+    border-radius: 999px;
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-outline) 36%,
+      transparent
+    );
+  }
+
+  &::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 1px solid
+      color-mix(in oklch, var(--scheme-color-outline) 36%, transparent);
+    border-radius: 50%;
+    background: var(--scheme-color-surface-container-highest);
+  }
+}
+
 .sequencer-phrase-indicator {
   position: absolute;
   top: -2px;
@@ -2800,61 +3166,5 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 // カーソルが必要であれば画像を追加する
 .cursor-erase {
   cursor: default;
-}
-
-.zoom-x-slider {
-  position: absolute;
-  bottom: 16px;
-  right: 32px;
-  width: 80px;
-
-  :deep(.q-slider__track) {
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-outline-variant) 62%,
-      transparent
-    );
-    color: color-mix(
-      in oklch,
-      var(--scheme-color-secondary) 86%,
-      var(--scheme-color-on-surface)
-    );
-  }
-
-  :deep(.q-slider__thumb) {
-    color: color-mix(
-      in oklch,
-      var(--scheme-color-secondary) 86%,
-      var(--scheme-color-on-surface)
-    );
-  }
-}
-
-.zoom-y-slider {
-  position: absolute;
-  bottom: 40px;
-  right: 16px;
-  height: 80px;
-
-  :deep(.q-slider__track) {
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-outline-variant) 62%,
-      transparent
-    );
-    color: color-mix(
-      in oklch,
-      var(--scheme-color-secondary) 86%,
-      var(--scheme-color-on-surface)
-    );
-  }
-
-  :deep(.q-slider__thumb) {
-    color: color-mix(
-      in oklch,
-      var(--scheme-color-secondary) 86%,
-      var(--scheme-color-on-surface)
-    );
-  }
 }
 </style>

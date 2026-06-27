@@ -1,26 +1,31 @@
 <template>
   <div class="sing-editor">
-    <ToolBar />
-    <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpen }">
+    <ToolBar
+      :toolPaletteLayout
+      :sequencerViewport
+      @navigateSequencer="navigateSequencer"
+    />
+    <div class="sing-main">
       <EngineStartupOverlay :isCompletedInitialStartup />
       <ExportOverlay />
 
       <QSplitter
-        :modelValue="isSidebarOpen ? sidebarWidth : 0"
+        :modelValue="0"
         unit="px"
         class="full-width"
         :limits="[200, 300]"
-        :disable="!isSidebarOpen"
-        :separatorStyle="{ display: isSidebarOpen ? 'block' : 'none' }"
+        disable
+        :separatorStyle="{ display: 'none' }"
         emitImmediately
-        @update:modelValue="setSidebarWidth"
       >
-        <template #before>
-          <SideBar v-if="isSidebarOpen" />
-        </template>
         <template #after>
           <!-- full-heightで高さをQSplitterの高さに揃える -->
-          <ScoreSequencer class="full-height" />
+          <ScoreSequencer
+            v-model:toolPaletteLayout="toolPaletteLayout"
+            v-model:sequencerViewport="sequencerViewport"
+            v-model:sequencerNavigationRequest="sequencerNavigationRequest"
+            class="full-height"
+          />
         </template>
       </QSplitter>
     </div>
@@ -29,11 +34,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { ref } from "vue";
 import ToolBar from "./ToolBar/ToolBar.vue";
 import PlaybackBar from "./PlaybackBar.vue";
-import ScoreSequencer from "./ScoreSequencer.vue";
-import SideBar from "./SideBar/SideBar.vue";
+import ScoreSequencer, {
+  type SequencerNavigationRequest,
+  type SequencerViewportState,
+} from "./ScoreSequencer.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import ExportOverlay from "@/components/Sing/ExportOverlay.vue";
 import { useStore } from "@/store";
@@ -43,6 +50,7 @@ import {
   createDefaultTempo,
   createDefaultTimeSignature,
 } from "@/sing/domain";
+import type { ToolPaletteLayout } from "@/components/Sing/toolPaletteLayout";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -51,26 +59,22 @@ const props = defineProps<{
 
 const store = useStore();
 
-const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
-const sidebarWidth = ref(300);
-
-const setSidebarWidth = (width: number) => {
-  if (isSidebarOpen.value) {
-    sidebarWidth.value = width;
-  }
-};
-
-// トラック数が1から増えたら、サイドバーを開く
-watch(
-  () => store.state.tracks.size,
-  (tracksSize, oldTracksSize) => {
-    if (oldTracksSize <= 1 && tracksSize > 1) {
-      void store.actions.SET_SONG_SIDEBAR_OPEN({ isSongSidebarOpen: true });
-    }
-  },
-);
-
 const isCompletedInitialStartup = ref(false);
+const toolPaletteLayout = ref<ToolPaletteLayout>("sideRight");
+const sequencerViewport = ref<SequencerViewportState>({
+  clientWidth: 0,
+  scrollLeft: 0,
+  scrollWidth: 1,
+  zoomX: 1,
+});
+const sequencerNavigationRequest = ref<SequencerNavigationRequest>();
+let sequencerNavigationRequestId = 0;
+const navigateSequencer = (scrollLeft: number) => {
+  sequencerNavigationRequest.value = {
+    id: ++sequencerNavigationRequestId,
+    scrollLeft,
+  };
+};
 // TODO: Vueっぽくないので解体する
 onetimeWatch(
   () => props.isProjectFileLoaded,

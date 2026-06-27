@@ -142,10 +142,10 @@ const phraseQuerySignature = computed(() =>
   }),
 );
 
-const originalVolumeLineColorLight = new Color(156, 158, 156, 255);
-const originalVolumeLineColorDark = new Color(114, 116, 114, 255);
-const editedVolumeLineColorLight = new Color(0, 167, 63, 255);
-const editedVolumeLineColorDark = new Color(95, 188, 117, 255);
+const originalVolumeLineColorLight = new Color(156, 158, 156, 190);
+const originalVolumeLineColorDark = new Color(156, 160, 156, 178);
+const editedVolumeLineColorLight = new Color(72, 108, 86, 210);
+const editedVolumeLineColorDark = new Color(156, 195, 169, 210);
 const absoluteVolumeMajorGridDbValues = [
   MAX_DISPLAY_DB,
   -6,
@@ -1287,15 +1287,15 @@ onMounted(async () => {
   }
   originalVolumeLine = new VolumeLine({
     color: originalVolumeLineColor.value,
-    width: 1.25,
+    width: 1,
     dashed: true,
     isVisible: true,
   });
   editedVolumeLine = new VolumeLine({
     color: editedVolumeLineColor.value,
-    width: 2.25,
+    width: 1.5,
     showArea: true,
-    areaAlpha: 0.2,
+    areaAlpha: 0.1,
     isVisible: true,
   });
 
