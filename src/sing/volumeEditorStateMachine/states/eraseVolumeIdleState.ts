@@ -3,7 +3,6 @@ import type {
   VolumeEditorInput,
   VolumeEditorContext,
 } from "../common";
-import { applyEditableCursorState } from "../common";
 import type { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
 import { isFrameInVolumeEditableRange } from "@/sing/volumeEditRanges";
@@ -47,7 +46,7 @@ export class EraseVolumeIdleState implements State<
       position.frame,
       context.getEditableFrameRanges(),
     );
-    applyEditableCursorState(context, isEditable, "ERASE");
+    context.cursorState.value = isEditable ? "ERASE" : "NOT_ALLOWED";
 
     if (
       pointerEvent.type === "pointerdown" &&
