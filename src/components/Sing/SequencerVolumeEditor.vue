@@ -40,8 +40,8 @@ import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
 import { useMounted } from "@/composables/useMounted";
-import { createLogger } from "@/helpers/log";
 import { Mutex } from "@/helpers/mutex";
+import { getOrThrow } from "@/helpers/mapHelper";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import { decibelToLinear, linearToDecibel } from "@/sing/audio";
 import { secondToTick, tickToSecond } from "@/sing/music";
@@ -82,7 +82,6 @@ const MIN_DISPLAY_DB = -36.5;
 const MAX_DISPLAY_DB = -0.5;
 const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
 
-const { warn } = createLogger("SequencerVolumeEditor");
 const store = useStore();
 const { volumePreviewEdit, stateMachineProcess, previewMode, cursorState } =
   useVolumeEditorStateMachine(store, {
@@ -123,15 +122,13 @@ const setTool = (value: VolumeEditTool) => {
 const phraseSignature = computed(() =>
   [...store.state.phrases.values()].map(
     (phrase) =>
-      `${phrase.trackId}:${phrase.startTime}:${phrase.notes.length}:${phrase.minNonPauseStartFrame}:${phrase.maxNonPauseEndFrame}`,
+      `${phrase.trackId}:${phrase.startTime}:${phrase.notes.length}:${phrase.minNonPauseStartFrame}:${phrase.maxNonPauseEndFrame}:${phrase.singingVolumeKey}`,
   ),
 );
-const phraseQuerySignature = computed(() =>
-  [...store.state.phraseQueries.entries()].map(([key, query]) => {
-    const volumeLen = query?.volume?.length ?? 0;
-    const frameRate = query?.frameRate ?? 0;
-    return `${key}:${volumeLen}:${frameRate}`;
-  }),
+const phraseSingingVolumeSignature = computed(() =>
+  [...store.state.phraseSingingVolumes.entries()].map(
+    ([key, volume]) => `${key}:${volume.length}`,
+  ),
 );
 
 const originalVolumeLineColorLight = new Color(156, 158, 156, 255);
@@ -463,23 +460,16 @@ const refreshOriginalVolumeSegments = () => {
     if (phrase.trackId !== trackId) {
       continue;
     }
-    if (phrase.queryKey == undefined) {
+    if (phrase.singingVolumeKey == undefined) {
       continue;
     }
-    const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
-    // NOTE: ノート追加直後など、phraseとphraseQueryの更新が段階的に入る場合がある。
-    // 未確定なphraseだけをスキップし、確定済みの範囲から順次表示を更新する。
-    if (phraseQuery?.volume == undefined) {
-      continue;
-    }
-    if (phraseQuery.frameRate !== frameRate) {
-      throw new Error(
-        `Frame rate mismatch: expected ${frameRate}, got ${phraseQuery.frameRate}. queryKey: ${phrase.queryKey}`,
-      );
-    }
+    const phraseSingingVolume = getOrThrow(
+      store.state.phraseSingingVolumes,
+      phrase.singingVolumeKey,
+    );
 
     const startFrame = Math.round(phrase.startTime * frameRate);
-    const endFrame = startFrame + phraseQuery.volume.length;
+    const endFrame = startFrame + phraseSingingVolume.length;
     if (originalFramewise.length < endFrame) {
       originalFramewise.push(
         ...new Array(endFrame - originalFramewise.length).fill(
@@ -487,7 +477,7 @@ const refreshOriginalVolumeSegments = () => {
         ),
       );
     }
-    for (const [i, value] of phraseQuery.volume.entries()) {
+    for (const [i, value] of phraseSingingVolume.entries()) {
       const v = Math.max(0, value);
       originalFramewise[startFrame + i] = Math.min(v, 1);
     }
@@ -515,22 +505,17 @@ const refreshEditableFrameRanges = () => {
     if (phrase.trackId !== selectedTrackId.value) {
       continue;
     }
-    if (phrase.queryKey == undefined) {
+    if (phrase.singingVolumeKey == undefined) {
       continue;
     }
-    const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
-    if (phraseQuery?.volume == undefined) {
-      continue;
-    }
-    if (phraseQuery.frameRate !== frameRate) {
-      throw new Error(
-        `Frame rate mismatch: expected ${frameRate}, got ${phraseQuery.frameRate}. queryKey: ${phrase.queryKey}`,
-      );
-    }
+    const phraseSingingVolume = getOrThrow(
+      store.state.phraseSingingVolumes,
+      phrase.singingVolumeKey,
+    );
     const phraseStartFrame = Math.round(phrase.startTime * frameRate);
-    const phraseEndFrame = phraseStartFrame + phraseQuery.volume.length;
+    const phraseEndFrame = phraseStartFrame + phraseSingingVolume.length;
     const startOffset = phrase.minNonPauseStartFrame ?? 0;
-    const endOffset = phrase.maxNonPauseEndFrame ?? phraseQuery.volume.length;
+    const endOffset = phrase.maxNonPauseEndFrame ?? phraseSingingVolume.length;
     const startFrame = Math.max(0, phraseStartFrame + startOffset);
     const endFrame = Math.min(phraseEndFrame, phraseStartFrame + endOffset);
     if (startFrame < endFrame) {
@@ -767,7 +752,7 @@ watch(
   [
     mounted,
     phraseSignature,
-    phraseQuerySignature,
+    phraseSingingVolumeSignature,
     selectedTrackId,
     tempos,
     timeSignatures,
@@ -776,15 +761,11 @@ watch(
     editorFrameRate,
   ],
   async ([isMounted]) => {
-    try {
-      await using _lock = await refreshVolumeSegmentsLock.acquire();
-      if (isMounted) {
-        refreshEditableFrameRanges();
-        refreshOriginalVolumeSegments();
-        refreshEffectiveVolumeSegments();
-      }
-    } catch (e) {
-      warn("Failed to refresh original volume segments.", e);
+    await using _lock = await refreshVolumeSegmentsLock.acquire();
+    if (isMounted) {
+      refreshEditableFrameRanges();
+      refreshOriginalVolumeSegments();
+      refreshEffectiveVolumeSegments();
     }
   },
 );
@@ -796,12 +777,8 @@ watch(
     volumePreviewEdit,
   ],
   async () => {
-    try {
-      await using _lock = await refreshVolumeSegmentsLock.acquire();
-      refreshEffectiveVolumeSegments();
-    } catch (e) {
-      warn("Failed to refresh effective volume segments.", e);
-    }
+    await using _lock = await refreshVolumeSegmentsLock.acquire();
+    refreshEffectiveVolumeSegments();
   },
 );
 
