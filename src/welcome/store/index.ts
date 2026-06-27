@@ -11,7 +11,7 @@ import { themes } from "@/domain/theme";
 import type { EngineId } from "@/type/preload";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
-import { errorToMessage } from "@/helpers/errorHelper";
+import { errorToMessage, errorToMessages } from "@/helpers/errorHelper";
 
 type LatestInfoState =
   | { type: "loading" }
@@ -252,9 +252,10 @@ function createWelcomeStore() {
         `Engine package ${engineId} remote info fetch failed`,
         error,
       );
+      const { displayable } = errorToMessages(error);
       engineState.latestInfo = {
         type: "fetchError",
-        message: errorToMessage(error).split("\n")[0],
+        message: displayable.length > 0 ? displayable[0] : "（不明なエラー）",
       };
     }
   };
