@@ -36,7 +36,7 @@ const tpqn = computed(() => store.state.tpqn);
 const tempos = computed(() => store.state.tempos);
 const isDark = computed(() => store.state.currentTheme === "Dark");
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
-const scaleX = computed(() => store.state.sequencerZoomX);
+const scaleX = computed(() => props.viewportInfo.scaleX);
 
 type AudioEventId = SequenceId;
 
@@ -445,7 +445,9 @@ onMounted(async () => {
       canvasWidth = canvasContainerWidth;
       canvasHeight = canvasContainerHeight;
       renderer.resize(canvasWidth, canvasHeight);
-      renderInNextFrame = true;
+      // NOTE: 次フレームで再描画するとちらついてしまうため、同期的に再描画する
+      renderInNextFrame = false;
+      render();
     }
   });
   resizeObserver.observe(canvasContainerElement);

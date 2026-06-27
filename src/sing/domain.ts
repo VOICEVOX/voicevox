@@ -266,6 +266,31 @@ export function toPhonemes(phonemeTimings: PhonemeTiming[]) {
 }
 
 /**
+ * 各音素のノート内でのインデックスを計算する。
+ * noteIdが変わるとインデックスは0にリセットされる。
+ */
+export function computePhonemeIndicesInNote<
+  T extends { noteId?: string | null },
+>(phonemes: readonly T[]): number[] {
+  const indices: number[] = [];
+  let phonemeIndexInNote = 0;
+
+  for (let i = 0; i < phonemes.length; i++) {
+    const phoneme = phonemes[i];
+    const prevPhoneme = getPrev(phonemes, i);
+
+    if (prevPhoneme == undefined || phoneme.noteId !== prevPhoneme.noteId) {
+      phonemeIndexInNote = 0;
+    } else {
+      phonemeIndexInNote++;
+    }
+    indices.push(phonemeIndexInNote);
+  }
+
+  return indices;
+}
+
+/**
  * 音素タイミング列に音素タイミング編集を適用する。
  */
 export function applyPhonemeTimingEdit(
@@ -273,20 +298,13 @@ export function applyPhonemeTimingEdit(
   phonemeTimingEditData: PhonemeTimingEditData,
   frameRate: number,
 ) {
-  let phonemeIndexInNote = 0;
+  const phonemeIndices = computePhonemeIndicesInNote(phonemeTimings);
+
   for (let i = 0; i < phonemeTimings.length; i++) {
     const phonemeTiming = phonemeTimings[i];
     const prevPhonemeTiming = getPrev(phonemeTimings, i);
     const nextPhonemeTiming = getNext(phonemeTimings, i);
-
-    if (
-      prevPhonemeTiming == undefined ||
-      phonemeTiming.noteId !== prevPhonemeTiming.noteId
-    ) {
-      phonemeIndexInNote = 0;
-    } else {
-      phonemeIndexInNote++;
-    }
+    const phonemeIndexInNote = phonemeIndices[i];
 
     if (phonemeTiming.phoneme === "pau") {
       continue;
