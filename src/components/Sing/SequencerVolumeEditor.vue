@@ -361,7 +361,7 @@ const render = () => {
   };
 
   // 編集不可区間のオーバーレイ
-  if (disabledOverlayGraphics) {
+  if (disabledOverlayGraphics != undefined) {
     disabledOverlayGraphics.clear();
     const overlayAlpha = isDark.value ? 0.35 : 0.08;
     const frameRate = editorFrameRate.value;
