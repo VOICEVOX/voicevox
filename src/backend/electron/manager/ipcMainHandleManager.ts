@@ -11,13 +11,11 @@ import type { IpcIHData } from "../ipcType";
 import { getEngineInfoManager } from "./engineInfoManager";
 import { getEngineProcessManager } from "./engineProcessManager";
 import { getMainWindowManager } from "./windowManager/main";
-import { AssetTextFileNames } from "@/type/staticResources";
 import { failure, success } from "@/type/result";
 import {
   defaultToolbarButtonSetting,
   type EngineId,
   type SystemError,
-  type TextAsset,
 } from "@/type/preload";
 
 // エンジンのフォルダを開く
@@ -103,7 +101,6 @@ class IpcMainHandleManager {
   }
 
   private getHandle(): IpcMainHandle<IpcIHData> {
-    const staticDirPath = this.staticDirPath;
     const appDirPath = this.appDirPath;
     const initialFilePathGetter = this.initialFilePathGetter;
 
@@ -113,15 +110,6 @@ class IpcMainHandleManager {
     const engineInfoManager = getEngineInfoManager();
     const engineProcessManager = getEngineProcessManager();
     return {
-      GET_TEXT_ASSET: async (_, textType) => {
-        const fileName = path.join(staticDirPath, AssetTextFileNames[textType]);
-        const text = await fs.promises.readFile(fileName, "utf-8");
-        if (textType === "OssLicenses" || textType === "UpdateInfos") {
-          return JSON.parse(text) as TextAsset[typeof textType];
-        }
-        return text;
-      },
-
       GET_ALT_PORT_INFOS: () => {
         return engineInfoManager.altPortInfos;
       },
