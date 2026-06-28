@@ -11,7 +11,7 @@
     :description="message"
     :icon="
       props.type !== 'info'
-        ? { name: `sym_o_${iconName}`, color: color }
+        ? { name: `sym_r_${iconName}`, color: color }
         : undefined
     "
     :persistent

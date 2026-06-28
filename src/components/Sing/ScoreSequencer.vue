@@ -1,232 +1,544 @@
 <template>
-  <QSplitter
-    :modelValue="isParameterPanelOpen ? parameterPanelHeight : 0"
-    reverse
-    unit="px"
-    horizontal
-    :disable="!isParameterPanelOpen"
-    :separatorStyle="{
-      display: isParameterPanelOpen ? 'block' : 'none',
-      // NOTE: 当たり判定を小さくする
-      overflow: 'hidden',
-      height: '4px',
-    }"
-    @update:modelValue="setParameterPanelHeight"
+  <div
+    class="score-sequencer-shell"
+    :class="[
+      `tool-layout-${toolPaletteLayout}`,
+      { 'tool-layout-docked': isScoreDockLayout },
+      { 'tool-layout-header-rail': isScoreHeaderRailLayout },
+      { 'tool-layout-reserved-rail': isScoreReservedRailLayout },
+      { 'tool-layout-surface-strip': isScoreSurfaceStripLayout },
+      { 'tool-layout-command-bar': isScoreTrueCommandLayout },
+      { 'tool-layout-mode-context': isScoreModeContextLayout },
+      { 'tool-layout-context-hud': isScoreContextHudLayout },
+      { 'tool-layout-inspector-header': isScoreInspectorHeaderLayout },
+      { 'tool-layout-tool-chip': isScoreToolChipLayout },
+    ]"
   >
-    <template #before>
-      <div class="score-sequencer full-height">
-        <!-- 左上の角 -->
-        <div class="sequencer-corner"></div>
-        <!-- ルーラー -->
-        <SequencerRuler
-          class="sequencer-ruler"
-          :offset="scrollX"
-          :numMeasures
-        />
-        <!-- 鍵盤 -->
-        <SequencerKeys
-          class="sequencer-keys"
-          :offset="scrollY"
-          :blackKeyWidth="28"
-        />
-        <!-- グリッド -->
-        <SequencerGrid
-          class="sequencer-grid"
-          :offsetX="scrollX"
-          :offsetY="scrollY"
-          :style="{
-            marginRight: `${scrollBarWidth}px`,
-            marginBottom: `${scrollBarWidth}px`,
-          }"
-        />
-        <!-- キャラクター全身 -->
-        <CharacterPortrait
-          class="sequencer-character-portrait"
-          :style="{
-            marginRight: `${scrollBarWidth}px`,
-            marginBottom: `${scrollBarWidth}px`,
-          }"
-        />
-        <!-- ノート入力のための補助線 -->
-        <div
-          v-if="editTarget === 'NOTE' && showGuideLine"
-          class="sequencer-guideline-container"
-          :style="{
-            marginRight: `${scrollBarWidth}px`,
-            marginBottom: `${scrollBarWidth}px`,
-          }"
-        >
+    <QSplitter
+      :modelValue="isParameterPanelOpen ? parameterPanelHeight : 0"
+      reverse
+      unit="px"
+      horizontal
+      class="full-height"
+      :disable="!isParameterPanelOpen"
+      :separatorStyle="{
+        display: isParameterPanelOpen ? 'block' : 'none',
+        // NOTE: 当たり判定を小さくする
+        overflow: 'hidden',
+        height: '4px',
+      }"
+      @update:modelValue="setParameterPanelHeight"
+    >
+      <template #before>
+        <div class="score-sequencer full-height">
+          <div class="piano-roll-toolbar" aria-label="ピアノロール操作">
+            <span v-if="isScoreTrueCommandLayout" class="surface-command-title">
+              ピアノロール
+            </span>
+            <div class="piano-roll-mode-zone">
+              <div
+                class="piano-roll-edit-target-tabs"
+                role="tablist"
+                aria-label="編集対象"
+              >
+                <button
+                  class="piano-roll-edit-target-tab"
+                  :class="{ active: editTarget === 'NOTE' }"
+                  type="button"
+                  role="tab"
+                  aria-label="ノート"
+                  title="ノート"
+                  :aria-selected="editTarget === 'NOTE'"
+                  @click="changeEditTarget('NOTE')"
+                >
+                  <span v-if="usesPianoTextTabs">ノート</span>
+                  <span v-else class="edit-target-button-content">
+                    <span class="material-symbols-rounded" aria-hidden="true">
+                      edit_note
+                    </span>
+                    <span class="edit-target-button-label">ノート</span>
+                  </span>
+                </button>
+                <button
+                  class="piano-roll-edit-target-tab"
+                  :class="{ active: editTarget === 'PITCH' }"
+                  type="button"
+                  role="tab"
+                  aria-label="ピッチ"
+                  title="ピッチ"
+                  :aria-selected="editTarget === 'PITCH'"
+                  @click="changeEditTarget('PITCH')"
+                >
+                  <span v-if="usesPianoTextTabs">ピッチ</span>
+                  <span v-else class="edit-target-button-content">
+                    <span class="material-symbols-rounded" aria-hidden="true">
+                      timeline
+                    </span>
+                    <span class="edit-target-button-label">ピッチ</span>
+                  </span>
+                </button>
+              </div>
+              <SequencerToolPalette
+                v-if="
+                  isScoreInlineRailLayout ||
+                  isScoreInlineCommandToolLayout ||
+                  toolPaletteLayout === 'dock'
+                "
+                :editTarget
+                :sequencerNoteTool
+                :sequencerPitchTool
+                :orientation="
+                  isScoreInlineCommandToolLayout || toolPaletteLayout === 'dock'
+                    ? 'horizontal'
+                    : 'vertical'
+                "
+                @update:sequencerNoteTool="setSequencerNoteTool"
+                @update:sequencerPitchTool="setSequencerPitchTool"
+              />
+            </div>
+            <div
+              v-if="isScoreModeContextLayout"
+              class="piano-roll-context-strip"
+            >
+              <span class="context-strip-target">{{ pianoModeLabel }}</span>
+              <SequencerToolPalette
+                :editTarget
+                :sequencerNoteTool
+                :sequencerPitchTool
+                orientation="horizontal"
+                @update:sequencerNoteTool="setSequencerNoteTool"
+                @update:sequencerPitchTool="setSequencerPitchTool"
+              />
+            </div>
+            <div v-if="isScoreContextHudLayout" class="piano-roll-context-hud">
+              <span class="context-hud-label">{{ currentPianoToolLabel }}</span>
+              <SequencerToolPalette
+                :editTarget
+                :sequencerNoteTool
+                :sequencerPitchTool
+                orientation="horizontal"
+                @update:sequencerNoteTool="setSequencerNoteTool"
+                @update:sequencerPitchTool="setSequencerPitchTool"
+              />
+            </div>
+            <div
+              v-if="isScoreToolChipLayout"
+              class="piano-roll-current-tool-zone"
+            >
+              <button
+                class="current-tool-chip"
+                type="button"
+                :title="currentPianoToolLabel"
+              >
+                <span class="material-symbols-rounded" aria-hidden="true">
+                  {{ currentPianoToolIcon }}
+                </span>
+                <span>{{ currentPianoToolLabel }}</span>
+              </button>
+              <button
+                class="command-palette-button"
+                type="button"
+                title="コマンドを検索"
+              >
+                <span class="material-symbols-rounded" aria-hidden="true">
+                  keyboard_command_key
+                </span>
+              </button>
+              <div class="tool-chip-popover">
+                <SequencerToolPalette
+                  :editTarget
+                  :sequencerNoteTool
+                  :sequencerPitchTool
+                  orientation="horizontal"
+                  @update:sequencerNoteTool="setSequencerNoteTool"
+                  @update:sequencerPitchTool="setSequencerPitchTool"
+                />
+              </div>
+            </div>
+            <div
+              v-if="toolPaletteLayout === 'reservedRail'"
+              class="piano-roll-tool-zone"
+            >
+              <SequencerToolPalette
+                :editTarget
+                :sequencerNoteTool
+                :sequencerPitchTool
+                orientation="vertical"
+                @update:sequencerNoteTool="setSequencerNoteTool"
+                @update:sequencerPitchTool="setSequencerPitchTool"
+              />
+            </div>
+            <div
+              v-if="
+                toolPaletteLayout !== 'rail' &&
+                toolPaletteLayout !== 'proposalB' &&
+                toolPaletteLayout !== 'dock' &&
+                toolPaletteLayout !== 'proposalE' &&
+                toolPaletteLayout !== 'proposalF' &&
+                toolPaletteLayout !== 'proposalG' &&
+                toolPaletteLayout !== 'proposalH' &&
+                toolPaletteLayout !== 'proposalI' &&
+                toolPaletteLayout !== 'proposalJ' &&
+                toolPaletteLayout !== 'reservedRail'
+              "
+              class="piano-roll-floating-tools"
+              :class="[
+                `layout-${toolPaletteLayout}`,
+                { 'active-target-pitch': editTarget === 'PITCH' },
+              ]"
+            >
+              <SequencerToolPalette
+                :editTarget
+                :sequencerNoteTool
+                :sequencerPitchTool
+                :orientation="pianoToolPaletteOrientation"
+                @update:sequencerNoteTool="setSequencerNoteTool"
+                @update:sequencerPitchTool="setSequencerPitchTool"
+              />
+            </div>
+            <button
+              v-if="isScoreTrueCommandLayout"
+              class="piano-roll-command-button"
+              type="button"
+              title="その他"
+            >
+              <span class="material-symbols-rounded" aria-hidden="true">
+                more_horiz
+              </span>
+            </button>
+            <label class="piano-roll-snap-control">
+              <span class="piano-roll-snap-label">スナップ</span>
+              <select
+                class="piano-roll-snap-select"
+                :value="sequencerSnapType"
+                @change="setSnapType"
+              >
+                <option
+                  v-for="option in snapTypeSelectOptions"
+                  :key="option.snapType"
+                  :value="option.snapType"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </label>
+          </div>
+          <!-- 左上の角 -->
+          <div class="sequencer-corner"></div>
+          <!-- ルーラー -->
+          <SequencerRuler
+            class="sequencer-ruler"
+            :offset="scrollX"
+            :numMeasures
+          />
+          <!-- 鍵盤 -->
+          <SequencerKeys
+            class="sequencer-keys"
+            :offset="scrollY"
+            :blackKeyWidth="28"
+          />
+          <!-- グリッド -->
+          <SequencerGrid
+            class="sequencer-grid"
+            :offsetX="scrollX"
+            :offsetY="scrollY"
+            :style="{
+              marginRight: `${scrollBarWidth}px`,
+              marginBottom: 0,
+            }"
+          />
+          <!-- キャラクター全身 -->
+          <CharacterPortrait
+            class="sequencer-character-portrait"
+            :style="{
+              marginRight: `${scrollBarWidth}px`,
+              marginBottom: `${sequencerBottomInset}px`,
+            }"
+          />
+          <!-- ノート入力のための補助線 -->
           <div
-            class="sequencer-guideline"
+            v-if="editTarget === 'NOTE' && showGuideLine"
+            class="sequencer-guideline-container"
             :style="{
-              transform: `translateX(${guideLineX - scrollX}px)`,
+              marginRight: `${scrollBarWidth}px`,
+              marginBottom: `${sequencerBottomInset}px`,
             }"
-          ></div>
-        </div>
-        <!-- シーケンサ -->
-        <div
-          ref="sequencerBody"
-          class="sequencer-body"
-          :class="{
-            'edit-note': editTarget === 'NOTE',
-            'edit-pitch': editTarget === 'PITCH',
-            [cursorClass]: true,
-          }"
-          aria-label="シーケンサ"
-          @pointerdown="onPointerDown"
-          @pointerenter="onPointerEnter"
-          @pointerleave="onPointerLeave"
-          @dblclick.stop="onDoubleClick"
-          @wheel="onWheel"
-          @scroll="onScroll"
-          @contextmenu.prevent
-        >
-          <!-- 実際のグリッド全体と同じ大きさを持つ要素 -->
-          <SequencerGridSpacer />
-          <!-- undefinedだと警告が出るのでnullを渡す -->
-          <!-- TODO: ちゃんとしたトラックIDを渡す -->
-          <SequencerShadowNote
-            v-for="note in notesInOtherTracks"
-            :key="note.id"
-            :note
-          />
-          <SequencerNote
-            v-for="note in editTarget === 'NOTE'
-              ? notesInSelectedTrackWithPreview
-              : notesInSelectedTrack"
-            :key="note.id"
-            class="sequencer-note"
-            :note
-            :isSelected="selectedNoteIds.has(note.id)"
-            :isPreview="previewNoteIds.has(note.id)"
-            :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
-            :previewLyric="previewLyrics.get(note.id) ?? null"
-            :nowPreviewing
-            :previewMode
-            :cursorClass
-            @barPointerdown="onNoteBarPointerDown($event, note)"
-            @barDoubleClick="onNoteBarDoubleClick($event, note)"
-            @leftEdgePointerdown="onNoteLeftEdgePointerDown($event, note)"
-            @rightEdgePointerdown="onNoteRightEdgePointerDown($event, note)"
-          />
-          <SequencerLyricInput
-            v-if="editingLyricNote != undefined"
-            :editingLyricNote
-            @input="onLyricInput"
-            @keydown="onLyricInputKeydown"
-            @blur="onLyricInputBlur"
-          />
-        </div>
-        <SequencerPitch
-          v-if="editTarget === 'PITCH'"
-          class="sequencer-pitch"
-          :style="{
-            marginRight: `${scrollBarWidth}px`,
-            marginBottom: `${scrollBarWidth}px`,
-          }"
-          :offsetX="scrollX"
-          :offsetY="scrollY"
-          :previewPitchEdit
-        />
-        <div
-          class="sequencer-overlay"
-          :style="{
-            marginRight: `${scrollBarWidth}px`,
-            marginBottom: `${scrollBarWidth}px`,
-          }"
-        >
+          >
+            <div
+              class="sequencer-guideline"
+              :style="{
+                transform: `translateX(${guideLineX - scrollX}px)`,
+              }"
+            ></div>
+          </div>
+          <!-- シーケンサ -->
           <div
-            v-if="previewRectForRectSelect != undefined"
-            class="rect-select-preview"
-            :style="{
-              left: `${previewRectForRectSelect.x}px`,
-              top: `${previewRectForRectSelect.y}px`,
-              width: `${previewRectForRectSelect.width}px`,
-              height: `${previewRectForRectSelect.height}px`,
+            ref="sequencerBody"
+            class="sequencer-body"
+            :class="{
+              'edit-note': editTarget === 'NOTE',
+              'edit-pitch': editTarget === 'PITCH',
+              [cursorClass]: true,
             }"
-          ></div>
-          <SequencerPhraseIndicator
-            v-for="phraseInfo in phraseInfosInOtherTracks"
-            :key="phraseInfo.key"
-            :phraseKey="phraseInfo.key"
-            :isInSelectedTrack="false"
-            class="sequencer-phrase-indicator"
+            aria-label="シーケンサ"
+            @pointerdown="onPointerDown"
+            @pointerenter="onPointerEnter"
+            @pointerleave="onPointerLeave"
+            @dblclick.stop="onDoubleClick"
+            @wheel="onWheel"
+            @scroll="onScroll"
+            @contextmenu.prevent
+          >
+            <!-- 実際のグリッド全体と同じ大きさを持つ要素 -->
+            <SequencerGridSpacer />
+            <!-- undefinedだと警告が出るのでnullを渡す -->
+            <!-- TODO: ちゃんとしたトラックIDを渡す -->
+            <SequencerShadowNote
+              v-for="note in notesInOtherTracks"
+              :key="note.id"
+              :note
+            />
+            <SequencerNote
+              v-for="note in editTarget === 'NOTE'
+                ? notesInSelectedTrackWithPreview
+                : notesInSelectedTrack"
+              :key="note.id"
+              class="sequencer-note"
+              :note
+              :isSelected="selectedNoteIds.has(note.id)"
+              :isPreview="previewNoteIds.has(note.id)"
+              :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
+              :previewLyric="previewLyrics.get(note.id) ?? null"
+              :nowPreviewing
+              :previewMode
+              :cursorClass
+              @barPointerdown="onNoteBarPointerDown($event, note)"
+              @barDoubleClick="onNoteBarDoubleClick($event, note)"
+              @leftEdgePointerdown="onNoteLeftEdgePointerDown($event, note)"
+              @rightEdgePointerdown="onNoteRightEdgePointerDown($event, note)"
+            />
+            <SequencerLyricInput
+              v-if="editingLyricNote != undefined"
+              :editingLyricNote
+              @input="onLyricInput"
+              @keydown="onLyricInputKeydown"
+              @blur="onLyricInputBlur"
+            />
+          </div>
+          <SequencerPitch
+            v-if="editTarget === 'PITCH'"
+            class="sequencer-pitch"
             :style="{
-              width: `${phraseInfo.width}px`,
-              transform: `translateX(${phraseInfo.x - scrollX}px)`,
+              marginRight: `${scrollBarWidth}px`,
+              marginBottom: `${sequencerBottomInset}px`,
             }"
-          />
-          <SequencerPhraseIndicator
-            v-for="phraseInfo in phraseInfosInSelectedTrack"
-            :key="phraseInfo.key"
-            :phraseKey="phraseInfo.key"
-            isInSelectedTrack
-            class="sequencer-phrase-indicator"
-            :style="{
-              width: `${phraseInfo.width}px`,
-              transform: `translateX(${phraseInfo.x - scrollX}px)`,
-            }"
+            :offsetX="scrollX"
+            :offsetY="scrollY"
+            :previewPitchEdit
           />
           <div
-            class="sequencer-playhead"
-            data-testid="sequencer-playhead"
+            class="sequencer-overlay"
             :style="{
-              transform: `translateX(${playheadX - scrollX - 1}px)`,
+              marginRight: `${scrollBarWidth}px`,
+              marginBottom: `${sequencerBottomInset}px`,
             }"
-          ></div>
+          >
+            <div
+              v-if="previewRectForRectSelect != undefined"
+              class="rect-select-preview"
+              :style="{
+                left: `${previewRectForRectSelect.x}px`,
+                top: `${previewRectForRectSelect.y}px`,
+                width: `${previewRectForRectSelect.width}px`,
+                height: `${previewRectForRectSelect.height}px`,
+              }"
+            ></div>
+            <SequencerPhraseIndicator
+              v-for="phraseInfo in phraseInfosInOtherTracks"
+              :key="phraseInfo.key"
+              :phraseKey="phraseInfo.key"
+              :isInSelectedTrack="false"
+              class="sequencer-phrase-indicator"
+              :style="{
+                width: `${phraseInfo.width}px`,
+                transform: `translateX(${phraseInfo.x - scrollX}px)`,
+              }"
+            />
+            <SequencerPhraseIndicator
+              v-for="phraseInfo in phraseInfosInSelectedTrack"
+              :key="phraseInfo.key"
+              :phraseKey="phraseInfo.key"
+              isInSelectedTrack
+              class="sequencer-phrase-indicator"
+              :style="{
+                width: `${phraseInfo.width}px`,
+                transform: `translateX(${phraseInfo.x - scrollX}px)`,
+              }"
+            />
+            <div
+              class="sequencer-playhead"
+              data-testid="sequencer-playhead"
+              :style="{
+                transform: `translateX(${playheadX - scrollX - 1}px)`,
+              }"
+            ></div>
+          </div>
+          <div
+            class="sequencer-horizontal-controls"
+            :style="{
+              '--sequencer-scrollbar-width': `${scrollBarWidth}px`,
+            }"
+          >
+            <div
+              ref="sequencerScrollbarRef"
+              class="sequencer-horizontal-scrollbar-shell"
+              :class="{ dragging: isSequencerScrollbarDragging }"
+              role="slider"
+              tabindex="0"
+              aria-label="シーケンサの横スクロール"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              :aria-valuenow="Math.round(sequencerScrollRatio * 100)"
+              @pointerdown="onSequencerScrollbarPointerDown"
+              @keydown.left.prevent="scrollSequencerByKeyboard(-1)"
+              @keydown.right.prevent="scrollSequencerByKeyboard(1)"
+              @keydown.home.prevent="scrollSequencerToEdge(0)"
+              @keydown.end.prevent="scrollSequencerToEdge(1)"
+            >
+              <div
+                class="sequencer-horizontal-scrollbar-rail"
+                aria-hidden="true"
+              >
+                <div
+                  class="sequencer-horizontal-scrollbar-window"
+                  :style="{
+                    left: `${sequencerVisibleRange.left}%`,
+                    width: `${sequencerVisibleRange.width}%`,
+                  }"
+                ></div>
+              </div>
+            </div>
+            <div class="sequencer-horizontal-zoom" @click.stop>
+              <button
+                class="sequencer-horizontal-zoom-button"
+                type="button"
+                aria-label="シーケンサを縮小"
+                @click="decreaseSequencerZoomX"
+              >
+                -
+              </button>
+              <input
+                class="sequencer-horizontal-zoom-slider"
+                type="range"
+                :min="ZOOM_X_MIN"
+                :max="ZOOM_X_MAX"
+                :step="ZOOM_X_STEP"
+                :value="zoomX"
+                aria-label="シーケンサの横ズーム"
+                @input="setZoomXFromInput"
+              />
+              <button
+                class="sequencer-horizontal-zoom-button"
+                type="button"
+                aria-label="シーケンサを拡大"
+                @click="increaseSequencerZoomX"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
         </div>
-        <QSlider
-          :modelValue="zoomX"
-          :min="ZOOM_X_MIN"
-          :max="ZOOM_X_MAX"
-          :step="ZOOM_X_STEP"
-          class="zoom-x-slider"
-          trackSize="2px"
-          @update:modelValue="setZoomX"
-        />
-        <QSlider
-          :modelValue="zoomY"
-          :min="ZOOM_Y_MIN"
-          :max="ZOOM_Y_MAX"
-          :step="ZOOM_Y_STEP"
-          vertical
-          reverse
-          class="zoom-y-slider"
-          trackSize="2px"
-          @update:modelValue="setZoomY"
-        />
-        <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
-        <SequencerToolPalette
-          :editTarget
-          :sequencerNoteTool
-          :sequencerPitchTool
-          @update:sequencerNoteTool="
-            (value) =>
-              store.dispatch('SET_SEQUENCER_NOTE_TOOL', {
-                sequencerNoteTool: value,
-              })
+      </template>
+      <template #after>
+        <SequencerParameterPanel
+          v-if="isParameterPanelOpen"
+          :viewportInfo
+          :toolPaletteLayout
+          :parameterPanelLayoutMode
+          :volumeEditValueMode
+          :referenceOverlayMode
+          @update:needsAutoScroll="
+            (value) => (parameterPanelNeedsAutoScroll = value)
           "
-          @update:sequencerPitchTool="
-            (value) =>
-              store.dispatch('SET_SEQUENCER_PITCH_TOOL', {
-                sequencerPitchTool: value,
-              })
-          "
+          @panTimeline="panTimelineBy"
+          @zoomTimeline="zoomTimelineAt"
         />
+      </template>
+    </QSplitter>
+    <div
+      class="sequencer-full-playhead-layer"
+      :style="{
+        left: `${fullPlayheadLeftOffset}px`,
+        right: `${fullPlayheadRightInset}px`,
+      }"
+    >
+      <div
+        class="sequencer-full-playhead"
+        data-testid="sequencer-full-playhead"
+        :style="{
+          transform: `translateX(${playheadX - scrollX - 1}px)`,
+        }"
+      ></div>
+    </div>
+    <div class="tool-layout-switcher" aria-label="ツール配置">
+      <div class="tool-layout-switcher-grip" aria-hidden="true"></div>
+      <div class="tool-layout-switcher-panel">
+        <div class="tool-layout-switcher-section-label">Tools</div>
+        <button
+          v-for="option in TOOL_PALETTE_LAYOUT_OPTIONS"
+          :key="option.value"
+          class="tool-layout-switch"
+          :class="{ active: toolPaletteLayout === option.value }"
+          type="button"
+          :aria-pressed="toolPaletteLayout === option.value"
+          :title="option.label"
+          @click="toolPaletteLayout = option.value"
+        >
+          {{ option.label }}
+        </button>
+        <div class="tool-layout-switcher-section-label">Parameter Panel</div>
+        <button
+          v-for="option in PARAMETER_PANEL_LAYOUT_OPTIONS"
+          :key="option.value"
+          class="tool-layout-switch"
+          :class="{ active: parameterPanelLayoutMode === option.value }"
+          type="button"
+          :aria-pressed="parameterPanelLayoutMode === option.value"
+          :title="option.label"
+          @click="parameterPanelLayoutMode = option.value"
+        >
+          {{ option.label }}
+        </button>
+        <div class="tool-layout-switcher-section-label">Volume</div>
+        <button
+          v-for="option in VOLUME_EDIT_VALUE_MODE_OPTIONS"
+          :key="option.value"
+          class="tool-layout-switch"
+          :class="{ active: volumeEditValueMode === option.value }"
+          type="button"
+          :aria-pressed="volumeEditValueMode === option.value"
+          :title="option.label"
+          @click="volumeEditValueMode = option.value"
+        >
+          {{ option.label }}
+        </button>
+        <div class="tool-layout-switcher-section-label">Reference</div>
+        <button
+          v-for="option in REFERENCE_OVERLAY_MODE_OPTIONS"
+          :key="option.value"
+          class="tool-layout-switch"
+          :class="{ active: referenceOverlayMode === option.value }"
+          type="button"
+          :aria-pressed="referenceOverlayMode === option.value"
+          :title="option.label"
+          @click="referenceOverlayMode = option.value"
+        >
+          {{ option.label }}
+        </button>
       </div>
-    </template>
-    <template #after>
-      <SequencerParameterPanel
-        v-if="isParameterPanelOpen"
-        :viewportInfo
-        @update:needsAutoScroll="
-          (value) => (parameterPanelNeedsAutoScroll = value)
-        "
-        @panTimeline="panTimelineBy"
-        @zoomTimeline="zoomTimelineAt"
-      />
-    </template>
-  </QSplitter>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -236,6 +548,18 @@ import type { InjectionKey } from "vue";
 export const numMeasuresInjectionKey: InjectionKey<{
   numMeasures: ComputedRef<number>;
 }> = Symbol("sequencerNumMeasures");
+
+export type SequencerViewportState = {
+  clientWidth: number;
+  scrollLeft: number;
+  scrollWidth: number;
+  zoomX: number;
+};
+
+export type SequencerNavigationRequest = {
+  id: number;
+  scrollLeft: number;
+};
 </script>
 
 <script setup lang="ts">
@@ -244,6 +568,7 @@ import {
   ref,
   nextTick,
   onMounted,
+  onBeforeUnmount,
   onActivated,
   onDeactivated,
   watch,
@@ -259,11 +584,16 @@ import type { Note } from "@/domain/project/type";
 import {
   getNoteDuration,
   getTimeSignaturePositions,
+  isTriplet,
   noteNumberToFrequency,
   tickToMeasureNumber,
   tickToSecond,
 } from "@/sing/music";
-import { getEndTicksOfPhrase, getStartTicksOfPhrase } from "@/sing/domain";
+import {
+  getEndTicksOfPhrase,
+  getSnapTypes,
+  getStartTicksOfPhrase,
+} from "@/sing/domain";
 import {
   tickToBaseX,
   baseXToTick,
@@ -272,9 +602,6 @@ import {
   ZOOM_X_MIN,
   ZOOM_X_MAX,
   ZOOM_X_STEP,
-  ZOOM_Y_MIN,
-  ZOOM_Y_MAX,
-  ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
   SEQUENCER_MIN_NUM_MEASURES,
 } from "@/sing/viewHelper";
@@ -289,6 +616,18 @@ import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
 import SequencerToolPalette from "@/components/Sing/SequencerToolPalette.vue";
+import {
+  TOOL_PALETTE_LAYOUT_OPTIONS,
+  type ToolPaletteLayout,
+} from "@/components/Sing/toolPaletteLayout";
+import {
+  PARAMETER_PANEL_LAYOUT_OPTIONS,
+  REFERENCE_OVERLAY_MODE_OPTIONS,
+  VOLUME_EDIT_VALUE_MODE_OPTIONS,
+  type ParameterPanelLayoutMode,
+  type ReferenceOverlayMode,
+  type VolumeEditValueMode,
+} from "@/components/Sing/parameterPanelViewMode";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -297,6 +636,11 @@ import type {
   PositionOnSequencer,
   ViewportInfo,
 } from "@/sing/sequencerStateMachine/common";
+import type {
+  NoteEditTool,
+  PitchEditTool,
+  SequencerEditTarget,
+} from "@/store/type";
 import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
 import { assertNonNullable } from "@/type/utility";
 
@@ -454,6 +798,7 @@ const phraseInfosInOtherTracks = computed(() => {
 const DEFAULT_PARAMETER_PANEL_HEIGHT = 200;
 const MIN_PARAMETER_PANEL_HEIGHT = 100;
 const MAX_PARAMETER_PANEL_HEIGHT = 500;
+const SEQUENCER_HORIZONTAL_CONTROLS_HEIGHT = 18;
 
 const splitterPosition = computed(() => store.state.splitterPosition);
 const parameterPanelHeight = ref(DEFAULT_PARAMETER_PANEL_HEIGHT);
@@ -490,7 +835,109 @@ const setParameterPanelHeight = async (height: number) => {
 
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
+const sequencerScrollbarRef = ref<HTMLElement>();
+const sequencerClientWidth = ref(0);
+const sequencerScrollWidth = ref(1);
+const isSequencerScrollbarDragging = ref(false);
 const parameterPanelNeedsAutoScroll = ref(false);
+const toolPaletteLayout = defineModel<ToolPaletteLayout>("toolPaletteLayout", {
+  required: true,
+});
+const sequencerViewport = defineModel<SequencerViewportState>(
+  "sequencerViewport",
+  {
+    required: true,
+  },
+);
+const sequencerNavigationRequest = defineModel<
+  SequencerNavigationRequest | undefined
+>("sequencerNavigationRequest");
+const parameterPanelLayoutMode = ref<ParameterPanelLayoutMode>("single");
+const volumeEditValueMode = ref<VolumeEditValueMode>("absolute");
+const referenceOverlayMode = ref<ReferenceOverlayMode>("waveform");
+let sequencerBodyResizeObserver: ResizeObserver | undefined;
+const updateSequencerViewport = () => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (sequencerBodyElement == undefined) return;
+
+  sequencerClientWidth.value = sequencerBodyElement.clientWidth;
+  sequencerScrollWidth.value = Math.max(sequencerBodyElement.scrollWidth, 1);
+  sequencerViewport.value = {
+    clientWidth: sequencerBodyElement.clientWidth,
+    scrollLeft: sequencerBodyElement.scrollLeft,
+    scrollWidth: sequencerBodyElement.scrollWidth,
+    zoomX: zoomX.value,
+  };
+};
+const sequencerBottomInset = computed(() =>
+  Math.max(scrollBarWidth.value, SEQUENCER_HORIZONTAL_CONTROLS_HEIGHT),
+);
+const isScoreInlineRailLayout = computed(
+  () =>
+    toolPaletteLayout.value === "rail" ||
+    toolPaletteLayout.value === "proposalB",
+);
+const isScoreDockLayout = computed(
+  () =>
+    toolPaletteLayout.value === "dock" ||
+    toolPaletteLayout.value === "dockCenter",
+);
+const isScoreHeaderRailLayout = computed(
+  () => toolPaletteLayout.value === "proposalC",
+);
+const isScoreReservedRailLayout = computed(
+  () => toolPaletteLayout.value === "reservedRail",
+);
+const isScoreSurfaceStripLayout = computed(
+  () =>
+    toolPaletteLayout.value === "proposalE" ||
+    toolPaletteLayout.value === "proposalF" ||
+    toolPaletteLayout.value === "proposalI" ||
+    toolPaletteLayout.value === "proposalJ",
+);
+const isScoreInlineCommandToolLayout = computed(
+  () =>
+    toolPaletteLayout.value === "proposalE" ||
+    toolPaletteLayout.value === "proposalF" ||
+    toolPaletteLayout.value === "proposalI",
+);
+const isScoreTrueCommandLayout = computed(
+  () => toolPaletteLayout.value === "proposalF",
+);
+const isScoreModeContextLayout = computed(
+  () => toolPaletteLayout.value === "proposalG",
+);
+const isScoreContextHudLayout = computed(
+  () => toolPaletteLayout.value === "proposalH",
+);
+const isScoreInspectorHeaderLayout = computed(
+  () => toolPaletteLayout.value === "proposalI",
+);
+const isScoreToolChipLayout = computed(
+  () => toolPaletteLayout.value === "proposalJ",
+);
+const usesPianoTextTabs = computed(
+  () =>
+    isScoreDockLayout.value ||
+    isScoreHeaderRailLayout.value ||
+    isScoreSurfaceStripLayout.value,
+);
+const fullPlayheadLeftOffset = computed(() => {
+  if (isScoreDockLayout.value || isScoreSurfaceStripLayout.value) return 48;
+  if (isScoreReservedRailLayout.value) return 144;
+  if (toolPaletteLayout.value === "sideRight") return 48;
+  return 96;
+});
+const fullPlayheadRightInset = computed(() =>
+  toolPaletteLayout.value === "sideRight" ? 48 : 0,
+);
+const pianoToolPaletteOrientation = computed<"vertical" | "horizontal">(() =>
+  toolPaletteLayout.value === "center" ||
+  toolPaletteLayout.value === "centerBottom" ||
+  toolPaletteLayout.value === "dockCenter"
+    ? "horizontal"
+    : "vertical",
+);
 
 // ステートマシン
 const {
@@ -538,10 +985,63 @@ const guideLineX = computed(() => {
 
 // 編集対象
 const editTarget = computed(() => store.state.sequencerEditTarget);
+const changeEditTarget = (editTarget: SequencerEditTarget) => {
+  void store.actions.SET_EDIT_TARGET({ editTarget });
+};
 // 選択中のノート編集ツール
 const sequencerNoteTool = computed(() => state.sequencerNoteTool);
+const setSequencerNoteTool = (sequencerNoteTool: NoteEditTool) => {
+  void store.actions.SET_SEQUENCER_NOTE_TOOL({ sequencerNoteTool });
+};
 // 選択中のピッチ編集ツール
 const sequencerPitchTool = computed(() => state.sequencerPitchTool);
+const setSequencerPitchTool = (sequencerPitchTool: PitchEditTool) => {
+  void store.actions.SET_SEQUENCER_PITCH_TOOL({ sequencerPitchTool });
+};
+
+const pianoModeLabel = computed(() =>
+  editTarget.value === "NOTE" ? "ノート" : "ピッチ",
+);
+const currentPianoToolLabel = computed(() => {
+  if (editTarget.value === "NOTE") {
+    return sequencerNoteTool.value === "SELECT_FIRST" ? "選択優先" : "編集優先";
+  }
+
+  return sequencerPitchTool.value === "DRAW" ? "ピッチ編集" : "ピッチ削除";
+});
+const currentPianoToolIcon = computed(() => {
+  if (editTarget.value === "NOTE") {
+    return sequencerNoteTool.value === "SELECT_FIRST"
+      ? "arrow_selector_tool"
+      : "stylus";
+  }
+
+  return sequencerPitchTool.value === "DRAW" ? "stylus" : "ink_eraser";
+});
+
+const sequencerSnapType = computed(() => state.sequencerSnapType);
+const snapTypeSelectOptions = computed(() => {
+  return getSnapTypes(tpqn.value)
+    .sort((a, b) => {
+      if (isTriplet(a) === isTriplet(b)) {
+        return a - b;
+      } else {
+        return isTriplet(a) ? 1 : -1;
+      }
+    })
+    .map((snapType) => {
+      if (isTriplet(snapType)) {
+        return { snapType, label: `1/${(snapType / 3) * 2} T` };
+      } else {
+        return { snapType, label: `1/${snapType}` };
+      }
+    });
+});
+const setSnapType = (event: Event) => {
+  void store.actions.SET_SNAP_TYPE({
+    snapType: Number((event.target as HTMLSelectElement).value),
+  });
+};
 
 // カーソル用のCSSクラス名ヘルパー
 const cursorClass = computed(() => {
@@ -851,6 +1351,69 @@ const handleKeyUp = (event: KeyboardEvent) => {
   });
 };
 
+const sequencerScrollMax = computed(() =>
+  Math.max(sequencerScrollWidth.value - sequencerClientWidth.value, 0),
+);
+const sequencerScrollRatio = computed(() =>
+  sequencerScrollMax.value === 0 ? 0 : scrollX.value / sequencerScrollMax.value,
+);
+const sequencerVisibleRange = computed(() => {
+  const contentWidth = Math.max(sequencerScrollWidth.value, 1);
+
+  return {
+    left: clamp((scrollX.value / contentWidth) * 100, 0, 100),
+    width: clamp((sequencerClientWidth.value / contentWidth) * 100, 0, 100),
+  };
+});
+const setSequencerScrollLeft = (value: number) => {
+  const sequencerBodyElement = sequencerBody.value;
+  if (sequencerBodyElement == undefined) return;
+
+  sequencerBodyElement.scrollTo(
+    clamp(value, 0, sequencerScrollMax.value),
+    sequencerBodyElement.scrollTop,
+  );
+  updateSequencerViewport();
+};
+const setSequencerScrollFromClientX = (clientX: number) => {
+  const railElement = sequencerScrollbarRef.value?.querySelector<HTMLElement>(
+    ".sequencer-horizontal-scrollbar-rail",
+  );
+  if (railElement == undefined || sequencerScrollMax.value === 0) return;
+
+  const rect = railElement.getBoundingClientRect();
+  const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
+  setSequencerScrollLeft(ratio * sequencerScrollMax.value);
+};
+const onSequencerScrollbarPointerMove = (event: PointerEvent) => {
+  event.preventDefault();
+  setSequencerScrollFromClientX(event.clientX);
+};
+const stopSequencerScrollbarDrag = () => {
+  isSequencerScrollbarDragging.value = false;
+  window.removeEventListener("pointermove", onSequencerScrollbarPointerMove);
+  window.removeEventListener("pointerup", stopSequencerScrollbarDrag);
+  window.removeEventListener("pointercancel", stopSequencerScrollbarDrag);
+};
+const onSequencerScrollbarPointerDown = (event: PointerEvent) => {
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+
+  event.preventDefault();
+  isSequencerScrollbarDragging.value = true;
+  setSequencerScrollFromClientX(event.clientX);
+  window.addEventListener("pointermove", onSequencerScrollbarPointerMove);
+  window.addEventListener("pointerup", stopSequencerScrollbarDrag);
+  window.addEventListener("pointercancel", stopSequencerScrollbarDrag);
+};
+const scrollSequencerByKeyboard = (direction: -1 | 1) => {
+  setSequencerScrollLeft(
+    scrollX.value + direction * Math.max(sequencerClientWidth.value * 0.8, 1),
+  );
+};
+const scrollSequencerToEdge = (ratio: 0 | 1) => {
+  setSequencerScrollLeft(sequencerScrollMax.value * ratio);
+};
+
 // X軸ズーム
 const setZoomX = (value: number | null) => {
   if (value == null) {
@@ -871,30 +1434,18 @@ const setZoomX = (value: number | null) => {
     const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
     const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
     sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
+    updateSequencerViewport();
   });
 };
 
-// Y軸ズーム
-const setZoomY = (value: number | null) => {
-  if (value == null) {
-    return;
-  }
-  const sequencerBodyElement = sequencerBody.value;
-  if (!sequencerBodyElement) {
-    throw new Error("sequencerBodyElement is null.");
-  }
-  // 画面の中央を基準に垂直方向のズームを行う
-  const oldZoomY = zoomY.value;
-  const newZoomY = value;
-  const scrollLeft = sequencerBodyElement.scrollLeft;
-  const scrollTop = sequencerBodyElement.scrollTop;
-  const clientHeight = sequencerBodyElement.clientHeight;
-
-  void store.actions.SET_ZOOM_Y({ zoomY: newZoomY }).then(() => {
-    const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
-    const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
-    sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
-  });
+const setZoomXFromInput = (event: Event) => {
+  setZoomX(Number((event.target as HTMLInputElement).value));
+};
+const increaseSequencerZoomX = () => {
+  setZoomX(Number(Math.min(zoomX.value + ZOOM_X_STEP, ZOOM_X_MAX).toFixed(2)));
+};
+const decreaseSequencerZoomX = () => {
+  setZoomX(Number(Math.max(zoomX.value - ZOOM_X_STEP, ZOOM_X_MIN).toFixed(2)));
 };
 
 const panTimelineBy = (deltaX: number) => {
@@ -917,6 +1468,7 @@ const zoomTimelineAt = (anchorX: number, deltaY: number) => {
     const cursorBaseX = (scrollLeft + anchorX) / oldZoomX;
     const newScrollLeft = cursorBaseX * newZoomX - anchorX;
     el.scrollTo(newScrollLeft, scrollTop);
+    updateSequencerViewport();
   });
 };
 
@@ -936,6 +1488,7 @@ const onScroll = (event: Event) => {
   }
   scrollX.value = event.currentTarget.scrollLeft;
   scrollY.value = event.currentTarget.scrollTop;
+  updateSequencerViewport();
 
   stateMachineProcess({
     type: "scrollEvent",
@@ -972,6 +1525,34 @@ watch(playheadTicks, (newPlayheadPosition) => {
   }
 });
 
+watch(zoomX, () => {
+  void nextTick(updateSequencerViewport);
+});
+
+watch(numMeasures, () => {
+  void nextTick(updateSequencerViewport);
+});
+
+watch(sequencerNavigationRequest, (request) => {
+  if (request == undefined) return;
+
+  const sequencerBodyElement = sequencerBody.value;
+  if (sequencerBodyElement == undefined) return;
+
+  sequencerBodyElement.scrollTo(
+    clamp(
+      request.scrollLeft,
+      0,
+      Math.max(
+        sequencerBodyElement.scrollWidth - sequencerBodyElement.clientWidth,
+        0,
+      ),
+    ),
+    sequencerBodyElement.scrollTop,
+  );
+  updateSequencerViewport();
+});
+
 // スクロールバーの幅を取得する
 onMounted(() => {
   const sequencerBodyElement = sequencerBody.value;
@@ -981,6 +1562,14 @@ onMounted(() => {
   const clientWidth = sequencerBodyElement.clientWidth;
   const offsetWidth = sequencerBodyElement.offsetWidth;
   scrollBarWidth.value = offsetWidth - clientWidth;
+  updateSequencerViewport();
+  sequencerBodyResizeObserver = new ResizeObserver(updateSequencerViewport);
+  sequencerBodyResizeObserver.observe(sequencerBodyElement);
+});
+
+onBeforeUnmount(() => {
+  sequencerBodyResizeObserver?.disconnect();
+  stopSequencerScrollbarDrag();
 });
 
 // 最初のonActivatedか判断するためのフラグ
@@ -1012,6 +1601,7 @@ onActivated(() => {
   // 実際にスクロールする
   void nextTick(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
+    updateSequencerViewport();
   });
 });
 
@@ -1230,47 +1820,995 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 @use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors;
 
+.score-sequencer-shell {
+  --editor-tool-rail-width: 48px;
+  --sequencer-ruler-height: 40px;
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sequencer-full-playhead-layer {
+  position: absolute;
+  top: var(--sequencer-ruler-height);
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: calc(#{vars.$z-index-sing-ruler} - 1);
+}
+
+.sequencer-full-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: var(--scheme-color-inverse-surface);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.tool-layout-docked .sequencer-full-playhead-layer,
+.tool-layout-surface-strip .sequencer-full-playhead-layer,
+.tool-layout-mode-context .sequencer-full-playhead-layer,
+.tool-layout-header-rail .sequencer-full-playhead-layer {
+  top: calc(36px + var(--sequencer-ruler-height));
+}
+
 .score-sequencer {
   backface-visibility: hidden;
   display: grid;
-  grid-template-rows: 40px 1fr;
-  grid-template-columns: 48px 1fr;
+  grid-template-rows: var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
   position: relative;
+}
+
+.tool-layout-sideRight .score-sequencer {
+  min-width: 0;
+  grid-template-columns: 48px minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.tool-layout-reserved-rail .score-sequencer {
+  grid-template-columns:
+    var(--editor-tool-rail-width) var(--editor-tool-rail-width) 48px
+    minmax(0, 1fr);
+}
+
+.tool-layout-docked .score-sequencer,
+.tool-layout-surface-strip .score-sequencer {
+  --piano-roll-dock-height: 36px;
+
+  grid-template-rows:
+    var(--piano-roll-dock-height) var(--sequencer-ruler-height)
+    1fr;
+  grid-template-columns: 48px minmax(0, 1fr);
+}
+
+.tool-layout-header-rail .score-sequencer {
+  grid-template-rows: 36px var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
+}
+
+.tool-layout-mode-context .score-sequencer {
+  grid-template-rows: 36px var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
+}
+
+.piano-roll-toolbar {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-rows: var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
+  pointer-events: none;
+  z-index: calc(#{vars.$z-index-sing-playhead} + 2);
+}
+
+.tool-layout-sideRight .piano-roll-toolbar {
+  min-width: 0;
+  grid-template-columns: 48px minmax(0, 1fr);
+}
+
+.tool-layout-reserved-rail .piano-roll-toolbar {
+  grid-template-columns:
+    var(--editor-tool-rail-width) var(--editor-tool-rail-width) 48px
+    minmax(0, 1fr);
+}
+
+.piano-roll-mode-zone {
+  grid-row: 1 / -1;
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  padding-top: 0;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-low) 74%,
+    transparent
+  );
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
+}
+
+.tool-layout-sideRight .piano-roll-mode-zone {
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--editor-tool-rail-width);
+  align-items: flex-start;
+  z-index: 3;
+  border-right: 0;
+  border-left: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
+}
+
+.piano-roll-tool-zone {
+  grid-row: 1 / -1;
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 6px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-low) 44%,
+    transparent
+  );
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
+  pointer-events: auto;
+}
+
+.tool-layout-docked .piano-roll-toolbar {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 2px 8px 0 56px;
+}
+
+.tool-layout-surface-strip .piano-roll-toolbar {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 2px 12px 0 56px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 94%, transparent);
+  border-bottom: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 36%, transparent);
+}
+
+.tool-layout-header-rail .piano-roll-toolbar {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  grid-template-rows: 36px var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
+}
+
+.tool-layout-mode-context .piano-roll-toolbar {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  grid-template-rows: 36px var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
+}
+
+.surface-command-title {
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: auto;
+}
+
+.tool-layout-command-bar .surface-command-title {
+  display: grid;
+  place-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 52%, transparent);
+}
+
+.tool-layout-docked .piano-roll-mode-zone {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding-top: 0;
+  background: transparent;
+  border-right: 0;
+}
+
+.tool-layout-surface-strip .piano-roll-mode-zone {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding-top: 0;
+  background: transparent;
+  border-right: 0;
+}
+
+.tool-layout-header-rail .piano-roll-mode-zone {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px 0 88px;
+  background: transparent;
+  border-right: 0;
+}
+
+.tool-layout-mode-context .piano-roll-mode-zone {
+  grid-row: 1 / -1;
+  grid-column: 1;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  padding-top: 0;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-low) 74%,
+    transparent
+  );
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
+}
+
+.tool-layout-proposalB .piano-roll-mode-zone {
+  gap: 14px;
+}
+
+.piano-roll-mode-zone,
+.piano-roll-floating-tools,
+.piano-roll-tool-zone,
+.piano-roll-context-strip,
+.piano-roll-context-hud,
+.piano-roll-current-tool-zone,
+.piano-roll-command-button {
+  pointer-events: auto;
+}
+
+.piano-roll-context-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 7px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 94%, transparent);
+  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
+}
+
+.tool-layout-mode-context .piano-roll-context-strip {
+  grid-row: 1;
+  grid-column: 2 / -1;
+  align-self: center;
+  justify-self: start;
+  margin-left: 8px;
+}
+
+.context-strip-target,
+.context-hud-label {
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tool-layout-context-hud .piano-roll-toolbar {
+  position: relative;
+}
+
+.piano-roll-context-hud {
+  position: absolute;
+  top: 52px;
+  left: calc(var(--editor-tool-rail-width) + 48px + 12px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 1px 8px 1px 10px;
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 44%, transparent);
+  border-radius: 4px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 90%, transparent);
+  box-shadow: 0 6px 18px oklch(0% 0 0 / 0.16);
+  backdrop-filter: blur(6px);
+}
+
+.piano-roll-current-tool-zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.current-tool-chip,
+.command-palette-button,
+.piano-roll-command-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
+  border-radius: 7px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 94%,
+    transparent
+  );
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 78%,
+    var(--scheme-color-primary)
+  );
+  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-surface-container-highest) 74%,
+      transparent
+    );
+    color: var(--scheme-color-on-surface);
+  }
+}
+
+.current-tool-chip {
+  gap: 6px;
+  min-width: 104px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.command-palette-button,
+.piano-roll-command-button {
+  width: 32px;
+  padding: 0;
+}
+
+.current-tool-chip .material-symbols-rounded,
+.command-palette-button .material-symbols-rounded,
+.piano-roll-command-button .material-symbols-rounded {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.tool-chip-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition:
+    opacity 0.12s ease-out,
+    transform 0.12s ease-out;
+  z-index: 2;
+}
+
+.piano-roll-current-tool-zone:hover .tool-chip-popover,
+.piano-roll-current-tool-zone:focus-within .tool-chip-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.piano-roll-floating-tools {
+  pointer-events: auto;
+}
+
+.piano-roll-floating-tools.layout-center {
+  grid-row: 1;
+  grid-column: 3;
+  align-self: center;
+  justify-self: center;
+}
+
+.piano-roll-floating-tools.layout-centerBottom {
+  grid-row: 2;
+  grid-column: 3;
+  align-self: end;
+  justify-self: center;
+  margin-bottom: 12px;
+}
+
+.piano-roll-floating-tools.layout-proposalA,
+.piano-roll-floating-tools.layout-proposalD {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: start;
+  margin: 6px 0 0 calc(var(--editor-tool-rail-width) + 6px);
+}
+
+.piano-roll-floating-tools.layout-proposalA.active-target-pitch,
+.piano-roll-floating-tools.layout-proposalD.active-target-pitch {
+  margin-top: 40px;
+}
+
+.piano-roll-floating-tools.layout-proposalC {
+  grid-row: 2 / -1;
+  grid-column: 1;
+  align-self: start;
+  justify-self: center;
+  margin-top: 6px;
+}
+
+.tool-layout-proposalD .piano-roll-floating-tools {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.12s ease-out,
+    transform 0.12s ease-out;
+}
+
+.tool-layout-proposalD .piano-roll-mode-zone:hover ~ .piano-roll-floating-tools,
+.tool-layout-proposalD .piano-roll-floating-tools:hover,
+.tool-layout-proposalD
+  .piano-roll-mode-zone:focus-within
+  ~ .piano-roll-floating-tools,
+.tool-layout-proposalD .piano-roll-floating-tools:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.piano-roll-floating-tools.layout-dockCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.piano-roll-floating-tools.layout-side {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: end;
+  margin: 48px 12px 0 0;
+}
+
+.piano-roll-floating-tools.layout-sideRight {
+  position: absolute;
+  top: 48px;
+  right: calc(var(--editor-tool-rail-width) + 12px);
+  margin: 0;
+}
+
+.piano-roll-floating-tools.layout-sideLeftToolbarRight {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: end;
+  margin: 48px 12px 0 0;
+}
+
+.piano-roll-floating-tools.layout-sideLeft {
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: start;
+  margin: 48px 0 0 calc(var(--editor-tool-rail-width) + 54px);
+}
+
+.piano-roll-edit-target-tabs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  width: 48px;
+  padding: 4px;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.tool-layout-docked .piano-roll-edit-target-tabs,
+.tool-layout-surface-strip .piano-roll-edit-target-tabs,
+.tool-layout-header-rail .piano-roll-edit-target-tabs {
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  width: auto;
+  padding: 1px;
+  border-radius: 7px;
+  background: var(--scheme-color-surface);
+  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.14);
+}
+
+.tool-layout-docked .piano-roll-edit-target-tab,
+.tool-layout-surface-strip .piano-roll-edit-target-tab,
+.tool-layout-header-rail .piano-roll-edit-target-tab {
+  width: auto;
+  min-width: 50px;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.tool-layout-docked .piano-roll-edit-target-tab,
+.tool-layout-surface-strip .piano-roll-edit-target-tab {
+  border: 0;
+  border-radius: 5px;
+}
+
+.tool-layout-docked .piano-roll-edit-target-tab.active,
+.tool-layout-surface-strip .piano-roll-edit-target-tab.active,
+.tool-layout-header-rail .piano-roll-edit-target-tab.active {
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-secondary-container) 72%,
+    var(--scheme-color-surface)
+  );
+  color: var(--scheme-color-on-secondary-container);
+  font-weight: 700;
+  box-shadow:
+    inset 0 0 0 1px
+      color-mix(in oklch, var(--scheme-color-secondary) 38%, transparent),
+    0 1px 2px oklch(0% 0 0 / 0.1);
+}
+
+.tool-layout-inspector-header .piano-roll-toolbar {
+  padding-left: 48px;
+  background: var(--scheme-color-surface-container-low);
+}
+
+.tool-layout-inspector-header .piano-roll-edit-target-tabs {
+  align-self: stretch;
+  gap: 6px;
+  height: 34px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tool-layout-inspector-header .piano-roll-edit-target-tab {
+  min-width: 68px;
+  height: 34px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tool-layout-inspector-header .piano-roll-edit-target-tab.active {
+  border-bottom: 2px solid var(--scheme-color-secondary);
+  background: transparent;
+  color: var(--scheme-color-on-surface);
+  box-shadow: none;
+}
+
+.tool-layout-command-bar .piano-roll-toolbar {
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 96%,
+    transparent
+  );
+}
+
+.tool-layout-command-bar .piano-roll-mode-zone {
+  padding-left: 2px;
+}
+
+.piano-roll-edit-target-tab {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--scheme-color-on-surface-variant);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-surface-container-highest) 68%,
+      transparent
+    );
+    color: var(--scheme-color-on-surface);
+  }
+
+  &.active {
+    z-index: 1;
+    background: var(--scheme-color-secondary-container);
+    color: var(--scheme-color-on-secondary-container);
+    box-shadow: none;
+  }
+
+  .material-symbols-rounded {
+    font-size: 20px;
+    font-variation-settings: "FILL" 1;
+    line-height: 1;
+  }
+}
+
+.edit-target-button-content {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.edit-target-button-label {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tool-layout-sideRight .piano-roll-edit-target-tab {
+  border-radius: 8px;
+
+  &.active {
+    box-shadow: none;
+  }
+}
+
+.piano-roll-snap-control {
+  grid-row: 1;
+  grid-column: 3;
+  justify-self: end;
+  align-self: center;
+  margin-left: auto;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 4px 0 8px;
+  border-radius: 6px;
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 12px;
+  font-weight: 500;
+  background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);
+  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
+  pointer-events: auto;
+
+  &:hover {
+    background: var(--scheme-color-surface-container-highest);
+  }
+}
+
+.tool-layout-reserved-rail .piano-roll-snap-control {
+  grid-column: 4;
+}
+
+.tool-layout-sideRight .piano-roll-snap-control {
+  grid-column: 2;
+  margin-right: 12px;
+  transform: translateX(calc(-1 * var(--editor-tool-rail-width)));
+}
+
+.tool-layout-docked .piano-roll-snap-control {
+  margin-left: auto;
+  margin-right: 4px;
+}
+
+.tool-layout-surface-strip .piano-roll-snap-control {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.tool-layout-command-bar .piano-roll-command-button {
+  margin-left: auto;
+}
+
+.tool-layout-command-bar .piano-roll-snap-control {
+  margin-left: 0;
+}
+
+.tool-layout-mode-context .piano-roll-snap-control {
+  grid-row: 1;
+  grid-column: 3;
+  margin-left: auto;
+  margin-right: 12px;
+}
+
+.tool-layout-header-rail .piano-roll-snap-control {
+  grid-row: 1;
+  grid-column: 3;
+  margin-left: auto;
+  margin-right: 12px;
+}
+
+.piano-roll-snap-label {
+  line-height: 1;
+}
+
+.piano-roll-snap-select {
+  height: 22px;
+  min-width: 62px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--scheme-color-on-surface);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+}
+
+.tool-layout-switcher {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  display: flex;
+  align-items: center;
+  transform: translate(calc(100% - 10px), -50%);
+  opacity: 0;
+  transition: transform 0.12s ease-out;
+  z-index: calc(#{vars.$z-index-sing-playhead} + 4);
+
+  &:hover,
+  &:focus-within {
+    transform: translate(0, -50%);
+    opacity: 1;
+  }
+}
+
+.tool-layout-switcher-grip {
+  width: 10px;
+  height: 56px;
+  border-radius: 6px 0 0 6px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-outline-variant) 54%,
+    var(--scheme-color-surface)
+  );
+  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
+}
+
+.tool-layout-switcher-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
+  border-radius: 7px 0 0 7px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 94%,
+    transparent
+  );
+  box-shadow: 0 4px 12px oklch(0% 0 0 / 0.12);
+}
+
+.tool-layout-switcher-section-label {
+  padding: 4px 6px 2px;
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tool-layout-switcher-section-label:not(:first-child) {
+  margin-top: 4px;
+  border-top: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 40%, transparent);
+}
+
+.tool-layout-switch {
+  min-width: 132px;
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 82%,
+    var(--scheme-color-primary)
+  );
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--scheme-color-surface-container-highest);
+    color: var(--scheme-color-on-surface);
+  }
+
+  &.active {
+    background: var(--scheme-color-surface);
+    color: var(--scheme-color-on-surface);
+    box-shadow: inset 0 0 0 1px
+      color-mix(in oklch, var(--scheme-color-primary) 34%, transparent);
+  }
 }
 
 .sequencer-corner {
   grid-row: 1;
-  grid-column: 1;
+  grid-column: 2;
+  position: relative;
   background: var(--scheme-color-sing-ruler-surface);
-  border-radius: 8px 0 0 0;
+  z-index: vars.$z-index-sing-ruler;
+}
+
+.tool-layout-sideRight .sequencer-corner {
+  grid-column: 1;
+}
+
+.tool-layout-reserved-rail .sequencer-corner {
+  grid-column: 3;
+}
+
+.tool-layout-docked .sequencer-corner,
+.tool-layout-surface-strip .sequencer-corner {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+.tool-layout-header-rail .sequencer-corner,
+.tool-layout-mode-context .sequencer-corner {
+  grid-row: 2;
+  grid-column: 2;
 }
 
 .sequencer-ruler {
   grid-row: 1;
+  grid-column: 3;
+}
+
+.tool-layout-sideRight .sequencer-ruler {
   grid-column: 2;
+}
+
+.tool-layout-reserved-rail .sequencer-ruler {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-ruler,
+.tool-layout-surface-strip .sequencer-ruler {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-ruler,
+.tool-layout-mode-context .sequencer-ruler {
+  grid-row: 2;
+  grid-column: 3;
 }
 
 .sequencer-keys {
   grid-row: 2;
+  grid-column: 2;
+  position: relative;
+  z-index: vars.$z-index-sing-ruler;
+}
+
+.tool-layout-sideRight .sequencer-keys {
   grid-column: 1;
+}
+
+.tool-layout-reserved-rail .sequencer-keys {
+  grid-column: 3;
+}
+
+.tool-layout-docked .sequencer-keys,
+.tool-layout-surface-strip .sequencer-keys {
+  grid-row: 3;
+  grid-column: 1;
+}
+
+.tool-layout-header-rail .sequencer-keys,
+.tool-layout-mode-context .sequencer-keys {
+  grid-row: 3;
+  grid-column: 2;
 }
 
 .sequencer-grid {
   grid-row: 2;
+  grid-column: 3;
+}
+
+.tool-layout-sideRight .sequencer-grid {
   grid-column: 2;
+  margin-right: 0 !important;
+}
+
+.tool-layout-reserved-rail .sequencer-grid {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-grid,
+.tool-layout-surface-strip .sequencer-grid {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-grid,
+.tool-layout-mode-context .sequencer-grid {
+  grid-row: 3;
+  grid-column: 3;
 }
 
 .sequencer-character-portrait {
   grid-row: 2;
+  grid-column: 3;
+}
+
+.tool-layout-sideRight .sequencer-character-portrait {
   grid-column: 2;
+  margin-right: 0 !important;
+}
+
+.tool-layout-reserved-rail .sequencer-character-portrait {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-character-portrait,
+.tool-layout-surface-strip .sequencer-character-portrait {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-character-portrait,
+.tool-layout-mode-context .sequencer-character-portrait {
+  grid-row: 3;
+  grid-column: 3;
 }
 
 .sequencer-guideline-container {
   grid-row: 2;
-  grid-column: 2;
+  grid-column: 3;
   position: relative;
   overflow: hidden;
   pointer-events: none;
+}
+
+.tool-layout-sideRight .sequencer-guideline-container {
+  grid-column: 2;
+  margin-right: 0 !important;
+}
+
+.tool-layout-reserved-rail .sequencer-guideline-container {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-guideline-container,
+.tool-layout-surface-strip .sequencer-guideline-container {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-guideline-container,
+.tool-layout-mode-context .sequencer-guideline-container {
+  grid-row: 3;
+  grid-column: 3;
 }
 
 .sequencer-guideline {
@@ -1282,13 +2820,56 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .sequencer-body {
   grid-row: 2;
-  grid-column: 2;
+  grid-column: 3;
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
   touch-action: none;
 
   // スクロールバー上のカーソルが要素のものになってしまうためデフォルトカーソルにする
+  &::-webkit-scrollbar {
+    background-color: transparent;
+  }
+
+  &::-webkit-scrollbar:horizontal {
+    height: 0;
+  }
+
+  &::-webkit-scrollbar:vertical {
+    width: #{vars.$size-scrollbar};
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: color-mix(
+      in oklch,
+      var(--scheme-color-outline-variant) 44%,
+      transparent
+    );
+    background-clip: content-box;
+    border: 3px solid transparent;
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(
+      in oklch,
+      var(--scheme-color-outline-variant) 68%,
+      transparent
+    );
+  }
+
+  &::-webkit-scrollbar-thumb:active {
+    background-color: color-mix(
+      in oklch,
+      var(--scheme-color-outline-variant) 82%,
+      transparent
+    );
+  }
+
+  &::-webkit-scrollbar-corner {
+    background-color: transparent;
+  }
+
   &::-webkit-scrollbar-thumb:hover,
   &::-webkit-scrollbar-thumb:active,
   &::-webkit-scrollbar-track:hover,
@@ -1297,17 +2878,261 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   }
 }
 
+.tool-layout-reserved-rail .sequencer-body {
+  grid-column: 4;
+}
+
+.tool-layout-sideRight .sequencer-body {
+  grid-column: 2;
+}
+
+.tool-layout-docked .sequencer-body,
+.tool-layout-surface-strip .sequencer-body {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-body,
+.tool-layout-mode-context .sequencer-body {
+  grid-row: 3;
+  grid-column: 3;
+}
+
 .sequencer-pitch {
   grid-row: 2;
+  grid-column: 3;
+}
+
+.tool-layout-sideRight .sequencer-pitch {
   grid-column: 2;
+  margin-right: 0 !important;
+}
+
+.tool-layout-reserved-rail .sequencer-pitch {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-pitch,
+.tool-layout-surface-strip .sequencer-pitch {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-pitch,
+.tool-layout-mode-context .sequencer-pitch {
+  grid-row: 3;
+  grid-column: 3;
 }
 
 .sequencer-overlay {
   grid-row: 2;
-  grid-column: 2;
+  grid-column: 3;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
   pointer-events: none;
+}
+
+.tool-layout-sideRight .sequencer-overlay {
+  grid-column: 2;
+  margin-right: 0 !important;
+}
+
+.tool-layout-reserved-rail .sequencer-overlay {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-overlay,
+.tool-layout-surface-strip .sequencer-overlay {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-overlay,
+.tool-layout-mode-context .sequencer-overlay {
+  grid-row: 3;
+  grid-column: 3;
+}
+
+.sequencer-horizontal-controls {
+  --sequencer-scrollbar-width: 0px;
+
+  grid-row: 2;
+  grid-column: 3;
+  align-self: end;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 136px;
+  align-items: center;
+  height: 18px;
+  margin-right: var(--sequencer-scrollbar-width);
+  min-width: 0;
+  pointer-events: auto;
+  z-index: calc(#{vars.$z-index-scrollbar} + 1);
+}
+
+.tool-layout-sideRight .sequencer-horizontal-controls {
+  grid-column: 2;
+  margin-right: var(--editor-tool-rail-width);
+}
+
+.tool-layout-reserved-rail .sequencer-horizontal-controls {
+  grid-column: 4;
+}
+
+.tool-layout-docked .sequencer-horizontal-controls,
+.tool-layout-surface-strip .sequencer-horizontal-controls {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.tool-layout-header-rail .sequencer-horizontal-controls,
+.tool-layout-mode-context .sequencer-horizontal-controls {
+  grid-row: 3;
+  grid-column: 3;
+}
+
+.sequencer-horizontal-scrollbar-shell {
+  position: relative;
+  height: 18px;
+  min-width: 0;
+  padding: 0 6px;
+  cursor: grab;
+  outline: none;
+
+  &.dragging {
+    cursor: grabbing;
+  }
+
+  &:hover .sequencer-horizontal-scrollbar-window,
+  &.dragging .sequencer-horizontal-scrollbar-window,
+  &:focus-visible .sequencer-horizontal-scrollbar-window {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-on-surface-variant) 36%,
+      transparent
+    );
+  }
+
+  &:focus-visible .sequencer-horizontal-scrollbar-rail {
+    box-shadow: 0 0 0 1px
+      color-mix(in oklch, var(--scheme-color-primary) 36%, transparent);
+  }
+}
+
+.sequencer-horizontal-scrollbar-rail {
+  position: absolute;
+  right: 6px;
+  left: 6px;
+  top: 3px;
+  height: 12px;
+  background: color-mix(in oklch, var(--scheme-color-scrim) 7%, transparent);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sequencer-horizontal-scrollbar-window {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  z-index: 1;
+  min-width: 18px;
+  border-radius: 999px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 20%,
+    transparent
+  );
+}
+
+.sequencer-horizontal-zoom {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 0 0 7px;
+}
+
+.sequencer-horizontal-zoom-button {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--scheme-color-on-surface-variant);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+
+  &:hover {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-surface-container-highest) 72%,
+      transparent
+    );
+    color: var(--scheme-color-on-surface);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--scheme-color-secondary);
+    outline-offset: -1px;
+  }
+}
+
+.sequencer-horizontal-zoom-slider {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+
+  &::-webkit-slider-runnable-track {
+    height: 3px;
+    border-radius: 999px;
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-outline) 36%,
+      transparent
+    );
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -4.5px;
+    border: 1px solid
+      color-mix(in oklch, var(--scheme-color-outline) 36%, transparent);
+    border-radius: 50%;
+    background: var(--scheme-color-surface-container-highest);
+  }
+
+  &::-moz-range-track {
+    height: 3px;
+    border-radius: 999px;
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-outline) 36%,
+      transparent
+    );
+  }
+
+  &::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 1px solid
+      color-mix(in oklch, var(--scheme-color-outline) 36%, transparent);
+    border-radius: 50%;
+    background: var(--scheme-color-surface-container-highest);
+  }
 }
 
 .sequencer-phrase-indicator {
@@ -1327,7 +3152,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   background: var(--scheme-color-inverse-surface);
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  z-index: vars.$z-index-sing-playhead;
+  z-index: calc(#{vars.$z-index-sing-tool-palette} - 1);
 }
 
 .rect-select-preview {
@@ -1342,37 +3167,5 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 // カーソルが必要であれば画像を追加する
 .cursor-erase {
   cursor: default;
-}
-
-.zoom-x-slider {
-  position: absolute;
-  bottom: 16px;
-  right: 32px;
-  width: 80px;
-
-  :deep(.q-slider__track) {
-    background: var(--scheme-color-outline-variant);
-    color: var(--scheme-color-primary-fixed-dim);
-  }
-
-  :deep(.q-slider__thumb) {
-    color: var(--scheme-color-primary-fixed-dim);
-  }
-}
-
-.zoom-y-slider {
-  position: absolute;
-  bottom: 40px;
-  right: 16px;
-  height: 80px;
-
-  :deep(.q-slider__track) {
-    background: var(--scheme-color-outline-variant);
-    color: var(--scheme-color-primary-fixed-dim);
-  }
-
-  :deep(.q-slider__thumb) {
-    color: var(--scheme-color-primary-fixed-dim);
-  }
 }
 </style>

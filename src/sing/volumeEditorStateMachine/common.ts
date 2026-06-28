@@ -2,12 +2,14 @@ import type { ComputedRef, Ref } from "vue";
 import type { Store } from "@/store";
 import type { StateDefinitions } from "@/sing/stateMachine";
 import type { CursorState } from "@/sing/viewHelper";
+import type { VolumeEditableFrameRange } from "@/sing/volumeEditRanges";
 import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
 
 export type PositionOnVolumeEditor = {
   readonly frame: number;
   readonly value: number;
+  readonly relativeDb?: number;
 };
 
 export type VolumeEditorInput =
@@ -68,13 +70,25 @@ export type VolumeEditorPartialStore = {
 
 export type VolumeEditorContext = VolumeEditorRefs &
   VolumeEditorComputedRefs & {
+    readonly getEditableFrameRanges: () => readonly VolumeEditableFrameRange[];
+    readonly getAbsoluteVolumeFromRelativeDb?: (
+      frame: number,
+      relativeDb: number,
+    ) => number;
     readonly store: VolumeEditorPartialStore;
   };
 
-export type VolumeEditorIdleStateId = "drawVolumeIdle" | "eraseVolumeIdle";
+export type VolumeEditorIdleStateId =
+  | "selectVolumeIdle"
+  | "drawVolumeIdle"
+  | "eraseVolumeIdle";
 
 export type VolumeEditorStateDefinitions = StateDefinitions<
   [
+    {
+      id: "selectVolumeIdle";
+      factoryArgs: undefined;
+    },
     {
       id: "drawVolumeIdle";
       factoryArgs: undefined;
@@ -101,3 +115,11 @@ export type VolumeEditorStateDefinitions = StateDefinitions<
     },
   ]
 >;
+
+export const applyEditableCursorState = (
+  context: VolumeEditorContext,
+  isEditable: boolean,
+  editableCursorState: Extract<CursorState, "DRAW" | "ERASE">,
+) => {
+  context.cursorState.value = isEditable ? editableCursorState : "NOT_ALLOWED";
+};

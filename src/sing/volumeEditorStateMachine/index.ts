@@ -6,6 +6,7 @@ import type {
 } from "./common";
 import { DrawVolumeIdleState } from "./states/drawVolumeIdleState";
 import { EraseVolumeIdleState } from "./states/eraseVolumeIdleState";
+import { SelectVolumeIdleState } from "./states/selectVolumeIdleState";
 import { DrawVolumeState } from "./states/drawVolumeState";
 import { EraseVolumeState } from "./states/eraseVolumeState";
 import { StateMachine } from "@/sing/stateMachine";
@@ -20,6 +21,7 @@ export const createVolumeEditorStateMachine = (
     VolumeEditorContext
   >(
     {
+      selectVolumeIdle: () => new SelectVolumeIdleState(),
       drawVolumeIdle: () => new DrawVolumeIdleState(),
       eraseVolumeIdle: () => new EraseVolumeIdleState(),
       drawVolume: (args) => new DrawVolumeState(args),

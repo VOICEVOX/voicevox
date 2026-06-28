@@ -11,9 +11,17 @@ import type {
 import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
 import { createVolumeEditorStateMachine } from "@/sing/volumeEditorStateMachine";
+import type { VolumeEditableFrameRange } from "@/sing/volumeEditRanges";
 
 export const useVolumeEditorStateMachine = (
   store: VolumeEditorPartialStore,
+  options: {
+    getEditableFrameRanges: () => readonly VolumeEditableFrameRange[];
+    getAbsoluteVolumeFromRelativeDb?: (
+      frame: number,
+      relativeDb: number,
+    ) => number;
+  },
 ) => {
   const refs = {
     // NOTE: data配列が大きくなるため、shallowRefで深いリアクティブ化を避ける
@@ -33,16 +41,24 @@ export const useVolumeEditorStateMachine = (
     nowPlaying: computed<boolean>(() => store.state.nowPlaying),
   };
 
-  const idleStateId = computed<VolumeEditorIdleStateId>(() =>
-    store.state.sequencerVolumeTool === "ERASE"
-      ? "eraseVolumeIdle"
-      : "drawVolumeIdle",
-  );
+  const idleStateId = computed<VolumeEditorIdleStateId>(() => {
+    switch (store.state.sequencerVolumeTool) {
+      case "SELECT":
+        return "selectVolumeIdle";
+      case "ERASE":
+        return "eraseVolumeIdle";
+      case "DRAW":
+        return "drawVolumeIdle";
+    }
+    return "drawVolumeIdle";
+  });
 
   const stateMachine = createVolumeEditorStateMachine(
     {
       ...refs,
       ...computedRefs,
+      getEditableFrameRanges: options.getEditableFrameRanges,
+      getAbsoluteVolumeFromRelativeDb: options.getAbsoluteVolumeFromRelativeDb,
       store,
     },
     idleStateId.value,
