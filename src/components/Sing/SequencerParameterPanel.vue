@@ -150,7 +150,47 @@
           <SequencerPhonemeTimingEditor :viewportInfo />
         </div>
         <div class="parameter-stack-editor">
+          <div
+            class="volume-reference-editor"
+            :class="{ 'has-waveform-reference': showsVolumeWaveformReference }"
+          >
+            <SequencerWaveform
+              v-if="showsVolumeWaveformReference"
+              class="volume-waveform-reference"
+              :viewportInfo
+            />
+            <SequencerVolumeEditor
+              class="volume-editor-layer"
+              :offsetX="viewportInfo.offsetX"
+              :valueMode="volumeEditValueMode"
+              @update:needsAutoScroll="
+                (value) => emit('update:needsAutoScroll', value)
+              "
+              @panTimeline="(deltaX) => emit('panTimeline', deltaX)"
+              @zoomTimeline="
+                (anchorX, deltaY) => emit('zoomTimeline', anchorX, deltaY)
+              "
+            />
+          </div>
+        </div>
+      </template>
+      <template v-else>
+        <SequencerPhonemeTimingEditor
+          v-if="editTarget === 'PHONEME_TIMING'"
+          :viewportInfo
+        />
+        <div
+          v-if="editTarget === 'VOLUME'"
+          class="volume-reference-editor"
+          :class="{ 'has-waveform-reference': showsVolumeWaveformReference }"
+        >
+          <SequencerWaveform
+            v-if="showsVolumeWaveformReference"
+            class="volume-waveform-reference"
+            :viewportInfo
+          />
           <SequencerVolumeEditor
+            class="volume-editor-layer"
             :offsetX="viewportInfo.offsetX"
             :valueMode="volumeEditValueMode"
             @update:needsAutoScroll="
@@ -162,24 +202,6 @@
             "
           />
         </div>
-      </template>
-      <template v-else>
-        <SequencerPhonemeTimingEditor
-          v-if="editTarget === 'PHONEME_TIMING'"
-          :viewportInfo
-        />
-        <SequencerVolumeEditor
-          v-if="editTarget === 'VOLUME'"
-          :offsetX="viewportInfo.offsetX"
-          :valueMode="volumeEditValueMode"
-          @update:needsAutoScroll="
-            (value) => emit('update:needsAutoScroll', value)
-          "
-          @panTimeline="(deltaX) => emit('panTimeline', deltaX)"
-          @zoomTimeline="
-            (anchorX, deltaY) => emit('zoomTimeline', anchorX, deltaY)
-          "
-        />
       </template>
     </div>
   </div>
@@ -193,9 +215,11 @@ import type { ParameterPanelEditTarget, VolumeEditTool } from "@/store/type";
 import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEditTargetSwitcher.vue";
 import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimingEditor.vue";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
+import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
 import type { ToolPaletteLayout } from "@/components/Sing/toolPaletteLayout";
 import type {
   ParameterPanelLayoutMode,
+  ReferenceOverlayMode,
   VolumeEditValueMode,
 } from "@/components/Sing/parameterPanelViewMode";
 import type { ViewportInfo } from "@/sing/viewHelper";
@@ -205,6 +229,7 @@ const props = defineProps<{
   toolPaletteLayout: ToolPaletteLayout;
   parameterPanelLayoutMode: ParameterPanelLayoutMode;
   volumeEditValueMode: VolumeEditValueMode;
+  referenceOverlayMode: ReferenceOverlayMode;
 }>();
 
 const emit = defineEmits<{
@@ -216,6 +241,11 @@ const emit = defineEmits<{
 const store = useStore();
 
 const editTarget = computed(() => store.state.parameterPanelEditTarget);
+const showsVolumeWaveformReference = computed(
+  () =>
+    props.volumeEditValueMode === "relative" &&
+    props.referenceOverlayMode === "waveform",
+);
 const isParameterInlineRailLayout = computed(
   () =>
     props.toolPaletteLayout === "rail" ||
@@ -789,6 +819,43 @@ const currentParameterToolIcon = computed(() => {
 .parameter-stack-editor + .parameter-stack-editor {
   border-top: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 44%, transparent);
+}
+
+.volume-reference-editor {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.volume-waveform-reference {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 48px;
+  z-index: 0;
+  opacity: 0.46;
+  pointer-events: none;
+}
+
+.volume-reference-editor.has-waveform-reference::after {
+  position: absolute;
+  inset: 0 0 0 48px;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in oklch, var(--scheme-color-surface) 12%, transparent) 48%,
+    transparent 100%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.volume-editor-layer {
+  position: relative;
+  z-index: 2;
 }
 
 .tool-layout-sideRight .edit-area {

@@ -457,6 +457,7 @@
           :toolPaletteLayout
           :parameterPanelLayoutMode
           :volumeEditValueMode
+          :referenceOverlayMode
           @update:needsAutoScroll="
             (value) => (parameterPanelNeedsAutoScroll = value)
           "
@@ -853,7 +854,7 @@ const sequencerNavigationRequest = defineModel<
 >("sequencerNavigationRequest");
 const parameterPanelLayoutMode = ref<ParameterPanelLayoutMode>("single");
 const volumeEditValueMode = ref<VolumeEditValueMode>("absolute");
-const referenceOverlayMode = ref<ReferenceOverlayMode>("none");
+const referenceOverlayMode = ref<ReferenceOverlayMode>("waveform");
 let sequencerBodyResizeObserver: ResizeObserver | undefined;
 const updateSequencerViewport = () => {
   const sequencerBodyElement = sequencerBody.value;
