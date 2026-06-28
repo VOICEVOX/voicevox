@@ -118,16 +118,11 @@ const setTool = (value: VolumeEditTool) => {
   });
 };
 
-// Mapの中身更新も検知するためのシグネチャ
+// phrases内部の更新を検知し、再描画するためのシグネチャ
 const phraseSignature = computed(() =>
   [...store.state.phrases.values()].map(
     (phrase) =>
       `${phrase.trackId}:${phrase.startTime}:${phrase.notes.length}:${phrase.minNonPauseStartFrame}:${phrase.maxNonPauseEndFrame}:${phrase.singingVolumeKey}`,
-  ),
-);
-const phraseSingingVolumeSignature = computed(() =>
-  [...store.state.phraseSingingVolumes.entries()].map(
-    ([key, volume]) => `${key}:${volume.length}`,
   ),
 );
 
@@ -463,6 +458,15 @@ const refreshOriginalVolumeSegments = () => {
     if (phrase.singingVolumeKey == undefined) {
       continue;
     }
+    if (phrase.queryKey == undefined) {
+      throw new Error("phrase.queryKey is undefined.");
+    }
+    const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
+    if (phraseQuery.frameRate !== frameRate) {
+      throw new Error(
+        "The frame rate between the singing guide and the edit does not match.",
+      );
+    }
     const phraseSingingVolume = getOrThrow(
       store.state.phraseSingingVolumes,
       phrase.singingVolumeKey,
@@ -507,6 +511,15 @@ const refreshEditableFrameRanges = () => {
     }
     if (phrase.singingVolumeKey == undefined) {
       continue;
+    }
+    if (phrase.queryKey == undefined) {
+      throw new Error("phrase.queryKey is undefined.");
+    }
+    const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
+    if (phraseQuery.frameRate !== frameRate) {
+      throw new Error(
+        "The frame rate between the singing guide and the edit does not match.",
+      );
     }
     const phraseSingingVolume = getOrThrow(
       store.state.phraseSingingVolumes,
@@ -752,7 +765,6 @@ watch(
   [
     mounted,
     phraseSignature,
-    phraseSingingVolumeSignature,
     selectedTrackId,
     tempos,
     timeSignatures,
