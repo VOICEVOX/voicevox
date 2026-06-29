@@ -4,6 +4,8 @@
     class="volume-editor"
     :class="cursorClass"
     @pointerdown="onSurfacePointerDown"
+    @pointermove="onSurfacePointerMove"
+    @pointerleave="onSurfacePointerLeave"
   >
     <canvas
       ref="canvas"
@@ -38,8 +40,8 @@ import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
 import { useMounted } from "@/composables/useMounted";
-import { createLogger } from "@/helpers/log";
 import { Mutex } from "@/helpers/mutex";
+import { getOrThrow } from "@/helpers/mapHelper";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import { decibelToLinear, linearToDecibel } from "@/sing/audio";
 import { secondToTick, tickToSecond } from "@/sing/music";
@@ -55,6 +57,12 @@ import { Color } from "@/sing/graphics/lineStrip";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 import { useTimelineWheel } from "@/composables/useTimelineWheel";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
+import {
+  getOverlappingVolumeEditableFrameRanges,
+  maskVolumeEditDataByEditableRanges,
+  mergeVolumeEditableFrameRanges,
+  type VolumeEditableFrameRange,
+} from "@/sing/volumeEditRanges";
 
 const props = defineProps<{
   offsetX: number;
@@ -74,10 +82,11 @@ const MIN_DISPLAY_DB = -36.5;
 const MAX_DISPLAY_DB = -0.5;
 const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
 
-const { warn } = createLogger("SequencerVolumeEditor");
 const store = useStore();
 const { volumePreviewEdit, stateMachineProcess, previewMode, cursorState } =
-  useVolumeEditorStateMachine(store);
+  useVolumeEditorStateMachine(store, {
+    getEditableFrameRanges: () => editableFrameRanges.value,
+  });
 
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
@@ -109,18 +118,12 @@ const setTool = (value: VolumeEditTool) => {
   });
 };
 
-// Mapの中身更新も検知するためのシグネチャ
+// phrases内部の更新を検知し、再描画するためのシグネチャ
 const phraseSignature = computed(() =>
   [...store.state.phrases.values()].map(
-    (phrase) => `${phrase.trackId}:${phrase.startTime}:${phrase.notes.length}`,
+    (phrase) =>
+      `${phrase.trackId}:${phrase.startTime}:${phrase.notes.length}:${phrase.minNonPauseStartFrame}:${phrase.maxNonPauseEndFrame}:${phrase.singingVolumeKey}`,
   ),
-);
-const phraseQuerySignature = computed(() =>
-  [...store.state.phraseQueries.entries()].map(([key, query]) => {
-    const volumeLen = query?.volume?.length ?? 0;
-    const frameRate = query?.frameRate ?? 0;
-    return `${key}:${volumeLen}:${frameRate}`;
-  }),
 );
 
 const originalVolumeLineColorLight = new Color(156, 158, 156, 255);
@@ -163,6 +166,8 @@ const cursorClass = computed(() => {
       return "cursor-draw";
     case "ERASE":
       return "cursor-erase";
+    case "NOT_ALLOWED":
+      return "cursor-not-allowed";
     default:
       return "cursor-crosshair";
   }
@@ -185,6 +190,7 @@ let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let gridGraphics: PIXI.Graphics | undefined;
 let erasePreviewOverlay: PIXI.Graphics | undefined;
+let disabledOverlayGraphics: PIXI.Graphics | undefined;
 let originalVolumeLine: VolumeLine | undefined;
 let editedVolumeLine: VolumeLine | undefined;
 let requestId: number | undefined;
@@ -204,9 +210,8 @@ let originalFramewiseCache: number[] = [];
 let hasOriginalFramewiseCache = false;
 let originalFrameRateCache = 0;
 let originalTrackIdCache: TrackId | undefined;
-const previewEraseRange = ref<{ startBaseX: number; endBaseX: number } | null>(
-  null,
-);
+const editableFrameRanges = ref<VolumeEditableFrameRange[]>([]);
+const previewEraseRanges = ref<{ startBaseX: number; endBaseX: number }[]>([]);
 
 const gridPatterns = useSequencerGrid({
   timeSignatures: toRef(() => timeSignatures.value),
@@ -235,6 +240,25 @@ const frameToBaseX = (frame: number, frameRate: number) => {
   const rawTempos = toRaw(tempos.value);
   const ticks = secondToTick(seconds, rawTempos, tpqn.value);
   return tickToBaseX(ticks, tpqn.value);
+};
+
+const timelineFrameLength = computed(() => {
+  const frameRate = editorFrameRate.value;
+  const totalTicks = getTotalTicks(
+    timeSignatures.value,
+    numMeasures.value,
+    tpqn.value,
+  );
+  const totalSeconds = tickToSecond(totalTicks, tempos.value, tpqn.value);
+  return Math.max(Math.round(totalSeconds * frameRate), 1);
+});
+
+const frameToScreenX = (frame: number, frameRate: number) => {
+  return (
+    frameToBaseX(frame, frameRate) * sequencerZoomX.value -
+    props.offsetX +
+    KEY_COLUMN_WIDTH_PX
+  );
 };
 
 const buildSegments = (framewiseData: number[], frameRate: number) => {
@@ -275,8 +299,12 @@ const updateGrid = () => {
   gridGraphics.clear();
   const height = viewportHeight.value;
   const width = viewportWidth.value;
-  const beatColor = isDark.value ? 0x4a4a4a : 0xc4c4c4;
-  const measureColor = isDark.value ? 0x6b6b6b : 0x8a8a8a;
+  // NOTE: ScoreSequencerのSVGグリッドは sing-colors.scss の CSS変数で色指定しているが、
+  // PIXI.GraphicsではCSS変数を参照できないため、対応する近似hex値をハードコードしている。
+  // sing-grid-beat-line: light oklch(lr-85), dark oklch(lr-4)
+  // sing-grid-measure-line: light oklch(lr-75), dark oklch(lr-40)
+  const beatColor = isDark.value ? 0x161616 : 0xc4c4c4;
+  const measureColor = isDark.value ? 0x585858 : 0xadadad;
 
   for (const pattern of gridPatterns.value) {
     const measuresInPattern = Math.round(pattern.width / pattern.patternWidth);
@@ -327,13 +355,58 @@ const render = () => {
     leftPadding: KEY_COLUMN_WIDTH_PX,
   };
 
+  // 編集不可区間のオーバーレイ
+  if (disabledOverlayGraphics != undefined) {
+    disabledOverlayGraphics.clear();
+    const overlayAlpha = isDark.value ? 0.35 : 0.08;
+    const frameRate = editorFrameRate.value;
+    let cursor = 0;
+    for (const range of editableFrameRanges.value) {
+      if (cursor < range.startFrame) {
+        const startX = frameToScreenX(cursor, frameRate);
+        const endX = frameToScreenX(range.startFrame, frameRate);
+        const clampedStart = Math.max(0, startX);
+        const clampedEnd = Math.min(viewInfo.viewportWidth, endX);
+        if (clampedEnd > clampedStart) {
+          disabledOverlayGraphics
+            .rect(
+              clampedStart,
+              0,
+              clampedEnd - clampedStart,
+              viewInfo.viewportHeight,
+            )
+            .fill({ color: 0x000000, alpha: overlayAlpha });
+        }
+      }
+      cursor = Math.max(cursor, range.endFrame);
+    }
+    // 最後の editable range 以降
+    const trailingStartX =
+      editableFrameRanges.value.length > 0
+        ? frameToScreenX(cursor, frameRate)
+        : 0;
+    if (trailingStartX < viewInfo.viewportWidth) {
+      const clampedStart = Math.max(0, trailingStartX);
+      disabledOverlayGraphics
+        .rect(
+          clampedStart,
+          0,
+          viewInfo.viewportWidth - clampedStart,
+          viewInfo.viewportHeight,
+        )
+        .fill({ color: 0x000000, alpha: overlayAlpha });
+    }
+  }
+
   updateGrid();
 
   // 削除中のプレビューオーバーレイ(半透明)
   if (erasePreviewOverlay) {
     erasePreviewOverlay.clear();
-    const range = previewEraseRange.value;
-    if (range && range.endBaseX > range.startBaseX) {
+    for (const range of previewEraseRanges.value) {
+      if (range.endBaseX <= range.startBaseX) {
+        continue;
+      }
       const startX =
         range.startBaseX * viewInfo.zoomX -
         viewInfo.offsetX +
@@ -370,18 +443,9 @@ const refreshVolumeSegmentsLock = new Mutex();
 
 const refreshOriginalVolumeSegments = () => {
   const frameRate = editorFrameRate.value;
-  if (frameRate <= 0) {
-    return;
-  }
   const trackId = selectedTrackId.value;
 
-  const totalTicks = getTotalTicks(
-    timeSignatures.value,
-    numMeasures.value,
-    tpqn.value,
-  );
-  const totalSeconds = tickToSecond(totalTicks, tempos.value, tpqn.value);
-  const baseFrameLength = Math.max(Math.round(totalSeconds * frameRate), 1);
+  const baseFrameLength = timelineFrameLength.value;
 
   const originalFramewise = new Array<number>(baseFrameLength).fill(
     VALUE_INDICATING_NO_DATA,
@@ -391,23 +455,25 @@ const refreshOriginalVolumeSegments = () => {
     if (phrase.trackId !== trackId) {
       continue;
     }
+    if (phrase.singingVolumeKey == undefined) {
+      continue;
+    }
     if (phrase.queryKey == undefined) {
-      continue;
+      throw new Error("phrase.queryKey is undefined.");
     }
-    const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
-    // NOTE: ノート追加直後など、phraseとphraseQueryの更新が段階的に入る場合がある。
-    // 未確定なphraseだけをスキップし、確定済みの範囲から順次表示を更新する。
-    if (phraseQuery?.volume == undefined) {
-      continue;
-    }
+    const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
     if (phraseQuery.frameRate !== frameRate) {
       throw new Error(
-        `Frame rate mismatch: expected ${frameRate}, got ${phraseQuery.frameRate}. queryKey: ${phrase.queryKey}`,
+        "The frame rate between the singing guide and the edit does not match.",
       );
     }
+    const phraseSingingVolume = getOrThrow(
+      store.state.phraseSingingVolumes,
+      phrase.singingVolumeKey,
+    );
 
     const startFrame = Math.round(phrase.startTime * frameRate);
-    const endFrame = startFrame + phraseQuery.volume.length;
+    const endFrame = startFrame + phraseSingingVolume.length;
     if (originalFramewise.length < endFrame) {
       originalFramewise.push(
         ...new Array(endFrame - originalFramewise.length).fill(
@@ -415,7 +481,7 @@ const refreshOriginalVolumeSegments = () => {
         ),
       );
     }
-    for (const [i, value] of phraseQuery.volume.entries()) {
+    for (const [i, value] of phraseSingingVolume.entries()) {
       const v = Math.max(0, value);
       originalFramewise[startFrame + i] = Math.min(v, 1);
     }
@@ -425,15 +491,56 @@ const refreshOriginalVolumeSegments = () => {
   hasOriginalFramewiseCache = true;
   originalFrameRateCache = frameRate;
   originalTrackIdCache = trackId;
-  volumeOriginalSegmentsData = buildSegments(originalFramewise, frameRate);
+
+  // 編集可能区間のみ描画する（ポーズ区間のボリュームを非表示にする）
+  const maskedOriginal = maskVolumeEditDataByEditableRanges(
+    { values: originalFramewise, startFrame: 0 },
+    editableFrameRanges.value,
+  );
+  volumeOriginalSegmentsData = buildSegments(maskedOriginal, frameRate);
   renderInNextFrame = true;
+};
+
+const refreshEditableFrameRanges = () => {
+  const frameRate = editorFrameRate.value;
+
+  const ranges: VolumeEditableFrameRange[] = [];
+  for (const phrase of store.state.phrases.values()) {
+    if (phrase.trackId !== selectedTrackId.value) {
+      continue;
+    }
+    if (phrase.singingVolumeKey == undefined) {
+      continue;
+    }
+    if (phrase.queryKey == undefined) {
+      throw new Error("phrase.queryKey is undefined.");
+    }
+    const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
+    if (phraseQuery.frameRate !== frameRate) {
+      throw new Error(
+        "The frame rate between the singing guide and the edit does not match.",
+      );
+    }
+    const phraseSingingVolume = getOrThrow(
+      store.state.phraseSingingVolumes,
+      phrase.singingVolumeKey,
+    );
+    const phraseStartFrame = Math.round(phrase.startTime * frameRate);
+    const phraseEndFrame = phraseStartFrame + phraseSingingVolume.length;
+    const startOffset = phrase.minNonPauseStartFrame ?? 0;
+    const endOffset = phrase.maxNonPauseEndFrame ?? phraseSingingVolume.length;
+    const startFrame = Math.max(0, phraseStartFrame + startOffset);
+    const endFrame = Math.min(phraseEndFrame, phraseStartFrame + endOffset);
+    if (startFrame < endFrame) {
+      ranges.push({ startFrame, endFrame });
+    }
+  }
+
+  editableFrameRanges.value = mergeVolumeEditableFrameRanges(ranges);
 };
 
 const refreshEffectiveVolumeSegments = () => {
   const frameRate = editorFrameRate.value;
-  if (frameRate <= 0) {
-    return;
-  }
 
   if (!hasOriginalFramewiseCache) {
     throw new Error("Original framewise cache is not available.");
@@ -448,6 +555,7 @@ const refreshEffectiveVolumeSegments = () => {
   }
 
   const originalFramewise = originalFramewiseCache;
+  const editableRanges = editableFrameRanges.value;
   let maxFrame = Math.max(originalFramewise.length, 1);
 
   const baseEditData = selectedTrack.value?.volumeEditData ?? [];
@@ -470,12 +578,17 @@ const refreshEffectiveVolumeSegments = () => {
           ),
         );
       }
-      for (const [i, rawValue] of preview.data.entries()) {
-        const value = Math.min(Math.max(rawValue, 0), 1);
-        editFramewise[startFrame + i] = value;
+      // プレビューデータを editableRanges でマスクして適用
+      const maskedPreview = maskVolumeEditDataByEditableRanges(
+        { values: preview.data, startFrame: preview.startFrame },
+        editableRanges,
+      );
+      for (const [i, rawValue] of maskedPreview.entries()) {
+        if (rawValue === VALUE_INDICATING_NO_DATA) continue;
+        editFramewise[startFrame + i] = Math.min(Math.max(rawValue, 0), 1);
       }
       maxFrame = Math.max(maxFrame, endFrame);
-      previewEraseRange.value = null;
+      previewEraseRanges.value = [];
     } else if (preview.type === "erase") {
       const start = Math.max(0, preview.startFrame);
       const end = start + preview.frameLength;
@@ -486,15 +599,27 @@ const refreshEffectiveVolumeSegments = () => {
           ),
         );
       }
-      editFramewise.fill(VALUE_INDICATING_NO_DATA, start, end);
+      const overlaps = getOverlappingVolumeEditableFrameRanges(
+        start,
+        preview.frameLength,
+        editableRanges,
+      );
+      for (const overlap of overlaps) {
+        editFramewise.fill(
+          VALUE_INDICATING_NO_DATA,
+          overlap.startFrame,
+          overlap.endFrame,
+        );
+      }
       maxFrame = Math.max(maxFrame, end);
-      const startBaseX = frameToBaseX(start, frameRate);
-      const endBaseX = frameToBaseX(end, frameRate);
-      previewEraseRange.value = { startBaseX, endBaseX };
+      previewEraseRanges.value = overlaps.map((overlap) => ({
+        startBaseX: frameToBaseX(overlap.startFrame, frameRate),
+        endBaseX: frameToBaseX(overlap.endFrame, frameRate),
+      }));
     }
   }
   if (preview == undefined) {
-    previewEraseRange.value = null;
+    previewEraseRanges.value = [];
   }
 
   const totalFrames = Math.max(
@@ -509,7 +634,6 @@ const refreshEffectiveVolumeSegments = () => {
       ),
     );
   }
-
   const effectiveFramewise = new Array<number>(totalFrames).fill(
     VALUE_INDICATING_NO_DATA,
   );
@@ -523,7 +647,13 @@ const refreshEffectiveVolumeSegments = () => {
     }
   }
 
-  volumeEffectiveSegmentsData = buildSegments(effectiveFramewise, frameRate);
+  // 編集不可区間のボリュームを非表示にする
+  const maskedEffective = maskVolumeEditDataByEditableRanges(
+    { values: effectiveFramewise, startFrame: 0 },
+    editableRanges,
+  );
+
+  volumeEffectiveSegmentsData = buildSegments(maskedEffective, frameRate);
   renderInNextFrame = true;
 };
 
@@ -531,12 +661,11 @@ const dispatchVolumeEditorEvent = (
   pointerEvent: PointerEvent,
   targetArea: "Editor" | "Window",
 ) => {
-  const position = computeViewportPosition(pointerEvent);
   stateMachineProcess({
     type: "pointerEvent",
     targetArea,
     pointerEvent,
-    position,
+    position: computeViewportPosition(pointerEvent),
   });
 };
 
@@ -590,6 +719,18 @@ const onSurfacePointerDown = (event: PointerEvent) => {
   dispatchVolumeEditorEvent(event, "Editor");
 };
 
+const onSurfacePointerMove = (event: PointerEvent) => {
+  if (previewMode.value === "IDLE") {
+    dispatchVolumeEditorEvent(event, "Editor");
+  }
+};
+
+const onSurfacePointerLeave = (event: PointerEvent) => {
+  if (previewMode.value === "IDLE") {
+    dispatchVolumeEditorEvent(event, "Editor");
+  }
+};
+
 const onWindowPointerMove = (event: PointerEvent) => {
   dispatchVolumeEditorEvent(event, "Window");
 };
@@ -624,7 +765,6 @@ watch(
   [
     mounted,
     phraseSignature,
-    phraseQuerySignature,
     selectedTrackId,
     tempos,
     timeSignatures,
@@ -633,14 +773,11 @@ watch(
     editorFrameRate,
   ],
   async ([isMounted]) => {
-    try {
-      await using _lock = await refreshVolumeSegmentsLock.acquire();
-      if (isMounted) {
-        refreshOriginalVolumeSegments();
-        refreshEffectiveVolumeSegments();
-      }
-    } catch (e) {
-      warn("Failed to refresh original volume segments.", e);
+    await using _lock = await refreshVolumeSegmentsLock.acquire();
+    if (isMounted) {
+      refreshEditableFrameRanges();
+      refreshOriginalVolumeSegments();
+      refreshEffectiveVolumeSegments();
     }
   },
 );
@@ -652,12 +789,8 @@ watch(
     volumePreviewEdit,
   ],
   async () => {
-    try {
-      await using _lock = await refreshVolumeSegmentsLock.acquire();
-      refreshEffectiveVolumeSegments();
-    } catch (e) {
-      warn("Failed to refresh effective volume segments.", e);
-    }
+    await using _lock = await refreshVolumeSegmentsLock.acquire();
+    refreshEffectiveVolumeSegments();
   },
 );
 
@@ -698,6 +831,7 @@ onMounted(async () => {
     return;
   }
   stage = new PIXI.Container();
+  disabledOverlayGraphics = new PIXI.Graphics();
   erasePreviewOverlay = new PIXI.Graphics();
   gridGraphics = new PIXI.Graphics();
   originalVolumeLine = new VolumeLine({
@@ -714,8 +848,9 @@ onMounted(async () => {
     isVisible: true,
   });
 
-  stage.addChild(erasePreviewOverlay); // 下地
-  stage.addChild(gridGraphics); // グリッドはオーバーレイの上に
+  stage.addChild(disabledOverlayGraphics);
+  stage.addChild(erasePreviewOverlay);
+  stage.addChild(gridGraphics);
   stage.addChild(originalVolumeLine.container);
   stage.addChild(editedVolumeLine.container);
 
@@ -768,6 +903,7 @@ onUnmounted(() => {
   originalVolumeLine?.destroy();
   editedVolumeLine?.destroy();
   gridGraphics?.destroy();
+  disabledOverlayGraphics?.destroy();
   stage?.destroy();
   renderer?.destroy({ removeView: true });
   resizeObserver?.disconnect();
