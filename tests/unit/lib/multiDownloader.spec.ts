@@ -144,8 +144,8 @@ test("複数ファイルを同時にダウンロードできる", async () => {
       inFlight += 1;
       maxConcurrent = Math.max(maxConcurrent, inFlight);
       await new Promise((r) => setTimeout(r, 200));
-      res.statusCode = 200;
       inFlight -= 1;
+      res.statusCode = 200;
       res.end("Hello, World!\n");
     },
   });
