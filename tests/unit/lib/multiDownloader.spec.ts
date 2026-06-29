@@ -5,6 +5,9 @@ import http from "node:http";
 import { expect, test } from "vitest";
 import { MultiDownloader } from "@/backend/electron/multiDownloader";
 
+// TODO: setTimeoutを使うとテストの実行時間が伸びたりテストが不安定になってしまうので、
+// setTimeoutを使わないテストに変更する
+
 function isClientDisconnectedError(err: unknown): boolean {
   return (
     typeof err === "object" &&
