@@ -7,11 +7,45 @@
     @pointermove="onSurfacePointerMove"
     @pointerleave="onSurfacePointerLeave"
   >
+    <SequencerParameterGrid
+      class="volume-time-grid"
+      :viewportInfo="props.viewportInfo"
+    />
     <canvas
       ref="canvas"
       class="volume-editor-canvas"
       @wheel="handleWheel"
     ></canvas>
+    <div
+      v-if="tooltipState != undefined"
+      class="volume-value-guide-line"
+      :style="tooltipGuideLineStyle"
+    ></div>
+    <div
+      v-if="tooltipState != undefined"
+      class="volume-value-tooltip"
+      :style="tooltipStyle"
+    >
+      <div class="volume-value-tooltip-primary">
+        {{ tooltipState.value.primaryLabel }}
+      </div>
+      <div
+        v-if="tooltipState.value.secondaryLabel != undefined"
+        class="volume-value-tooltip-secondary"
+      >
+        {{ tooltipState.value.secondaryLabel }}
+      </div>
+    </div>
+    <div class="volume-grid-labels" aria-hidden="true">
+      <div
+        v-for="label in horizontalGridLabels"
+        :key="label.label"
+        class="volume-grid-label"
+        :style="{ top: `${label.y}px` }"
+      >
+        {{ label.label }}
+      </div>
+    </div>
     <SequencerVolumeToolPalette
       class="volume-tool-palette"
       :sequencerVolumeTool="tool"
@@ -30,7 +64,6 @@ import {
   onUnmounted,
   ref,
   toRaw,
-  toRef,
   watch,
 } from "vue";
 import * as PIXI from "pixi.js";
@@ -43,29 +76,39 @@ import { useMounted } from "@/composables/useMounted";
 import { Mutex } from "@/helpers/mutex";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
-import { decibelToLinear, linearToDecibel } from "@/sing/audio";
+import { linearToDecibel } from "@/sing/audio";
 import { secondToTick, tickToSecond } from "@/sing/music";
 import { getTotalTicks } from "@/sing/rulerHelper";
 import { clamp } from "@/sing/utility";
-import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import { baseXToTick, tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
 import { assertNonNullable } from "@/type/utility";
 import type { TrackId } from "@/type/preload";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
 import { VolumeLine } from "@/sing/graphics/volumeLine";
 import type { VolumeSegment } from "@/sing/graphics/volumeLine";
-import { Color } from "@/sing/graphics/lineStrip";
-import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 import { useTimelineWheel } from "@/composables/useTimelineWheel";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
+import SequencerParameterGrid from "@/components/Sing/SequencerParameterGrid.vue";
+import {
+  VOLUME_EDITOR_ALPHA,
+  VOLUME_EDITOR_LAYOUT,
+  VOLUME_EDITOR_LINE_WIDTH,
+  VOLUME_GRAPHICS_COLORS,
+  VOLUME_LINE_COLORS,
+} from "@/components/Sing/volumeEditorStyle";
+import { absoluteVolumeValueScale } from "@/sing/volumeValueScale";
+import type { VolumeGridLine } from "@/sing/volumeValueScale";
 import {
   getOverlappingVolumeEditableFrameRanges,
+  isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
   mergeVolumeEditableFrameRanges,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
+import type { PositionOnVolumeEditor } from "@/sing/volumeEditorStateMachine/common";
 
 const props = defineProps<{
-  offsetX: number;
+  viewportInfo: ViewportInfo;
 }>();
 
 const emit = defineEmits<{
@@ -74,13 +117,7 @@ const emit = defineEmits<{
   zoomTimeline: [anchorX: number, deltaY: number];
 }>();
 
-// NOTE: 最大値・最小値はエンジン出力と表示に合わせたヒューリスティックなもの
-// エディタ側の表示や編集の問題ではないためエンジンが変わったら変更可能だが、既存のプロジェクトで表示が変わる点には注意
-// 最大値: 0dB相当でのエンジン出力品質があまりよくなさそうなため、-0.5dB相当に設定
-// 最小値: -36dB程度以下はエンジンの出力がノイズっぽいのと、オリジナルボリューム(エンジン出力デフォルト)の典型的な範囲で見やすい程度の高さにするため
-const MIN_DISPLAY_DB = -36.5;
-const MAX_DISPLAY_DB = -0.5;
-const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
+const volumeValueScale = absoluteVolumeValueScale;
 
 const store = useStore();
 const { volumePreviewEdit, stateMachineProcess, previewMode, cursorState } =
@@ -93,13 +130,15 @@ const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 const tempos = computed(() => store.state.tempos);
 const tpqn = computed(() => store.state.tpqn);
-const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const editorFrameRate = computed(() => store.state.editorFrameRate);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const isDark = computed(() => store.state.currentTheme === "Dark");
 
-const numMeasuresContext = inject(numMeasuresInjectionKey, null);
-const numMeasures = computed(() => numMeasuresContext?.numMeasures.value ?? 0);
+const numMeasuresContext = inject(numMeasuresInjectionKey);
+if (numMeasuresContext == undefined) {
+  throw new Error("numMeasuresContext is undefined.");
+}
+const { numMeasures } = numMeasuresContext;
 
 watch(previewMode, (mode) => {
   emit("update:needsAutoScroll", mode !== "IDLE");
@@ -126,16 +165,13 @@ const phraseSignature = computed(() =>
   ),
 );
 
-const originalVolumeLineColorLight = new Color(156, 158, 156, 255);
-const originalVolumeLineColorDark = new Color(114, 116, 114, 255);
-const editedVolumeLineColorLight = new Color(0, 167, 63, 255);
-const editedVolumeLineColorDark = new Color(95, 188, 117, 255);
-
 const originalVolumeLineColor = computed(() =>
-  isDark.value ? originalVolumeLineColorDark : originalVolumeLineColorLight,
+  isDark.value
+    ? VOLUME_LINE_COLORS.originalDark
+    : VOLUME_LINE_COLORS.originalLight,
 );
 const editedVolumeLineColor = computed(() =>
-  isDark.value ? editedVolumeLineColorDark : editedVolumeLineColorLight,
+  isDark.value ? VOLUME_LINE_COLORS.editedDark : VOLUME_LINE_COLORS.editedLight,
 );
 
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
@@ -174,7 +210,7 @@ const cursorClass = computed(() => {
 });
 
 const { handleWheel } = useTimelineWheel({
-  leftPaddingPx: KEY_COLUMN_WIDTH_PX,
+  leftPaddingPx: VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
   isWheelDisabled: () => previewMode.value !== "IDLE",
   onPanX: (deltaX) => emit("panTimeline", deltaX),
   onZoomX: (anchorX, deltaY) => emit("zoomTimeline", anchorX, deltaY),
@@ -190,7 +226,6 @@ let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let gridGraphics: PIXI.Graphics | undefined;
 let erasePreviewOverlay: PIXI.Graphics | undefined;
-let disabledOverlayGraphics: PIXI.Graphics | undefined;
 let originalVolumeLine: VolumeLine | undefined;
 let editedVolumeLine: VolumeLine | undefined;
 let requestId: number | undefined;
@@ -213,27 +248,36 @@ let originalTrackIdCache: TrackId | undefined;
 const editableFrameRanges = ref<VolumeEditableFrameRange[]>([]);
 const previewEraseRanges = ref<{ startBaseX: number; endBaseX: number }[]>([]);
 
-const gridPatterns = useSequencerGrid({
-  timeSignatures: toRef(() => timeSignatures.value),
-  tpqn: toRef(() => tpqn.value),
-  sequencerZoomX: toRef(() => sequencerZoomX.value),
-  numMeasures: toRef(() => numMeasures.value),
+type VolumeTooltipValue = {
+  primaryLabel: string;
+  secondaryLabel?: string;
+};
+
+type VolumeTooltipState = {
+  value: VolumeTooltipValue;
+  x: number;
+  y: number;
+  guideY: number;
+};
+
+type VolumePointerInfo = {
+  position: PositionOnVolumeEditor;
+  db: number;
+  originalValue: number | undefined;
+  isEditable: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+const tooltipState = ref<VolumeTooltipState>();
+
+watch([tool, previewMode], ([currentTool, currentPreviewMode]) => {
+  if (currentTool !== "DRAW" && currentPreviewMode !== "VOLUME_DRAW") {
+    tooltipState.value = undefined;
+  }
 });
-
-const normalizedYToDb = (y: number) => {
-  const clampedY = clamp(y, 0, 1);
-  return MIN_DISPLAY_DB + clampedY * (MAX_DISPLAY_DB - MIN_DISPLAY_DB);
-};
-
-const dbToNormalizedY = (db: number) => {
-  const clampedDb = clamp(db, MIN_DISPLAY_DB, MAX_DISPLAY_DB);
-  return (clampedDb - MIN_DISPLAY_DB) / (MAX_DISPLAY_DB - MIN_DISPLAY_DB);
-};
-
-const linearToNormalizedY = (linear: number) => {
-  const db = linearToDecibel(Math.max(linear, 0));
-  return dbToNormalizedY(db);
-};
 
 const frameToBaseX = (frame: number, frameRate: number) => {
   const seconds = frame / frameRate;
@@ -253,15 +297,189 @@ const timelineFrameLength = computed(() => {
   return Math.max(Math.round(totalSeconds * frameRate), 1);
 });
 
-const frameToScreenX = (frame: number, frameRate: number) => {
-  return (
-    frameToBaseX(frame, frameRate) * sequencerZoomX.value -
-    props.offsetX +
-    KEY_COLUMN_WIDTH_PX
-  );
+const getOriginalValueFromFramewise = (
+  framewiseData: readonly number[],
+  frame: number,
+) => {
+  const value = framewiseData.at(frame);
+  if (value == undefined || value === VALUE_INDICATING_NO_DATA) {
+    return undefined;
+  }
+  if (!Number.isFinite(value)) {
+    throw new Error("original volume value must be finite.");
+  }
+  if (value <= 0) {
+    return undefined;
+  }
+  return value;
 };
 
-const buildSegments = (framewiseData: number[], frameRate: number) => {
+const getOriginalValueAtFrame = (frame: number) => {
+  if (!hasOriginalFramewiseCache) {
+    return undefined;
+  }
+  return getOriginalValueFromFramewise(originalFramewiseCache, frame);
+};
+
+const isDenseHorizontalGridLabel = (line: VolumeGridLine) =>
+  line.label === "0" ||
+  line.label === "-12" ||
+  line.label === "-24" ||
+  line.label === "-36";
+
+const isSparseHorizontalGridLine = (line: VolumeGridLine) =>
+  line.label === "-12" || line.label === "-24";
+
+const getVisibleHorizontalGridLines = (
+  height: number,
+  options: { includesLabels: boolean },
+) => {
+  if (height >= VOLUME_EDITOR_LAYOUT.denseGridLabelMinHeightPx) {
+    return volumeValueScale.gridLines;
+  }
+  if (height >= VOLUME_EDITOR_LAYOUT.sparseGridLabelMinHeightPx) {
+    return volumeValueScale.gridLines.filter(isDenseHorizontalGridLabel);
+  }
+  return options.includesLabels
+    ? []
+    : volumeValueScale.gridLines.filter(isSparseHorizontalGridLine);
+};
+
+const horizontalGridLabels = computed(() => {
+  const height = viewportHeight.value;
+  if (height == undefined) {
+    return [];
+  }
+  return getVisibleHorizontalGridLines(height, { includesLabels: true }).map(
+    (line) => {
+      const y = (1 - volumeValueScale.dbToNormalizedY(line.db)) * height;
+      return {
+        label: line.label,
+        y: clamp(y, 8, height - 8),
+      };
+    },
+  );
+});
+
+const tooltipStyle = computed(() => {
+  const tooltip = tooltipState.value;
+  if (tooltip == undefined) {
+    return undefined;
+  }
+  return {
+    left: `${tooltip.x}px`,
+    top: `${tooltip.y}px`,
+  };
+});
+
+const tooltipGuideLineStyle = computed(() => {
+  const tooltip = tooltipState.value;
+  if (tooltip == undefined) {
+    return undefined;
+  }
+  return {
+    left: `${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`,
+    top: `${tooltip.guideY}px`,
+  };
+});
+
+const formatAbsoluteDbLabel = (db: number) => {
+  const roundedDb = db >= volumeValueScale.maxDb ? 0 : Math.round(db * 10) / 10;
+  return (Object.is(roundedDb, -0) ? 0 : roundedDb).toFixed(1);
+};
+
+const formatSignedDbLabel = (db: number) => {
+  const roundedDb = Math.round(db * 10) / 10;
+  const normalizedDb = Object.is(roundedDb, -0) ? 0 : roundedDb;
+  return `${normalizedDb > 0 ? "+" : ""}${normalizedDb.toFixed(1)}`;
+};
+
+const formatTooltipValue = (pointerInfo: VolumePointerInfo) => {
+  const tooltipValue: VolumeTooltipValue = {
+    primaryLabel: formatAbsoluteDbLabel(pointerInfo.db),
+  };
+  const originalValue = pointerInfo.originalValue;
+  if (originalValue == undefined) {
+    return tooltipValue;
+  }
+  const originalDb = linearToDecibel(originalValue);
+  if (originalDb < volumeValueScale.minDb) {
+    return tooltipValue;
+  }
+  return {
+    ...tooltipValue,
+    secondaryLabel: `元との差 ${formatSignedDbLabel(pointerInfo.db - originalDb)}`,
+  };
+};
+
+const resolveTooltipPosition = (pointerInfo: VolumePointerInfo) => {
+  const rightX =
+    pointerInfo.x +
+    VOLUME_EDITOR_LAYOUT.tooltipOffsetPx +
+    VOLUME_EDITOR_LAYOUT.tooltipWidthPx;
+  const rawX =
+    rightX <= pointerInfo.width
+      ? pointerInfo.x + VOLUME_EDITOR_LAYOUT.tooltipOffsetPx
+      : pointerInfo.x -
+        VOLUME_EDITOR_LAYOUT.tooltipOffsetPx -
+        VOLUME_EDITOR_LAYOUT.tooltipWidthPx;
+  const rawY =
+    pointerInfo.y -
+      VOLUME_EDITOR_LAYOUT.tooltipOffsetPx -
+      VOLUME_EDITOR_LAYOUT.tooltipHeightPx >=
+    0
+      ? pointerInfo.y -
+        VOLUME_EDITOR_LAYOUT.tooltipOffsetPx -
+        VOLUME_EDITOR_LAYOUT.tooltipHeightPx
+      : pointerInfo.y + VOLUME_EDITOR_LAYOUT.tooltipOffsetPx;
+  const maxX = Math.max(
+    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+    pointerInfo.width -
+      VOLUME_EDITOR_LAYOUT.tooltipWidthPx -
+      VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+  );
+  const maxY = Math.max(
+    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+    pointerInfo.height -
+      VOLUME_EDITOR_LAYOUT.tooltipHeightPx -
+      VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+  );
+  return {
+    x: clamp(rawX, VOLUME_EDITOR_LAYOUT.tooltipPaddingPx, maxX),
+    y: clamp(rawY, VOLUME_EDITOR_LAYOUT.tooltipPaddingPx, maxY),
+  };
+};
+
+const updateTooltip = (
+  pointerInfo: VolumePointerInfo,
+  targetArea: "Editor" | "Window",
+  pointerEventType: PointerEvent["type"],
+) => {
+  const isHoveringDrawTool =
+    previewMode.value === "IDLE" &&
+    tool.value === "DRAW" &&
+    targetArea === "Editor" &&
+    pointerEventType !== "pointerleave";
+  const isDrawing = previewMode.value === "VOLUME_DRAW";
+  if (!pointerInfo.isEditable || (!isHoveringDrawTool && !isDrawing)) {
+    tooltipState.value = undefined;
+    return;
+  }
+
+  const position = resolveTooltipPosition(pointerInfo);
+  tooltipState.value = {
+    value: formatTooltipValue(pointerInfo),
+    x: position.x,
+    y: position.y,
+    guideY: pointerInfo.y,
+  };
+};
+
+const buildSegments = (
+  framewiseData: number[],
+  frameRate: number,
+  originalFramewiseData: readonly number[],
+) => {
   const segments: VolumeSegment[] = [];
   let current: VolumeSegment | undefined;
 
@@ -276,9 +494,17 @@ const buildSegments = (framewiseData: number[], frameRate: number) => {
 
     const baseX = frameToBaseX(frame, frameRate);
     if (!Number.isFinite(baseX)) {
-      continue;
+      throw new Error("baseX must be finite.");
     }
-    const normalizedY = linearToNormalizedY(Math.min(Math.max(value, 0), 1));
+    const originalValue = getOriginalValueFromFramewise(
+      originalFramewiseData,
+      frame,
+    );
+    const normalizedY = volumeValueScale.valueToNormalizedY({
+      value,
+      frame,
+      originalValue,
+    });
 
     if (current == undefined) {
       current = [];
@@ -292,50 +518,40 @@ const buildSegments = (framewiseData: number[], frameRate: number) => {
   return segments;
 };
 
-const updateGrid = () => {
+const updateHorizontalGrid = () => {
   assertNonNullable(gridGraphics);
   assertNonNullable(viewportHeight.value);
   assertNonNullable(viewportWidth.value);
   gridGraphics.clear();
   const height = viewportHeight.value;
   const width = viewportWidth.value;
-  // NOTE: ScoreSequencerのSVGグリッドは sing-colors.scss の CSS変数で色指定しているが、
-  // PIXI.GraphicsではCSS変数を参照できないため、対応する近似hex値をハードコードしている。
-  // sing-grid-beat-line: light oklch(lr-85), dark oklch(lr-4)
-  // sing-grid-measure-line: light oklch(lr-75), dark oklch(lr-40)
-  const beatColor = isDark.value ? 0x161616 : 0xc4c4c4;
-  const measureColor = isDark.value ? 0x585858 : 0xadadad;
+  if (width <= VOLUME_EDITOR_LAYOUT.keyColumnWidthPx) {
+    return;
+  }
 
-  for (const pattern of gridPatterns.value) {
-    const measuresInPattern = Math.round(pattern.width / pattern.patternWidth);
-    for (let m = 0; m <= measuresInPattern; m++) {
-      const measureX =
-        pattern.x +
-        pattern.patternWidth * m -
-        props.offsetX +
-        KEY_COLUMN_WIDTH_PX;
-      if (measureX < -1 || measureX > width + 1) {
-        continue;
-      }
-      gridGraphics
-        .moveTo(measureX, 0)
-        .lineTo(measureX, height)
-        .stroke({ width: 1, color: measureColor, alpha: 0.35 });
-
-      if (m === measuresInPattern) {
-        continue;
-      }
-      for (let b = 1; b < pattern.beatsPerMeasure; b++) {
-        const beatX = measureX + pattern.beatWidth * b;
-        if (beatX < -1 || beatX > width + 1) {
-          continue;
-        }
-        gridGraphics
-          .moveTo(beatX, 0)
-          .lineTo(beatX, height)
-          .stroke({ width: 1, color: beatColor, alpha: 0.22 });
-      }
+  const color = isDark.value
+    ? VOLUME_GRAPHICS_COLORS.horizontalLineDark
+    : VOLUME_GRAPHICS_COLORS.horizontalLineLight;
+  for (const line of getVisibleHorizontalGridLines(height, {
+    includesLabels: false,
+  })) {
+    if (!line.drawLine) {
+      continue;
     }
+    const y =
+      Math.round((1 - volumeValueScale.dbToNormalizedY(line.db)) * height) +
+      0.5;
+    gridGraphics
+      .moveTo(VOLUME_EDITOR_LAYOUT.keyColumnWidthPx, y)
+      .lineTo(width, y)
+      .stroke({
+        width: VOLUME_EDITOR_LINE_WIDTH.horizontalGrid,
+        color,
+        alpha:
+          line.kind === "baseline"
+            ? VOLUME_EDITOR_ALPHA.horizontalGridBaseline
+            : VOLUME_EDITOR_ALPHA.horizontalGrid,
+      });
   }
 };
 
@@ -350,58 +566,15 @@ const render = () => {
   const viewInfo = {
     viewportWidth: viewportWidth.value,
     viewportHeight: viewportHeight.value,
-    zoomX: sequencerZoomX.value,
-    offsetX: props.offsetX,
-    leftPadding: KEY_COLUMN_WIDTH_PX,
+    zoomX: props.viewportInfo.scaleX,
+    offsetX: props.viewportInfo.offsetX,
+    leftPadding: VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
   };
 
-  // 編集不可区間のオーバーレイ
-  if (disabledOverlayGraphics != undefined) {
-    disabledOverlayGraphics.clear();
-    const overlayAlpha = isDark.value ? 0.35 : 0.08;
-    const frameRate = editorFrameRate.value;
-    let cursor = 0;
-    for (const range of editableFrameRanges.value) {
-      if (cursor < range.startFrame) {
-        const startX = frameToScreenX(cursor, frameRate);
-        const endX = frameToScreenX(range.startFrame, frameRate);
-        const clampedStart = Math.max(0, startX);
-        const clampedEnd = Math.min(viewInfo.viewportWidth, endX);
-        if (clampedEnd > clampedStart) {
-          disabledOverlayGraphics
-            .rect(
-              clampedStart,
-              0,
-              clampedEnd - clampedStart,
-              viewInfo.viewportHeight,
-            )
-            .fill({ color: 0x000000, alpha: overlayAlpha });
-        }
-      }
-      cursor = Math.max(cursor, range.endFrame);
-    }
-    // 最後の editable range 以降
-    const trailingStartX =
-      editableFrameRanges.value.length > 0
-        ? frameToScreenX(cursor, frameRate)
-        : 0;
-    if (trailingStartX < viewInfo.viewportWidth) {
-      const clampedStart = Math.max(0, trailingStartX);
-      disabledOverlayGraphics
-        .rect(
-          clampedStart,
-          0,
-          viewInfo.viewportWidth - clampedStart,
-          viewInfo.viewportHeight,
-        )
-        .fill({ color: 0x000000, alpha: overlayAlpha });
-    }
-  }
-
-  updateGrid();
+  updateHorizontalGrid();
 
   // 削除中のプレビューオーバーレイ(半透明)
-  if (erasePreviewOverlay) {
+  if (erasePreviewOverlay != undefined) {
     erasePreviewOverlay.clear();
     for (const range of previewEraseRanges.value) {
       if (range.endBaseX <= range.startBaseX) {
@@ -425,7 +598,10 @@ const render = () => {
             clampedEnd - clampedStart,
             viewInfo.viewportHeight,
           )
-          .fill({ color: 0x000000, alpha: 0.12 });
+          .fill({
+            color: VOLUME_GRAPHICS_COLORS.erasePreviewOverlay,
+            alpha: VOLUME_EDITOR_ALPHA.erasePreviewOverlay,
+          });
       }
     }
   }
@@ -497,7 +673,11 @@ const refreshOriginalVolumeSegments = () => {
     { values: originalFramewise, startFrame: 0 },
     editableFrameRanges.value,
   );
-  volumeOriginalSegmentsData = buildSegments(maskedOriginal, frameRate);
+  volumeOriginalSegmentsData = buildSegments(
+    maskedOriginal,
+    frameRate,
+    originalFramewise,
+  );
   renderInNextFrame = true;
 };
 
@@ -558,7 +738,7 @@ const refreshEffectiveVolumeSegments = () => {
   const editableRanges = editableFrameRanges.value;
   let maxFrame = Math.max(originalFramewise.length, 1);
 
-  const baseEditData = selectedTrack.value?.volumeEditData ?? [];
+  const baseEditData = selectedTrack.value.volumeEditData;
   const editFramewise = new Array<number>(
     Math.max(maxFrame, baseEditData.length),
   ).fill(VALUE_INDICATING_NO_DATA);
@@ -653,7 +833,11 @@ const refreshEffectiveVolumeSegments = () => {
     editableRanges,
   );
 
-  volumeEffectiveSegmentsData = buildSegments(maskedEffective, frameRate);
+  volumeEffectiveSegmentsData = buildSegments(
+    maskedEffective,
+    frameRate,
+    originalFramewise,
+  );
   renderInNextFrame = true;
 };
 
@@ -661,40 +845,64 @@ const dispatchVolumeEditorEvent = (
   pointerEvent: PointerEvent,
   targetArea: "Editor" | "Window",
 ) => {
+  const pointerInfo = computeViewportPointerInfo(pointerEvent);
   stateMachineProcess({
     type: "pointerEvent",
     targetArea,
     pointerEvent,
-    position: computeViewportPosition(pointerEvent),
+    position: pointerInfo.position,
   });
+  updateTooltip(pointerInfo, targetArea, pointerEvent.type);
 };
 
-const computeViewportPosition = (pointerEvent: PointerEvent) => {
+const computeViewportPointerInfo = (
+  pointerEvent: PointerEvent,
+): VolumePointerInfo => {
   const rect =
     viewportRectCache ?? canvasContainer.value?.getBoundingClientRect();
   if (rect == undefined) {
     throw new Error("volume editor viewport element is null.");
   }
+  if (rect.width <= 0 || rect.height <= 0) {
+    throw new Error("volume editor viewport size is invalid.");
+  }
   const localX = pointerEvent.clientX - rect.left;
   const localY = pointerEvent.clientY - rect.top;
-  const width = rect.width || 1;
-  const height = rect.height || 1;
+  const width = rect.width;
+  const height = rect.height;
   const clampedX = clamp(localX, 0, width);
   const clampedY = clamp(localY, 0, height);
 
-  const timelineX = props.offsetX + clampedX - KEY_COLUMN_WIDTH_PX;
-  const baseX = Math.max(0, timelineX) / sequencerZoomX.value;
+  const timelineX =
+    props.viewportInfo.offsetX -
+    VOLUME_EDITOR_LAYOUT.keyColumnWidthPx +
+    clampedX;
+  const baseX = Math.max(0, timelineX) / props.viewportInfo.scaleX;
   const ticks = baseXToTick(baseX, tpqn.value);
   const seconds = tickToSecond(ticks, tempos.value, tpqn.value);
   const frame = Math.max(0, Math.round(seconds * editorFrameRate.value));
 
   const normalizedY = 1 - clampedY / height;
-  const db = normalizedYToDb(clamp(normalizedY, 0, 1));
-  const linearValue = Math.min(decibelToLinear(db), 1);
+  const db = volumeValueScale.normalizedYToDb(normalizedY);
+  const originalValue = getOriginalValueAtFrame(frame);
+  const value = volumeValueScale.dbToValue({
+    db,
+    frame,
+    originalValue,
+  });
 
   return {
-    frame,
-    value: linearValue,
+    position: {
+      frame,
+      value,
+    },
+    db,
+    originalValue,
+    isEditable: isFrameInVolumeEditableRange(frame, editableFrameRanges.value),
+    x: clampedX,
+    y: clampedY,
+    width,
+    height,
   };
 };
 
@@ -745,8 +953,8 @@ const onWindowPointerCancel = (event: PointerEvent) => {
 
 watch(
   [
-    () => store.state.sequencerZoomX,
-    () => props.offsetX,
+    () => props.viewportInfo.scaleX,
+    () => props.viewportInfo.offsetX,
     isDark,
     () => viewportWidth.value,
     () => viewportHeight.value,
@@ -785,7 +993,7 @@ watch(
 watch(
   [
     selectedTrackId,
-    () => selectedTrack.value?.volumeEditData,
+    () => selectedTrack.value.volumeEditData,
     volumePreviewEdit,
   ],
   async () => {
@@ -797,7 +1005,7 @@ watch(
 onMounted(async () => {
   const containerEl = canvasContainer.value;
   const canvasEl = canvas.value;
-  if (!containerEl || !canvasEl) {
+  if (containerEl == undefined || canvasEl == undefined) {
     throw new Error("canvas elements are missing.");
   }
   if (store.state.parameterPanelEditTarget !== "VOLUME") {
@@ -831,24 +1039,22 @@ onMounted(async () => {
     return;
   }
   stage = new PIXI.Container();
-  disabledOverlayGraphics = new PIXI.Graphics();
   erasePreviewOverlay = new PIXI.Graphics();
   gridGraphics = new PIXI.Graphics();
   originalVolumeLine = new VolumeLine({
     color: originalVolumeLineColor.value,
-    width: 1.25,
+    width: VOLUME_EDITOR_LINE_WIDTH.originalVolume,
     dashed: true,
     isVisible: true,
   });
   editedVolumeLine = new VolumeLine({
     color: editedVolumeLineColor.value,
-    width: 2.25,
+    width: VOLUME_EDITOR_LINE_WIDTH.editedVolume,
     showArea: true,
-    areaAlpha: 0.2,
+    areaAlpha: VOLUME_EDITOR_ALPHA.editedVolumeArea,
     isVisible: true,
   });
 
-  stage.addChild(disabledOverlayGraphics);
   stage.addChild(erasePreviewOverlay);
   stage.addChild(gridGraphics);
   stage.addChild(originalVolumeLine.container);
@@ -903,7 +1109,6 @@ onUnmounted(() => {
   originalVolumeLine?.destroy();
   editedVolumeLine?.destroy();
   gridGraphics?.destroy();
-  disabledOverlayGraphics?.destroy();
   stage?.destroy();
   renderer?.destroy({ removeView: true });
   resizeObserver?.disconnect();
@@ -914,6 +1119,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/v2/variables" as vars;
+
 .volume-editor {
   width: 100%;
   height: 100%;
@@ -922,9 +1129,81 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+.volume-time-grid {
+  position: absolute;
+  inset: 0 0 0 v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
+  z-index: 0;
+  pointer-events: none;
+}
+
 .volume-editor-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.volume-grid-labels {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 2;
+  width: v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
+  pointer-events: none;
+  user-select: none;
+}
+
+.volume-grid-label {
+  position: absolute;
+  right: 6px;
+  transform: translateY(-50%);
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  opacity: 0.78;
+  white-space: nowrap;
+}
+
+.volume-value-guide-line {
+  position: absolute;
+  right: 0;
+  z-index: 2;
+  height: 0;
+  border-top: v-bind("`${VOLUME_EDITOR_LINE_WIDTH.tooltipGuide}px`") solid
+    color-mix(in oklch, var(--scheme-color-primary) 60%, transparent);
+  opacity: v-bind("VOLUME_EDITOR_ALPHA.tooltipGuide");
+  transform: translateY(-0.5px);
+  pointer-events: none;
+}
+
+.volume-value-tooltip {
+  position: absolute;
+  z-index: calc(#{vars.$z-index-sing-tool-palette} + 1);
+  box-sizing: border-box;
+  width: v-bind("`${VOLUME_EDITOR_LAYOUT.tooltipWidthPx}px`");
+  min-height: v-bind("`${VOLUME_EDITOR_LAYOUT.tooltipHeightPx}px`");
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: color-mix(in oklch, var(--scheme-color-surface) 8%, #000 92%);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.volume-value-tooltip-primary {
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.volume-value-tooltip-secondary {
+  font-size: 10px;
+  line-height: 12px;
+  opacity: 0.78;
 }
 </style>
