@@ -1302,10 +1302,10 @@ onMounted(async () => {
   stage.addChild(disabledOverlayGraphics); // 編集不可区間（最背面）
   stage.addChild(erasePreviewOverlay); // 下地
   stage.addChild(gridGraphics); // グリッドはオーバーレイの上に
-  stage.addChild(volumeDbLabelBackground); // dBラベルの固定背景
-  stage.addChild(volumeDbLabelContainer);
   stage.addChild(originalVolumeLine.container);
   stage.addChild(editedVolumeLine.container);
+  stage.addChild(volumeDbLabelBackground); // dBラベルの固定背景
+  stage.addChild(volumeDbLabelContainer);
 
   const callback = () => {
     if (renderInNextFrame) {

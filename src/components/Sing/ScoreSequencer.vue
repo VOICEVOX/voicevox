@@ -375,13 +375,6 @@
                 transform: `translateX(${phraseInfo.x - scrollX}px)`,
               }"
             />
-            <div
-              class="sequencer-playhead"
-              data-testid="sequencer-playhead"
-              :style="{
-                transform: `translateX(${playheadX - scrollX - 1}px)`,
-              }"
-            ></div>
           </div>
           <div
             class="sequencer-horizontal-controls"
@@ -475,7 +468,7 @@
     >
       <div
         class="sequencer-full-playhead"
-        data-testid="sequencer-full-playhead"
+        data-testid="sequencer-playhead"
         :style="{
           transform: `translateX(${playheadX - scrollX - 1}px)`,
         }"
@@ -924,7 +917,7 @@ const usesPianoTextTabs = computed(
 );
 const fullPlayheadLeftOffset = computed(() => {
   if (isScoreDockLayout.value || isScoreSurfaceStripLayout.value) return 48;
-  if (isScoreReservedRailLayout.value) return 144;
+  if (isScoreReservedRailLayout.value) return 136;
   if (toolPaletteLayout.value === "sideRight") return 48;
   return 96;
 });
@@ -1822,6 +1815,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .score-sequencer-shell {
   --editor-tool-rail-width: 48px;
+  --editor-reserved-tool-rail-width: 40px;
   --sequencer-ruler-height: 40px;
 
   position: relative;
@@ -1874,7 +1868,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .tool-layout-reserved-rail .score-sequencer {
   grid-template-columns:
-    var(--editor-tool-rail-width) var(--editor-tool-rail-width) 48px
+    var(--editor-tool-rail-width) var(--editor-reserved-tool-rail-width) 48px
     minmax(0, 1fr);
 }
 
@@ -1915,7 +1909,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .tool-layout-reserved-rail .piano-roll-toolbar {
   grid-template-columns:
-    var(--editor-tool-rail-width) var(--editor-tool-rail-width) 48px
+    var(--editor-tool-rail-width) var(--editor-reserved-tool-rail-width) 48px
     minmax(0, 1fr);
 }
 
@@ -2085,6 +2079,16 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   pointer-events: auto;
 }
 
+.piano-roll-mode-zone :deep(.tool-palette),
+.piano-roll-tool-zone :deep(.tool-palette),
+.piano-roll-context-strip :deep(.tool-palette),
+.piano-roll-context-hud :deep(.tool-palette) {
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
 .piano-roll-context-strip {
   display: flex;
   align-items: center;
@@ -2220,6 +2224,32 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   pointer-events: auto;
 }
 
+.piano-roll-floating-tools.layout-center :deep(.tool-palette),
+.piano-roll-floating-tools.layout-centerBottom :deep(.tool-palette),
+.piano-roll-floating-tools.layout-dockCenter :deep(.tool-palette) {
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.piano-roll-floating-tools.layout-side :deep(.tool-palette),
+.piano-roll-floating-tools.layout-sideLeft :deep(.tool-palette),
+.piano-roll-floating-tools.layout-sideRight :deep(.tool-palette),
+.piano-roll-floating-tools.layout-sideLeftToolbarRight :deep(.tool-palette) {
+  border-color: color-mix(
+    in oklch,
+    var(--scheme-color-outline-variant) 24%,
+    transparent
+  );
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 92%,
+    transparent
+  );
+  box-shadow: 0 4px 14px oklch(0% 0 0 / 0.16);
+}
+
 .piano-roll-floating-tools.layout-center {
   grid-row: 1;
   grid-column: 3;
@@ -2333,10 +2363,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   align-items: center;
   gap: 0;
   width: auto;
-  padding: 1px;
-  border-radius: 7px;
-  background: var(--scheme-color-surface);
-  box-shadow: 0 1px 3px oklch(0% 0 0 / 0.14);
+  padding: 0;
+  border-radius: 5px;
+  background: transparent;
+  box-shadow: none;
 }
 
 .tool-layout-docked .piano-roll-edit-target-tab,
@@ -2362,17 +2392,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .tool-layout-docked .piano-roll-edit-target-tab.active,
 .tool-layout-surface-strip .piano-roll-edit-target-tab.active,
 .tool-layout-header-rail .piano-roll-edit-target-tab.active {
-  background: color-mix(
-    in oklch,
-    var(--scheme-color-secondary-container) 72%,
-    var(--scheme-color-surface)
-  );
+  background: var(--scheme-color-secondary-container);
   color: var(--scheme-color-on-secondary-container);
   font-weight: 700;
-  box-shadow:
-    inset 0 0 0 1px
-      color-mix(in oklch, var(--scheme-color-secondary) 38%, transparent),
-    0 1px 2px oklch(0% 0 0 / 0.1);
+  box-shadow: none;
 }
 
 .tool-layout-inspector-header .piano-roll-toolbar {
@@ -2399,9 +2422,9 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .tool-layout-inspector-header .piano-roll-edit-target-tab.active {
-  border-bottom: 2px solid var(--scheme-color-secondary);
-  background: transparent;
-  color: var(--scheme-color-on-surface);
+  border-bottom: 0;
+  background: var(--scheme-color-secondary-container);
+  color: var(--scheme-color-on-secondary-container);
   box-shadow: none;
 }
 
@@ -2488,15 +2511,23 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   height: 24px;
   padding: 0 4px 0 8px;
   border-radius: 6px;
-  color: var(--scheme-color-on-surface-variant);
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 86%,
+    var(--scheme-color-secondary)
+  );
   font-size: 12px;
   font-weight: 500;
-  background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);
-  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
+  background: transparent;
+  box-shadow: none;
   pointer-events: auto;
 
   &:hover {
-    background: var(--scheme-color-surface-container-highest);
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary-container) 36%,
+      transparent
+    );
   }
 }
 
@@ -2552,7 +2583,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   border: 0;
   border-radius: 5px;
   background: transparent;
-  color: var(--scheme-color-on-surface);
+  color: var(--scheme-color-on-surface-variant);
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
@@ -3141,18 +3172,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   left: 0;
   height: 6px;
   border-radius: 2px;
-}
-
-.sequencer-playhead {
-  position: absolute;
-  top: 0;
-  left: 0px;
-  width: 2px;
-  height: 100%;
-  background: var(--scheme-color-inverse-surface);
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  z-index: calc(#{vars.$z-index-sing-tool-palette} - 1);
 }
 
 .rect-select-preview {

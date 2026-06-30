@@ -119,7 +119,7 @@ const emit = defineEmits<{
   color: color-mix(
     in oklch,
     var(--scheme-color-on-surface-variant) 78%,
-    var(--scheme-color-primary)
+    var(--scheme-color-secondary)
   );
   cursor: pointer;
 
@@ -133,12 +133,18 @@ const emit = defineEmits<{
   }
 
   &.active {
-    background: var(--scheme-color-surface);
-    color: var(--scheme-color-on-surface);
-    box-shadow:
-      inset 0 0 0 1px
-        color-mix(in oklch, var(--scheme-color-primary) 34%, transparent),
-      0 1px 2px oklch(0% 0 0 / 0.1);
+    background: var(--scheme-color-secondary-container);
+    color: var(--scheme-color-on-secondary-container);
+    box-shadow: none;
+  }
+
+  &.active:hover {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary-container) 84%,
+      var(--scheme-color-secondary)
+    );
+    color: var(--scheme-color-on-secondary-container);
   }
 
   .material-symbols-rounded {

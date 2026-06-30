@@ -52,11 +52,12 @@ defineProps<{
 
 <style scoped lang="scss">
 .edit-target-switcher {
-  border: 1px solid var(--scheme-color-outline-variant);
   box-sizing: border-box;
   padding: 3px;
   height: 40px;
   border-radius: 20px;
+  border: 0;
+  box-shadow: none;
 }
 
 .segment-switch {

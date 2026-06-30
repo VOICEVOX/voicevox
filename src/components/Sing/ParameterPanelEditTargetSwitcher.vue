@@ -135,16 +135,11 @@ const targetOptions = computed(() => {
   align-items: center;
   gap: 0;
   width: auto;
-  padding: 1px;
-  border-radius: 7px;
-  border: 1px solid
-    color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
-  background: color-mix(
-    in oklch,
-    var(--scheme-color-surface-container-lowest) 94%,
-    transparent
-  );
-  box-shadow: 0 2px 6px oklch(0% 0 0 / 0.08);
+  padding: 0;
+  border-radius: 5px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .text-mode .segment-switch {
@@ -160,16 +155,9 @@ const targetOptions = computed(() => {
 }
 
 .text-mode .segment-switch.active {
-  background: color-mix(
-    in oklch,
-    var(--scheme-color-secondary-container) 72%,
-    var(--scheme-color-surface)
-  );
+  background: var(--scheme-color-secondary-container);
   color: var(--scheme-color-on-secondary-container);
   font-weight: 700;
-  box-shadow:
-    inset 0 0 0 1px
-      color-mix(in oklch, var(--scheme-color-secondary) 38%, transparent),
-    0 1px 2px oklch(0% 0 0 / 0.1);
+  box-shadow: none;
 }
 </style>

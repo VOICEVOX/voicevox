@@ -350,6 +350,7 @@ const currentParameterToolIcon = computed(() => {
 <style scoped lang="scss">
 .parameter-panel {
   --editor-tool-rail-width: 48px;
+  --editor-reserved-tool-rail-width: 40px;
 
   position: relative;
   width: 100%;
@@ -379,7 +380,7 @@ const currentParameterToolIcon = computed(() => {
 
 .parameter-panel.tool-layout-reserved-rail {
   grid-template-columns:
-    var(--editor-tool-rail-width) var(--editor-tool-rail-width)
+    var(--editor-tool-rail-width) var(--editor-reserved-tool-rail-width)
     minmax(0, 1fr);
 }
 
@@ -388,6 +389,8 @@ const currentParameterToolIcon = computed(() => {
 }
 
 .tool-area {
+  position: relative;
+  z-index: 4;
   grid-column: 1;
   grid-row: 1;
   display: flex;
@@ -413,7 +416,6 @@ const currentParameterToolIcon = computed(() => {
   bottom: 0;
   width: var(--editor-tool-rail-width);
   align-items: flex-start;
-  z-index: 3;
   border-right: 0;
   border-left: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
@@ -447,7 +449,7 @@ const currentParameterToolIcon = computed(() => {
   border-right: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
   pointer-events: auto;
-  z-index: 2;
+  z-index: 4;
 }
 
 .tool-layout-docked .tool-area {
@@ -543,6 +545,16 @@ const currentParameterToolIcon = computed(() => {
   pointer-events: auto;
 }
 
+.tool-area :deep(.tool-palette),
+.parameter-panel-tool-zone :deep(.tool-palette),
+.parameter-panel-context-strip :deep(.tool-palette),
+.parameter-panel-context-hud :deep(.tool-palette) {
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
 .parameter-panel-context-strip {
   grid-column: 2;
   grid-row: 1;
@@ -558,7 +570,7 @@ const currentParameterToolIcon = computed(() => {
   background: color-mix(in oklch, var(--scheme-color-surface) 94%, transparent);
   box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
   pointer-events: auto;
-  z-index: 2;
+  z-index: 4;
 }
 
 .context-strip-target,
@@ -586,7 +598,7 @@ const currentParameterToolIcon = computed(() => {
   box-shadow: 0 6px 18px oklch(0% 0 0 / 0.16);
   backdrop-filter: blur(6px);
   pointer-events: auto;
-  z-index: 2;
+  z-index: 4;
 }
 
 .parameter-panel-current-tool-zone {
@@ -662,7 +674,7 @@ const currentParameterToolIcon = computed(() => {
   transition:
     opacity 0.12s ease-out,
     transform 0.12s ease-out;
-  z-index: 2;
+  z-index: 5;
 }
 
 .parameter-panel-current-tool-zone:hover .tool-chip-popover,
@@ -699,16 +711,43 @@ const currentParameterToolIcon = computed(() => {
 }
 
 .tool-layout-inspector-header .tool-area :deep(.segment-switch.active) {
-  border-bottom: 2px solid var(--scheme-color-secondary);
-  background: transparent;
-  color: var(--scheme-color-on-surface);
+  border-bottom: 0;
+  background: var(--scheme-color-secondary-container);
+  color: var(--scheme-color-on-secondary-container);
   box-shadow: none;
 }
 
 .parameter-panel-floating-tools {
   grid-row: 1;
-  z-index: 2;
+  z-index: 4;
   pointer-events: none;
+}
+
+.parameter-panel-floating-tools.layout-center :deep(.tool-palette),
+.parameter-panel-floating-tools.layout-centerBottom :deep(.tool-palette),
+.parameter-panel-floating-tools.layout-dockCenter :deep(.tool-palette) {
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.parameter-panel-floating-tools.layout-side :deep(.tool-palette),
+.parameter-panel-floating-tools.layout-sideLeft :deep(.tool-palette),
+.parameter-panel-floating-tools.layout-sideRight :deep(.tool-palette),
+.parameter-panel-floating-tools.layout-sideLeftToolbarRight
+  :deep(.tool-palette) {
+  border-color: color-mix(
+    in oklch,
+    var(--scheme-color-outline-variant) 24%,
+    transparent
+  );
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-lowest) 92%,
+    transparent
+  );
+  box-shadow: 0 4px 14px oklch(0% 0 0 / 0.16);
 }
 
 .parameter-panel-floating-tools.layout-center {
@@ -800,6 +839,7 @@ const currentParameterToolIcon = computed(() => {
 }
 
 .edit-area {
+  z-index: 0;
   grid-column: 2;
   grid-row: 1;
   position: relative;
@@ -855,7 +895,7 @@ const currentParameterToolIcon = computed(() => {
 
 .volume-editor-layer {
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
 
 .tool-layout-sideRight .edit-area {
