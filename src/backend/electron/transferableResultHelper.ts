@@ -5,6 +5,7 @@
  */
 
 import { DisplayableError, errorToMessages } from "@/helpers/errorHelper";
+import { assertNonNullable } from "@/type/utility";
 
 /** 例外メッセージ用のオブジェクト */
 type TransferableResultCause = { isDisplayable: boolean; message: string };
@@ -51,6 +52,7 @@ export function getOrThrowTransferableResult<T>(
           : new Error(message, { cause }),
       undefined,
     );
-    throw error ?? new Error("Unknown error");
+    assertNonNullable(error);
+    throw error;
   }
 }
