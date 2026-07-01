@@ -11,7 +11,7 @@ import { themes } from "@/domain/theme";
 import type { EngineId } from "@/type/preload";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
-import { errorToMessage, errorToMessages } from "@/helpers/errorHelper";
+import { errorToMessages } from "@/helpers/errorHelper";
 
 type LatestInfoState =
   | { type: "loading" }
