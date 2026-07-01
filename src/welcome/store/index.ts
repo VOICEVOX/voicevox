@@ -11,11 +11,12 @@ import { themes } from "@/domain/theme";
 import type { EngineId } from "@/type/preload";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
+import { errorToMessages } from "@/helpers/errorHelper";
 
 type LatestInfoState =
   | { type: "loading" }
   | { type: "fetched"; info: EnginePackageLatestInfo }
-  | { type: "fetchError" };
+  | { type: "fetchError"; message: string };
 
 type AllEngineState =
   | {
@@ -251,7 +252,11 @@ function createWelcomeStore() {
         `Engine package ${engineId} remote info fetch failed`,
         error,
       );
-      engineState.latestInfo = { type: "fetchError" };
+      const { displayable } = errorToMessages(error);
+      engineState.latestInfo = {
+        type: "fetchError",
+        message: displayable.length > 0 ? displayable[0] : "（不明なエラー）",
+      };
     }
   };
 
