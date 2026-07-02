@@ -2,9 +2,9 @@ import { Color } from "@/sing/graphics/lineStrip";
 
 export const VOLUME_EDITOR_LAYOUT = {
   keyColumnWidthPx: 48,
-  tooltipWidthPx: 84,
-  tooltipHeightPx: 34,
-  tooltipOffsetPx: 10,
+  tooltipWidthPx: 64,
+  tooltipHeightPx: 16,
+  tooltipOffsetPx: 16,
   tooltipPaddingPx: 4,
   denseGridLabelMinHeightPx: 120,
   sparseGridLabelMinHeightPx: 80,

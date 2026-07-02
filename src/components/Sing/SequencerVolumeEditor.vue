@@ -26,15 +26,7 @@
       class="volume-value-tooltip"
       :style="tooltipStyle"
     >
-      <div class="volume-value-tooltip-primary">
-        {{ tooltipState.value.primaryLabel }}
-      </div>
-      <div
-        v-if="tooltipState.value.secondaryLabel != undefined"
-        class="volume-value-tooltip-secondary"
-      >
-        {{ tooltipState.value.secondaryLabel }}
-      </div>
+      {{ tooltipState.value }}
     </div>
     <div class="volume-grid-labels" aria-hidden="true">
       <div
@@ -76,7 +68,6 @@ import { useMounted } from "@/composables/useMounted";
 import { Mutex } from "@/helpers/mutex";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
-import { linearToDecibel } from "@/sing/audio";
 import { secondToTick, tickToSecond } from "@/sing/music";
 import { getTotalTicks } from "@/sing/rulerHelper";
 import { clamp } from "@/sing/utility";
@@ -254,16 +245,10 @@ let originalTrackIdCache: TrackId | undefined;
 const editableFrameRanges = ref<VolumeEditableFrameRange[]>([]);
 const previewEraseRanges = ref<{ startBaseX: number; endBaseX: number }[]>([]);
 
-type VolumeTooltipValue = {
-  primaryLabel: string;
-  secondaryLabel?: string;
-};
-
 type VolumeTooltipState = {
-  value: VolumeTooltipValue;
-  x: number;
-  y: number;
-  guideY: number;
+  value: string;
+  pointerX: number;
+  pointerY: number;
 };
 
 type VolumePointerInfo = {
@@ -273,8 +258,6 @@ type VolumePointerInfo = {
   isEditable: boolean;
   x: number;
   y: number;
-  width: number;
-  height: number;
 };
 
 const tooltipState = ref<VolumeTooltipState>();
@@ -361,14 +344,42 @@ const horizontalGridLabels = computed(() => {
   );
 });
 
+// NOTE: ツールチップはカーソルの右下に一定オフセットで追従表示する
+// 線を書く場合、視線方向が多くの場合右のため自然に目に入り、無駄な視線移動を避ける
+// また、下寄りとして、描いていく先側を阻害しないようにする
+// エリア端では反転などはせず、余計な注意を引かないようにする
 const tooltipStyle = computed(() => {
   const tooltip = tooltipState.value;
-  if (tooltip == undefined) {
+  const width = viewportWidth.value;
+  const height = viewportHeight.value;
+  if (tooltip == undefined || width == undefined || height == undefined) {
     return undefined;
   }
+  const maxX = Math.max(
+    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+    width -
+      VOLUME_EDITOR_LAYOUT.tooltipWidthPx -
+      VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+  );
+  const maxY = Math.max(
+    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+    height -
+      VOLUME_EDITOR_LAYOUT.tooltipHeightPx -
+      VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+  );
+  const left = clamp(
+    tooltip.pointerX + VOLUME_EDITOR_LAYOUT.tooltipOffsetPx,
+    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+    maxX,
+  );
+  const top = clamp(
+    tooltip.pointerY + VOLUME_EDITOR_LAYOUT.tooltipOffsetPx,
+    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+    maxY,
+  );
   return {
-    left: `${tooltip.x}px`,
-    top: `${tooltip.y}px`,
+    left: `${left}px`,
+    top: `${top}px`,
   };
 });
 
@@ -379,7 +390,7 @@ const tooltipGuideLineStyle = computed(() => {
   }
   return {
     left: `${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`,
-    top: `${tooltip.guideY}px`,
+    top: `${tooltip.pointerY}px`,
   };
 });
 
@@ -388,66 +399,12 @@ const formatAbsoluteDbLabel = (db: number) => {
   return (Object.is(roundedDb, -0) ? 0 : roundedDb).toFixed(1);
 };
 
-const formatSignedDbLabel = (db: number) => {
-  const roundedDb = Math.round(db * 10) / 10;
-  const normalizedDb = Object.is(roundedDb, -0) ? 0 : roundedDb;
-  return `${normalizedDb > 0 ? "+" : ""}${normalizedDb.toFixed(1)}`;
-};
-
+// カーソルが指す絶対dB値を表示する。
+// 描画中に制御している変数はペンのY位置＝絶対dBなので、それをそのまま数値にする。
+// 元のボリュームとの差分は数字では表現しない（連続編集では差分は曲線になり、スカラーでは表せないため）。
+// 差分は元カーブの点線と編集後の線の縦の距離として知覚的に読み取れる。
 const formatTooltipValue = (pointerInfo: VolumePointerInfo) => {
-  const tooltipValue: VolumeTooltipValue = {
-    primaryLabel: formatAbsoluteDbLabel(pointerInfo.db),
-  };
-  const originalValue = pointerInfo.originalValue;
-  if (originalValue == undefined) {
-    return tooltipValue;
-  }
-  const originalDb = linearToDecibel(originalValue);
-  if (originalDb < volumeValueScale.minDb) {
-    return tooltipValue;
-  }
-  return {
-    ...tooltipValue,
-    secondaryLabel: `元との差 ${formatSignedDbLabel(pointerInfo.db - originalDb)}`,
-  };
-};
-
-const resolveTooltipPosition = (pointerInfo: VolumePointerInfo) => {
-  const rightX =
-    pointerInfo.x +
-    VOLUME_EDITOR_LAYOUT.tooltipOffsetPx +
-    VOLUME_EDITOR_LAYOUT.tooltipWidthPx;
-  const rawX =
-    rightX <= pointerInfo.width
-      ? pointerInfo.x + VOLUME_EDITOR_LAYOUT.tooltipOffsetPx
-      : pointerInfo.x -
-        VOLUME_EDITOR_LAYOUT.tooltipOffsetPx -
-        VOLUME_EDITOR_LAYOUT.tooltipWidthPx;
-  const rawY =
-    pointerInfo.y -
-      VOLUME_EDITOR_LAYOUT.tooltipOffsetPx -
-      VOLUME_EDITOR_LAYOUT.tooltipHeightPx >=
-    0
-      ? pointerInfo.y -
-        VOLUME_EDITOR_LAYOUT.tooltipOffsetPx -
-        VOLUME_EDITOR_LAYOUT.tooltipHeightPx
-      : pointerInfo.y + VOLUME_EDITOR_LAYOUT.tooltipOffsetPx;
-  const maxX = Math.max(
-    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
-    pointerInfo.width -
-      VOLUME_EDITOR_LAYOUT.tooltipWidthPx -
-      VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
-  );
-  const maxY = Math.max(
-    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
-    pointerInfo.height -
-      VOLUME_EDITOR_LAYOUT.tooltipHeightPx -
-      VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
-  );
-  return {
-    x: clamp(rawX, VOLUME_EDITOR_LAYOUT.tooltipPaddingPx, maxX),
-    y: clamp(rawY, VOLUME_EDITOR_LAYOUT.tooltipPaddingPx, maxY),
-  };
+  return `${formatAbsoluteDbLabel(pointerInfo.db)} dB`;
 };
 
 const updateTooltip = (pointerInfo: VolumePointerInfo) => {
@@ -458,12 +415,10 @@ const updateTooltip = (pointerInfo: VolumePointerInfo) => {
     return;
   }
 
-  const position = resolveTooltipPosition(pointerInfo);
   tooltipState.value = {
     value: formatTooltipValue(pointerInfo),
-    x: position.x,
-    y: position.y,
-    guideY: pointerInfo.y,
+    pointerX: pointerInfo.x,
+    pointerY: pointerInfo.y,
   };
 };
 
@@ -893,8 +848,6 @@ const computeViewportPointerInfo = (
     isEditable: isFrameInVolumeEditableRange(frame, editableFrameRanges.value),
     x: clampedX,
     y: clampedY,
-    width,
-    height,
   };
 };
 
@@ -1200,24 +1153,15 @@ onUnmounted(() => {
   min-height: v-bind("`${VOLUME_EDITOR_LAYOUT.tooltipHeightPx}px`");
   padding: 3px 6px;
   border-radius: 4px;
-  background: color-mix(in oklch, var(--scheme-color-surface) 8%, #000 92%);
-  box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
+  // カーブと重なっても下が透けて見えるように半透明にする
+  background: rgb(0 0 0 / 72%);
   color: #fff;
+  font-size: 11px;
+  line-height: 14px;
   font-variant-numeric: tabular-nums;
   text-align: center;
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
-}
-
-.volume-value-tooltip-primary {
-  font-size: 11px;
-  line-height: 14px;
-}
-
-.volume-value-tooltip-secondary {
-  font-size: 10px;
-  line-height: 12px;
-  opacity: 0.78;
 }
 </style>
