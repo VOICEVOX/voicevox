@@ -1,4 +1,4 @@
-import { decibelToLinear, linearToDecibel } from "@/sing/audio";
+import { linearToDecibel } from "@/sing/audio";
 import { clamp } from "@/sing/utility";
 
 export type VolumeGridLine = {
@@ -6,6 +6,7 @@ export type VolumeGridLine = {
   kind: "major" | "baseline";
   label: string;
   drawLine: boolean;
+  displayPriority: "primary" | "secondary";
 };
 
 export type VolumeValueScale = {
@@ -14,29 +15,66 @@ export type VolumeValueScale = {
   gridLines: readonly VolumeGridLine[];
   normalizedYToDb: (normalizedY: number) => number;
   dbToNormalizedY: (db: number) => number;
-  dbToValue: (input: {
-    db: number;
-    frame: number;
-    originalValue: number | undefined;
-  }) => number;
-  valueToNormalizedY: (input: {
-    value: number;
-    frame: number;
-    originalValue: number | undefined;
-  }) => number;
+  valueToNormalizedY: (value: number) => number;
 };
 
+// NOTE: 最大値・最小値はエンジン出力と表示に合わせたヒューリスティックなもの。
+// エディタ側の表示や編集の問題ではないためエンジンが変わったら変更可能だが、既存のプロジェクトで表示が変わる点には注意。
+// 最大値: 0dB相当でのエンジン出力品質があまりよくなさそうなため、-0.5dB相当に設定。
+// 最小値: -36dB程度以下はエンジンの出力がノイズっぽいのと、オリジナルボリューム（エンジン出力デフォルト）の典型的な範囲で見やすい程度の高さにするため。
 export const ABSOLUTE_VOLUME_MIN_DB = -36.5;
 export const ABSOLUTE_VOLUME_MAX_DB = -0.5;
 
 export const ABSOLUTE_VOLUME_GRID_LINES = [
-  { db: ABSOLUTE_VOLUME_MAX_DB, kind: "baseline", label: "0", drawLine: false },
-  { db: -6, kind: "major", label: "-6", drawLine: true },
-  { db: -12, kind: "major", label: "-12", drawLine: true },
-  { db: -18, kind: "major", label: "-18", drawLine: true },
-  { db: -24, kind: "major", label: "-24", drawLine: true },
-  { db: -30, kind: "major", label: "-30", drawLine: true },
-  { db: -36, kind: "major", label: "-36", drawLine: false },
+  {
+    db: ABSOLUTE_VOLUME_MAX_DB,
+    kind: "baseline",
+    label: "0",
+    drawLine: false,
+    displayPriority: "primary",
+  },
+  {
+    db: -6,
+    kind: "major",
+    label: "-6",
+    drawLine: true,
+    displayPriority: "secondary",
+  },
+  {
+    db: -12,
+    kind: "major",
+    label: "-12",
+    drawLine: true,
+    displayPriority: "primary",
+  },
+  {
+    db: -18,
+    kind: "major",
+    label: "-18",
+    drawLine: true,
+    displayPriority: "secondary",
+  },
+  {
+    db: -24,
+    kind: "major",
+    label: "-24",
+    drawLine: true,
+    displayPriority: "primary",
+  },
+  {
+    db: -30,
+    kind: "major",
+    label: "-30",
+    drawLine: true,
+    displayPriority: "secondary",
+  },
+  {
+    db: -36,
+    kind: "major",
+    label: "-36",
+    drawLine: false,
+    displayPriority: "primary",
+  },
 ] as const satisfies readonly VolumeGridLine[];
 
 const assertFinite = (value: number, name: string) => {
@@ -63,14 +101,7 @@ const dbToNormalizedY = (db: number) => {
   );
 };
 
-const dbToValue = ({ db }: Parameters<VolumeValueScale["dbToValue"]>[0]) => {
-  assertFinite(db, "db");
-  return Math.min(decibelToLinear(db), 1);
-};
-
-const valueToNormalizedY = ({
-  value,
-}: Parameters<VolumeValueScale["valueToNormalizedY"]>[0]) => {
+const valueToNormalizedY = (value: number) => {
   assertFinite(value, "value");
   if (value < 0) {
     throw new Error("value must be greater than or equal to 0.");
@@ -85,6 +116,5 @@ export const absoluteVolumeValueScale: VolumeValueScale = {
   gridLines: ABSOLUTE_VOLUME_GRID_LINES,
   normalizedYToDb,
   dbToNormalizedY,
-  dbToValue,
   valueToNormalizedY,
 };
