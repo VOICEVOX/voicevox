@@ -81,7 +81,7 @@ import { secondToTick, tickToSecond } from "@/sing/music";
 import { getTotalTicks } from "@/sing/rulerHelper";
 import { clamp } from "@/sing/utility";
 import { baseXToTick, tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
-import { assertNonNullable } from "@/type/utility";
+import { assertNonNullable, ensureNotNullish } from "@/type/utility";
 import type { TrackId } from "@/type/preload";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
 import { VolumeLine } from "@/sing/graphics/volumeLine";
@@ -97,7 +97,7 @@ import {
   VOLUME_LINE_COLORS,
 } from "@/components/Sing/volumeEditorStyle";
 import { absoluteVolumeValueScale } from "@/sing/volumeValueScale";
-import type { VolumeGridLine } from "@/sing/volumeValueScale";
+import { absoluteVolumeEditMode } from "@/sing/volumeEditMode";
 import {
   getOverlappingVolumeEditableFrameRanges,
   isFrameInVolumeEditableRange,
@@ -118,6 +118,7 @@ const emit = defineEmits<{
 }>();
 
 const volumeValueScale = absoluteVolumeValueScale;
+const volumeEditMode = absoluteVolumeEditMode;
 
 const store = useStore();
 const { volumePreviewEdit, stateMachineProcess, previewMode, cursorState } =
@@ -134,10 +135,10 @@ const editorFrameRate = computed(() => store.state.editorFrameRate);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const isDark = computed(() => store.state.currentTheme === "Dark");
 
-const numMeasuresContext = inject(numMeasuresInjectionKey);
-if (numMeasuresContext == undefined) {
-  throw new Error("numMeasuresContext is undefined.");
-}
+const numMeasuresContext = ensureNotNullish(
+  inject(numMeasuresInjectionKey),
+  "numMeasuresContext is undefined.",
+);
 const { numMeasures } = numMeasuresContext;
 
 watch(previewMode, (mode) => {
@@ -196,7 +197,12 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
   },
 ]);
 
+const isPointerInParameterArea = ref(false);
+
 const cursorClass = computed(() => {
+  if (!isPointerInParameterArea.value && previewMode.value === "IDLE") {
+    return "cursor-default";
+  }
   switch (cursorState.value) {
     case "DRAW":
       return "cursor-draw";
@@ -273,8 +279,8 @@ type VolumePointerInfo = {
 
 const tooltipState = ref<VolumeTooltipState>();
 
-watch([tool, previewMode], ([currentTool, currentPreviewMode]) => {
-  if (currentTool !== "DRAW" && currentPreviewMode !== "VOLUME_DRAW") {
+watch(previewMode, (mode) => {
+  if (mode !== "VOLUME_DRAW") {
     tooltipState.value = undefined;
   }
 });
@@ -321,15 +327,6 @@ const getOriginalValueAtFrame = (frame: number) => {
   return getOriginalValueFromFramewise(originalFramewiseCache, frame);
 };
 
-const isDenseHorizontalGridLabel = (line: VolumeGridLine) =>
-  line.label === "0" ||
-  line.label === "-12" ||
-  line.label === "-24" ||
-  line.label === "-36";
-
-const isSparseHorizontalGridLine = (line: VolumeGridLine) =>
-  line.label === "-12" || line.label === "-24";
-
 const getVisibleHorizontalGridLines = (
   height: number,
   options: { includesLabels: boolean },
@@ -337,12 +334,15 @@ const getVisibleHorizontalGridLines = (
   if (height >= VOLUME_EDITOR_LAYOUT.denseGridLabelMinHeightPx) {
     return volumeValueScale.gridLines;
   }
-  if (height >= VOLUME_EDITOR_LAYOUT.sparseGridLabelMinHeightPx) {
-    return volumeValueScale.gridLines.filter(isDenseHorizontalGridLabel);
+  if (
+    height >= VOLUME_EDITOR_LAYOUT.sparseGridLabelMinHeightPx ||
+    !options.includesLabels
+  ) {
+    return volumeValueScale.gridLines.filter(
+      (line) => line.displayPriority === "primary",
+    );
   }
-  return options.includesLabels
-    ? []
-    : volumeValueScale.gridLines.filter(isSparseHorizontalGridLine);
+  return [];
 };
 
 const horizontalGridLabels = computed(() => {
@@ -450,18 +450,10 @@ const resolveTooltipPosition = (pointerInfo: VolumePointerInfo) => {
   };
 };
 
-const updateTooltip = (
-  pointerInfo: VolumePointerInfo,
-  targetArea: "Editor" | "Window",
-  pointerEventType: PointerEvent["type"],
-) => {
-  const isHoveringDrawTool =
-    previewMode.value === "IDLE" &&
-    tool.value === "DRAW" &&
-    targetArea === "Editor" &&
-    pointerEventType !== "pointerleave";
+const updateTooltip = (pointerInfo: VolumePointerInfo) => {
+  // ツールチップはボリューム描画のドラッグ中のみ表示する
   const isDrawing = previewMode.value === "VOLUME_DRAW";
-  if (!pointerInfo.isEditable || (!isHoveringDrawTool && !isDrawing)) {
+  if (!isDrawing || !pointerInfo.isEditable) {
     tooltipState.value = undefined;
     return;
   }
@@ -475,11 +467,7 @@ const updateTooltip = (
   };
 };
 
-const buildSegments = (
-  framewiseData: number[],
-  frameRate: number,
-  originalFramewiseData: readonly number[],
-) => {
+const buildSegments = (framewiseData: number[], frameRate: number) => {
   const segments: VolumeSegment[] = [];
   let current: VolumeSegment | undefined;
 
@@ -496,15 +484,7 @@ const buildSegments = (
     if (!Number.isFinite(baseX)) {
       throw new Error("baseX must be finite.");
     }
-    const originalValue = getOriginalValueFromFramewise(
-      originalFramewiseData,
-      frame,
-    );
-    const normalizedY = volumeValueScale.valueToNormalizedY({
-      value,
-      frame,
-      originalValue,
-    });
+    const normalizedY = volumeValueScale.valueToNormalizedY(value);
 
     if (current == undefined) {
       current = [];
@@ -673,11 +653,7 @@ const refreshOriginalVolumeSegments = () => {
     { values: originalFramewise, startFrame: 0 },
     editableFrameRanges.value,
   );
-  volumeOriginalSegmentsData = buildSegments(
-    maskedOriginal,
-    frameRate,
-    originalFramewise,
-  );
+  volumeOriginalSegmentsData = buildSegments(maskedOriginal, frameRate);
   renderInNextFrame = true;
 };
 
@@ -819,11 +795,14 @@ const refreshEffectiveVolumeSegments = () => {
   );
   for (const [i] of effectiveFramewise.entries()) {
     const edited = editFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
+    const original = originalFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
     if (edited !== VALUE_INDICATING_NO_DATA) {
-      effectiveFramewise[i] = Math.min(Math.max(edited, 0), 1);
+      effectiveFramewise[i] = volumeEditMode.toEffectiveValue(
+        edited,
+        original === VALUE_INDICATING_NO_DATA ? undefined : original,
+      );
     } else {
-      effectiveFramewise[i] =
-        originalFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
+      effectiveFramewise[i] = original;
     }
   }
 
@@ -833,11 +812,7 @@ const refreshEffectiveVolumeSegments = () => {
     editableRanges,
   );
 
-  volumeEffectiveSegmentsData = buildSegments(
-    maskedEffective,
-    frameRate,
-    originalFramewise,
-  );
+  volumeEffectiveSegmentsData = buildSegments(maskedEffective, frameRate);
   renderInNextFrame = true;
 };
 
@@ -852,25 +827,46 @@ const dispatchVolumeEditorEvent = (
     pointerEvent,
     position: pointerInfo.position,
   });
-  updateTooltip(pointerInfo, targetArea, pointerEvent.type);
+  updateTooltip(pointerInfo);
+};
+
+const getViewportRect = () => {
+  const rect =
+    viewportRectCache ?? canvasContainer.value?.getBoundingClientRect();
+  assertNonNullable(rect, "volume editor viewport element is null.");
+  if (rect.width <= 0 || rect.height <= 0) {
+    throw new Error("volume editor viewport size is invalid.");
+  }
+  return rect;
+};
+
+const isPointerEventInParameterArea = (pointerEvent: PointerEvent) => {
+  const rect = getViewportRect();
+  const localX = pointerEvent.clientX - rect.left;
+  const localY = pointerEvent.clientY - rect.top;
+  return (
+    localX >= VOLUME_EDITOR_LAYOUT.keyColumnWidthPx &&
+    localX <= rect.width &&
+    localY >= 0 &&
+    localY <= rect.height
+  );
+};
+
+const hidePointerFeedback = () => {
+  isPointerInParameterArea.value = false;
+  tooltipState.value = undefined;
 };
 
 const computeViewportPointerInfo = (
   pointerEvent: PointerEvent,
 ): VolumePointerInfo => {
-  const rect =
-    viewportRectCache ?? canvasContainer.value?.getBoundingClientRect();
-  if (rect == undefined) {
-    throw new Error("volume editor viewport element is null.");
-  }
-  if (rect.width <= 0 || rect.height <= 0) {
-    throw new Error("volume editor viewport size is invalid.");
-  }
+  const rect = getViewportRect();
   const localX = pointerEvent.clientX - rect.left;
   const localY = pointerEvent.clientY - rect.top;
   const width = rect.width;
   const height = rect.height;
-  const clampedX = clamp(localX, 0, width);
+  const minX = Math.min(VOLUME_EDITOR_LAYOUT.keyColumnWidthPx, width);
+  const clampedX = clamp(localX, minX, width);
   const clampedY = clamp(localY, 0, height);
 
   const timelineX =
@@ -885,11 +881,7 @@ const computeViewportPointerInfo = (
   const normalizedY = 1 - clampedY / height;
   const db = volumeValueScale.normalizedYToDb(normalizedY);
   const originalValue = getOriginalValueAtFrame(frame);
-  const value = volumeValueScale.dbToValue({
-    db,
-    frame,
-    originalValue,
-  });
+  const value = volumeEditMode.toStoredValue(db, originalValue);
 
   return {
     position: {
@@ -910,14 +902,22 @@ const onSurfacePointerDown = (event: PointerEvent) => {
   if (event.button !== 0) {
     return;
   }
-  if (canvasContainer.value != undefined) {
-    const rect = canvasContainer.value.getBoundingClientRect();
-    viewportRectCache = {
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
-    };
+  const containerEl = canvasContainer.value;
+  assertNonNullable(containerEl, "volume editor viewport element is null.");
+  const rect = containerEl.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    throw new Error("volume editor viewport size is invalid.");
+  }
+  viewportRectCache = {
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
+  };
+  isPointerInParameterArea.value = isPointerEventInParameterArea(event);
+  if (!isPointerInParameterArea.value) {
+    hidePointerFeedback();
+    return;
   }
   if (store.state.parameterPanelEditTarget !== "VOLUME") {
     void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({
@@ -929,25 +929,40 @@ const onSurfacePointerDown = (event: PointerEvent) => {
 
 const onSurfacePointerMove = (event: PointerEvent) => {
   if (previewMode.value === "IDLE") {
+    isPointerInParameterArea.value = isPointerEventInParameterArea(event);
+    if (!isPointerInParameterArea.value) {
+      hidePointerFeedback();
+      return;
+    }
     dispatchVolumeEditorEvent(event, "Editor");
   }
 };
 
 const onSurfacePointerLeave = (event: PointerEvent) => {
+  isPointerInParameterArea.value = false;
   if (previewMode.value === "IDLE") {
     dispatchVolumeEditorEvent(event, "Editor");
   }
 };
 
 const onWindowPointerMove = (event: PointerEvent) => {
+  if (previewMode.value === "IDLE") {
+    return;
+  }
   dispatchVolumeEditorEvent(event, "Window");
 };
 
 const onWindowPointerUp = (event: PointerEvent) => {
+  if (previewMode.value === "IDLE") {
+    return;
+  }
   dispatchVolumeEditorEvent(event, "Window");
 };
 
 const onWindowPointerCancel = (event: PointerEvent) => {
+  if (previewMode.value === "IDLE") {
+    return;
+  }
   dispatchVolumeEditorEvent(event, "Window");
 };
 
@@ -1005,9 +1020,8 @@ watch(
 onMounted(async () => {
   const containerEl = canvasContainer.value;
   const canvasEl = canvas.value;
-  if (containerEl == undefined || canvasEl == undefined) {
-    throw new Error("canvas elements are missing.");
-  }
+  assertNonNullable(containerEl, "canvas elements are missing.");
+  assertNonNullable(canvasEl, "canvas elements are missing.");
   if (store.state.parameterPanelEditTarget !== "VOLUME") {
     void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({
       editTarget: "VOLUME",

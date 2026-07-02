@@ -22,6 +22,7 @@ import type {
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import { ExhaustiveError } from "@/type/utility";
 import { getRepresentableNoteTypes, isValidNotes } from "@/sing/music";
+import type { VolumeEditMode } from "@/sing/volumeEditMode";
 
 const MAX_SNAP_TYPE = 32;
 
@@ -633,6 +634,7 @@ export function applyVolumeEdit(
   editorFrameRate: number,
   minNonPauseStartFrame: number | undefined,
   maxNonPauseEndFrame: number | undefined,
+  volumeEditMode: VolumeEditMode,
 ) {
   if (phraseQuery.frameRate !== editorFrameRate) {
     throw new Error(
@@ -663,8 +665,11 @@ export function applyVolumeEdit(
     if (editedVolume === VALUE_INDICATING_NO_DATA) {
       continue;
     }
-    // NOTE: ボリューム編集結果が負値になるケースに備えて0以上にクランプする
-    volume[i - phraseQueryStartFrame] = Math.max(editedVolume, 0);
+    const indexInPhrase = i - phraseQueryStartFrame;
+    volume[indexInPhrase] = volumeEditMode.toEffectiveValue(
+      editedVolume,
+      volume[indexInPhrase],
+    );
   }
 }
 
