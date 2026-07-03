@@ -172,7 +172,7 @@ export default defineConfigWithVueTs(
     name: "voicevox/defaults/rules",
     rules: {
       "@typescript-eslint/no-unused-vars": [
-        process.env.NODE_ENV !== "production" ? "warn" : "error", // 開発時のみwarn
+        "error",
         {
           ignoreRestSiblings: true,
           ignoreUsingDeclarations: true,

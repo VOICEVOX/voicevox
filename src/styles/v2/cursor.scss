@@ -18,6 +18,10 @@
   cursor: move;
 }
 
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
 .cursor-draw {
   cursor:
     url("/draw-cursor.png") 2 2,

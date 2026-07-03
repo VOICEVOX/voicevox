@@ -124,7 +124,7 @@ export class SelectNotesToolIdleState implements State<
               position: Math.max(0, guideLineTicks),
               duration: context.snapTicks.value,
               noteNumber: clamp(input.cursorPos.noteNumber, 0, 127),
-              lyric: undefined,
+              lyric: null,
             };
 
             void context.store.actions.COMMAND_ADD_NOTES({

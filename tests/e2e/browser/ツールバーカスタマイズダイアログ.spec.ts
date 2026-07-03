@@ -48,8 +48,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
     ).toBe(1);
     await page.getByText("保存", { exact: true }).click();
     await getNewestQuasarDialog(page)
-      .getByRole("button")
-      .filter({ hasText: "close" })
+      .getByRole("button", { name: "ツールバーのカスタマイズを閉じる" })
       .click();
   });
 
@@ -94,10 +93,8 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
   });
 
   await test.step("閉じた後ツールバーからボタンが消えている", async () => {
-    await page
-      .locator("header")
-      .getByRole("button")
-      .filter({ hasText: "close" })
+    await getNewestQuasarDialog(page)
+      .getByRole("button", { name: "ツールバーのカスタマイズを閉じる" })
       .click();
 
     await page.waitForTimeout(100);
