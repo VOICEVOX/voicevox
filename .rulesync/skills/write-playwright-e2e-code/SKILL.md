@@ -107,7 +107,7 @@ Good 2:
 // コード
 <button aria-label="閉じる"><CloseIcon /></button>
 // テスト
-await page.getByLabel("閉じる").click();
+await page.getByRole("button", { name: "閉じる" }).click();
 ```
 
 Bad 2 (WAI-ARIA に準拠していない):
