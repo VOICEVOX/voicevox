@@ -110,7 +110,7 @@ Good 2:
 await page.getByLabel("閉じる").click();
 ```
 
-Bad 2 (WCAGに準拠していない):
+Bad 2 (WAI-ARIA に準拠していない):
 
 ```typescript
 // コード
