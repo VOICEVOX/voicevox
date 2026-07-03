@@ -12,7 +12,7 @@ export const isTest = import.meta.env.MODE === "test";
 
 // electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なOS判定
 function checkOs(os: "windows" | "mac" | "linux"): boolean {
-  let isSpecifiedOs: boolean | undefined = undefined;
+  let isSpecifiedOs: boolean | undefined;
   if (typeof process !== "undefined" && process?.platform) {
     // electronのメインプロセス用
     if (os === "windows") {

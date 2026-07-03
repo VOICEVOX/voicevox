@@ -2404,7 +2404,7 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
 
-        let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
+        let newAccentPhrasesSegment: AccentPhrase[];
 
         const kanaRegex = createKanaRegex(true);
         if (kanaRegex.test(newPronunciation)) {

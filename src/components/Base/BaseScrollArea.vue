@@ -6,14 +6,10 @@
       </div>
     </ScrollAreaViewport>
     <ScrollAreaScrollbar class="ScrollAreaScrollbar" orientation="horizontal">
-      <ScrollAreaThumb class="ScrollAreaThumb">
-        <div class="thumb"></div>
-      </ScrollAreaThumb>
+      <ScrollAreaThumb class="ScrollAreaThumb"></ScrollAreaThumb>
     </ScrollAreaScrollbar>
     <ScrollAreaScrollbar class="ScrollAreaScrollbar" orientation="vertical">
-      <ScrollAreaThumb class="ScrollAreaThumb">
-        <div class="thumb"></div>
-      </ScrollAreaThumb>
+      <ScrollAreaThumb class="ScrollAreaThumb"></ScrollAreaThumb>
     </ScrollAreaScrollbar>
   </ScrollAreaRoot>
 </template>
@@ -35,24 +31,20 @@ import {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  display: grid;
 }
 
-// 親要素のサイズいっぱいに広げさせるためプライベートなデータ属性を使用
-:deep([data-radix-scroll-area-viewport]) {
+.ScrollAreaViewport {
+  height: 100%;
   width: 100%;
-  height: 100%;
-}
-
-:deep(.ScrollAreaViewport) {
-  height: 100%;
 }
 
 .ScrollAreaScrollbar {
+  display: flex;
   user-select: none;
   touch-action: none;
   z-index: vars.$z-index-scrollbar;
+  padding: 4px;
 }
 
 .ScrollAreaScrollbar[data-orientation="vertical"] {
@@ -60,26 +52,22 @@ import {
 }
 
 .ScrollAreaScrollbar[data-orientation="horizontal"] {
+  flex-direction: column;
   height: vars.$size-scrollbar;
 }
 
 .ScrollAreaThumb {
-  padding: 4px;
-}
-
-.thumb {
-  width: 100%;
-  height: 100%;
+  flex: 1;
   background-color: colors.$scrollbar;
   border-radius: vars.$size-scrollbar;
   position: relative;
 }
 
-.ScrollAreaScrollbar:hover .thumb {
+.ScrollAreaScrollbar:hover .ScrollAreaThumb {
   background-color: colors.$scrollbar-hovered;
 }
 
-.ScrollAreaScrollbar:active .thumb {
+.ScrollAreaScrollbar:active .ScrollAreaThumb {
   background-color: colors.$scrollbar-pressed;
 }
 </style>

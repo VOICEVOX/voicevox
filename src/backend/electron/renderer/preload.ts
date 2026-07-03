@@ -8,7 +8,7 @@ import {
   BridgeKey,
   type SandboxWithTransferableResult,
 } from "./backendApiLoader";
-import type { ConfigType, EngineId, Sandbox, TextAsset } from "@/type/preload";
+import type { ConfigType, EngineId, Sandbox } from "@/type/preload";
 
 const ipcRendererInvokeProxy = new Proxy(
   {},
@@ -25,12 +25,6 @@ const ipcRendererInvokeProxy = new Proxy(
 ) as IpcRendererInvoke;
 
 const api: Sandbox = {
-  getTextAsset: (textType) => {
-    return ipcRendererInvokeProxy.GET_TEXT_ASSET(textType) as Promise<
-      TextAsset[typeof textType]
-    >;
-  },
-
   getAltPortInfos: async () => {
     return await ipcRendererInvokeProxy.GET_ALT_PORT_INFOS();
   },

@@ -5,41 +5,17 @@ import http from "node:http";
 import { expect, test } from "vitest";
 import { MultiDownloader } from "@/backend/electron/multiDownloader";
 
-// タイムアウトの時間でテストするときの余裕。
-// 環境によってTimeoutが少し早く終わることを想定。
-const epsilon = 10;
+// TODO: setTimeoutを使うとテストの実行時間が伸びたりテストが不安定になってしまうので、
+// setTimeoutを使わないテストに変更する
 
-/* NOTE:
- * 同時に複数の処理を待ち、片方の処理を待たず終わる、というテストを書くときは、終わらない側の時間を基準にすること。
- * 例えば以下のようなテストは避ける：
- *
- * ```ts
- * test("Promise.raceは一つでも解決された瞬間に解決される", async () => {
- *   const startTime = Date.now();
- *   const test = await Promise.race([
- *     sleep(1000),
- *     sleep(2000),
- *   ]);
- *   const duration = Date.now() - startTime;
- *   expect(duration).toBeLessThan(1000 + epsilon);
- * });
- * ```
- *
- * なぜなら、環境によっては1秒ちょっとで終わらず、テストがFlakyになる可能性があるため。
- * 代わりに以下のように書く：
- *
- * ```ts
- * test("Promise.raceは一つでも解決された瞬間に解決される", async () => {
- *   const startTime = Date.now();
- *   const test = await Promise.race([
- *     sleep(1000),
- *     sleep(2000),
- *   ])
- *   const duration = Date.now() - startTime;
- *   expect(duration).toBeLessThan(2000 - epsilon);
- * });
- * ```
- */
+function isClientDisconnectedError(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err != null &&
+    "code" in err &&
+    err.code === "ECONNRESET"
+  );
+}
 
 class TestServer {
   server: http.Server;
@@ -70,12 +46,7 @@ class TestServer {
     const handler = this.endpoints[pathname];
     if (handler) {
       void handler(req, res).catch((err: unknown) => {
-        if (
-          typeof err === "object" &&
-          err != null &&
-          "code" in err &&
-          err.code === "ECONNRESET"
-        ) {
+        if (isClientDisconnectedError(err)) {
           // クライアントが切断した場合は無視
           return;
         }
@@ -132,7 +103,7 @@ test("ダウンロードしたファイルはSymbol.asyncDisposeで自動削除�
       res.end("Hello, World!!");
     },
   });
-  let downloadedPaths: string[] = [];
+  let downloadedPaths: string[];
   {
     await using downloader = new MultiDownloader(tempDir.path, [
       {
@@ -166,9 +137,14 @@ test("ダウンロードしたファイルはSymbol.asyncDisposeで自動削除�
 
 test("複数ファイルを同時にダウンロードできる", async () => {
   await using tempDir = await temporaryDirectory();
+  let inFlight = 0;
+  let maxConcurrent = 0;
   await using dummyServer = new TestServer({
     "/slow": async (_req, res) => {
+      inFlight += 1;
+      maxConcurrent = Math.max(maxConcurrent, inFlight);
       await new Promise((r) => setTimeout(r, 200));
+      inFlight -= 1;
       res.statusCode = 200;
       res.end("Hello, World!\n");
     },
@@ -191,17 +167,17 @@ test("複数ファイルを同時にダウンロードできる", async () => {
         url: `${dummyServer.url}/slow`,
       },
     ]);
-    const startTime = Date.now();
     await downloader.download();
-    const duration = Date.now() - startTime;
 
-    // 同時ダウンロードできていなかったら600ms以上かかる
-    expect(duration).toBeLessThan(600 - epsilon);
+    expect(maxConcurrent).toBe(3);
   }
 });
 
 test("一つエラーが起きると全体が失敗し、かつそのときでもクリーンアップされる", async () => {
   await using tempDir = await temporaryDirectory();
+  let slow1000State: "notStarted" | "pending" | "completed" = "notStarted";
+  const { promise: slow1000Settled, resolve: slow1000SettledResolve } =
+    Promise.withResolvers<void>();
   await using dummyServer = new TestServer({
     "/slow-100": async (_req, res) => {
       await new Promise((r) => setTimeout(r, 100));
@@ -209,9 +185,25 @@ test("一つエラーが起きると全体が失敗し、かつそのときで�
       res.end("Hello, World!\n");
     },
     "/slow-1000": async (_req, res) => {
+      slow1000State = "pending";
       await new Promise((r) => setTimeout(r, 1000));
+      if (res.destroyed || res.writableEnded) {
+        slow1000SettledResolve();
+        return;
+      }
       res.statusCode = 200;
-      res.end("Hello, World!\n");
+      try {
+        res.end("Hello, World!\n");
+        slow1000SettledResolve();
+      } catch (err: unknown) {
+        if (isClientDisconnectedError(err)) {
+          slow1000SettledResolve();
+          return;
+        }
+        throw err;
+      } finally {
+        slow1000State = "completed";
+      }
     },
     "/slow-fail": async (_req, res) => {
       await new Promise((r) => setTimeout(r, 500));
@@ -238,10 +230,19 @@ test("一つエラーが起きると全体が失敗し、かつそのときで�
       },
     ]);
 
-    const currentTime = Date.now();
-    await expect(downloader.download()).rejects.toThrow();
+    const downloadResult = downloader.download();
+    const winner = await Promise.race([
+      downloadResult.then(
+        () => "download-resolved" as const,
+        () => "download-rejected" as const,
+      ),
+      slow1000Settled.then(() => "slow1000-settled" as const),
+    ]);
+
+    expect(winner).toBe("download-rejected");
+    await expect(downloadResult).rejects.toThrow();
     // 他の長いリクエストを待たずにすぐに失敗しているはず
-    expect(Date.now() - currentTime).toBeLessThan(1000 - epsilon);
+    expect(slow1000State).toBe("pending");
   }
 
   const downloadedPaths = [
