@@ -116,7 +116,7 @@ Bad 2 (WAI-ARIA に準拠していない):
 // コード
 <button aria-label="close-icon"><CloseIcon /></button>
 // テスト
-await page.getByLabel("close-icon").click();
+await page.getByRole("button", { name: "close-icon" }).click();
 ```
 
 ## locator・変数の共有
