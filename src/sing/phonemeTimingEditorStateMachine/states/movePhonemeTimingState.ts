@@ -188,7 +188,10 @@ export class MovePhonemeTimingState implements State<
         phraseInfo.startTime + phraseInfo.maxNonPauseEndFrame / frameRate;
     }
 
-    let minTimeSeconds = prevInfo.editedStartTimeSeconds;
+    // 前後の音素が最低1フレーム分残るようにクランプ範囲を調整する
+    const oneFrameSeconds = 1 / frameRate;
+
+    let minTimeSeconds = prevInfo.editedStartTimeSeconds + oneFrameSeconds;
     if (
       minNonPauseStartTime != undefined &&
       minTimeSeconds < minNonPauseStartTime
@@ -196,12 +199,17 @@ export class MovePhonemeTimingState implements State<
       minTimeSeconds = minNonPauseStartTime;
     }
 
-    let maxTimeSeconds = targetInfo.editedEndTimeSeconds;
+    let maxTimeSeconds = targetInfo.editedEndTimeSeconds - oneFrameSeconds;
     if (
       maxNonPauseEndTime != undefined &&
       maxTimeSeconds > maxNonPauseEndTime
     ) {
       maxTimeSeconds = maxNonPauseEndTime;
+    }
+
+    // 上記の切り上げ・切り下げで範囲が反転し得るので、その場合は一点に潰す
+    if (minTimeSeconds > maxTimeSeconds) {
+      minTimeSeconds = maxTimeSeconds;
     }
 
     // ピクセル座標からbaseXを計算し、tickを経由して秒に変換
