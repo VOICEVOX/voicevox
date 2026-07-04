@@ -1,5 +1,5 @@
 <template>
-  <div class="tool-palette">
+  <div class="tool-palette" @pointerdown.stop>
     <QBtn
       flat
       round
