@@ -4,6 +4,8 @@ import type {
   PhonemeTimingEditorIdleStateId,
   PhonemeTimingEditorInput,
   PhonemeTimingEditorStateDefinitions,
+  PhonemeTimingInfo,
+  PhraseInfo,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
 import { NoteId, TrackId } from "@/type/preload";
 import { baseXToTick, getButton } from "@/sing/viewHelper";
@@ -176,42 +178,6 @@ export class MovePhonemeTimingState implements State<
     assertNonNullable(phraseInfo.query);
     const frameRate = phraseInfo.query.frameRate;
 
-    let minNonPauseStartTime: number | undefined = undefined;
-    if (phraseInfo.minNonPauseStartFrame != undefined) {
-      minNonPauseStartTime =
-        phraseInfo.startTime + phraseInfo.minNonPauseStartFrame / frameRate;
-    }
-
-    let maxNonPauseEndTime: number | undefined = undefined;
-    if (phraseInfo.maxNonPauseEndFrame != undefined) {
-      maxNonPauseEndTime =
-        phraseInfo.startTime + phraseInfo.maxNonPauseEndFrame / frameRate;
-    }
-
-    // 前後の音素が最低1フレーム分残るようにクランプ範囲を調整する
-    const oneFrameSeconds = 1 / frameRate;
-
-    let minTimeSeconds = prevInfo.editedStartTimeSeconds + oneFrameSeconds;
-    if (
-      minNonPauseStartTime != undefined &&
-      minTimeSeconds < minNonPauseStartTime
-    ) {
-      minTimeSeconds = minNonPauseStartTime;
-    }
-
-    let maxTimeSeconds = targetInfo.editedEndTimeSeconds - oneFrameSeconds;
-    if (
-      maxNonPauseEndTime != undefined &&
-      maxTimeSeconds > maxNonPauseEndTime
-    ) {
-      maxTimeSeconds = maxNonPauseEndTime;
-    }
-
-    // 上記の切り上げ・切り下げで範囲が反転し得るので、その場合は一点に潰す
-    if (minTimeSeconds > maxTimeSeconds) {
-      minTimeSeconds = maxTimeSeconds;
-    }
-
     // ピクセル座標からbaseXを計算し、tickを経由して秒に変換
     // これによりテンポ変更を正しく考慮できる
     const startBaseX =
@@ -230,11 +196,12 @@ export class MovePhonemeTimingState implements State<
     const originalStartTimeSeconds = targetInfo.originalStartTimeSeconds;
     const editedStartTimeSeconds = targetInfo.editedStartTimeSeconds;
 
-    // 前後の音素タイミングとフレーズ範囲端を越えないようclampする
-    const newStartTime = clamp(
+    const newStartTime = this.clampMovingPhonemeStartTime(
       editedStartTimeSeconds + timeDeltaSeconds,
-      minTimeSeconds,
-      maxTimeSeconds,
+      phraseInfo,
+      prevInfo,
+      targetInfo,
+      frameRate,
     );
 
     const newOffsetSeconds = newStartTime - originalStartTimeSeconds;
@@ -265,5 +232,61 @@ export class MovePhonemeTimingState implements State<
       phonemeTimingEdit,
       trackId: this.targetTrackId,
     });
+  }
+
+  /**
+   * 移動対象の音素の開始時刻を、音素タイミングに課される次の制約に基づいてクランプする。
+   * - 前後の音素が最低1フレーム分残ること
+   * - 非pause区間の開始フレームが所定の最小値以上、終了フレームが所定の最大値以下
+   *
+   * @param candidateTimeSeconds - クランプしたい開始時刻の候補
+   * @param phraseInfo - 対象音素が属するフレーズの情報
+   * @param prevInfo - 対象音素の直前の音素のタイミング情報
+   * @param targetInfo - 対象音素のタイミング情報
+   * @param frameRate - フレームレート
+   */
+  private clampMovingPhonemeStartTime(
+    candidateTimeSeconds: number,
+    phraseInfo: PhraseInfo,
+    prevInfo: PhonemeTimingInfo,
+    targetInfo: PhonemeTimingInfo,
+    frameRate: number,
+  ): number {
+    let minNonPauseStartTime: number | undefined = undefined;
+    if (phraseInfo.minNonPauseStartFrame != undefined) {
+      minNonPauseStartTime =
+        phraseInfo.startTime + phraseInfo.minNonPauseStartFrame / frameRate;
+    }
+
+    let maxNonPauseEndTime: number | undefined = undefined;
+    if (phraseInfo.maxNonPauseEndFrame != undefined) {
+      maxNonPauseEndTime =
+        phraseInfo.startTime + phraseInfo.maxNonPauseEndFrame / frameRate;
+    }
+
+    const oneFrameSeconds = 1 / frameRate;
+
+    let minTimeSeconds = prevInfo.editedStartTimeSeconds + oneFrameSeconds;
+    if (
+      minNonPauseStartTime != undefined &&
+      minTimeSeconds < minNonPauseStartTime
+    ) {
+      minTimeSeconds = minNonPauseStartTime;
+    }
+
+    let maxTimeSeconds = targetInfo.editedEndTimeSeconds - oneFrameSeconds;
+    if (
+      maxNonPauseEndTime != undefined &&
+      maxTimeSeconds > maxNonPauseEndTime
+    ) {
+      maxTimeSeconds = maxNonPauseEndTime;
+    }
+
+    // 上記の切り上げ・切り下げで範囲が反転し得るので、その場合は一点に潰す
+    if (minTimeSeconds > maxTimeSeconds) {
+      minTimeSeconds = maxTimeSeconds;
+    }
+
+    return clamp(candidateTimeSeconds, minTimeSeconds, maxTimeSeconds);
   }
 }
