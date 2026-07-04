@@ -35,7 +35,9 @@ export class MovePhonemeTimingToolIdleState implements State<
       const mouseButton = getButton(input.pointerEvent);
       const selectedTrackId = context.selectedTrackId.value;
 
-      const isPointerMove = input.pointerEvent.type === "pointermove";
+      const isPointerMove =
+        input.pointerEvent.type === "pointermove" &&
+        input.targetArea === "PhonemeTimingArea";
       const isPointerDown =
         input.pointerEvent.type === "pointerdown" &&
         mouseButton === "LEFT_BUTTON" &&

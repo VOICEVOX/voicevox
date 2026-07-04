@@ -126,6 +126,8 @@ export class MovePhonemeTimingState implements State<
           );
           this.shouldApplyPreview = pixelDelta >= 1;
           setNextState(this.returnStateId, undefined);
+        } else if (input.pointerEvent.type === "pointercancel") {
+          setNextState(this.returnStateId, undefined);
         }
       }
     }

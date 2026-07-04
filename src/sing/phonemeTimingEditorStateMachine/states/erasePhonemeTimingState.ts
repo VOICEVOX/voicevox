@@ -106,6 +106,8 @@ export class ErasePhonemeTimingState implements State<
         ) {
           this.shouldApplyPreview = this.targets.length > 0;
           setNextState(this.returnStateId, undefined);
+        } else if (input.pointerEvent.type === "pointercancel") {
+          setNextState(this.returnStateId, undefined);
         }
       }
     }

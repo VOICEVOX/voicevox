@@ -5,6 +5,7 @@
       ref="parameterArea"
       class="parameter-area"
       @pointerdown="onPointerDown"
+      @pointermove="onPointerMove"
     >
       <SequencerParameterGrid class="parameter-grid" :viewportInfo />
       <SequencerWaveform class="waveform" :viewportInfo />
@@ -121,6 +122,15 @@ const onPointerDown = (event: PointerEvent) => {
   });
 };
 
+const onPointerMove = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "PhonemeTimingArea",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
 const onWindowPointerMove = (event: PointerEvent) => {
   stateMachineProcess({
     type: "pointerEvent",
@@ -139,14 +149,25 @@ const onWindowPointerUp = (event: PointerEvent) => {
   });
 };
 
+const onWindowPointerCancel = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "Window",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
 onMountedOrActivated(() => {
   window.addEventListener("pointermove", onWindowPointerMove);
   window.addEventListener("pointerup", onWindowPointerUp);
+  window.addEventListener("pointercancel", onWindowPointerCancel);
 });
 
 onUnmountedOrDeactivated(() => {
   window.removeEventListener("pointermove", onWindowPointerMove);
   window.removeEventListener("pointerup", onWindowPointerUp);
+  window.removeEventListener("pointercancel", onWindowPointerCancel);
 });
 
 // parameter-areaの各行の高さ
