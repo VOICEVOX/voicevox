@@ -45,7 +45,6 @@ let resizeObserver: ResizeObserver | undefined;
 let canvasWidth: number | undefined;
 let canvasHeight: number | undefined;
 
-// ScoreSequencerのグリッドと同一面に見えるよう、同じCSS変数から色を解決する
 let gridLineColorsCache:
   | { theme: "light" | "dark"; measure: Color; beat: Color }
   | undefined;
@@ -58,11 +57,11 @@ const getGridLineColors = () => {
       theme,
       measure: resolveColorFromCssVariable(
         containerElement,
-        "--scheme-color-sing-grid-measure-line",
+        "--scheme-color-sing-parameter-grid-measure-line",
       ),
       beat: resolveColorFromCssVariable(
         containerElement,
-        "--scheme-color-sing-grid-beat-line",
+        "--scheme-color-sing-parameter-grid-beat-line",
       ),
     };
   }
