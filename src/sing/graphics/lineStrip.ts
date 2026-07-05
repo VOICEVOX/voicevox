@@ -30,6 +30,16 @@ export class Color {
   toRgbaArray() {
     return [this.r, this.g, this.b, this.a];
   }
+
+  /** RGB部分を0xRRGGBB形式の数値にする（PIXIのcolor指定用） */
+  toRgbNumber() {
+    return (this.r << 16) | (this.g << 8) | this.b;
+  }
+
+  /** アルファ値を0以上1以下にして返す（PIXIのalpha指定用） */
+  toAlphaFloat() {
+    return this.a / 255;
+  }
 }
 
 /**

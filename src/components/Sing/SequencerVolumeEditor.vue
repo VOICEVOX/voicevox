@@ -85,8 +85,9 @@ import {
   VOLUME_EDITOR_LAYOUT,
   VOLUME_EDITOR_LINE_WIDTH,
   VOLUME_GRAPHICS_COLORS,
-  VOLUME_LINE_COLORS,
 } from "@/components/Sing/volumeEditorStyle";
+import { resolveColorFromCssVariable } from "@/sing/graphics/cssColor";
+import type { Color } from "@/sing/graphics/lineStrip";
 import { absoluteVolumeEditMode } from "@/sing/volumeEditMode";
 import {
   getOverlappingVolumeEditableFrameRanges,
@@ -156,19 +157,28 @@ const phraseSignature = computed(() =>
   ),
 );
 
-const originalVolumeLineColor = computed(() =>
-  isDark.value
-    ? VOLUME_LINE_COLORS.originalDark
-    : VOLUME_LINE_COLORS.originalLight,
-);
-const editedVolumeLineColor = computed(() =>
-  isDark.value ? VOLUME_LINE_COLORS.editedDark : VOLUME_LINE_COLORS.editedLight,
-);
-// 有効範囲バンドは「ここに描ける」ことを示すため、編集後カーブと同系色にする
-const editableRangeBandColor = computed(() => {
-  const color = editedVolumeLineColor.value;
-  return (color.r << 16) | (color.g << 8) | color.b;
-});
+// ボリューム線の色はテーマのCSS変数から解決する
+let volumeLineColorsCache:
+  | { isDark: boolean; original: Color; edited: Color }
+  | undefined;
+
+const getVolumeLineColors = () => {
+  if (volumeLineColorsCache?.isDark !== isDark.value) {
+    const containerElement = ensureNotNullish(canvasContainer.value);
+    volumeLineColorsCache = {
+      isDark: isDark.value,
+      original: resolveColorFromCssVariable(
+        containerElement,
+        "--scheme-color-sing-volume-original-line",
+      ),
+      edited: resolveColorFromCssVariable(
+        containerElement,
+        "--scheme-color-sing-volume-edited-line",
+      ),
+    };
+  }
+  return volumeLineColorsCache;
+};
 
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 const contextMenuData = computed<ContextMenuItemData[]>(() => [
@@ -499,11 +509,13 @@ const render = () => {
     offsetX: props.viewportInfo.offsetX,
     leftPadding: VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
   };
+  const lineColors = getVolumeLineColors();
 
   updateHorizontalGrid();
 
   // 有効編集範囲を下端のバンドで示す
   // 面のオーバーレイはグリッドやカーブと干渉するため、レーン下端の細い帯にしている
+  // 「ここに描ける」ことを示すため、編集後カーブと同系色にする
   if (editableRangeBand != undefined) {
     editableRangeBand.clear();
     const frameRate = editorFrameRate.value;
@@ -530,7 +542,7 @@ const render = () => {
           bandHeight,
         )
         .fill({
-          color: editableRangeBandColor.value,
+          color: lineColors.edited.toRgbNumber(),
           alpha: VOLUME_EDITOR_ALPHA.editableRangeBand,
         });
     }
@@ -569,8 +581,8 @@ const render = () => {
     }
   }
 
-  originalVolumeLine.color = originalVolumeLineColor.value;
-  editedVolumeLine.color = editedVolumeLineColor.value;
+  originalVolumeLine.color = lineColors.original;
+  editedVolumeLine.color = lineColors.edited;
 
   originalVolumeLine.update(volumeOriginalSegmentsData, viewInfo);
   editedVolumeLine.update(volumeEffectiveSegmentsData, viewInfo);
@@ -1038,14 +1050,15 @@ onMounted(async () => {
   erasePreviewOverlay = new PIXI.Graphics();
   gridGraphics = new PIXI.Graphics();
   editableRangeBand = new PIXI.Graphics();
+  const initialLineColors = getVolumeLineColors();
   originalVolumeLine = new VolumeLine({
-    color: originalVolumeLineColor.value,
+    color: initialLineColors.original,
     width: VOLUME_EDITOR_LINE_WIDTH.originalVolume,
     dashed: true,
     isVisible: true,
   });
   editedVolumeLine = new VolumeLine({
-    color: editedVolumeLineColor.value,
+    color: initialLineColors.edited,
     width: VOLUME_EDITOR_LINE_WIDTH.editedVolume,
     showArea: true,
     areaAlpha: VOLUME_EDITOR_ALPHA.editedVolumeArea,

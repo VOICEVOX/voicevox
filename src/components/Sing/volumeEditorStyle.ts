@@ -1,5 +1,3 @@
-import { Color } from "@/sing/graphics/lineStrip";
-
 export const VOLUME_EDITOR_LAYOUT = {
   keyColumnWidthPx: 48,
   tooltipWidthPx: 64,
@@ -26,13 +24,6 @@ export const VOLUME_EDITOR_ALPHA = {
   tooltipGuide: 0.45,
   erasePreviewOverlay: 0.12,
   editableRangeBand: 0.5,
-} as const;
-
-export const VOLUME_LINE_COLORS = {
-  originalLight: new Color(156, 158, 156, 191),
-  originalDark: new Color(114, 116, 114, 191),
-  editedLight: new Color(0, 167, 63, 209),
-  editedDark: new Color(95, 188, 117, 209),
 } as const;
 
 // NOTE: PIXI.GraphicsはCSS変数を参照できないため、sing-colors.scssの色の近似hex値をハードコードしている

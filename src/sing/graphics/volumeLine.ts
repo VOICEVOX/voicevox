@@ -27,10 +27,6 @@ type VolumeLineOptions = {
   isVisible?: boolean;
 };
 
-const colorToHex = (color: Color) => {
-  return (color.r << 16) + (color.g << 8) + color.b;
-};
-
 /**
  * ボリュームライン（折れ線と塗りつぶし）を描画するクラス。
  */
@@ -74,7 +70,7 @@ export class VolumeLine {
 
     const strokeStyle = {
       width: this.width,
-      color: colorToHex(this.color),
+      color: this.color.toRgbNumber(),
       alpha,
       alignment: 0.5,
     };
@@ -115,7 +111,7 @@ export class VolumeLine {
               y: viewInfo.viewportHeight,
             },
           ])
-          .fill({ color: colorToHex(this.color), alpha: this.areaAlpha });
+          .fill({ color: this.color.toRgbNumber(), alpha: this.areaAlpha });
       }
 
       if (this.dashed) {
