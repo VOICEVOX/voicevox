@@ -17,11 +17,22 @@ import {
   getTimeSignaturePositions,
 } from "@/sing/music";
 import { assertNonNullable } from "@/type/utility";
-import { SEQUENCER_PARAMETER_GRID_LINE_STYLE } from "@/components/Sing/sequencerParameterGridStyle";
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
 }>();
+
+// テーマに応じた線のスタイル
+const gridLineStyles = {
+  light: {
+    measure: { color: 0x8a8a8a, alpha: 0.35 },
+    beat: { color: 0xc4c4c4, alpha: 0.25 },
+  },
+  dark: {
+    measure: { color: 0x6b6b6b, alpha: 0.35 },
+    beat: { color: 0x4a4a4a, alpha: 0.25 },
+  },
+} as const;
 
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
@@ -123,7 +134,7 @@ const render = () => {
   }
   graphic.clear();
 
-  const style = SEQUENCER_PARAMETER_GRID_LINE_STYLE[currentTheme.value];
+  const style = gridLineStyles[currentTheme.value];
 
   // 小節線をまとめて描画
   for (const x of measureLineXs) {

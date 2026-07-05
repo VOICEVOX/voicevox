@@ -1,26 +1,34 @@
 import { decibelToLinear } from "@/sing/audio";
+import {
+  absoluteVolumeValueScale,
+  type VolumeValueScale,
+} from "@/sing/volumeValueScale";
 
 /**
- * ボリュームの編集値をどう解釈するかを定義する
- * 今後の相対値編集が必要になった場合、VolumeEditModeを変更することで切り替えられるようにする
- * エディタの表示と合成の両方がこの型を参照することで、表示と再生結果のズレを防ぐ
+ * ボリューム編集値の解釈を定義する。
+ * 相対値編集を追加する場合はこの実装を差し替える。
+ * 表示と合成が同じ実装を参照するため、表示と再生結果はズレない。
  */
 export type VolumeEditMode = {
   /**
-   * エディタ上のポインタ位置が示すdBを、volumeEditDataに保存する編集値へ変換する
-   * 相対値編集の場合は変換に元のボリュームが必要になるため、originalValueも受け取る
+   * 編集値の解釈と対になる表示スケール。
+   * モードごとに有効なスケールは1つなので、不正な組み合わせを防ぐためモード側が持つ。
+   */
+  valueScale: VolumeValueScale;
+  /**
+   * エディタ上のポインタ位置が示すdBを、volumeEditDataに保存する編集値へ変換する。
+   * 相対値編集では変換に元のボリュームが必要になるため、originalValueも受け取る。
    */
   toStoredValue: (db: number, originalValue: number | undefined) => number;
   /**
-   * 編集値と元のボリュームから、実際に適用する実ボリュームを計算する
-   * この計算結果がエディタでの表示と合成の両方に使われる
-   * 元のボリュームが存在しないフレームでは、originalValueにundefinedが渡される
-   * VALUE_INDICATING_NO_DATAは呼び出し側でundefinedに変換し、この関数には渡さないようにする
+   * 編集値と元のボリュームから、実際に適用する実ボリュームを計算する。
+   * 実ボリュームが定まらない場合（元のボリュームを必要とするモードでoriginalValueがない場合）はundefinedを返す。
+   * originalValueにVALUE_INDICATING_NO_DATAは渡さず、呼び出し側でundefinedに変換すること。
    */
   toEffectiveValue: (
     editValue: number,
     originalValue: number | undefined,
-  ) => number;
+  ) => number | undefined;
 };
 
 /**
@@ -28,12 +36,13 @@ export type VolumeEditMode = {
  * 編集値はlinear volumeそのものとして保存され、元のボリュームに依存せずそのまま適用される
  */
 export const absoluteVolumeEditMode: VolumeEditMode = {
+  valueScale: absoluteVolumeValueScale,
   toStoredValue: (db) => {
     if (!Number.isFinite(db)) {
       throw new Error("db must be finite.");
     }
-    return Math.min(decibelToLinear(db), 1);
+    return decibelToLinear(db);
   },
-  // NOTE: 編集値が負値になっているケースがありえそうなため、0以上にクランプする
+  // NOTE: 編集結果が負値になるケースに備えて0以上にクランプする
   toEffectiveValue: (editValue) => Math.max(editValue, 0),
 };

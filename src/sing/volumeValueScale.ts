@@ -1,5 +1,5 @@
 import { linearToDecibel } from "@/sing/audio";
-import { clamp } from "@/sing/utility";
+import { clamp, round } from "@/sing/utility";
 
 export type VolumeGridLine = {
   db: number;
@@ -16,6 +16,8 @@ export type VolumeValueScale = {
   normalizedYToDb: (normalizedY: number) => number;
   dbToNormalizedY: (db: number) => number;
   valueToNormalizedY: (value: number) => number;
+  /** ツールチップなどに表示するdB値を整形する */
+  formatDbLabel: (db: number) => string;
 };
 
 // NOTE: 最大値・最小値はエンジン出力と表示に合わせたヒューリスティックなもの。
@@ -110,6 +112,12 @@ const valueToNormalizedY = (value: number) => {
   return dbToNormalizedY(linearToDecibel(Math.min(value, 1)));
 };
 
+const formatDbLabel = (db: number) => {
+  // スケール上端はグリッドラベルと同じ「0」表記に揃える
+  const roundedDb = db >= ABSOLUTE_VOLUME_MAX_DB ? 0 : round(db, 1);
+  return roundedDb.toFixed(1);
+};
+
 export const absoluteVolumeValueScale: VolumeValueScale = {
   minDb: ABSOLUTE_VOLUME_MIN_DB,
   maxDb: ABSOLUTE_VOLUME_MAX_DB,
@@ -117,4 +125,5 @@ export const absoluteVolumeValueScale: VolumeValueScale = {
   normalizedYToDb,
   dbToNormalizedY,
   valueToNormalizedY,
+  formatDbLabel,
 };

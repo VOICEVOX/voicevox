@@ -38,6 +38,15 @@ describe("volumeValueScale", () => {
     ).toThrow("value must be finite.");
   });
 
+  it("dBをラベル文字列に整形する", () => {
+    expect(absoluteVolumeValueScale.formatDbLabel(-6)).toBe("-6.0");
+    expect(absoluteVolumeValueScale.formatDbLabel(-12.34)).toBe("-12.3");
+    // スケール上端はグリッドラベルの「0」と表記を揃える
+    expect(absoluteVolumeValueScale.formatDbLabel(ABSOLUTE_VOLUME_MAX_DB)).toBe(
+      "0.0",
+    );
+  });
+
   it("絶対ボリューム用グリッド線を定義する", () => {
     expect(
       absoluteVolumeValueScale.gridLines.map((line) => line.label),

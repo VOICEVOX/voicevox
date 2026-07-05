@@ -87,7 +87,6 @@ import {
   VOLUME_GRAPHICS_COLORS,
   VOLUME_LINE_COLORS,
 } from "@/components/Sing/volumeEditorStyle";
-import { absoluteVolumeValueScale } from "@/sing/volumeValueScale";
 import { absoluteVolumeEditMode } from "@/sing/volumeEditMode";
 import {
   getOverlappingVolumeEditableFrameRanges,
@@ -108,8 +107,8 @@ const emit = defineEmits<{
   zoomTimeline: [anchorX: number, deltaY: number];
 }>();
 
-const volumeValueScale = absoluteVolumeValueScale;
 const volumeEditMode = absoluteVolumeEditMode;
+const volumeValueScale = volumeEditMode.valueScale;
 
 const store = useStore();
 const { volumePreviewEdit, stateMachineProcess, previewMode, cursorState } =
@@ -165,6 +164,11 @@ const originalVolumeLineColor = computed(() =>
 const editedVolumeLineColor = computed(() =>
   isDark.value ? VOLUME_LINE_COLORS.editedDark : VOLUME_LINE_COLORS.editedLight,
 );
+// 有効範囲バンドは「ここに描ける」ことを示すため、編集後カーブと同系色にする
+const editableRangeBandColor = computed(() => {
+  const color = editedVolumeLineColor.value;
+  return (color.r << 16) | (color.g << 8) | color.b;
+});
 
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 const contextMenuData = computed<ContextMenuItemData[]>(() => [
@@ -195,13 +199,12 @@ const cursorClass = computed(() => {
     return "cursor-default";
   }
   switch (cursorState.value) {
-    case "DRAW":
-      return "cursor-draw";
     case "ERASE":
       return "cursor-erase";
     case "NOT_ALLOWED":
       return "cursor-not-allowed";
     default:
+      // 精密な位置指定がしやすいよう、描画時もペンアイコンではなくcrosshairにする
       return "cursor-crosshair";
   }
 });
@@ -223,6 +226,7 @@ let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let gridGraphics: PIXI.Graphics | undefined;
 let erasePreviewOverlay: PIXI.Graphics | undefined;
+let editableRangeBand: PIXI.Graphics | undefined;
 let originalVolumeLine: VolumeLine | undefined;
 let editedVolumeLine: VolumeLine | undefined;
 let requestId: number | undefined;
@@ -338,16 +342,15 @@ const horizontalGridLabels = computed(() => {
       const y = (1 - volumeValueScale.dbToNormalizedY(line.db)) * height;
       return {
         label: line.label,
+        // ラベルはheight >= sparseGridLabelMinHeightPxのときのみ存在するため、clampの範囲は逆転しない
         y: clamp(y, 8, height - 8),
       };
     },
   );
 });
 
-// NOTE: ツールチップはカーソルの右下に一定オフセットで追従表示する
-// 線を書く場合、視線方向が多くの場合右のため自然に目に入り、無駄な視線移動を避ける
-// また、下寄りとして、描いていく先側を阻害しないようにする
-// エリア端では反転などはせず、余計な注意を引かないようにする
+// NOTE: ツールチップは描画中の視線方向（右下）に置くと目に入りやすく、描く先も隠さない。
+// エリア端でも反転はさせず、余計な注意を引かないようにする。
 const tooltipStyle = computed(() => {
   const tooltip = tooltipState.value;
   const width = viewportWidth.value;
@@ -394,21 +397,12 @@ const tooltipGuideLineStyle = computed(() => {
   };
 });
 
-const formatAbsoluteDbLabel = (db: number) => {
-  const roundedDb = db >= volumeValueScale.maxDb ? 0 : Math.round(db * 10) / 10;
-  return (Object.is(roundedDb, -0) ? 0 : roundedDb).toFixed(1);
-};
-
-// カーソルが指す絶対dB値を表示する。
-// 描画中に制御している変数はペンのY位置＝絶対dBなので、それをそのまま数値にする。
-// 元のボリュームとの差分は数字では表現しない（連続編集では差分は曲線になり、スカラーでは表せないため）。
-// 差分は元カーブの点線と編集後の線の縦の距離として知覚的に読み取れる。
+// 元ボリュームとの差分は連続編集では曲線になりスカラーで表せないため、絶対dBを表示する
 const formatTooltipValue = (pointerInfo: VolumePointerInfo) => {
-  return `${formatAbsoluteDbLabel(pointerInfo.db)} dB`;
+  return `${volumeValueScale.formatDbLabel(pointerInfo.db)} dB`;
 };
 
 const updateTooltip = (pointerInfo: VolumePointerInfo) => {
-  // ツールチップはボリューム描画のドラッグ中のみ表示する
   const isDrawing = previewMode.value === "VOLUME_DRAW";
   if (!isDrawing || !pointerInfo.isEditable) {
     tooltipState.value = undefined;
@@ -508,7 +502,41 @@ const render = () => {
 
   updateHorizontalGrid();
 
-  // 削除中のプレビューオーバーレイ(半透明)
+  // 有効編集範囲を下端のバンドで示す
+  // 面のオーバーレイはグリッドやカーブと干渉するため、レーン下端の細い帯にしている
+  if (editableRangeBand != undefined) {
+    editableRangeBand.clear();
+    const frameRate = editorFrameRate.value;
+    const bandHeight = VOLUME_EDITOR_LAYOUT.editableRangeBandHeightPx;
+    for (const range of editableFrameRanges.value) {
+      const startX =
+        frameToBaseX(range.startFrame, frameRate) * viewInfo.zoomX -
+        viewInfo.offsetX +
+        viewInfo.leftPadding;
+      const endX =
+        frameToBaseX(range.endFrame, frameRate) * viewInfo.zoomX -
+        viewInfo.offsetX +
+        viewInfo.leftPadding;
+      const clampedStart = Math.max(viewInfo.leftPadding, startX);
+      const clampedEnd = Math.min(viewInfo.viewportWidth, endX);
+      if (clampedEnd <= clampedStart) {
+        continue;
+      }
+      editableRangeBand
+        .rect(
+          clampedStart,
+          viewInfo.viewportHeight - bandHeight,
+          clampedEnd - clampedStart,
+          bandHeight,
+        )
+        .fill({
+          color: editableRangeBandColor.value,
+          alpha: VOLUME_EDITOR_ALPHA.editableRangeBand,
+        });
+    }
+  }
+
+  // 削除中のプレビューオーバーレイ
   if (erasePreviewOverlay != undefined) {
     erasePreviewOverlay.clear();
     for (const range of previewEraseRanges.value) {
@@ -752,10 +780,11 @@ const refreshEffectiveVolumeSegments = () => {
     const edited = editFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
     const original = originalFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
     if (edited !== VALUE_INDICATING_NO_DATA) {
-      effectiveFramewise[i] = volumeEditMode.toEffectiveValue(
-        edited,
-        original === VALUE_INDICATING_NO_DATA ? undefined : original,
-      );
+      effectiveFramewise[i] =
+        volumeEditMode.toEffectiveValue(
+          edited,
+          original === VALUE_INDICATING_NO_DATA ? undefined : original,
+        ) ?? VALUE_INDICATING_NO_DATA;
     } else {
       effectiveFramewise[i] = original;
     }
@@ -793,6 +822,23 @@ const getViewportRect = () => {
     throw new Error("volume editor viewport size is invalid.");
   }
   return rect;
+};
+
+// NOTE: サイズ0のrectはキャッシュしない
+// レイアウト途中の値でポインタ座標計算を壊さないようにし、ドラッグ中は直前の有効なrectで継続させる
+const updateViewportRectCache = () => {
+  const containerEl = canvasContainer.value;
+  assertNonNullable(containerEl, "volume editor viewport element is null.");
+  const rect = containerEl.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    return;
+  }
+  viewportRectCache = {
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
+  };
 };
 
 const isPointerEventInParameterArea = (pointerEvent: PointerEvent) => {
@@ -855,18 +901,7 @@ const onSurfacePointerDown = (event: PointerEvent) => {
   if (event.button !== 0) {
     return;
   }
-  const containerEl = canvasContainer.value;
-  assertNonNullable(containerEl, "volume editor viewport element is null.");
-  const rect = containerEl.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) {
-    throw new Error("volume editor viewport size is invalid.");
-  }
-  viewportRectCache = {
-    left: rect.left,
-    top: rect.top,
-    width: rect.width,
-    height: rect.height,
-  };
+  updateViewportRectCache();
   isPointerInParameterArea.value = isPointerEventInParameterArea(event);
   if (!isPointerInParameterArea.value) {
     hidePointerFeedback();
@@ -982,13 +1017,7 @@ onMounted(async () => {
   }
 
   // NOTE: レイアウトスラッシングなど防止のため、初期サイズをキャッシュする
-  const initialRect = containerEl.getBoundingClientRect();
-  viewportRectCache = {
-    left: initialRect.left,
-    top: initialRect.top,
-    width: initialRect.width,
-    height: initialRect.height,
-  };
+  updateViewportRectCache();
   viewportWidth.value = containerEl.clientWidth;
   viewportHeight.value = containerEl.clientHeight;
 
@@ -1008,6 +1037,7 @@ onMounted(async () => {
   stage = new PIXI.Container();
   erasePreviewOverlay = new PIXI.Graphics();
   gridGraphics = new PIXI.Graphics();
+  editableRangeBand = new PIXI.Graphics();
   originalVolumeLine = new VolumeLine({
     color: originalVolumeLineColor.value,
     width: VOLUME_EDITOR_LINE_WIDTH.originalVolume,
@@ -1024,6 +1054,7 @@ onMounted(async () => {
 
   stage.addChild(erasePreviewOverlay);
   stage.addChild(gridGraphics);
+  stage.addChild(editableRangeBand);
   stage.addChild(originalVolumeLine.container);
   stage.addChild(editedVolumeLine.container);
 
@@ -1041,13 +1072,7 @@ onMounted(async () => {
     assertNonNullable(canvasContainer.value);
     const width = canvasContainer.value.clientWidth;
     const height = canvasContainer.value.clientHeight;
-    const rect = canvasContainer.value.getBoundingClientRect();
-    viewportRectCache = {
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
-    };
+    updateViewportRectCache();
     if (width > 0 && height > 0) {
       if (width === viewportWidth.value && height === viewportHeight.value) {
         return;
@@ -1076,6 +1101,7 @@ onUnmounted(() => {
   originalVolumeLine?.destroy();
   editedVolumeLine?.destroy();
   gridGraphics?.destroy();
+  editableRangeBand?.destroy();
   stage?.destroy();
   renderer?.destroy({ removeView: true });
   resizeObserver?.disconnect();
