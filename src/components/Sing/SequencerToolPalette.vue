@@ -96,6 +96,8 @@ defineEmits<{
 </script>
 
 <style scoped lang="scss">
+@use "@/styles/v2/variables" as vars;
+
 .tool-palette {
   display: flex;
   flex-direction: column;
@@ -104,7 +106,7 @@ defineEmits<{
   position: absolute;
   top: 56px;
   left: 64px;
-  z-index: var(--z-index-sing-tool-palette);
+  z-index: vars.$z-index-sing-tool-palette;
   padding: 2px;
   border-radius: 24px;
   gap: 0;

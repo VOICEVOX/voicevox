@@ -670,10 +670,15 @@ export function applyVolumeEdit(
       continue;
     }
     const indexInPhrase = i - phraseQueryStartFrame;
-    volume[indexInPhrase] = volumeEditMode.toEffectiveValue(
+    const effectiveVolume = volumeEditMode.toEffectiveValue(
       editedVolume,
       volume[indexInPhrase],
     );
+    // 実効値が定まらないフレームは元のボリュームを維持する
+    if (effectiveVolume == undefined) {
+      continue;
+    }
+    volume[indexInPhrase] = effectiveVolume;
   }
 }
 

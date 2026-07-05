@@ -3,11 +3,13 @@ import { Color } from "@/sing/graphics/lineStrip";
 export const VOLUME_EDITOR_LAYOUT = {
   keyColumnWidthPx: 48,
   tooltipWidthPx: 64,
-  tooltipHeightPx: 16,
+  // ツールチップの実高さ（line-height 14px + 上下padding 3px）。エリア端でのクランプ計算に使う
+  tooltipHeightPx: 20,
   tooltipOffsetPx: 16,
   tooltipPaddingPx: 4,
   denseGridLabelMinHeightPx: 120,
   sparseGridLabelMinHeightPx: 80,
+  editableRangeBandHeightPx: 3,
 } as const;
 
 export const VOLUME_EDITOR_LINE_WIDTH = {
@@ -23,6 +25,7 @@ export const VOLUME_EDITOR_ALPHA = {
   horizontalGridBaseline: 0.28,
   tooltipGuide: 0.45,
   erasePreviewOverlay: 0.12,
+  editableRangeBand: 0.5,
 } as const;
 
 export const VOLUME_LINE_COLORS = {
@@ -32,10 +35,9 @@ export const VOLUME_LINE_COLORS = {
   editedDark: new Color(95, 188, 117, 209),
 } as const;
 
+// NOTE: PIXI.GraphicsはCSS変数を参照できないため、sing-colors.scssの色の近似hex値をハードコードしている
 export const VOLUME_GRAPHICS_COLORS = {
   horizontalLineLight: 0xadadad,
   horizontalLineDark: 0x585858,
-  tooltipGuideLight: 0x4f4f4f,
-  tooltipGuideDark: 0xb8b8b8,
   erasePreviewOverlay: 0x000000,
 } as const;

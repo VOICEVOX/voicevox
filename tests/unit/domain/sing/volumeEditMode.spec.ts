@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { decibelToLinear } from "@/sing/audio";
 import { absoluteVolumeEditMode } from "@/sing/volumeEditMode";
-import { ABSOLUTE_VOLUME_MAX_DB } from "@/sing/volumeValueScale";
+import {
+  ABSOLUTE_VOLUME_MAX_DB,
+  absoluteVolumeValueScale,
+} from "@/sing/volumeValueScale";
 
 describe("absoluteVolumeEditMode", () => {
+  it("絶対値スケールと組で定義されている", () => {
+    expect(absoluteVolumeEditMode.valueScale).toBe(absoluteVolumeValueScale);
+  });
+
   it("dBを保存値のlinear volumeに変換する", () => {
     expect(absoluteVolumeEditMode.toStoredValue(-6, undefined)).toBeCloseTo(
       decibelToLinear(-6),
@@ -16,7 +23,7 @@ describe("absoluteVolumeEditMode", () => {
     );
   });
 
-  it("dBから保存値への変換結果は1を超えない", () => {
+  it("スケール上端のdBの保存値は1を超えない", () => {
     expect(
       absoluteVolumeEditMode.toStoredValue(ABSOLUTE_VOLUME_MAX_DB, undefined),
     ).toBeLessThanOrEqual(1);
