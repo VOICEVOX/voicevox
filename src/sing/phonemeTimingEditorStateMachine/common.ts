@@ -3,7 +3,7 @@ import type { Store } from "@/store";
 import type { StateDefinitions } from "@/sing/stateMachine";
 import type { CursorState, ViewportInfo } from "@/sing/viewHelper";
 import { NoteId, TrackId } from "@/type/preload";
-import type { Note, PhonemeTimingEditData, Tempo } from "@/domain/project/type";
+import type { PhonemeTimingEditData, Tempo } from "@/domain/project/type";
 import type {
   EditorFrameAudioQuery,
   EditorFrameAudioQueryKey,
@@ -40,8 +40,6 @@ export type PhonemeTimingPreview =
 export type PhraseInfo = Readonly<{
   startTime: number;
   query?: EditorFrameAudioQuery;
-  // NOTE: notesは現時点では未使用。今後の編集機能の実装で使う予定の先行定義
-  notes: Note[];
   minNonPauseStartFrame: number | undefined;
   maxNonPauseEndFrame: number | undefined;
 }>;
@@ -174,7 +172,6 @@ export function getPhraseInfosForTrack(
     phraseInfos.set(phraseKey, {
       startTime: phrase.startTime,
       query,
-      notes: phrase.notes,
       minNonPauseStartFrame: phrase.minNonPauseStartFrame,
       maxNonPauseEndFrame: phrase.maxNonPauseEndFrame,
     });
