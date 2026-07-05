@@ -159,7 +159,7 @@ const phraseSignature = computed(() =>
 
 // ボリューム線の色はテーマのCSS変数から解決する
 let volumeLineColorsCache:
-  | { isDark: boolean; original: Color; edited: Color }
+  | { isDark: boolean; original: Color; edited: Color; editing: Color }
   | undefined;
 
 const getVolumeLineColors = () => {
@@ -174,6 +174,10 @@ const getVolumeLineColors = () => {
       edited: resolveColorFromCssVariable(
         containerElement,
         "--scheme-color-sing-volume-edited-line",
+      ),
+      editing: resolveColorFromCssVariable(
+        containerElement,
+        "--scheme-color-sing-volume-edited-line-editing",
       ),
     };
   }
@@ -515,7 +519,7 @@ const render = () => {
 
   // 有効編集範囲を下端のバンドで示す
   // 面のオーバーレイはグリッドやカーブと干渉するため、レーン下端の細い帯にしている
-  // 「ここに描ける」ことを示すため、編集後カーブと同系色にする
+  // 操作可能性の手がかりなので、操作中と同じprimary系の色を使う
   if (editableRangeBand != undefined) {
     editableRangeBand.clear();
     const frameRate = editorFrameRate.value;
@@ -542,7 +546,7 @@ const render = () => {
           bandHeight,
         )
         .fill({
-          color: lineColors.edited.toRgbNumber(),
+          color: lineColors.editing.toRgbNumber(),
           alpha: VOLUME_EDITOR_ALPHA.editableRangeBand,
         });
     }
@@ -582,7 +586,11 @@ const render = () => {
   }
 
   originalVolumeLine.color = lineColors.original;
-  editedVolumeLine.color = lineColors.edited;
+  // ノートの選択状態と同じく、描いている間だけprimaryで強調する
+  editedVolumeLine.color =
+    previewMode.value === "VOLUME_DRAW"
+      ? lineColors.editing
+      : lineColors.edited;
 
   originalVolumeLine.update(volumeOriginalSegmentsData, viewInfo);
   editedVolumeLine.update(volumeEffectiveSegmentsData, viewInfo);
@@ -971,6 +979,7 @@ watch(
     () => props.viewportInfo.scaleX,
     () => props.viewportInfo.offsetX,
     isDark,
+    previewMode,
     () => viewportWidth.value,
     () => viewportHeight.value,
   ],
