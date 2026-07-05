@@ -343,9 +343,12 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-94) var(--neutral-c) var(--neutral-h)
   );
 
-  /* ボリューム編集: 実効線は唯一の彩度アクセント、オリジナル線は同hue低彩度(secondary)の参照情報 */
+  /* ボリューム編集: ノートと同じ状態表現（通常=secondary、操作中=primary）に合わせる */
   --scheme-color-sing-volume-edited-line: oklch(
-    var(--lr-55) 0.14 var(--primary-h) / 82%
+    var(--lr-45) var(--secondary-c) var(--secondary-h) / 85%
+  );
+  --scheme-color-sing-volume-edited-line-editing: oklch(
+    var(--lr-45) var(--primary-c) var(--primary-h) / 90%
   );
   --scheme-color-sing-volume-original-line: oklch(
     var(--lr-70) var(--secondary-c) var(--secondary-h) / 75%
@@ -612,9 +615,12 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-14) var(--neutral-c) var(--neutral-h)
   );
 
-  /* ボリューム編集: 実効線は唯一の彩度アクセント、オリジナル線は同hue低彩度(secondary)の参照情報 */
+  /* ボリューム編集: ノートと同じ状態表現（通常=secondary、操作中=primary）に合わせる */
   --scheme-color-sing-volume-edited-line: oklch(
-    var(--lr-70) 0.12 var(--primary-h) / 82%
+    var(--lr-75) var(--secondary-c) var(--secondary-h) / 85%
+  );
+  --scheme-color-sing-volume-edited-line-editing: oklch(
+    var(--lr-75) var(--primary-c) var(--primary-h) / 90%
   );
   --scheme-color-sing-volume-original-line: oklch(
     var(--lr-45) var(--secondary-c) var(--secondary-h) / 75%
