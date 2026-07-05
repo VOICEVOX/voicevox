@@ -1165,6 +1165,9 @@ onUnmounted(() => {
   inset: 0 auto 0 0;
   z-index: 2;
   width: v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
+  // 鍵盤と同じ見た目の軸エリアにする。カーブが左へスクロールした分はこの下に隠れる
+  background: var(--scheme-color-sing-piano-key-white);
+  border-right: 1px solid var(--scheme-color-sing-piano-keys-right-border);
   pointer-events: none;
   user-select: none;
 }
