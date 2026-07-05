@@ -23,7 +23,7 @@ export const VOLUME_EDITOR_ALPHA = {
   horizontalGridBaseline: 0.28,
   tooltipGuide: 0.45,
   erasePreviewOverlay: 0.12,
-  editableRangeBand: 0.5,
+  editableRangeBand: 0.4,
 } as const;
 
 // NOTE: PIXI.GraphicsはCSS変数を参照できないため、sing-colors.scssの色の近似hex値をハードコードしている

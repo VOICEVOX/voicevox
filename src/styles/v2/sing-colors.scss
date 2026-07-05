@@ -343,12 +343,13 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-94) var(--neutral-c) var(--neutral-h)
   );
 
-  /* ボリューム編集: ノートと同じ状態表現（通常=secondary、操作中=primary）に合わせる */
+  /* ボリューム編集: ノートと同じく操作中は彩度を上げて強調する。
+     細線は面積効果で知覚彩度が下がるため、通常時もノートのsecondaryより彩度を高くしている */
   --scheme-color-sing-volume-edited-line: oklch(
-    var(--lr-45) var(--secondary-c) var(--secondary-h) / 85%
+    var(--lr-45) var(--primary-c) var(--primary-h) / 85%
   );
   --scheme-color-sing-volume-edited-line-editing: oklch(
-    var(--lr-45) var(--primary-c) var(--primary-h) / 90%
+    var(--lr-50) 0.14 var(--primary-h) / 92%
   );
   --scheme-color-sing-volume-original-line: oklch(
     var(--lr-70) var(--secondary-c) var(--secondary-h) / 75%
@@ -615,12 +616,13 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-14) var(--neutral-c) var(--neutral-h)
   );
 
-  /* ボリューム編集: ノートと同じ状態表現（通常=secondary、操作中=primary）に合わせる */
+  /* ボリューム編集: ノートと同じく操作中は彩度を上げて強調する。
+     細線は面積効果で知覚彩度が下がるため、通常時もノートのsecondaryより彩度を高くしている */
   --scheme-color-sing-volume-edited-line: oklch(
-    var(--lr-75) var(--secondary-c) var(--secondary-h) / 85%
+    var(--lr-75) var(--primary-c) var(--primary-h) / 85%
   );
   --scheme-color-sing-volume-edited-line-editing: oklch(
-    var(--lr-75) var(--primary-c) var(--primary-h) / 90%
+    var(--lr-75) 0.13 var(--primary-h) / 92%
   );
   --scheme-color-sing-volume-original-line: oklch(
     var(--lr-45) var(--secondary-c) var(--secondary-h) / 75%
