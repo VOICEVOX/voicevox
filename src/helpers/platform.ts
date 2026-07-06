@@ -27,8 +27,10 @@ function checkOs(os: "windows" | "mac" | "linux"): boolean {
   } else if (navigator?.userAgentData) {
     // electronのレンダラープロセス用、Chrome系統が実装する実験的機能
     isSpecifiedOs = navigator.userAgentData.platform.toLowerCase().includes(os);
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
   } else if (navigator?.platform) {
     // ブラウザ用、非推奨機能
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     isSpecifiedOs = navigator.platform.toLowerCase().includes(os);
   } else {
     // ブラウザ用、不正確

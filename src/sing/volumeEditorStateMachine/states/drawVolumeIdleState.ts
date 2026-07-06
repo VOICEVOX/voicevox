@@ -5,6 +5,7 @@ import type {
 } from "../common";
 import type { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
+import { isFrameInVolumeEditableRange } from "@/sing/volumeEditRanges";
 
 export class DrawVolumeIdleState implements State<
   VolumeEditorStateDefinitions,
@@ -26,21 +27,37 @@ export class DrawVolumeIdleState implements State<
     context: VolumeEditorContext;
     setNextState: SetNextState<VolumeEditorStateDefinitions>;
   }) {
-    if (input.type === "pointerEvent") {
-      const mouseButton = getButton(input.pointerEvent);
-      const trackId = context.selectedTrackId.value;
+    if (input.type !== "pointerEvent") {
+      return;
+    }
+    if (input.targetArea !== "Editor") {
+      return;
+    }
 
-      if (
-        input.pointerEvent.type === "pointerdown" &&
-        mouseButton === "LEFT_BUTTON" &&
-        input.targetArea === "Editor"
-      ) {
-        setNextState("drawVolume", {
-          startPosition: input.position,
-          targetTrackId: trackId,
-          returnStateId: this.id,
-        });
-      }
+    const { pointerEvent, position } = input;
+
+    // エディタ外へ出たらカーソルを既定（描画）へ戻す
+    if (pointerEvent.type === "pointerleave") {
+      context.cursorState.value = "DRAW";
+      return;
+    }
+
+    const isEditable = isFrameInVolumeEditableRange(
+      position.frame,
+      context.getEditableFrameRanges(),
+    );
+    context.cursorState.value = isEditable ? "DRAW" : "NOT_ALLOWED";
+
+    if (
+      pointerEvent.type === "pointerdown" &&
+      getButton(pointerEvent) === "LEFT_BUTTON" &&
+      isEditable
+    ) {
+      setNextState("drawVolume", {
+        startPosition: position,
+        targetTrackId: context.selectedTrackId.value,
+        returnStateId: this.id,
+      });
     }
   }
 

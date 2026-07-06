@@ -42,7 +42,9 @@ export class Store<
     // なお、Vuexはメンテナンスモードであり今後この動作が変わることはないと考えられる。
     const { plugins, ...restOptions } = options;
     super(restOptions as OriginalStoreOptions<S>);
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     this.actions = dotNotationDispatchProxy(this.dispatch.bind(this));
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     this.mutations = dotNotationCommitProxy(this.commit.bind(this));
     plugins?.forEach((plugin) => plugin(this));
   }
@@ -343,7 +345,9 @@ const unwrapDotNotationAction = <
   ) {
     const dotNotationInjectee = {
       ...injectee,
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       actions: dotNotationDispatchProxy<SA>(injectee.dispatch),
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       mutations: dotNotationCommitProxy<SM>(injectee.commit),
     };
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return

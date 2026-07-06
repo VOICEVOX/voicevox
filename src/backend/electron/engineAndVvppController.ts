@@ -281,10 +281,18 @@ export class EngineAndVvppController {
 
     const latestUrl = envEngineInfo.latestUrl;
 
-    const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
+    let latestInfo: Awaited<ReturnType<typeof fetchLatestDefaultEngineInfo>>;
+    try {
+      latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
+    } catch (cause) {
+      throw new DisplayableError(
+        "ネットワークエラーにより最新のエンジン情報を取得できませんでした。インターネット接続を確認して、再試行してください。",
+        { cause },
+      );
+    }
     if (latestInfo.formatVersion !== 1) {
-      throw new Error(
-        `Unsupported format version: ${latestInfo.formatVersion}`,
+      throw new DisplayableError(
+        "エンジン情報の形式がこのバージョンのVOICEVOXに対応していません。VOICEVOXをアップデートしてください。",
       );
     }
 

@@ -86,7 +86,7 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
           tpqn,
         ),
         noteNumber: value.key,
-        lyric: value.lyric || undefined,
+        lyric: value.lyric || null,
       };
     });
 

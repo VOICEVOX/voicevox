@@ -8,6 +8,7 @@ import type {
 import type { SetNextState, State } from "@/sing/stateMachine";
 import type { TrackId } from "@/type/preload";
 import { getButton } from "@/sing/viewHelper";
+import { getOverlappingVolumeEditableFrameRanges } from "@/sing/volumeEditRanges";
 
 export class EraseVolumeState implements State<
   VolumeEditorStateDefinitions,
@@ -130,11 +131,17 @@ export class EraseVolumeState implements State<
     this.innerContext = undefined;
 
     if (this.applyPreview) {
-      void context.store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA({
-        startFrame: context.previewVolumeEdit.value.startFrame,
-        frameLength: context.previewVolumeEdit.value.frameLength,
-        trackId: this.trackId,
-      });
+      const overlaps = getOverlappingVolumeEditableFrameRanges(
+        context.previewVolumeEdit.value.startFrame,
+        context.previewVolumeEdit.value.frameLength,
+        context.getEditableFrameRanges(),
+      );
+      if (overlaps.length > 0) {
+        void context.store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA({
+          ranges: overlaps,
+          trackId: this.trackId,
+        });
+      }
     }
 
     context.previewVolumeEdit.value = undefined;

@@ -98,7 +98,11 @@ const secondToTickForConstantBpm = (
   return seconds * quarterNotesPerSecond * tpqn;
 };
 
-export const tickToSecond = (ticks: number, tempos: Tempo[], tpqn: number) => {
+export const tickToSecond = (
+  ticks: number,
+  tempos: readonly Tempo[],
+  tpqn: number,
+) => {
   let timeOfTempo = 0;
   let tempo = tempos[tempos.length - 1];
   for (let i = 0; i < tempos.length; i++) {
@@ -123,7 +127,7 @@ export const tickToSecond = (ticks: number, tempos: Tempo[], tpqn: number) => {
 
 export const secondToTick = (
   seconds: number,
-  tempos: Tempo[],
+  tempos: readonly Tempo[],
   tpqn: number,
 ) => {
   let timeOfTempo = 0;

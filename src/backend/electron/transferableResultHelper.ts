@@ -4,12 +4,15 @@
  * ref: https://github.com/electron/electron/issues/24427
  */
 
-import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
+import { DisplayableError, errorToMessages } from "@/helpers/errorHelper";
+import { assertNonNullable } from "@/type/utility";
 
 /** 例外メッセージ用のオブジェクト */
+type TransferableResultCause = { isDisplayable: boolean; message: string };
+
 export type TransferableResult<T> =
   | { ok: true; value: T }
-  | { ok: false; message: string; isDisplayable: boolean };
+  | { ok: false; causes: TransferableResultCause[] };
 
 /** 例外メッセージ用のオブジェクトにラップする */
 export async function wrapToTransferableResult<T>(
@@ -18,10 +21,19 @@ export async function wrapToTransferableResult<T>(
   try {
     return { ok: true, value: await fn() };
   } catch (e) {
+    const { displayable, internal } = errorToMessages(e);
     return {
       ok: false,
-      message: errorToMessage(e),
-      isDisplayable: e instanceof DisplayableError,
+      causes: [
+        ...displayable.map((message) => ({
+          isDisplayable: true,
+          message,
+        })),
+        ...internal.map((message) => ({
+          isDisplayable: false,
+          message,
+        })),
+      ],
     };
   }
 }
@@ -33,10 +45,14 @@ export function getOrThrowTransferableResult<T>(
   if (result.ok) {
     return result.value;
   } else {
-    if (result.isDisplayable) {
-      throw new DisplayableError(result.message);
-    } else {
-      throw new Error(result.message);
-    }
+    const error = result.causes.reduceRight<Error | undefined>(
+      (cause, { isDisplayable, message }) =>
+        isDisplayable
+          ? new DisplayableError(message, { cause })
+          : new Error(message, { cause }),
+      undefined,
+    );
+    assertNonNullable(error);
+    throw error;
   }
 }
