@@ -50,9 +50,15 @@
         </BaseSelect>
       </div>
       <div v-if="latestInfo.type === 'fetchError'" class="engine-fetch-error">
-        {{ latestInfo.message }}
+        最新情報の取得に失敗しました。
       </div>
       <div class="engine-action-buttons">
+        <BaseButton
+          v-if="latestInfo.type === 'fetchError'"
+          label="エラー詳細"
+          variant="default"
+          @click="showErrorDetailDialog(latestInfo.error)"
+        />
         <BaseButton
           v-if="latestInfo.type === 'fetchError'"
           label="再試行"
@@ -82,6 +88,7 @@ import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 import type { EngineId } from "@/type/preload";
 import { useStore, type EngineProgressInfo } from "@/welcome/store";
 import type { EnginePackageLatestInfo } from "@/domain/enginePackage";
+import { showErrorDialog } from "@/components/Dialog/Dialog";
 
 const props = defineProps<{
   engineId: EngineId;
@@ -107,6 +114,10 @@ function findSelectedPackageInfo(
   );
   assertNonNullable(targetInfo);
   return targetInfo.packageInfo;
+}
+
+function showErrorDetailDialog(error: unknown) {
+  void showErrorDialog("最新情報の取得に失敗しました", error);
 }
 
 const latestVersionText = computed(() => {
