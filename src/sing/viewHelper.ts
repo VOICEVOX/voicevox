@@ -172,6 +172,7 @@ export const cursorStateSchema = z.enum([
   "EW_RESIZE",
   "CROSSHAIR",
   "ERASE",
+  "NOT_ALLOWED",
 ]);
 export type CursorState = z.infer<typeof cursorStateSchema>;
 

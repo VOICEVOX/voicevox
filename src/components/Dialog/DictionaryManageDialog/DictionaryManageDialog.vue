@@ -21,6 +21,7 @@
               flat
               icon="close"
               color="display"
+              aria-label="辞書を閉じる"
               @click="closeDialog"
             />
           </QToolbar>
@@ -44,6 +45,7 @@
               <div class="list-title">単語一覧</div>
               <BaseButton
                 label="追加"
+                aria-label="単語を追加"
                 icon="add"
                 :disabled="uiLocked"
                 @click="selectNewWord"
