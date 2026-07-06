@@ -32,8 +32,6 @@ jobs:
             SHORT_SHA=$(cut -c 1-7 <<< "${{ github.sha }}")
           fi
 
-          cp .env.example .env
-
           # Storybookのビルド
           pnpm run storybook:build --output-dir $(pwd)/dist_preview/storybook
 

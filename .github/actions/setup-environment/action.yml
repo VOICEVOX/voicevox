@@ -38,3 +38,8 @@ runs:
 
     - shell: bash
       run: pnpm install --frozen-lockfile
+
+    - name: Setup .env
+      shell: bash
+      run: |
+        cp .env.example .env

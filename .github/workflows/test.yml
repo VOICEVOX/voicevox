@@ -93,10 +93,6 @@ jobs:
           dest: ${{ github.workspace }}/voicevox_engine
           target: ${{ matrix.voicevox_engine_asset_name }}
 
-      - name: Setup .env
-        run: |
-          cp .env.example .env
-
       - name: Run pnpm run test:browser-e2e
         run: |
           if [ -n "${{ runner.debug }}" ]; then
