@@ -73,7 +73,7 @@ await page.waitForTimeout(5000); // エンジン読み込みを待機
 ## locator の選択
 
 - `locator` はユーザー向けの情報から取得できるものを優先する
-- 適切な `locator` が書けない場合は、WAI-ARIA に準拠しつつソースコードの変更を検討する
+- 適切な `locator` が書けない場合は、WCAG の基準を満たしつつ WAI-ARIA の要件に合うようソースコードの変更を検討する
 - DOM 構造に依存するセレクターは原則使わず、他に取得方法がない場合だけ例外として使う
 
 優先順位:
@@ -110,7 +110,7 @@ Good 2:
 await page.getByRole("button", { name: "閉じる" }).click();
 ```
 
-Bad 2 (WAI-ARIA に準拠していない):
+Bad 2 (不明な名前):
 
 ```typescript
 // コード
