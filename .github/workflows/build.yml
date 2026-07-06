@@ -48,18 +48,62 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Linux NVIDIA GPU
-          - artifact_name: linux-nvidia-prepackage
+          # Linux
+          - artifact_name: linux-prepackage
             artifact_path: dist_electron/linux-unpacked
-            voicevox_engine_asset_name: linux-nvidia
             package_name: voicevox
-            compressed_artifact_name: voicevox-linux-nvidia
+            compressed_artifact_name: voicevox-linux
             app_asar_dir: prepackage/resources
-            installer_artifact_name: linux-nvidia-appimage
+            installer_artifact_name: linux-appimage
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX.AppImage
             os: ubuntu-22.04
+            env: .env.download-vvpp
+          # Windows
+          - artifact_name: windows-prepackage
+            artifact_path: dist_electron/win-unpacked
+            package_name: voicevox
+            compressed_artifact_name: voicevox-windows
+            app_asar_dir: prepackage/resources
+            installer_artifact_name: windows-nsis-web
+            nsis_web_artifact_name: "VOICEVOX.Web.Setup.${version}.${ext}"
+            os: windows-2022
+            env: .env.download-vvpp
+          # macOS (x64)
+          - artifact_name: macos-x64-prepackage
+            artifact_path: dist_electron/mac
+            package_name: voicevox
+            compressed_artifact_name: voicevox-macos-x64
+            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
+            installer_artifact_name: macos-x64-dmg
+            macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
+            os: macos-15-intel
+            env: .env.download-vvpp
+          # macOS (arm64)
+          - artifact_name: macos-arm64-prepackage
+            artifact_path: dist_electron/mac-arm64
+            package_name: voicevox
+            compressed_artifact_name: voicevox-macos-arm64
+            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
+            installer_artifact_name: macos-arm64-dmg
+            macos_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
+            os: macos-14
+            env: .env.download-vvpp
+
+          # Linux NVIDIA GPU
+          - artifact_name: linux-bundled-nvidia-prepackage
+            artifact_path: dist_electron/linux-unpacked
+            voicevox_engine_asset_name: linux-nvidia
+            package_name: voicevox-bundled
+            compressed_artifact_name: voicevox-linux-bundled-nvidia
+            app_asar_dir: prepackage/resources
+            installer_artifact_name: linux-bundled-nvidia-appimage
+            linux_artifact_name: "VOICEVOX-CUDA.${ext}"
+            linux_executable_name: voicevox-bundled
+            linux_appimage_7z_name: VOICEVOX-CUDA.AppImage
+            os: ubuntu-22.04
+            env: .env.embed-engine.linux
           # Linux CPU (x64)
           - artifact_name: linux-cpu-x64-prepackage
             artifact_path: dist_electron/linux-unpacked
@@ -68,11 +112,11 @@ jobs:
             compressed_artifact_name: voicevox-linux-cpu-x64
             app_asar_dir: prepackage/resources
             installer_artifact_name: linux-cpu-x64-appimage
-            linux_artifact_name: "VOICEVOX.${version}-x64.${ext}"
+            linux_artifact_name: "VOICEVOX-CPU.${version}-x64.${ext}"
             linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX-CPU-X64.AppImage
             os: ubuntu-22.04
-            build_installer: true
+            env: .env.embed-engine.linux
           # Linux CPU (arm64)
           - artifact_name: linux-cpu-arm64-prepackage
             artifact_path: dist_electron/linux-arm64-unpacked
@@ -81,10 +125,11 @@ jobs:
             compressed_artifact_name: voicevox-linux-cpu-arm64
             app_asar_dir: prepackage/resources
             installer_artifact_name: linux-cpu-arm64-appimage
-            linux_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
+            linux_artifact_name: "VOICEVOX-CPU.${version}-arm64.${ext}"
             linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX-CPU-ARM64.AppImage
             os: ubuntu-22.04-arm
+            env: .env.embed-engine.linux
           # Windows CUDA
           - artifact_name: windows-nvidia-prepackage
             artifact_path: dist_electron/win-unpacked
@@ -95,6 +140,7 @@ jobs:
             installer_artifact_name: windows-nvidia-nsis-web
             nsis_web_artifact_name: "VOICEVOX-CUDA.Web.Setup.${version}.${ext}"
             os: windows-2022
+            env: .env.embed-engine.windows
           # Windows CPU
           - artifact_name: windows-cpu-prepackage
             artifact_path: dist_electron/win-unpacked
@@ -105,17 +151,18 @@ jobs:
             installer_artifact_name: windows-cpu-nsis-web
             nsis_web_artifact_name: "VOICEVOX-CPU.Web.Setup.${version}.${ext}"
             os: windows-2022
-            build_installer: true
+            env: .env.embed-engine.windows
           # Windows DirectML
-          - artifact_name: windows-directml-prepackage
+          - artifact_name: windows-bundled-directml-prepackage
             artifact_path: dist_electron/win-unpacked
             voicevox_engine_asset_name: windows-directml
-            package_name: voicevox
-            compressed_artifact_name: voicevox-windows-directml
+            package_name: voicevox-bundled
+            compressed_artifact_name: voicevox-windows-bundled-directml
             app_asar_dir: prepackage/resources
-            installer_artifact_name: windows-directml-nsis-web
-            nsis_web_artifact_name: "VOICEVOX.Web.Setup.${version}.${ext}"
+            installer_artifact_name: windows-bundled-directml-nsis-web
+            nsis_web_artifact_name: "VOICEVOX-DirectML.Web.Setup.${version}.${ext}"
             os: windows-2022
+            env: .env.embed-engine.windows
           # macOS CPU (x64)
           - artifact_name: macos-cpu-x64-prepackage
             artifact_path: dist_electron/mac
@@ -124,9 +171,9 @@ jobs:
             compressed_artifact_name: voicevox-macos-cpu-x64
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-x64-dmg
-            macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
+            macos_artifact_name: "VOICEVOX-CPU.${version}-x64.${ext}"
             os: macos-15-intel
-            build_installer: true
+            env: .env.embed-engine.macos
           # macOS CPU (arm64)
           - artifact_name: macos-cpu-arm64-prepackage
             artifact_path: dist_electron/mac-arm64
@@ -135,9 +182,9 @@ jobs:
             compressed_artifact_name: voicevox-macos-cpu-arm64
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-arm64-dmg
-            macos_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
+            macos_artifact_name: "VOICEVOX-CPU.${version}-arm64.${ext}"
             os: macos-14
-            build_installer: true
+            env: .env.embed-engine.macos
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -205,6 +252,7 @@ jobs:
           path: resource
 
       - name: Download VOICEVOX ENGINE
+        if: matrix.voicevox_engine_asset_name != null
         id: download-engine
         uses: ./.github/actions/download-engine
         with:
@@ -229,12 +277,13 @@ jobs:
       - name: Generate public/licenses.json
         run: |
           pnpm run license:generate -o public/licenses.json
-          pnpm run license:merge -o public/licenses.json -i public/licenses.json -i voicevox_engine/licenses.json
+          if [ -d voicevox_engine ]; then
+            pnpm run license:merge -o public/licenses.json -i public/licenses.json -i voicevox_engine/licenses.json
+          fi
 
       - name: Overwrite .env.production for installler
-        if: matrix.build_installer == true
         run: |
-          cp ./build/.env.download-vvpp .env.production
+          cp ./build/${{ matrix.env }} .env.production
 
       - name: Set GTM ID
         run: |
@@ -282,21 +331,6 @@ jobs:
         env:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
-      - name: Overwrite .env.production for Linux
-        if: startsWith(matrix.os, 'ubuntu-')
-        run: |
-          cp ./build/.env.embed-engine.linux .env.production
-
-      - name: Overwrite .env.production for macOS
-        if: startsWith(matrix.os, 'macos-')
-        run: |
-          cp ./build/.env.embed-engine.macos .env.production
-
-      - name: Overwrite .env.production for Windows
-        if: startsWith(matrix.os, 'windows-')
-        run: |
-          cp ./build/.env.embed-engine.windows .env.production
-
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
@@ -342,29 +376,34 @@ jobs:
           mv ${{ matrix.artifact_path }} ./prepackage
 
       - name: Merge VOICEVOX ENGINE into prepackage/
-        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
+        if: matrix.voicevox_engine_asset_name != null && (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-'))
         run: |
           mv voicevox_engine/ prepackage/vv-engine/
 
       - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/Resources/
-        if: startsWith(matrix.artifact_name, 'macos-')
+        if: matrix.voicevox_engine_asset_name != null && startsWith(matrix.artifact_name, 'macos-')
         run: |
           mv voicevox_engine/ prepackage/VOICEVOX.app/Contents/Resources/vv-engine/
 
       - name: Recover file permissions
-        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        if: startsWith(matrix.artifact_name, 'linux-') # Linux
         run: |
           chmod +x "prepackage/${{ matrix.linux_executable_name }}"
-          chmod +x "prepackage/vv-engine/run"
+          if [ -d "prepackage/vv-engine" ]; then
+            chmod +x "prepackage/vv-engine/run"
+          fi
 
       - name: Recover file permissions for macOS build
         if: startsWith(matrix.artifact_name, 'macos-') # macOS
         run: |
-          chmod +x "prepackage/VOICEVOX.app/Contents/Resources/vv-engine/run"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (GPU).app/Contents/MacOS/VOICEVOX Helper (GPU)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
+
+          if [ -d "prepackage/VOICEVOX.app/Contents/Resources/vv-engine" ]; then
+            chmod +x "prepackage/VOICEVOX.app/Contents/Resources/vv-engine/run"
+          fi
 
       # NOTE: actions/upload-artifact@v4 does not upload `**.lproj` directories, which are an empty directory.
       #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
