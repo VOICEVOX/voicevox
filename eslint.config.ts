@@ -64,6 +64,7 @@ const typeCheckedRules: Rules = {
   "@typescript-eslint/require-array-sort-compare": "error",
 
   "@typescript-eslint/no-non-null-assertion": "error",
+  "@typescript-eslint/no-deprecated": "error",
 
   "@typescript-eslint/no-misused-promises": [
     "error",
@@ -172,7 +173,7 @@ export default defineConfigWithVueTs(
     name: "voicevox/defaults/rules",
     rules: {
       "@typescript-eslint/no-unused-vars": [
-        process.env.NODE_ENV !== "production" ? "warn" : "error", // 開発時のみwarn
+        "error",
         {
           ignoreRestSiblings: true,
           ignoreUsingDeclarations: true,

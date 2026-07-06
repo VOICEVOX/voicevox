@@ -100,11 +100,11 @@ export function getLast<T>(array: readonly T[]) {
   return array[array.length - 1];
 }
 
-export function getPrev<T>(array: T[], currentIndex: number) {
+export function getPrev<T>(array: readonly T[], currentIndex: number) {
   return currentIndex !== 0 ? array[currentIndex - 1] : undefined;
 }
 
-export function getNext<T>(array: T[], currentIndex: number) {
+export function getNext<T>(array: readonly T[], currentIndex: number) {
   return currentIndex !== array.length - 1
     ? array[currentIndex + 1]
     : undefined;

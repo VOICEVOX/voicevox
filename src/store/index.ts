@@ -39,6 +39,16 @@ import { createPartialStore } from "./vuex";
 import { engineStoreState, engineStore } from "./engine";
 import { filterCharacterInfosByStyleType } from "./utility";
 import {
+  loadContactText,
+  loadHowToUseText,
+  loadOssCommunityInfos,
+  loadOssLicenses,
+  loadPolicyText,
+  loadPrivacyPolicyText,
+  loadQAndAText,
+  loadUpdateInfos,
+} from "@/domain/staticAssets";
+import {
   type DefaultStyleId,
   EngineId,
   SpeakerId,
@@ -154,49 +164,49 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   GET_HOW_TO_USE_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("HowToUse");
+      return await loadHowToUseText();
     },
   },
 
   GET_CONTACT_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("Contact");
+      return await loadContactText();
     },
   },
 
   GET_Q_AND_A_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("QAndA");
+      return await loadQAndAText();
     },
   },
 
   GET_POLICY_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("Policy");
+      return await loadPolicyText();
     },
   },
 
   GET_OSS_LICENSES: {
     async action() {
-      return await window.backend.getTextAsset("OssLicenses");
+      return await loadOssLicenses();
     },
   },
 
   GET_UPDATE_INFOS: {
     async action() {
-      return await window.backend.getTextAsset("UpdateInfos");
+      return await loadUpdateInfos();
     },
   },
 
   GET_OSS_COMMUNITY_INFOS: {
     async action() {
-      return await window.backend.getTextAsset("OssCommunityInfos");
+      return await loadOssCommunityInfos();
     },
   },
 
   GET_PRIVACY_POLICY_TEXT: {
     async action() {
-      return await window.backend.getTextAsset("PrivacyPolicy");
+      return await loadPrivacyPolicyText();
     },
   },
 
