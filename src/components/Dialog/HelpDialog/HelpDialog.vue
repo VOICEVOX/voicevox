@@ -85,6 +85,7 @@ import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { createLogger } from "@/helpers/log";
 import { getAppInfos } from "@/domain/appInfo";
+import type { OssLicenseInfo } from "@/domain/staticAssets";
 
 type PageItem = {
   type: "item";
@@ -120,7 +121,7 @@ const newUpdateResult = useFetchNewUpdateInfos(
 );
 
 // エディタのOSSライセンス取得
-const licenses = ref<Record<string, string>[]>();
+const licenses = ref<OssLicenseInfo[]>();
 void store.actions.GET_OSS_LICENSES().then((obj) => (licenses.value = obj));
 
 const policy = ref<string>("");

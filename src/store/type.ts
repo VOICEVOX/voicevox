@@ -64,6 +64,7 @@ import type {
   WarningDialogOptions,
 } from "@/components/Dialog/Dialog";
 import type { HotkeySettingType } from "@/domain/hotkeyAction";
+import type { OssLicenseInfo } from "@/domain/staticAssets";
 import type {
   MultiFileProjectFormat,
   SingleFileProjectFormat,
@@ -1947,7 +1948,7 @@ export type IndexStoreTypes = {
   };
 
   GET_OSS_LICENSES: {
-    action(): Promise<Record<string, string>[]>;
+    action(): Promise<OssLicenseInfo[]>;
   };
 
   GET_UPDATE_INFOS: {
