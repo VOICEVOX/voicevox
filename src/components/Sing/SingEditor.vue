@@ -1,6 +1,7 @@
 <template>
   <div class="sing-editor">
     <ToolBar
+      v-model:audioAlignment="audioAlignment"
       :toolPaletteLayout
       :sequencerViewport
       @navigateSequencer="navigateSequencer"
@@ -22,6 +23,7 @@
           <!-- full-heightで高さをQSplitterの高さに揃える -->
           <ScoreSequencer
             v-model:toolPaletteLayout="toolPaletteLayout"
+            v-model:audioAlignment="audioAlignment"
             v-model:sequencerViewport="sequencerViewport"
             v-model:sequencerNavigationRequest="sequencerNavigationRequest"
             class="full-height"
@@ -51,6 +53,10 @@ import {
   createDefaultTimeSignature,
 } from "@/sing/domain";
 import type { ToolPaletteLayout } from "@/components/Sing/toolPaletteLayout";
+import {
+  createDefaultAudioAlignmentMockState,
+  type AudioAlignmentMockState,
+} from "@/components/Sing/audioAlignmentMock";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -60,7 +66,10 @@ const props = defineProps<{
 const store = useStore();
 
 const isCompletedInitialStartup = ref(false);
-const toolPaletteLayout = ref<ToolPaletteLayout>("sideRight");
+const toolPaletteLayout = ref<ToolPaletteLayout>("reservedRail");
+const audioAlignment = ref<AudioAlignmentMockState>(
+  createDefaultAudioAlignmentMockState(),
+);
 const sequencerViewport = ref<SequencerViewportState>({
   clientWidth: 0,
   scrollLeft: 0,

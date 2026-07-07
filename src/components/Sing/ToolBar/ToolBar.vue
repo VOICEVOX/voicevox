@@ -2,7 +2,7 @@
   <QToolbar
     class="sing-toolbar"
     :class="[
-      `mode-${arrangementViewMode}`,
+      `mode-${arrangementDisclosureMode}`,
       `arrangement-mode-${arrangementModeSide}`,
       { 'multitrack-resizing': isMultitrackResizing },
     ]"
@@ -12,102 +12,45 @@
       <div class="sing-arrangement-mode-column">
         <button
           class="sing-arrangement-toggle-button"
-          :class="{ active: arrangementViewMode === 'multitrack' }"
+          :class="{ active: arrangementDisclosureMode === 'expanded' }"
           type="button"
-          :aria-pressed="arrangementViewMode === 'multitrack'"
+          :aria-pressed="arrangementDisclosureMode === 'expanded'"
           :aria-label="
-            arrangementViewMode === 'multitrack'
-              ? 'マルチトラック表示を折りたたむ'
-              : 'マルチトラック表示を展開'
+            arrangementDisclosureMode === 'expanded'
+              ? 'アレンジメント表示を折りたたむ'
+              : 'アレンジメント表示を展開'
           "
           :title="
-            arrangementViewMode === 'multitrack'
-              ? 'マルチトラック表示を折りたたむ'
-              : 'マルチトラック表示を展開'
+            arrangementDisclosureMode === 'expanded'
+              ? 'アレンジメント表示を折りたたむ'
+              : 'アレンジメント表示を展開'
           "
-          @click="toggleArrangementViewMode"
+          @click="toggleArrangementDisclosureMode"
         >
           <span class="material-symbols-rounded" aria-hidden="true">
             {{
-              arrangementViewMode === "multitrack"
+              arrangementDisclosureMode === "expanded"
                 ? "expand_less"
                 : "expand_more"
             }}
           </span>
         </button>
       </div>
-      <div class="sing-track-strip" :class="`mode-${arrangementViewMode}`">
-        <div v-if="arrangementViewMode === 'singer'" class="sing-track-header">
-          <CharacterMenuButton />
-          <button class="sing-track-parameter-summary" type="button">
-            <span class="sing-track-parameter-line">
-              <span class="sing-track-parameter-label">歌い方</span>
-              <span class="sing-track-parameter-value">{{
-                singingTeacherLabel
-              }}</span>
-            </span>
-            <span class="sing-track-parameter-line compact">
-              <span class="sing-track-parameter-pair">
-                <span class="sing-track-parameter-label">音域</span>
-                <span class="sing-track-parameter-value">{{
-                  keyRangeAdjustment
-                }}</span>
-              </span>
-              <span class="sing-track-parameter-pair">
-                <span class="sing-track-parameter-label">声量</span>
-                <span class="sing-track-parameter-value">{{
-                  volumeRangeAdjustment
-                }}</span>
-              </span>
-            </span>
-            <QMenu class="sing-track-parameter-menu" anchor="bottom left">
-              <div class="sing-track-parameter-menu-content" @click.stop>
-                <label class="sing-track-parameter-menu-row">
-                  <span>歌い方</span>
-                  <select
-                    class="sing-track-parameter-menu-control"
-                    :value="singingTeacherLabel"
-                    @change="setSingingTeacher"
-                  >
-                    <option
-                      v-for="option in singingTeacherOptions"
-                      :key="option"
-                      :value="option"
-                    >
-                      {{ option }}
-                    </option>
-                  </select>
-                </label>
-                <label class="sing-track-parameter-menu-row">
-                  <span>音域</span>
-                  <input
-                    class="sing-track-parameter-menu-control number"
-                    type="number"
-                    :value="keyRangeAdjustment"
-                    @change="setKeyRangeAdjustment"
-                  />
-                </label>
-                <label class="sing-track-parameter-menu-row">
-                  <span>声量</span>
-                  <input
-                    class="sing-track-parameter-menu-control number"
-                    type="number"
-                    :value="volumeRangeAdjustment"
-                    @change="setVolumeRangeAdjustment"
-                  />
-                </label>
-              </div>
-            </QMenu>
-          </button>
-        </div>
-        <div v-else class="sing-multitrack-header-column">
+      <div
+        class="sing-track-strip"
+        :class="`mode-${arrangementDisclosureMode}`"
+      >
+        <div
+          class="sing-multitrack-header-column"
+          :class="{ collapsed: arrangementDisclosureMode === 'collapsed' }"
+        >
           <div
             ref="multitrackHeaderScrollRef"
             class="sing-multitrack-header-scroll"
             @scroll="onMultitrackHeaderScroll"
           >
             <div
-              v-for="row in multitrackRows"
+              v-for="row in visibleArrangementRows"
               :key="row.id"
               class="sing-multitrack-header-row"
               :class="{
@@ -115,7 +58,7 @@
                 audio: row.kind === 'audio',
                 inactive: !row.shouldPlay,
               }"
-              @click="selectMultitrackRow(row)"
+              @click="selectArrangementRow(row)"
             >
               <div class="sing-multitrack-avatar">
                 <template v-if="row.kind === 'singer'">
@@ -168,8 +111,66 @@
                   row.name
                 }}</span>
                 <span class="sing-multitrack-track-status">
-                  {{ row.singerName || row.statusLabel }}
+                  {{ row.statusLabel }}
                 </span>
+                <div
+                  v-if="row.kind === 'audio' && row.isSelected"
+                  class="sing-audio-alignment-row"
+                  @click.stop
+                  @pointerdown.stop
+                >
+                  <label class="sing-audio-offset-field">
+                    <input
+                      type="number"
+                      :value="audioAlignmentOffsetMs"
+                      aria-label="オーディオオフセット"
+                      @change="setAudioOffsetFromInput"
+                    />
+                    <span>ms</span>
+                  </label>
+                  <div class="sing-audio-nudge-group" aria-label="ナッジ">
+                    <button
+                      class="sing-audio-nudge-button"
+                      type="button"
+                      aria-label="10ms早く"
+                      @click="nudgeAudioOffset(-10)"
+                    >
+                      -10
+                    </button>
+                    <button
+                      class="sing-audio-nudge-button"
+                      type="button"
+                      aria-label="1ms早く"
+                      @click="nudgeAudioOffset(-1)"
+                    >
+                      -1
+                    </button>
+                    <button
+                      class="sing-audio-nudge-button"
+                      type="button"
+                      aria-label="1ms遅く"
+                      @click="nudgeAudioOffset(1)"
+                    >
+                      +1
+                    </button>
+                    <button
+                      class="sing-audio-nudge-button"
+                      type="button"
+                      aria-label="10ms遅く"
+                      @click="nudgeAudioOffset(10)"
+                    >
+                      +10
+                    </button>
+                  </div>
+                  <label class="sing-audio-snap-toggle">
+                    <input
+                      type="checkbox"
+                      :checked="audioAlignment.snapToGrid"
+                      @change="toggleAudioSnap"
+                    />
+                    <span>Snap</span>
+                  </label>
+                </div>
                 <div
                   v-if="row.kind === 'singer'"
                   class="sing-multitrack-mix-row"
@@ -230,6 +231,15 @@
                 </div>
               </div>
               <div v-if="row.kind === 'singer'" class="sing-multitrack-actions">
+                <button
+                  v-if="row.errorCount > 0"
+                  class="sing-multitrack-error-badge"
+                  type="button"
+                  aria-label="最初のエラーへ移動"
+                  @click.stop="jumpToFirstTrackError(row)"
+                >
+                  {{ row.errorCount }}
+                </button>
                 <button
                   class="sing-multitrack-state-button"
                   :class="{ active: row.isMuted }"
@@ -329,22 +339,25 @@
                         v-close-popup
                         class="sing-multitrack-menu-command"
                         type="button"
+                        @click="moveAudioClipStartToPlayhead"
                       >
-                        クリップ追加
+                        先頭を再生位置へ
                       </button>
                       <button
                         v-close-popup
                         class="sing-multitrack-menu-command"
                         type="button"
+                        @click="nudgeAudioOffset(-10)"
                       >
-                        トラック名を変更
+                        10ms早く
                       </button>
                       <button
                         v-close-popup
                         class="sing-multitrack-menu-command"
                         type="button"
+                        @click="nudgeAudioOffset(10)"
                       >
-                        トラック削除
+                        10ms遅く
                       </button>
                     </div>
                   </QMenu>
@@ -361,28 +374,35 @@
                     v-close-popup
                     class="sing-multitrack-menu-command"
                     type="button"
+                    @click="moveAudioClipStartToPlayhead"
                   >
-                    クリップ追加
+                    先頭を再生位置へ
                   </button>
                   <button
                     v-close-popup
                     class="sing-multitrack-menu-command"
                     type="button"
+                    @click="nudgeAudioOffset(-10)"
                   >
-                    トラック名を変更
+                    10ms早く
                   </button>
                   <button
                     v-close-popup
                     class="sing-multitrack-menu-command"
                     type="button"
+                    @click="nudgeAudioOffset(10)"
                   >
-                    トラック削除
+                    10ms遅く
                   </button>
                 </div>
               </QMenu>
             </div>
           </div>
-          <div class="sing-multitrack-footer-row" aria-label="トラック操作">
+          <div
+            v-if="arrangementDisclosureMode === 'expanded'"
+            class="sing-multitrack-footer-row"
+            aria-label="トラック操作"
+          >
             <button
               class="sing-multitrack-add-button"
               type="button"
@@ -411,69 +431,16 @@
         <div class="sing-singer-map">
           <div
             class="sing-minimap-layout"
-            :class="`mode-${arrangementViewMode}`"
-            @wheel="onMinimapWheel"
+            :class="`mode-${arrangementDisclosureMode}`"
           >
             <div ref="minimapViewportRef" class="sing-minimap-viewport">
               <div
-                v-if="arrangementViewMode === 'singer'"
-                class="sing-minimap-content"
-                :class="{ dragging: isSingerMinimapNavigating }"
-                role="button"
-                tabindex="0"
-                aria-label="ノートミニマップの位置へ移動"
-                @pointerdown="onSingerMinimapPointerDown"
-                @keydown.left.prevent="navigateSingerMinimapByKeyboard(-1)"
-                @keydown.right.prevent="navigateSingerMinimapByKeyboard(1)"
-              >
-                <div
-                  v-if="sequencerVisibleRange.width > 0"
-                  class="sing-minimap-sequencer-window"
-                  :style="{
-                    left: `${sequencerVisibleRange.left}%`,
-                    width: `${sequencerVisibleRange.width}%`,
-                  }"
-                ></div>
-                <div
-                  class="sing-minimap-playhead"
-                  :style="{ left: `${minimapPlayheadPosition}%` }"
-                ></div>
-                <div
-                  v-for="phraseLyric in minimapPhraseLyrics"
-                  :key="phraseLyric.id"
-                  class="sing-minimap-phrase-lyric"
-                  :style="{
-                    left: `${phraseLyric.left}%`,
-                    width: `${phraseLyric.width}%`,
-                  }"
-                >
-                  <span>{{ phraseLyric.text }}</span>
-                </div>
-                <div
-                  v-for="previewNote in minimapRegularNotes"
-                  :key="previewNote.id"
-                  class="sing-minimap-note"
-                  :style="{
-                    left: `${previewNote.left}%`,
-                    width: `${previewNote.width}%`,
-                    top: `${previewNote.top}%`,
-                  }"
-                ></div>
-                <div
-                  v-for="previewNote in minimapErrorNotes"
-                  :key="previewNote.id"
-                  class="sing-minimap-note error"
-                  :style="{
-                    left: `${previewNote.left}%`,
-                    width: `${previewNote.width}%`,
-                    top: `${previewNote.top}%`,
-                  }"
-                ></div>
-              </div>
-              <div
-                v-else
                 ref="multitrackMapScrollRef"
                 class="sing-multitrack-map-scroll"
+                :class="{
+                  collapsed: arrangementDisclosureMode === 'collapsed',
+                  dragging: isMinimapWindowNavigating,
+                }"
                 @scroll="onMultitrackMapScroll"
               >
                 <div
@@ -483,17 +450,28 @@
                   aria-label="マルチトラック概要の位置へ移動"
                   :style="{
                     width: minimapContentWidthStyle,
-                    transform: minimapContentTransform,
                   }"
                   @click="setPlayheadFromMinimap"
+                  @keydown.left.prevent="navigateMinimapWindowByKeyboard(-1)"
+                  @keydown.right.prevent="navigateMinimapWindowByKeyboard(1)"
                 >
+                  <div
+                    v-if="sequencerVisibleRange.width > 0"
+                    class="sing-multitrack-sequencer-window"
+                    :style="{
+                      left: `${sequencerVisibleRange.left}%`,
+                      width: `${sequencerVisibleRange.width}%`,
+                    }"
+                    @pointerdown.stop="onMinimapWindowPointerDown"
+                    @click.stop
+                  ></div>
                   <div
                     class="sing-multitrack-playhead"
                     :style="{ left: `${minimapPlayheadPosition}%` }"
                   ></div>
                   <div class="sing-multitrack-grid"></div>
                   <div
-                    v-for="row in multitrackRows"
+                    v-for="row in visibleArrangementRows"
                     :key="row.id"
                     class="sing-multitrack-map-row"
                     :class="{
@@ -502,11 +480,26 @@
                     }"
                   >
                     <div
-                      v-if="row.lyricSummary"
-                      class="sing-multitrack-row-lyric"
-                    >
-                      {{ row.lyricSummary }}
-                    </div>
+                      v-for="marker in row.errorMarkers"
+                      :key="marker.id"
+                      class="sing-multitrack-error-marker"
+                      :style="{ left: `${marker.left}%` }"
+                    ></div>
+                    <template v-if="row.isSelected">
+                      <button
+                        v-for="phraseLyric in row.phraseLyrics"
+                        :key="phraseLyric.id"
+                        class="sing-multitrack-phrase-lyric"
+                        type="button"
+                        :style="{
+                          left: `${phraseLyric.left}%`,
+                          width: `${phraseLyric.width}%`,
+                        }"
+                        @click.stop="jumpToTick(phraseLyric.startTick)"
+                      >
+                        {{ phraseLyric.text }}
+                      </button>
+                    </template>
                     <template v-if="row.kind === 'singer'">
                       <div
                         v-for="previewNote in row.notes"
@@ -525,7 +518,10 @@
                         v-for="clip in row.clips"
                         :key="clip.id"
                         class="sing-multitrack-audio-clip"
-                        :class="{ dragging: draggingAudioClipId === clip.id }"
+                        :class="{
+                          dragging: draggingAudioClipId === clip.id,
+                          selected: audioAlignment.selectedClipId === clip.id,
+                        }"
                         :style="{
                           left: `${clip.left}%`,
                           width: `${clip.width}%`,
@@ -535,6 +531,10 @@
                           startMultitrackAudioClipDrag($event, clip)
                         "
                       >
+                        <span
+                          class="sing-multitrack-audio-head-handle"
+                          aria-hidden="true"
+                        ></span>
                         <span
                           v-for="(peak, peakIndex) in clip.peaks"
                           :key="peakIndex"
@@ -566,22 +566,25 @@
                                 v-close-popup
                                 class="sing-multitrack-menu-command"
                                 type="button"
+                                @click="moveAudioClipStartToPlayhead"
                               >
-                                クリップを分割
+                                先頭を再生位置へ
                               </button>
                               <button
                                 v-close-popup
                                 class="sing-multitrack-menu-command"
                                 type="button"
+                                @click="nudgeAudioOffset(-10)"
                               >
-                                クリップを複製
+                                10ms早く
                               </button>
                               <button
                                 v-close-popup
                                 class="sing-multitrack-menu-command"
                                 type="button"
+                                @click="nudgeAudioOffset(10)"
                               >
-                                クリップを削除
+                                10ms遅く
                               </button>
                             </div>
                           </QMenu>
@@ -596,22 +599,25 @@
                               v-close-popup
                               class="sing-multitrack-menu-command"
                               type="button"
+                              @click="moveAudioClipStartToPlayhead"
                             >
-                              クリップを分割
+                              先頭を再生位置へ
                             </button>
                             <button
                               v-close-popup
                               class="sing-multitrack-menu-command"
                               type="button"
+                              @click="nudgeAudioOffset(-10)"
                             >
-                              クリップを複製
+                              10ms早く
                             </button>
                             <button
                               v-close-popup
                               class="sing-multitrack-menu-command"
                               type="button"
+                              @click="nudgeAudioOffset(10)"
                             >
-                              クリップを削除
+                              10ms遅く
                             </button>
                           </div>
                         </QMenu>
@@ -621,76 +627,10 @@
                 </div>
               </div>
             </div>
-            <div
-              v-if="arrangementViewMode === 'multitrack'"
-              class="sing-minimap-controls"
-            >
-              <div
-                ref="minimapScrollbarRef"
-                class="sing-minimap-scrollbar-shell"
-                :class="{ dragging: isMinimapScrollbarDragging }"
-                role="slider"
-                tabindex="0"
-                aria-label="ミニマップのスクロール"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                :aria-valuenow="Math.round(minimapScrollRatio * 100)"
-                @pointerdown="onMinimapScrollbarPointerDown"
-                @keydown.left.prevent="scrollMinimapByKeyboard(-1)"
-                @keydown.right.prevent="scrollMinimapByKeyboard(1)"
-                @keydown.home.prevent="scrollMinimapToEdge(0)"
-                @keydown.end.prevent="scrollMinimapToEdge(1)"
-              >
-                <div class="sing-minimap-scrollbar-rail" aria-hidden="true">
-                  <div
-                    v-if="sequencerVisibleRange.width > 0"
-                    class="sing-minimap-scrollbar-sequencer-window"
-                    :style="{
-                      left: `${sequencerVisibleRange.left}%`,
-                      width: `${sequencerVisibleRange.width}%`,
-                    }"
-                  ></div>
-                  <div
-                    class="sing-minimap-scrollbar-window"
-                    :style="{
-                      left: `${minimapVisibleRange.left}%`,
-                      width: `${minimapVisibleRange.width}%`,
-                    }"
-                  ></div>
-                </div>
-              </div>
-              <div class="sing-minimap-zoom" @click.stop>
-                <button
-                  class="sing-minimap-zoom-button"
-                  type="button"
-                  aria-label="ミニマップを縮小"
-                  @click="decreaseMinimapZoom"
-                >
-                  -
-                </button>
-                <input
-                  v-model.number="minimapZoom"
-                  class="sing-minimap-zoom-slider"
-                  type="range"
-                  :min="MINIMAP_ZOOM_MIN"
-                  :max="MINIMAP_ZOOM_MAX"
-                  :step="MINIMAP_ZOOM_STEP"
-                  aria-label="ミニマップのズーム"
-                />
-                <button
-                  class="sing-minimap-zoom-button"
-                  type="button"
-                  aria-label="ミニマップを拡大"
-                  @click="increaseMinimapZoom"
-                >
-                  +
-                </button>
-              </div>
-            </div>
           </div>
         </div>
         <div
-          v-if="arrangementViewMode === 'multitrack'"
+          v-if="arrangementDisclosureMode === 'expanded'"
           class="sing-multitrack-resize-handle"
           role="separator"
           aria-orientation="horizontal"
@@ -703,14 +643,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import {
   getEndTicksOfPhrase,
@@ -720,16 +653,31 @@ import {
   isValidVolumeRangeAdjustment,
   shouldPlayTracks,
 } from "@/sing/domain";
-import { getTimeSignaturePositions, tickToMeasureNumber } from "@/sing/music";
+import {
+  getTimeSignaturePositions,
+  tickToMeasureNumber,
+  tickToSecond,
+} from "@/sing/music";
 import { getTotalTicks } from "@/sing/rulerHelper";
 import { SEQUENCER_MIN_NUM_MEASURES } from "@/sing/viewHelper";
 import CharacterSelectMenu from "@/components/Sing/CharacterMenuButton/CharacterSelectMenu.vue";
-import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import type { Note } from "@/domain/project/type";
 import type { StyleInfo, TrackId } from "@/type/preload";
 import type { ToolPaletteLayout } from "@/components/Sing/toolPaletteLayout";
 import type { SequencerViewportState } from "@/components/Sing/ScoreSequencer.vue";
+import {
+  MOCK_AUDIO_CLIP_BASE_LEFT_PERCENT,
+  MOCK_AUDIO_CLIP_ID,
+  MOCK_AUDIO_CLIP_WIDTH_PERCENT,
+  MOCK_AUDIO_PEAKS,
+  MOCK_AUDIO_TRACK_ID,
+  formatAudioAlignmentOffsetMs,
+  getAudioAlignmentMeasureDurationMs,
+  getAudioAlignmentOffsetMs,
+  splitAudioAlignmentOffsetMs,
+  type AudioAlignmentMockState,
+} from "@/components/Sing/audioAlignmentMock";
 
 const store = useStore();
 const props = defineProps<{
@@ -739,28 +687,22 @@ const props = defineProps<{
 const emit = defineEmits<{
   navigateSequencer: [scrollLeft: number];
 }>();
-const MINIMAP_QUARTER_NOTE_WIDTH = 12;
+const audioAlignment = defineModel<AudioAlignmentMockState>("audioAlignment", {
+  required: true,
+});
 const MINIMAP_NOTE_LOW_NOTE_NUMBER = 48;
 const MINIMAP_NOTE_HIGH_NOTE_NUMBER = 84;
-const MINIMAP_NOTE_TOP_OFFSET = 31;
-const MINIMAP_NOTE_VERTICAL_RANGE = 40;
 const MINIMAP_NOTE_RANGE_PADDING = 2;
 const MINIMAP_NOTE_RANGE_MIN_SEMITONES = 12;
-const MINIMAP_ZOOM_MIN = 0.05;
-const MINIMAP_ZOOM_MAX = 3;
-const MINIMAP_ZOOM_STEP = 0.05;
+const COLLAPSED_ARRANGEMENT_HEIGHT = 72;
 const MULTITRACK_ARRANGEMENT_HEIGHT_MIN = 144;
 const MULTITRACK_ARRANGEMENT_HEIGHT_MAX = 420;
 const MULTITRACK_ARRANGEMENT_HEIGHT_DEFAULT = 184;
-const MULTITRACK_NOTE_TOP_OFFSET = 24;
-const MULTITRACK_NOTE_VERTICAL_RANGE = 48;
-const MOCK_AUDIO_CLIP_WIDTH_PERCENT = 52;
-const MOCK_AUDIO_PEAKS = [
-  34, 56, 48, 71, 42, 62, 76, 54, 39, 68, 82, 57, 44, 73, 51, 64, 35, 59, 78,
-  46, 69, 53, 41, 66,
-];
-
-type ArrangementViewMode = "singer" | "multitrack";
+const ARRANGEMENT_NOTE_TOP_OFFSET_SELECTED = 24;
+const ARRANGEMENT_NOTE_VERTICAL_RANGE_SELECTED = 40;
+const ARRANGEMENT_NOTE_TOP_OFFSET_COMPACT = 16;
+const ARRANGEMENT_NOTE_VERTICAL_RANGE_COMPACT = 22;
+type ArrangementDisclosureMode = "collapsed" | "expanded";
 
 type PreviewNote = {
   id: string;
@@ -777,9 +719,23 @@ type PreviewAudioClip = {
   peaks: number[];
 };
 
+type PhraseLyricMarker = {
+  id: string;
+  left: number;
+  width: number;
+  startTick: number;
+  text: string;
+};
+
+type ErrorMarker = {
+  id: string;
+  left: number;
+  startTick: number;
+};
+
 type MultitrackControlTarget = "gain" | "pan";
 
-type MultitrackRow = {
+type ArrangementRow = {
   id: string;
   kind: "singer" | "audio";
   trackId?: TrackId;
@@ -798,12 +754,14 @@ type MultitrackRow = {
   shouldPlay: boolean;
   keyRangeAdjustment: number;
   volumeRangeAdjustment: number;
-  lyricSummary: string;
+  phraseLyrics: PhraseLyricMarker[];
+  errorMarkers: ErrorMarker[];
+  errorCount: number;
   notes: PreviewNote[];
   clips: PreviewAudioClip[];
 };
 
-const arrangementViewMode = ref<ArrangementViewMode>("singer");
+const arrangementDisclosureMode = ref<ArrangementDisclosureMode>("collapsed");
 const multitrackArrangementHeight = ref(MULTITRACK_ARRANGEMENT_HEIGHT_DEFAULT);
 const isMultitrackResizing = ref(false);
 const editingTrackNameId = ref<TrackId>();
@@ -813,22 +771,22 @@ const activeMultitrackControl = ref<{
   target: MultitrackControlTarget;
   value: number;
 }>();
-const mockAudioClipLeftPercent = ref(10);
 const draggingAudioClipId = ref<string>();
 let multitrackResizeStartY = 0;
 let multitrackResizeStartHeight = MULTITRACK_ARRANGEMENT_HEIGHT_DEFAULT;
 let audioClipDragStartClientX = 0;
-let audioClipDragStartLeftPercent = 0;
+let audioClipDragStartCoarseMeasureOffset = 0;
 
 const arrangementToolbarStyle = computed<Record<string, string>>(() => ({
+  "--sing-collapsed-arrangement-height": `${COLLAPSED_ARRANGEMENT_HEIGHT}px`,
   "--sing-multitrack-arrangement-height": `${multitrackArrangementHeight.value}px`,
 }));
 const arrangementModeSide = computed<"left" | "right">(() =>
   props.toolPaletteLayout === "sideRight" ? "right" : "left",
 );
-const toggleArrangementViewMode = () => {
-  arrangementViewMode.value =
-    arrangementViewMode.value === "multitrack" ? "singer" : "multitrack";
+const toggleArrangementDisclosureMode = () => {
+  arrangementDisclosureMode.value =
+    arrangementDisclosureMode.value === "expanded" ? "collapsed" : "expanded";
   void nextTick(updateMinimapViewportWidth);
 };
 const setMultitrackArrangementHeight = (height: number) => {
@@ -861,19 +819,22 @@ const startMultitrackResize = (event: PointerEvent) => {
   window.addEventListener("pointerup", stopMultitrackResize);
   window.addEventListener("pointercancel", stopMultitrackResize);
 };
-const setMockAudioClipLeftPercent = (left: number) => {
-  mockAudioClipLeftPercent.value = Math.max(
-    0,
-    Math.min(left, 100 - MOCK_AUDIO_CLIP_WIDTH_PERCENT),
-  );
-};
 const onMultitrackAudioClipDragPointerMove = (event: PointerEvent) => {
   event.preventDefault();
   const deltaPercent =
     ((event.clientX - audioClipDragStartClientX) /
       Math.max(minimapContentWidth.value, 1)) *
     100;
-  setMockAudioClipLeftPercent(audioClipDragStartLeftPercent + deltaPercent);
+  const measureStepPercent = audioClipMeasureStepPercent.value;
+  const deltaMeasures =
+    measureStepPercent === 0
+      ? 0
+      : Math.round(deltaPercent / measureStepPercent);
+  audioAlignment.value = {
+    ...audioAlignment.value,
+    coarseMeasureOffset: audioClipDragStartCoarseMeasureOffset + deltaMeasures,
+    selectedClipId: MOCK_AUDIO_CLIP_ID,
+  };
 };
 const stopMultitrackAudioClipDrag = () => {
   draggingAudioClipId.value = undefined;
@@ -892,19 +853,18 @@ const startMultitrackAudioClipDrag = (
 
   event.preventDefault();
   draggingAudioClipId.value = clip.id;
+  audioAlignment.value = {
+    ...audioAlignment.value,
+    selectedClipId: clip.id,
+  };
   audioClipDragStartClientX = event.clientX;
-  audioClipDragStartLeftPercent = clip.left;
+  audioClipDragStartCoarseMeasureOffset =
+    audioAlignment.value.coarseMeasureOffset;
   window.addEventListener("pointermove", onMultitrackAudioClipDragPointerMove);
   window.addEventListener("pointerup", stopMultitrackAudioClipDrag);
   window.addEventListener("pointercancel", stopMultitrackAudioClipDrag);
 };
 
-const keyRangeAdjustment = computed(
-  () => store.getters.SELECTED_TRACK.keyRangeAdjustment,
-);
-const volumeRangeAdjustment = computed(
-  () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
-);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -919,21 +879,13 @@ const areAllTracksMuted = computed(() =>
 const playableTrackIds = computed(() => shouldPlayTracks(store.state.tracks));
 const singingTeacherLabel = ref("波音リツ");
 const singingTeacherOptions = ["波音リツ", "ずんだもん", "四国めたん"];
-const minimapZoom = ref(1);
 const minimapViewportRef = ref<HTMLElement>();
-const minimapScrollbarRef = ref<HTMLElement>();
 const multitrackHeaderScrollRef = ref<HTMLElement>();
 const multitrackMapScrollRef = ref<HTMLElement>();
 const minimapViewportWidth = ref(0);
-const minimapScrollLeft = ref(0);
-const isMinimapScrollbarDragging = ref(false);
-const isSingerMinimapNavigating = ref(false);
+const isMinimapWindowNavigating = ref(false);
 let minimapResizeObserver: ResizeObserver | undefined;
 let isSyncingMultitrackVerticalScroll = false;
-
-const setSingingTeacher = (event: Event) => {
-  singingTeacherLabel.value = (event.target as HTMLSelectElement).value;
-};
 
 const arrangementEndTick = computed(() => {
   const tpqn = Math.max(store.state.tpqn, 1);
@@ -967,16 +919,6 @@ const arrangementEndTick = computed(() => {
 
   return Math.max(getTotalTicks(timeSignatures, numMeasures, tpqn), 1);
 });
-const selectedTrackPhrases = computed(() => {
-  return [...store.state.phrases.entries()]
-    .filter(
-      ([, phrase]) =>
-        phrase.trackId === selectedTrackId.value && phrase.notes.length > 0,
-    )
-    .sort(
-      ([, a], [, b]) => getStartTicksOfPhrase(a) - getStartTicksOfPhrase(b),
-    );
-});
 const clampPercent = (value: number) => Math.max(0, Math.min(value, 100));
 const toPercent = (value: number, start: number, end: number) => {
   const span = Math.max(end - start, 1);
@@ -1001,39 +943,12 @@ const setPlayheadFromMinimap = (event: MouseEvent) => {
 const minimapPlayheadPosition = computed(() =>
   toPercent(store.getters.PLAYHEAD_POSITION, 0, arrangementEndTick.value),
 );
-const minimapContentWidth = computed(() => {
-  const tpqn = Math.max(store.state.tpqn, 1);
-  const quarterNotes = arrangementEndTick.value / tpqn;
-  const contentWidth =
-    quarterNotes * MINIMAP_QUARTER_NOTE_WIDTH * minimapZoom.value;
-  return Math.max(minimapViewportWidth.value, Math.ceil(contentWidth));
-});
+const minimapContentWidth = computed(() =>
+  Math.max(minimapViewportWidth.value, 1),
+);
 const minimapContentWidthStyle = computed(
   () => `${minimapContentWidth.value}px`,
 );
-const minimapScrollMax = computed(() =>
-  Math.max(minimapContentWidth.value - minimapViewportWidth.value, 0),
-);
-const minimapScrollRatio = computed({
-  get: () =>
-    minimapScrollMax.value === 0
-      ? 0
-      : minimapScrollLeft.value / minimapScrollMax.value,
-  set: (value) => {
-    minimapScrollLeft.value =
-      Math.max(0, Math.min(Number(value), 1)) * minimapScrollMax.value;
-  },
-});
-const minimapContentTransform = computed(
-  () => `translateX(-${minimapScrollLeft.value}px)`,
-);
-const minimapVisibleRange = computed(() => {
-  const contentWidth = Math.max(minimapContentWidth.value, 1);
-  return {
-    left: clampPercent((minimapScrollLeft.value / contentWidth) * 100),
-    width: clampPercent((minimapViewportWidth.value / contentWidth) * 100),
-  };
-});
 const sequencerVisibleRange = computed(() => {
   const sequencerContentWidth = Math.max(
     props.sequencerViewport.scrollWidth,
@@ -1072,107 +987,41 @@ const navigateSequencerToRatio = (ratio: number) => {
     ratio * sequencerContentWidth - clientWidth / 2,
   );
 };
-const getSingerMinimapPointerRatio = (clientX: number) => {
+const getMinimapPointerRatio = (clientX: number) => {
   const minimapViewportElement = minimapViewportRef.value;
   if (minimapViewportElement == undefined) return 0;
 
   const rect = minimapViewportElement.getBoundingClientRect();
   return Math.max(0, Math.min((clientX - rect.left) / rect.width, 1));
 };
-const onSingerMinimapPointerMove = (event: PointerEvent) => {
+const onMinimapWindowPointerMove = (event: PointerEvent) => {
   event.preventDefault();
-  navigateSequencerToRatio(getSingerMinimapPointerRatio(event.clientX));
+  navigateSequencerToRatio(getMinimapPointerRatio(event.clientX));
 };
-const stopSingerMinimapNavigation = () => {
-  isSingerMinimapNavigating.value = false;
-  window.removeEventListener("pointermove", onSingerMinimapPointerMove);
-  window.removeEventListener("pointerup", stopSingerMinimapNavigation);
-  window.removeEventListener("pointercancel", stopSingerMinimapNavigation);
+const stopMinimapWindowNavigation = () => {
+  isMinimapWindowNavigating.value = false;
+  window.removeEventListener("pointermove", onMinimapWindowPointerMove);
+  window.removeEventListener("pointerup", stopMinimapWindowNavigation);
+  window.removeEventListener("pointercancel", stopMinimapWindowNavigation);
 };
-const onSingerMinimapPointerDown = (event: PointerEvent) => {
+const onMinimapWindowPointerDown = (event: PointerEvent) => {
   if (event.pointerType === "mouse" && event.button !== 0) return;
 
   event.preventDefault();
-  isSingerMinimapNavigating.value = true;
-  navigateSequencerToRatio(getSingerMinimapPointerRatio(event.clientX));
-  window.addEventListener("pointermove", onSingerMinimapPointerMove);
-  window.addEventListener("pointerup", stopSingerMinimapNavigation);
-  window.addEventListener("pointercancel", stopSingerMinimapNavigation);
+  isMinimapWindowNavigating.value = true;
+  navigateSequencerToRatio(getMinimapPointerRatio(event.clientX));
+  window.addEventListener("pointermove", onMinimapWindowPointerMove);
+  window.addEventListener("pointerup", stopMinimapWindowNavigation);
+  window.addEventListener("pointercancel", stopMinimapWindowNavigation);
 };
-const navigateSingerMinimapByKeyboard = (direction: -1 | 1) => {
+const navigateMinimapWindowByKeyboard = (direction: -1 | 1) => {
   navigateSequencerToScrollLeft(
     props.sequencerViewport.scrollLeft +
       direction * Math.max(props.sequencerViewport.clientWidth * 0.8, 1),
   );
 };
-const clampMinimapZoom = (value: number) =>
-  Math.max(MINIMAP_ZOOM_MIN, Math.min(value, MINIMAP_ZOOM_MAX));
-const increaseMinimapZoom = () => {
-  minimapZoom.value = clampMinimapZoom(
-    Number((minimapZoom.value + MINIMAP_ZOOM_STEP).toFixed(2)),
-  );
-};
-const decreaseMinimapZoom = () => {
-  minimapZoom.value = clampMinimapZoom(
-    Number((minimapZoom.value - MINIMAP_ZOOM_STEP).toFixed(2)),
-  );
-};
 const updateMinimapViewportWidth = () => {
   minimapViewportWidth.value = minimapViewportRef.value?.clientWidth ?? 0;
-};
-const setMinimapScrollLeft = (value: number) => {
-  minimapScrollLeft.value = Math.max(
-    0,
-    Math.min(value, minimapScrollMax.value),
-  );
-};
-const setMinimapScrollFromClientX = (clientX: number) => {
-  const railElement = minimapScrollbarRef.value?.querySelector<HTMLElement>(
-    ".sing-minimap-scrollbar-rail",
-  );
-  if (railElement == undefined || minimapScrollMax.value === 0) return;
-
-  const rect = railElement.getBoundingClientRect();
-  const contentWidth = Math.max(minimapContentWidth.value, 1);
-  const visibleRatio = Math.min(minimapViewportWidth.value / contentWidth, 1);
-  const pointerRatio = Math.max(
-    0,
-    Math.min((clientX - rect.left) / rect.width, 1),
-  );
-  const leftRatio = Math.max(
-    0,
-    Math.min(pointerRatio - visibleRatio / 2, 1 - visibleRatio),
-  );
-  setMinimapScrollLeft(leftRatio * contentWidth);
-};
-const onMinimapScrollbarPointerMove = (event: PointerEvent) => {
-  event.preventDefault();
-  setMinimapScrollFromClientX(event.clientX);
-};
-const stopMinimapScrollbarDrag = () => {
-  isMinimapScrollbarDragging.value = false;
-  window.removeEventListener("pointermove", onMinimapScrollbarPointerMove);
-  window.removeEventListener("pointerup", stopMinimapScrollbarDrag);
-  window.removeEventListener("pointercancel", stopMinimapScrollbarDrag);
-};
-const onMinimapScrollbarPointerDown = (event: PointerEvent) => {
-  if (event.pointerType === "mouse" && event.button !== 0) return;
-  if (minimapScrollMax.value === 0) return;
-
-  event.preventDefault();
-  isMinimapScrollbarDragging.value = true;
-  setMinimapScrollFromClientX(event.clientX);
-  window.addEventListener("pointermove", onMinimapScrollbarPointerMove);
-  window.addEventListener("pointerup", stopMinimapScrollbarDrag);
-  window.addEventListener("pointercancel", stopMinimapScrollbarDrag);
-};
-const scrollMinimapByKeyboard = (direction: -1 | 1) => {
-  setMinimapScrollLeft(
-    minimapScrollLeft.value + direction * minimapViewportWidth.value * 0.16,
-  );
-};
-const scrollMinimapToEdge = (ratio: 0 | 1) => {
-  setMinimapScrollLeft(minimapScrollMax.value * ratio);
 };
 const syncMultitrackVerticalScroll = (
   source: HTMLElement,
@@ -1208,39 +1057,102 @@ const onMultitrackMapScroll = (event: Event) => {
     multitrackHeaderScrollRef.value,
   );
 };
-const getWheelDeltaUnit = (event: WheelEvent) => {
-  if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) return 16;
-  if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
-    return Math.max(minimapViewportWidth.value, 1);
-  }
-  return 1;
-};
-const onMinimapWheel = (event: WheelEvent) => {
-  if (arrangementViewMode.value !== "multitrack") return;
-  const targetElement =
-    event.target instanceof Element ? event.target : undefined;
-  const isOverMultitrackMap =
-    targetElement?.closest(".sing-multitrack-map-scroll") != undefined;
-  const shouldScrollVertically =
-    isOverMultitrackMap &&
-    !event.shiftKey &&
-    Math.abs(event.deltaY) >= Math.abs(event.deltaX);
-  if (shouldScrollVertically) return;
+const arrangementMeasureCount = computed(() => {
+  const tpqn = Math.max(store.state.tpqn, 1);
+  const timeSignatures = store.state.timeSignatures;
+  if (timeSignatures.length === 0) return SEQUENCER_MIN_NUM_MEASURES;
 
-  if (minimapScrollMax.value === 0) return;
-
-  const wheelDelta =
-    event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX)
-      ? event.deltaY
-      : event.deltaX;
-  if (wheelDelta === 0) return;
-
-  event.preventDefault();
-  setMinimapScrollLeft(
-    minimapScrollLeft.value + wheelDelta * getWheelDeltaUnit(event),
+  const noteEndPositions = [...store.state.tracks.values()].flatMap((track) =>
+    track.notes.map((note) => note.position + note.duration),
   );
-};
+  const timeSignaturePositions = getTimeSignaturePositions(
+    timeSignatures,
+    tpqn,
+  );
+  const lastTimeSignaturePosition = timeSignaturePositions.at(-1) ?? 0;
+  const lastTempoPosition = store.state.tempos.at(-1)?.position ?? 0;
+  const maxTick = Math.max(
+    lastTimeSignaturePosition,
+    lastTempoPosition,
+    ...noteEndPositions,
+    0,
+  );
 
+  return Math.max(
+    SEQUENCER_MIN_NUM_MEASURES,
+    tickToMeasureNumber(maxTick, timeSignatures, tpqn) + 8,
+  );
+});
+const audioAlignmentMeasureDurationMs = computed(() =>
+  getAudioAlignmentMeasureDurationMs({
+    tempos: store.state.tempos,
+    timeSignatures: store.state.timeSignatures,
+  }),
+);
+const audioAlignmentOffsetMs = computed(() =>
+  getAudioAlignmentOffsetMs(
+    audioAlignment.value,
+    audioAlignmentMeasureDurationMs.value,
+  ),
+);
+const audioAlignmentOffsetLabel = computed(() =>
+  formatAudioAlignmentOffsetMs(audioAlignmentOffsetMs.value),
+);
+const audioClipMeasureStepPercent = computed(
+  () => 100 / Math.max(arrangementMeasureCount.value, 1),
+);
+const audioClipLeftPercent = computed(() =>
+  Math.max(
+    0,
+    Math.min(
+      MOCK_AUDIO_CLIP_BASE_LEFT_PERCENT +
+        audioAlignment.value.coarseMeasureOffset *
+          audioClipMeasureStepPercent.value,
+      100 - MOCK_AUDIO_CLIP_WIDTH_PERCENT,
+    ),
+  ),
+);
+const setAudioOffsetMs = (offsetMs: number) => {
+  audioAlignment.value = {
+    ...audioAlignment.value,
+    ...splitAudioAlignmentOffsetMs(
+      offsetMs,
+      audioAlignmentMeasureDurationMs.value,
+    ),
+    selectedClipId: MOCK_AUDIO_CLIP_ID,
+  };
+};
+const nudgeAudioOffset = (deltaMs: number) => {
+  setAudioOffsetMs(audioAlignmentOffsetMs.value + deltaMs);
+};
+const setAudioOffsetFromInput = (event: Event) => {
+  if (!(event.target instanceof HTMLInputElement)) return;
+
+  const value = Number(event.target.value);
+  if (!Number.isFinite(value)) {
+    event.target.value = String(audioAlignmentOffsetMs.value);
+    return;
+  }
+
+  setAudioOffsetMs(value);
+};
+const toggleAudioSnap = (event: Event) => {
+  if (!(event.target instanceof HTMLInputElement)) return;
+
+  audioAlignment.value = {
+    ...audioAlignment.value,
+    snapToGrid: event.target.checked,
+    selectedClipId: MOCK_AUDIO_CLIP_ID,
+  };
+};
+const moveAudioClipStartToPlayhead = () => {
+  const playheadSeconds = tickToSecond(
+    store.getters.PLAYHEAD_POSITION,
+    store.state.tempos,
+    Math.max(store.state.tpqn, 1),
+  );
+  setAudioOffsetMs(Math.round(playheadSeconds * 1000));
+};
 onMounted(() => {
   void nextTick(() => {
     updateMinimapViewportWidth();
@@ -1253,14 +1165,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   minimapResizeObserver?.disconnect();
-  stopSingerMinimapNavigation();
-  stopMinimapScrollbarDrag();
+  stopMinimapWindowNavigation();
   stopMultitrackResize();
   stopMultitrackAudioClipDrag();
-});
-
-watch(minimapScrollMax, () => {
-  setMinimapScrollLeft(minimapScrollLeft.value);
 });
 const getLyricForNote = (note: Note) => {
   const explicitLyric = note.lyric?.trim();
@@ -1291,9 +1198,6 @@ const getMinimapNoteNumberRange = (notes: Note[]) => {
     high: Math.min(127, high),
   };
 };
-const selectedTrackMinimapNoteNumberRange = computed(() =>
-  getMinimapNoteNumberRange(selectedTrack.value.notes),
-);
 const createPreviewNotes = (
   notes: Note[],
   {
@@ -1355,9 +1259,62 @@ const getErrorNoteIdsForTrack = (trackId: TrackId) => {
 
   return errorNoteIds;
 };
-const getLyricSummary = (notes: Note[]) => {
-  const lyricSummary = notes.slice(0, 18).map(getLyricForNote).join("");
-  return notes.length > 18 ? `${lyricSummary}…` : lyricSummary;
+const createErrorMarkers = (
+  notes: Note[],
+  errorNoteIds: Set<string>,
+): ErrorMarker[] => {
+  return notes
+    .filter((note) => errorNoteIds.has(note.id))
+    .map((note) => ({
+      id: `error:${note.id}`,
+      left: toPercent(note.position, 0, arrangementEndTick.value),
+      startTick: note.position,
+    }));
+};
+const createPhraseLyrics = (
+  trackId: TrackId,
+  notes: Note[],
+): PhraseLyricMarker[] => {
+  const phraseLyrics = [...store.state.phrases.entries()]
+    .filter(
+      ([, phrase]) => phrase.trackId === trackId && phrase.notes.length > 0,
+    )
+    .sort(([, a], [, b]) => getStartTicksOfPhrase(a) - getStartTicksOfPhrase(b))
+    .map(([phraseKey, phrase]) => {
+      const startTicks = getStartTicksOfPhrase(phrase);
+      const endTicks = getEndTicksOfPhrase(phrase);
+      return {
+        id: `phrase:${String(phraseKey)}`,
+        left: toPercent(startTicks, 0, arrangementEndTick.value),
+        width: Math.max(
+          toPercent(endTicks, 0, arrangementEndTick.value) -
+            toPercent(startTicks, 0, arrangementEndTick.value),
+          0.8,
+        ),
+        startTick: startTicks,
+        text: phrase.notes.map(getLyricForNote).join(""),
+      };
+    });
+
+  if (phraseLyrics.length > 0 || notes.length === 0) return phraseLyrics;
+
+  const startTicks = Math.min(...notes.map((note) => note.position));
+  const endTicks = Math.max(
+    ...notes.map((note) => note.position + note.duration),
+  );
+  return [
+    {
+      id: `track:${trackId}:lyrics`,
+      left: toPercent(startTicks, 0, arrangementEndTick.value),
+      width: Math.max(
+        toPercent(endTicks, 0, arrangementEndTick.value) -
+          toPercent(startTicks, 0, arrangementEndTick.value),
+        0.8,
+      ),
+      startTick: startTicks,
+      text: notes.map(getLyricForNote).join(""),
+    },
+  ];
 };
 const getTrackCharacter = (trackId: TrackId) => {
   const track = tracks.value.get(trackId);
@@ -1379,6 +1336,18 @@ const getTrackCharacter = (trackId: TrackId) => {
 };
 const getMultitrackSingingTeacherLabel = (trackId: TrackId) =>
   multitrackSingingTeacherLabels.value[trackId] ?? singingTeacherLabel.value;
+const getArrangementSingerStatusLabel = ({
+  singerName,
+  singingTeacher,
+  keyRangeAdjustment,
+  volumeRangeAdjustment,
+}: {
+  singerName: string;
+  singingTeacher: string;
+  keyRangeAdjustment: number;
+  volumeRangeAdjustment: number;
+}) =>
+  `${singerName} / ${singingTeacher} / 音域 ${keyRangeAdjustment} 声量 ${volumeRangeAdjustment}`;
 const getGainLabel = (gain: number) => `${Math.round(gain * 100)}%`;
 const getPanLabel = (pan: number) => {
   const panAmount = Math.round(Math.abs(pan) * 100);
@@ -1386,24 +1355,24 @@ const getPanLabel = (pan: number) => {
   return `${pan < 0 ? "L" : "R"}${panAmount}`;
 };
 const isMultitrackControlActive = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   target: MultitrackControlTarget,
 ) =>
   activeMultitrackControl.value?.rowId === row.id &&
   activeMultitrackControl.value.target === target;
 const getActiveMultitrackControlValue = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   target: MultitrackControlTarget,
 ) =>
   isMultitrackControlActive(row, target)
     ? activeMultitrackControl.value?.value
     : undefined;
-const getMultitrackGainDisplayLabel = (row: MultitrackRow) =>
+const getMultitrackGainDisplayLabel = (row: ArrangementRow) =>
   getGainLabel(getActiveMultitrackControlValue(row, "gain") ?? row.gain);
-const getMultitrackPanDisplayLabel = (row: MultitrackRow) =>
+const getMultitrackPanDisplayLabel = (row: ArrangementRow) =>
   getPanLabel(getActiveMultitrackControlValue(row, "pan") ?? row.pan);
 const clearMultitrackControl = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   target: MultitrackControlTarget,
 ) => {
   if (isMultitrackControlActive(row, target)) {
@@ -1417,7 +1386,7 @@ const getNumberFromValueOrEvent = (valueOrEvent: number | Event) =>
       ? Number(valueOrEvent.target.value)
       : undefined;
 const previewMultitrackControl = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   target: MultitrackControlTarget,
   valueOrEvent: number | Event,
 ) => {
@@ -1430,11 +1399,18 @@ const previewMultitrackControl = (
     value,
   };
 };
-const multitrackRows = computed<MultitrackRow[]>(() => {
+const arrangementRows = computed<ArrangementRow[]>(() => {
   const trackRows = trackOrder.value.flatMap((trackId, trackIndex) => {
     const track = tracks.value.get(trackId);
     if (!track) return [];
     const character = getTrackCharacter(trackId);
+    const errorNoteIds = getErrorNoteIdsForTrack(trackId);
+    const errorMarkers = createErrorMarkers(track.notes, errorNoteIds);
+    const isSelected =
+      trackId === selectedTrackId.value &&
+      audioAlignment.value.selectedClipId == undefined;
+    const singerName = character?.singerName ?? "未設定";
+    const singingTeacher = getMultitrackSingingTeacherLabel(trackId);
 
     return [
       {
@@ -1443,14 +1419,16 @@ const multitrackRows = computed<MultitrackRow[]>(() => {
         trackId,
         name: track.name || `Track ${trackIndex + 1}`,
         isNameEditing: editingTrackNameId.value === trackId,
-        singerName: character?.singerName ?? "未設定",
-        singingTeacherLabel: getMultitrackSingingTeacherLabel(trackId),
+        singerName,
+        singingTeacherLabel: singingTeacher,
         characterStyle: character?.style,
-        statusLabel:
-          track.notes.length === 0
-            ? "空のシンガー"
-            : `${track.notes.length} notes`,
-        isSelected: trackId === selectedTrackId.value,
+        statusLabel: getArrangementSingerStatusLabel({
+          singerName,
+          singingTeacher,
+          keyRangeAdjustment: track.keyRangeAdjustment,
+          volumeRangeAdjustment: track.volumeRangeAdjustment,
+        }),
+        isSelected,
         isSolo: track.solo,
         isMuted: track.mute,
         gain: track.gain,
@@ -1459,11 +1437,20 @@ const multitrackRows = computed<MultitrackRow[]>(() => {
         shouldPlay: playableTrackIds.value.has(trackId),
         keyRangeAdjustment: track.keyRangeAdjustment,
         volumeRangeAdjustment: track.volumeRangeAdjustment,
-        lyricSummary: getLyricSummary(track.notes),
+        phraseLyrics: createPhraseLyrics(trackId, track.notes),
+        errorMarkers,
+        errorCount: errorMarkers.length,
         notes: createPreviewNotes(track.notes, {
-          errorNoteIds: getErrorNoteIdsForTrack(trackId),
-          topOffset: MULTITRACK_NOTE_TOP_OFFSET,
-          verticalRange: MULTITRACK_NOTE_VERTICAL_RANGE,
+          errorNoteIds,
+          noteNumberRange: isSelected
+            ? getMinimapNoteNumberRange(track.notes)
+            : undefined,
+          topOffset: isSelected
+            ? ARRANGEMENT_NOTE_TOP_OFFSET_SELECTED
+            : ARRANGEMENT_NOTE_TOP_OFFSET_COMPACT,
+          verticalRange: isSelected
+            ? ARRANGEMENT_NOTE_VERTICAL_RANGE_SELECTED
+            : ARRANGEMENT_NOTE_VERTICAL_RANGE_COMPACT,
         }),
         clips: [],
       },
@@ -1473,14 +1460,14 @@ const multitrackRows = computed<MultitrackRow[]>(() => {
   return [
     ...trackRows,
     {
-      id: "mock-audio-track",
+      id: MOCK_AUDIO_TRACK_ID,
       kind: "audio" as const,
       name: "Audio Ref",
       isNameEditing: false,
       singerName: "",
       singingTeacherLabel: "",
-      statusLabel: "clip align",
-      isSelected: false,
+      statusLabel: `オフセット ${audioAlignmentOffsetLabel.value} / 粗 ${audioAlignment.value.coarseMeasureOffset}小節`,
+      isSelected: audioAlignment.value.selectedClipId === MOCK_AUDIO_CLIP_ID,
       isSolo: false,
       isMuted: false,
       gain: 1,
@@ -1489,12 +1476,14 @@ const multitrackRows = computed<MultitrackRow[]>(() => {
       shouldPlay: true,
       keyRangeAdjustment: 0,
       volumeRangeAdjustment: 0,
-      lyricSummary: "",
+      phraseLyrics: [],
+      errorMarkers: [],
+      errorCount: 0,
       notes: [],
       clips: [
         {
-          id: "mock-audio-clip-main",
-          left: mockAudioClipLeftPercent.value,
+          id: MOCK_AUDIO_CLIP_ID,
+          left: audioClipLeftPercent.value,
           width: MOCK_AUDIO_CLIP_WIDTH_PERCENT,
           peaks: MOCK_AUDIO_PEAKS,
         },
@@ -1502,9 +1491,33 @@ const multitrackRows = computed<MultitrackRow[]>(() => {
     },
   ];
 });
-const selectMultitrackRow = (row: MultitrackRow) => {
+const visibleArrangementRows = computed<ArrangementRow[]>(() => {
+  if (arrangementDisclosureMode.value === "expanded") {
+    return arrangementRows.value;
+  }
+
+  const selectedRow = arrangementRows.value.find((row) => row.isSelected);
+  const firstSingerRow = arrangementRows.value.find(
+    (row) => row.kind === "singer",
+  );
+  const focusedRow = selectedRow ?? firstSingerRow;
+  return focusedRow == undefined ? [] : [focusedRow];
+});
+const selectArrangementRow = (row: ArrangementRow) => {
+  if (row.kind === "audio") {
+    audioAlignment.value = {
+      ...audioAlignment.value,
+      selectedClipId: MOCK_AUDIO_CLIP_ID,
+    };
+    return;
+  }
+
   if (row.trackId == undefined) return;
 
+  audioAlignment.value = {
+    ...audioAlignment.value,
+    selectedClipId: undefined,
+  };
   void store.actions.SELECT_TRACK({ trackId: row.trackId });
 };
 const blurCurrentInput = (event: Event) => {
@@ -1512,7 +1525,7 @@ const blurCurrentInput = (event: Event) => {
     event.target.blur();
   }
 };
-const startMultitrackTrackNameEdit = (row: MultitrackRow) => {
+const startMultitrackTrackNameEdit = (row: ArrangementRow) => {
   if (uiLocked.value || row.trackId == undefined) return;
 
   editingTrackNameId.value = row.trackId;
@@ -1553,12 +1566,12 @@ const deleteTrack = async (trackId: TrackId) => {
     });
   }
 };
-const deleteTrackFromRow = (row: MultitrackRow) => {
+const deleteTrackFromRow = (row: ArrangementRow) => {
   if (row.trackId == undefined) return;
 
   void deleteTrack(row.trackId);
 };
-const finishMultitrackTrackNameEdit = (row: MultitrackRow, event: Event) => {
+const finishMultitrackTrackNameEdit = (row: ArrangementRow, event: Event) => {
   editingTrackNameId.value = undefined;
   if (row.trackId == undefined || !(event.target instanceof HTMLInputElement)) {
     return;
@@ -1573,7 +1586,7 @@ const finishMultitrackTrackNameEdit = (row: MultitrackRow, event: Event) => {
   void store.actions.COMMAND_SET_TRACK_NAME({ trackId: row.trackId, name });
 };
 const setMultitrackTrackGain = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   valueOrEvent: number | Event,
 ) => {
   if (row.trackId == undefined) return;
@@ -1588,20 +1601,20 @@ const setMultitrackTrackGain = (
   }
 };
 const previewMultitrackTrackGain = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   valueOrEvent: number | Event,
 ) => {
   previewMultitrackControl(row, "gain", valueOrEvent);
 };
 const commitMultitrackTrackGain = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   valueOrEvent: number | Event,
 ) => {
   setMultitrackTrackGain(row, valueOrEvent);
   clearMultitrackControl(row, "gain");
 };
 const setMultitrackTrackPan = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   valueOrEvent: number | Event,
 ) => {
   if (row.trackId == undefined) return;
@@ -1616,19 +1629,19 @@ const setMultitrackTrackPan = (
   }
 };
 const previewMultitrackTrackPan = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   valueOrEvent: number | Event,
 ) => {
   previewMultitrackControl(row, "pan", valueOrEvent);
 };
 const commitMultitrackTrackPan = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   valueOrEvent: number | Event,
 ) => {
   setMultitrackTrackPan(row, valueOrEvent);
   clearMultitrackControl(row, "pan");
 };
-const setMultitrackTrackMute = (row: MultitrackRow, mute: boolean) => {
+const setMultitrackTrackMute = (row: ArrangementRow, mute: boolean) => {
   if (row.trackId == undefined) return;
 
   if (store.state.undoableTrackOperations.soloAndMute) {
@@ -1637,7 +1650,7 @@ const setMultitrackTrackMute = (row: MultitrackRow, mute: boolean) => {
     void store.actions.SET_TRACK_MUTE({ trackId: row.trackId, mute });
   }
 };
-const setMultitrackTrackSolo = (row: MultitrackRow, solo: boolean) => {
+const setMultitrackTrackSolo = (row: ArrangementRow, solo: boolean) => {
   if (row.trackId == undefined) return;
 
   if (store.state.undoableTrackOperations.soloAndMute) {
@@ -1658,7 +1671,7 @@ const muteAllTracks = () => {
     }
   }
 };
-const setMultitrackSingingTeacher = (row: MultitrackRow, event: Event) => {
+const setMultitrackSingingTeacher = (row: ArrangementRow, event: Event) => {
   if (
     row.trackId == undefined ||
     !(event.target instanceof HTMLSelectElement)
@@ -1671,7 +1684,7 @@ const setMultitrackSingingTeacher = (row: MultitrackRow, event: Event) => {
     [row.trackId]: event.target.value,
   };
 };
-const setMultitrackKeyRangeAdjustment = (row: MultitrackRow, event: Event) => {
+const setMultitrackKeyRangeAdjustment = (row: ArrangementRow, event: Event) => {
   if (row.trackId == undefined || !(event.target instanceof HTMLInputElement)) {
     return;
   }
@@ -1688,7 +1701,7 @@ const setMultitrackKeyRangeAdjustment = (row: MultitrackRow, event: Event) => {
   });
 };
 const setMultitrackVolumeRangeAdjustment = (
-  row: MultitrackRow,
+  row: ArrangementRow,
   event: Event,
 ) => {
   if (row.trackId == undefined || !(event.target instanceof HTMLInputElement)) {
@@ -1706,83 +1719,15 @@ const setMultitrackVolumeRangeAdjustment = (
     trackId: row.trackId,
   });
 };
-const minimapPhraseLyrics = computed(() => {
-  if (selectedTrackPhrases.value.length > 0) {
-    return selectedTrackPhrases.value.map(([phraseKey, phrase]) => {
-      const startTicks = getStartTicksOfPhrase(phrase);
-      const endTicks = getEndTicksOfPhrase(phrase);
-      return {
-        id: String(phraseKey),
-        left: toPercent(startTicks, 0, arrangementEndTick.value),
-        width: Math.max(
-          toPercent(endTicks, 0, arrangementEndTick.value) -
-            toPercent(startTicks, 0, arrangementEndTick.value),
-          0.8,
-        ),
-        text: phrase.notes.map(getLyricForNote).join(""),
-      };
-    });
-  }
-
-  const notes = selectedTrack.value.notes;
-  if (notes.length === 0) return [];
-
-  const startTicks = Math.min(...notes.map((note) => note.position));
-  const endTicks = Math.max(
-    ...notes.map((note) => note.position + note.duration),
-  );
-  return [
-    {
-      id: "track",
-      left: toPercent(startTicks, 0, arrangementEndTick.value),
-      width: Math.max(
-        toPercent(endTicks, 0, arrangementEndTick.value) -
-          toPercent(startTicks, 0, arrangementEndTick.value),
-        0.8,
-      ),
-      text: notes.map(getLyricForNote).join(""),
-    },
-  ];
-});
-const minimapNotes = computed(() => {
-  return createPreviewNotes(selectedTrack.value.notes, {
-    errorNoteIds: getErrorNoteIdsForTrack(selectedTrackId.value),
-    noteNumberRange: selectedTrackMinimapNoteNumberRange.value,
-    topOffset: MINIMAP_NOTE_TOP_OFFSET,
-    verticalRange: MINIMAP_NOTE_VERTICAL_RANGE,
-  });
-});
-const minimapRegularNotes = computed(() =>
-  minimapNotes.value.filter((note) => !note.isError),
-);
-const minimapErrorNotes = computed(() =>
-  minimapNotes.value.filter((note) => note.isError),
-);
-
-const setKeyRangeAdjustment = (event: Event) => {
-  const keyRangeAdjustmentValue = Number(
-    (event.target as HTMLInputElement).value,
-  );
-  if (!isValidKeyRangeAdjustment(keyRangeAdjustmentValue)) {
-    return;
-  }
-  void store.actions.COMMAND_SET_KEY_RANGE_ADJUSTMENT({
-    keyRangeAdjustment: keyRangeAdjustmentValue,
-    trackId: selectedTrackId.value,
-  });
+const jumpToTick = (tick: number) => {
+  void store.actions.SET_PLAYHEAD_POSITION({ position: tick });
+  navigateSequencerToRatio(tick / arrangementEndTick.value);
 };
+const jumpToFirstTrackError = (row: ArrangementRow) => {
+  const firstErrorMarker = row.errorMarkers[0];
+  if (firstErrorMarker == undefined) return;
 
-const setVolumeRangeAdjustment = (event: Event) => {
-  const volumeRangeAdjustmentValue = Number(
-    (event.target as HTMLInputElement).value,
-  );
-  if (!isValidVolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
-    return;
-  }
-  void store.actions.COMMAND_SET_VOLUME_RANGE_ADJUSTMENT({
-    volumeRangeAdjustment: volumeRangeAdjustmentValue,
-    trackId: selectedTrackId.value,
-  });
+  jumpToTick(firstErrorMarker.startTick);
 };
 </script>
 
@@ -1862,14 +1807,14 @@ const setVolumeRangeAdjustment = (event: Event) => {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  min-height: 80px;
+  min-height: calc(var(--sing-collapsed-arrangement-height) + 16px);
   padding: 8px 14px 8px 0;
   width: 100%;
   border-bottom: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 54%, transparent);
   letter-spacing: 0.01em;
 
-  &.mode-multitrack {
+  &.mode-expanded {
     min-height: calc(var(--sing-multitrack-arrangement-height) + 16px);
   }
 
@@ -1877,7 +1822,7 @@ const setVolumeRangeAdjustment = (event: Event) => {
     padding-right: 0;
   }
 
-  &.mode-singer.arrangement-mode-right {
+  &.mode-collapsed.arrangement-mode-right {
     padding-left: 12px;
   }
 }
@@ -1899,7 +1844,7 @@ const setVolumeRangeAdjustment = (event: Event) => {
   grid-row: 1;
   grid-column: 1;
   display: grid;
-  min-height: 64px;
+  min-height: var(--sing-collapsed-arrangement-height);
   padding-top: 8px;
   border: 0;
   border-right: 1px solid
@@ -1912,7 +1857,7 @@ const setVolumeRangeAdjustment = (event: Event) => {
   justify-items: center;
   align-items: start;
 
-  .mode-multitrack & {
+  .mode-expanded & {
     min-height: var(--sing-multitrack-arrangement-height);
   }
 
@@ -1976,7 +1921,7 @@ const setVolumeRangeAdjustment = (event: Event) => {
   display: flex;
   align-items: stretch;
   min-width: 0;
-  height: 64px;
+  height: var(--sing-collapsed-arrangement-height);
   border: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 38%, transparent);
   border-left: 0;
@@ -1984,7 +1929,7 @@ const setVolumeRangeAdjustment = (event: Event) => {
   background: var(--scheme-color-surface-container-highest);
   overflow: hidden;
 
-  &.mode-multitrack {
+  &.mode-expanded {
     height: var(--sing-multitrack-arrangement-height);
   }
 
@@ -2026,30 +1971,6 @@ const setVolumeRangeAdjustment = (event: Event) => {
   }
 }
 
-.sing-track-header {
-  display: flex;
-  align-items: stretch;
-  flex: 0 0 auto;
-  min-width: 0;
-  padding: 0;
-  border-right: 1px solid
-    color-mix(in oklch, var(--scheme-color-outline-variant) 34%, transparent);
-  background: var(--scheme-color-surface-container-highest);
-}
-
-.sing-track-header :deep(.q-btn) {
-  height: 100%;
-  min-width: 0;
-  max-width: 156px;
-  border-radius: 0;
-}
-
-.sing-track-header :deep(.q-btn__content) {
-  height: 100%;
-  min-width: 0;
-  justify-content: flex-start;
-}
-
 .sing-multitrack-header-column {
   position: relative;
   display: flex;
@@ -2074,6 +1995,11 @@ const setVolumeRangeAdjustment = (event: Event) => {
   &::-webkit-scrollbar {
     width: 0;
     height: 0;
+  }
+
+  .sing-multitrack-header-column.collapsed & {
+    padding-bottom: 0;
+    overflow-y: hidden;
   }
 }
 
@@ -2171,8 +2097,8 @@ const setVolumeRangeAdjustment = (event: Event) => {
   align-items: start;
   gap: 8px;
   min-width: 0;
-  height: 64px;
-  padding: 8px;
+  height: 44px;
+  padding: 6px 8px;
   border-bottom: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 24%, transparent);
   background: transparent;
@@ -2196,6 +2122,7 @@ const setVolumeRangeAdjustment = (event: Event) => {
   }
 
   &.selected {
+    height: 72px;
     background: color-mix(
       in oklch,
       var(--scheme-color-surface-container-highest) 88%,
@@ -2205,12 +2132,40 @@ const setVolumeRangeAdjustment = (event: Event) => {
     box-shadow: inset 3px 0 0 var(--scheme-color-secondary);
   }
 
+  &:not(.selected) {
+    grid-template-columns: 32px minmax(0, 1fr) 52px;
+
+    .sing-multitrack-header-main {
+      grid-template-rows: 18px 14px;
+    }
+
+    .sing-multitrack-mix-row {
+      display: none;
+    }
+
+    .sing-multitrack-actions {
+      grid-template-columns: repeat(3, 20px);
+    }
+
+    .sing-multitrack-more-button {
+      display: none;
+    }
+  }
+
   &.audio {
     color: color-mix(
       in oklch,
       var(--scheme-color-on-surface-variant) 88%,
       var(--scheme-color-secondary)
     );
+  }
+
+  &.audio.selected {
+    grid-template-columns: 32px minmax(0, 1fr) 28px;
+
+    .sing-multitrack-header-main {
+      grid-template-rows: 18px 14px 24px;
+    }
   }
 
   .material-symbols-rounded {
@@ -2330,6 +2285,102 @@ const setVolumeRangeAdjustment = (event: Event) => {
   font-size: 10px;
   font-weight: 400;
   line-height: 14px;
+}
+
+.sing-audio-alignment-row {
+  display: grid;
+  grid-template-columns: 72px minmax(68px, 1fr) 42px;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  height: 24px;
+}
+
+.sing-audio-offset-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container) 72%,
+    transparent
+  );
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 9px;
+  line-height: 1;
+
+  input {
+    appearance: textfield;
+    min-width: 0;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--scheme-color-on-surface);
+    font: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    outline: none;
+    text-align: right;
+  }
+}
+
+.sing-audio-nudge-group {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  min-width: 0;
+}
+
+.sing-audio-nudge-button {
+  appearance: none;
+  height: 22px;
+  min-width: 0;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 78%,
+    var(--scheme-color-secondary)
+  );
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 600;
+
+  &:hover {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary-container) 40%,
+      transparent
+    );
+    color: var(--scheme-color-on-surface);
+  }
+}
+
+.sing-audio-snap-toggle {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  align-items: center;
+  gap: 3px;
+  height: 22px;
+  color: var(--scheme-color-on-surface-variant);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+
+  input {
+    width: 10px;
+    height: 10px;
+    margin: 0;
+    accent-color: var(--scheme-color-secondary);
+  }
 }
 
 .sing-multitrack-mix-row {
@@ -2529,7 +2580,7 @@ const setVolumeRangeAdjustment = (event: Event) => {
 
 .sing-multitrack-actions {
   display: grid;
-  grid-template-columns: repeat(3, 20px);
+  grid-template-columns: repeat(4, 20px);
   align-self: start;
   gap: 4px;
   justify-content: end;
@@ -2541,7 +2592,9 @@ const setVolumeRangeAdjustment = (event: Event) => {
 }
 
 .sing-multitrack-state-button,
-.sing-multitrack-more-button {
+.sing-multitrack-more-button,
+.sing-multitrack-error-badge,
+.sing-track-error-badge {
   appearance: none;
   display: grid;
   width: 20px;
@@ -2587,6 +2640,28 @@ const setVolumeRangeAdjustment = (event: Event) => {
       "opsz" 20;
     line-height: 1;
   }
+}
+
+.sing-multitrack-error-badge,
+.sing-track-error-badge {
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-error-container) 88%,
+    var(--scheme-color-error)
+  );
+  color: var(--scheme-color-on-error-container);
+  font-size: 10px;
+  font-weight: 800;
+
+  &:hover:not(:disabled) {
+    background: var(--scheme-color-error);
+    color: var(--scheme-color-on-error);
+  }
+}
+
+.sing-track-error-badge {
+  align-self: center;
+  margin: 0 8px 0 -2px;
 }
 
 :global(.sing-multitrack-menu) {
@@ -2674,124 +2749,6 @@ const setVolumeRangeAdjustment = (event: Event) => {
   }
 }
 
-.sing-track-parameter-summary {
-  appearance: none;
-  align-self: stretch;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--scheme-color-on-surface);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  justify-content: center;
-  height: 100%;
-  margin-left: 0;
-  min-width: 0;
-  padding: 4px 7px 4px 10px;
-  width: 112px;
-  border-left: 1px solid
-    color-mix(in oklch, var(--scheme-color-outline-variant) 38%, transparent);
-  font: inherit;
-  text-align: left;
-
-  &:hover {
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-surface-container) 72%,
-      transparent
-    );
-  }
-}
-
-.sing-track-parameter-line {
-  align-items: baseline;
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  min-width: 0;
-
-  &.compact {
-    grid-template-columns: max-content max-content;
-    column-gap: 6px;
-  }
-}
-
-.sing-track-parameter-pair {
-  align-items: baseline;
-  display: grid;
-  grid-template-columns: 25px minmax(0, 1fr);
-  min-width: 0;
-}
-
-.sing-track-parameter-label {
-  color: var(--scheme-color-on-surface-variant);
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 15px;
-  white-space: nowrap;
-}
-
-.sing-track-parameter-value {
-  color: var(--scheme-color-on-surface);
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 15px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-:global(.sing-track-parameter-menu) {
-  border-radius: 8px;
-  box-shadow: 0 10px 28px
-    color-mix(in oklch, var(--scheme-color-shadow) 14%, transparent);
-}
-
-:global(.sing-track-parameter-menu-content) {
-  display: grid;
-  gap: 8px;
-  min-width: 196px;
-  padding: 12px;
-}
-
-:global(.sing-track-parameter-menu-row) {
-  align-items: baseline;
-  display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  gap: 18px;
-  color: var(--scheme-color-on-surface-variant);
-  font-size: 12px;
-  line-height: 18px;
-}
-
-:global(.sing-track-parameter-menu-control) {
-  appearance: none;
-  border: 1px solid
-    color-mix(in oklch, var(--scheme-color-outline-variant) 68%, transparent);
-  border-radius: 5px;
-  background: var(--scheme-color-surface-container-highest);
-  color: var(--scheme-color-on-surface);
-  font: inherit;
-  font-weight: 500;
-  min-width: 0;
-  padding: 4px 8px;
-  width: 100%;
-
-  &:focus {
-    border-color: color-mix(
-      in oklch,
-      var(--scheme-color-outline) 72%,
-      transparent
-    );
-    outline: none;
-  }
-
-  &.number {
-    appearance: textfield;
-    text-align: right;
-  }
-}
-
 .sing-singer-map {
   position: relative;
   flex: 1 1 auto;
@@ -2808,7 +2765,7 @@ const setVolumeRangeAdjustment = (event: Event) => {
 
 .sing-minimap-layout {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) 18px;
+  grid-template-rows: minmax(0, 1fr);
   height: 100%;
   min-width: 0;
   background:
@@ -2828,10 +2785,6 @@ const setVolumeRangeAdjustment = (event: Event) => {
     );
 }
 
-.sing-minimap-layout.mode-singer {
-  grid-template-rows: minmax(0, 1fr);
-}
-
 .sing-minimap-viewport {
   position: relative;
   grid-row: 1;
@@ -2840,228 +2793,27 @@ const setVolumeRangeAdjustment = (event: Event) => {
   overflow: hidden;
 }
 
-.sing-minimap-layout.mode-singer .sing-minimap-viewport {
-  grid-row: 1;
-}
-
-.sing-minimap-controls {
-  display: grid;
-  grid-row: 2;
-  grid-template-columns: minmax(0, 1fr) 136px;
-  align-items: center;
-  min-width: 0;
-}
-
-.sing-minimap-scrollbar-shell {
-  position: relative;
-  height: 18px;
-  min-width: 0;
-  padding: 0 6px;
-  cursor: grab;
-  outline: none;
-
-  &.dragging {
-    cursor: grabbing;
-  }
-
-  &:hover .sing-minimap-scrollbar-window,
-  &.dragging .sing-minimap-scrollbar-window,
-  &:focus-visible .sing-minimap-scrollbar-window {
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-on-surface-variant) 28%,
-      transparent
-    );
-  }
-
-  &:focus-visible .sing-minimap-scrollbar-rail {
-    box-shadow: 0 0 0 1px
-      color-mix(in oklch, var(--scheme-color-primary) 36%, transparent);
-  }
-}
-
-.sing-minimap-scrollbar-rail {
-  position: absolute;
-  right: 6px;
-  left: 6px;
-  top: 3px;
-  height: 12px;
-  background: color-mix(in oklch, var(--scheme-color-scrim) 18%, transparent);
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.sing-minimap-scrollbar-window {
-  position: absolute;
-  top: 3px;
-  bottom: 3px;
-  z-index: 2;
-  min-width: 18px;
-  border-radius: 999px;
-  background: color-mix(
-    in oklch,
-    var(--scheme-color-on-surface-variant) 9%,
-    transparent
-  );
-}
-
-.sing-minimap-scrollbar-sequencer-window {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 1;
-  background: color-mix(
-    in oklch,
-    var(--scheme-color-surface-container-highest) 92%,
-    var(--scheme-color-surface-container-high)
-  );
-  pointer-events: none;
-}
-
-.sing-minimap-zoom {
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) 18px;
-  gap: 4px;
-  align-items: center;
-  height: 18px;
-  padding: 0 7px;
-}
-
-.sing-minimap-zoom-button {
-  appearance: none;
-  display: grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: 0;
-  border-radius: 3px;
-  background: transparent;
-  color: var(--scheme-color-on-surface-variant);
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1;
-
-  &:hover {
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-surface-container-highest) 72%,
-      transparent
-    );
-    color: var(--scheme-color-on-surface);
-  }
-
-  &:focus-visible {
-    outline: 1px solid var(--scheme-color-secondary);
-    outline-offset: -1px;
-  }
-}
-
-.sing-minimap-zoom-slider {
-  appearance: none;
-  width: 100%;
-  min-width: 0;
-  height: 18px;
-  margin: 0;
-  background: transparent;
-  cursor: pointer;
-
-  &::-webkit-slider-runnable-track {
-    height: 3px;
-    border-radius: 999px;
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-outline) 36%,
-      transparent
-    );
-  }
-
-  &::-webkit-slider-thumb {
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    margin-top: -4.5px;
-    border: 1px solid
-      color-mix(in oklch, var(--scheme-color-outline) 36%, transparent);
-    border-radius: 50%;
-    background: var(--scheme-color-surface-container-highest);
-  }
-
-  &::-moz-range-track {
-    height: 3px;
-    border-radius: 999px;
-    background: color-mix(
-      in oklch,
-      var(--scheme-color-outline) 36%,
-      transparent
-    );
-  }
-
-  &::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
-    border: 1px solid
-      color-mix(in oklch, var(--scheme-color-outline) 36%, transparent);
-    border-radius: 50%;
-    background: var(--scheme-color-surface-container-highest);
-  }
-}
-
-.sing-minimap-content {
-  appearance: none;
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: grab;
-  font: inherit;
-  text-align: left;
-  overflow: hidden;
-  transform-origin: left top;
-
-  &:hover {
-    background: linear-gradient(
-      180deg,
-      transparent 0,
-      transparent 49%,
-      color-mix(in oklch, var(--scheme-color-outline-variant) 34%, transparent)
-        50%,
-      transparent 51%,
-      transparent 100%
-    );
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--scheme-color-secondary);
-    outline-offset: -2px;
-  }
-
-  &.dragging {
-    cursor: grabbing;
-  }
-}
-
-.sing-minimap-sequencer-window {
+.sing-multitrack-sequencer-window {
   position: absolute;
   top: 0;
   bottom: 0;
   z-index: 1;
   min-width: 8px;
   border: 1px solid
-    color-mix(in oklch, var(--scheme-color-secondary) 76%, transparent);
-  border-radius: 6px;
+    color-mix(in oklch, var(--scheme-color-secondary) 48%, transparent);
   background: color-mix(
     in oklch,
-    var(--scheme-color-secondary-container) 16%,
+    var(--scheme-color-secondary-container) 8%,
     transparent
   );
-  pointer-events: none;
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.sing-multitrack-sequencer-window {
+  z-index: 4;
+  border-top: 0;
+  border-bottom: 0;
 }
 
 .sing-multitrack-map-scroll {
@@ -3097,6 +2849,16 @@ const setVolumeRangeAdjustment = (event: Event) => {
   &::-webkit-scrollbar-track {
     background: transparent;
   }
+
+  &.collapsed {
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  &.collapsed::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }
 
 .sing-multitrack-content {
@@ -3118,11 +2880,14 @@ const setVolumeRangeAdjustment = (event: Event) => {
   text-align: left;
   overflow: hidden;
   transform-origin: left top;
-  will-change: transform;
 
   &:focus-visible {
     outline: 2px solid var(--scheme-color-secondary);
     outline-offset: -2px;
+  }
+
+  .sing-multitrack-map-scroll.dragging & {
+    cursor: grabbing;
   }
 }
 
@@ -3130,36 +2895,14 @@ const setVolumeRangeAdjustment = (event: Event) => {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image:
-    repeating-linear-gradient(
-      90deg,
-      color-mix(in oklch, var(--scheme-color-outline-variant) 24%, transparent)
-        0,
-      color-mix(in oklch, var(--scheme-color-outline-variant) 24%, transparent)
-        1px,
-      transparent 1px,
-      transparent 48px
-    ),
-    repeating-linear-gradient(
-      180deg,
-      transparent 0,
-      transparent 63px,
-      color-mix(in oklch, var(--scheme-color-outline-variant) 24%, transparent)
-        63px,
-      color-mix(in oklch, var(--scheme-color-outline-variant) 24%, transparent)
-        64px
-    );
-  pointer-events: none;
-}
-
-.sing-minimap-playhead {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 8;
-  width: 2px;
-  transform: translateX(-1px);
-  background: var(--scheme-color-inverse-surface);
+  background-image: repeating-linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--scheme-color-outline-variant) 24%, transparent) 0,
+    color-mix(in oklch, var(--scheme-color-outline-variant) 24%, transparent)
+      1px,
+    transparent 1px,
+    transparent 48px
+  );
   pointer-events: none;
 }
 
@@ -3174,42 +2917,32 @@ const setVolumeRangeAdjustment = (event: Event) => {
   pointer-events: none;
 }
 
-.sing-minimap-phrase-lyric {
+.sing-multitrack-error-marker {
   position: absolute;
-  top: 4px;
+  top: 0;
+  bottom: 0;
   z-index: 6;
-  display: flex;
-  align-items: center;
-  height: 15px;
-  min-width: 18px;
-  padding: 0 4px;
-  color: var(--scheme-color-on-surface-variant);
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 1;
-  opacity: 0.68;
-  overflow: hidden;
+  width: 2px;
+  transform: translateX(-1px);
+  background: color-mix(in oklch, var(--scheme-color-error) 78%, transparent);
   pointer-events: none;
-  text-align: left;
+}
 
-  span {
-    overflow: hidden;
-    max-width: 100%;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.sing-multitrack-error-marker {
+  opacity: 0.58;
 }
 
 .sing-multitrack-map-row {
   position: relative;
   z-index: 1;
   min-width: 0;
-  height: 64px;
+  height: 44px;
   border-bottom: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 24%, transparent);
   overflow: hidden;
 
   &.selected {
+    height: 72px;
     background: color-mix(
       in oklch,
       var(--scheme-color-secondary-container) 12%,
@@ -3226,53 +2959,33 @@ const setVolumeRangeAdjustment = (event: Event) => {
   }
 }
 
-.sing-multitrack-row-lyric {
+.sing-multitrack-phrase-lyric {
+  appearance: none;
   position: absolute;
   top: 5px;
-  left: 8px;
-  right: 8px;
   z-index: 2;
+  height: 14px;
+  min-width: 18px;
+  padding: 0 3px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
   color: var(--scheme-color-on-surface);
+  cursor: pointer;
+  font: inherit;
   font-size: 9px;
   font-weight: 600;
   line-height: 10px;
   overflow: hidden;
-  pointer-events: none;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
 
-.sing-minimap-note {
-  position: absolute;
-  z-index: 5;
-  height: 2px;
-  min-width: 5px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: color-mix(
-    in oklch,
-    var(--scheme-color-secondary) 46%,
-    var(--scheme-color-on-surface-variant)
-  );
-  color: var(--scheme-color-on-secondary-container);
-  opacity: 0.58;
-  overflow: hidden;
-  pointer-events: none;
-  transform: translateY(2px);
-
-  &.error {
-    z-index: 7;
-    height: 4px;
-    min-width: 7px;
-    border-radius: 2px;
+  &:hover {
     background: color-mix(
       in oklch,
-      var(--scheme-color-error) 88%,
-      var(--scheme-color-error-container)
+      var(--scheme-color-secondary-container) 40%,
+      transparent
     );
-    opacity: 0.96;
-    transform: translateY(1px);
   }
 }
 
@@ -3328,6 +3041,31 @@ const setVolumeRangeAdjustment = (event: Event) => {
     box-shadow: 0 0 0 1px
       color-mix(in oklch, var(--scheme-color-secondary) 54%, transparent);
   }
+
+  &.selected {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary-container) 34%,
+      var(--scheme-color-surface-container-highest)
+    );
+    box-shadow: 0 0 0 1px
+      color-mix(in oklch, var(--scheme-color-secondary) 36%, transparent);
+  }
+}
+
+.sing-multitrack-audio-head-handle {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: 2px;
+  border-radius: 999px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-secondary) 68%,
+    var(--scheme-color-on-surface-variant)
+  );
+  pointer-events: none;
 }
 
 .sing-multitrack-audio-peak {

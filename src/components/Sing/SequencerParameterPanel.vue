@@ -28,11 +28,14 @@
           editTarget === 'VOLUME' &&
           (isParameterInlineRailLayout ||
             isParameterInlineCommandToolLayout ||
-            toolPaletteLayout === 'dock')
+            toolPaletteLayout === 'dock' ||
+            toolPaletteLayout === 'zoneHeader')
         "
         :sequencerVolumeTool
         :orientation="
-          isParameterInlineCommandToolLayout || toolPaletteLayout === 'dock'
+          isParameterInlineCommandToolLayout ||
+          toolPaletteLayout === 'dock' ||
+          toolPaletteLayout === 'zoneHeader'
             ? 'horizontal'
             : 'vertical'
         "
@@ -116,6 +119,11 @@
     <div
       v-if="
         toolPaletteLayout !== 'rail' &&
+        toolPaletteLayout !== 'sectionedRail' &&
+        toolPaletteLayout !== 'globalRail' &&
+        toolPaletteLayout !== 'zoneHeader' &&
+        toolPaletteLayout !== 'selectionContextBar' &&
+        toolPaletteLayout !== 'markingMenu' &&
         toolPaletteLayout !== 'proposalB' &&
         toolPaletteLayout !== 'dock' &&
         toolPaletteLayout !== 'proposalE' &&
@@ -249,6 +257,7 @@ const showsVolumeWaveformReference = computed(
 const isParameterInlineRailLayout = computed(
   () =>
     props.toolPaletteLayout === "rail" ||
+    props.toolPaletteLayout === "sectionedRail" ||
     props.toolPaletteLayout === "proposalB",
 );
 const isParameterDockLayout = computed(
@@ -257,7 +266,9 @@ const isParameterDockLayout = computed(
     props.toolPaletteLayout === "dockCenter",
 );
 const isParameterHeaderRailLayout = computed(
-  () => props.toolPaletteLayout === "proposalC",
+  () =>
+    props.toolPaletteLayout === "proposalC" ||
+    props.toolPaletteLayout === "zoneHeader",
 );
 const isParameterReservedRailLayout = computed(
   () => props.toolPaletteLayout === "reservedRail",
@@ -271,6 +282,7 @@ const isParameterSurfaceStripLayout = computed(
 );
 const isParameterInlineCommandToolLayout = computed(
   () =>
+    props.toolPaletteLayout === "zoneHeader" ||
     props.toolPaletteLayout === "proposalE" ||
     props.toolPaletteLayout === "proposalF" ||
     props.toolPaletteLayout === "proposalI",
@@ -351,6 +363,7 @@ const currentParameterToolIcon = computed(() => {
 .parameter-panel {
   --editor-tool-rail-width: 48px;
   --editor-reserved-tool-rail-width: 40px;
+  --editor-zone-header-width: 176px;
 
   position: relative;
   width: 100%;
@@ -371,6 +384,11 @@ const currentParameterToolIcon = computed(() => {
 .parameter-panel.tool-layout-header-rail {
   grid-template-columns: var(--editor-tool-rail-width) minmax(0, 1fr);
   grid-template-rows: 36px 1fr;
+}
+
+.parameter-panel.tool-layout-zoneHeader {
+  grid-template-columns: var(--editor-zone-header-width) minmax(0, 1fr);
+  grid-template-rows: 1fr;
 }
 
 .parameter-panel.tool-layout-mode-context {
@@ -406,6 +424,11 @@ const currentParameterToolIcon = computed(() => {
   );
   border-right: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
+}
+
+.tool-layout-globalRail .tool-area {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .tool-layout-sideRight .tool-area {
@@ -512,6 +535,30 @@ const currentParameterToolIcon = computed(() => {
   border-right: 0;
 }
 
+.tool-layout-zoneHeader .tool-area {
+  grid-column: 1;
+  grid-row: 1;
+  flex-direction: row;
+  align-content: flex-start;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-low) 74%,
+    transparent
+  );
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
+}
+
+.tool-layout-zoneHeader .tool-area :deep(.text-mode) {
+  flex-direction: row;
+  width: auto;
+}
+
 .tool-layout-mode-context .tool-area {
   grid-column: 1;
   grid-row: 1 / -1;
@@ -536,6 +583,7 @@ const currentParameterToolIcon = computed(() => {
   width: auto;
 }
 
+.tool-layout-sectionedRail .tool-area,
 .tool-layout-proposalB .tool-area {
   gap: 14px;
 }
@@ -915,6 +963,11 @@ const currentParameterToolIcon = computed(() => {
 .tool-layout-header-rail .edit-area {
   grid-column: 2;
   grid-row: 2;
+}
+
+.tool-layout-zoneHeader .edit-area {
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .tool-layout-mode-context .edit-area {
