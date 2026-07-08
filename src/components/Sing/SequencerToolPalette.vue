@@ -133,18 +133,26 @@ const emit = defineEmits<{
   }
 
   &.active {
-    background: var(--scheme-color-secondary-container);
-    color: var(--scheme-color-on-secondary-container);
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 16%,
+      var(--scheme-color-surface-container-highest)
+    );
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-on-surface) 86%,
+      var(--scheme-color-secondary)
+    );
     box-shadow: none;
   }
 
   &.active:hover {
     background: color-mix(
       in oklch,
-      var(--scheme-color-secondary-container) 84%,
-      var(--scheme-color-secondary)
+      var(--scheme-color-secondary) 22%,
+      var(--scheme-color-surface-container-highest)
     );
-    color: var(--scheme-color-on-secondary-container);
+    color: var(--scheme-color-on-surface);
   }
 
   .material-symbols-rounded {

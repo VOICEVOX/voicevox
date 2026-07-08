@@ -6,6 +6,7 @@
       { 'tool-layout-docked': isScoreDockLayout },
       { 'tool-layout-header-rail': isScoreHeaderRailLayout },
       { 'tool-layout-reserved-rail': isScoreReservedRailLayout },
+      { 'tool-layout-header-tools': isScoreHeaderToolsLayout },
       { 'tool-layout-surface-strip': isScoreSurfaceStripLayout },
       { 'tool-layout-command-bar': isScoreTrueCommandLayout },
       { 'tool-layout-mode-context': isScoreModeContextLayout },
@@ -202,7 +203,7 @@
               </div>
             </div>
             <div
-              v-if="toolPaletteLayout === 'reservedRail'"
+              v-if="isScoreReservedToolZoneLayout"
               class="piano-roll-tool-zone"
             >
               <SequencerToolPalette
@@ -230,7 +231,7 @@
                 toolPaletteLayout !== 'proposalH' &&
                 toolPaletteLayout !== 'proposalI' &&
                 toolPaletteLayout !== 'proposalJ' &&
-                toolPaletteLayout !== 'reservedRail'
+                !isScoreReservedToolZoneLayout
               "
               class="piano-roll-floating-tools"
               :class="[
@@ -1152,7 +1153,7 @@ const audioAlignment = defineModel<AudioAlignmentMockState>("audioAlignment", {
   required: true,
 });
 const parameterPanelLayoutMode = ref<ParameterPanelLayoutMode>("single");
-const volumeEditValueMode = ref<VolumeEditValueMode>("absolute");
+const volumeEditValueMode = ref<VolumeEditValueMode>("relative");
 const referenceOverlayMode = ref<ReferenceOverlayMode>("waveform");
 const markingMenuPosition = ref<{ x: number; y: number } | undefined>();
 const isAudioAlignmentClipDragging = ref(false);
@@ -1192,7 +1193,17 @@ const isScoreHeaderRailLayout = computed(
     toolPaletteLayout.value === "zoneHeader",
 );
 const isScoreReservedRailLayout = computed(
-  () => toolPaletteLayout.value === "reservedRail",
+  () =>
+    toolPaletteLayout.value === "reservedRail" ||
+    toolPaletteLayout.value === "reservedRailHeaderTools",
+);
+const isScoreHeaderToolsLayout = computed(
+  () => toolPaletteLayout.value === "reservedRailHeaderTools",
+);
+const isScoreReservedToolZoneLayout = computed(
+  () =>
+    toolPaletteLayout.value === "reservedRail" ||
+    toolPaletteLayout.value === "reservedRailHeaderTools",
 );
 const isScoreSurfaceStripLayout = computed(
   () =>
@@ -1232,7 +1243,8 @@ const usesPianoTextTabs = computed(
 const fullPlayheadLeftOffset = computed(() => {
   if (toolPaletteLayout.value === "zoneHeader") return 176;
   if (isScoreDockLayout.value || isScoreSurfaceStripLayout.value) return 48;
-  if (isScoreReservedRailLayout.value) return 136;
+  if (toolPaletteLayout.value === "reservedRail") return 144;
+  if (isScoreHeaderToolsLayout.value) return 112;
   if (toolPaletteLayout.value === "sideRight") return 48;
   return 96;
 });
@@ -2228,7 +2240,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 @use "@/styles/colors" as colors;
 
 .score-sequencer-shell {
-  --editor-tool-rail-width: 48px;
+  --editor-tool-rail-width: 56px;
   --editor-reserved-tool-rail-width: 40px;
   --editor-zone-header-width: 176px;
   --sequencer-ruler-height: 40px;
@@ -2561,6 +2573,24 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   border-right: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
   pointer-events: auto;
+}
+
+.tool-layout-reserved-rail .piano-roll-mode-zone {
+  align-items: center;
+  padding-top: 8px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-low) 72%,
+    transparent
+  );
+  border-right: 0;
+}
+
+.tool-layout-reserved-rail .piano-roll-tool-zone {
+  padding-top: 8px;
+  background: var(--scheme-color-surface);
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 36%, transparent);
 }
 
 .tool-layout-docked .piano-roll-toolbar {
@@ -2963,6 +2993,13 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   pointer-events: auto;
 }
 
+.tool-layout-reserved-rail .piano-roll-edit-target-tabs {
+  align-items: center;
+  gap: 4px;
+  width: var(--editor-tool-rail-width);
+  padding: 0;
+}
+
 .tool-layout-docked .piano-roll-edit-target-tabs,
 .tool-layout-surface-strip .piano-roll-edit-target-tabs,
 .tool-layout-header-rail .piano-roll-edit-target-tabs {
@@ -3084,6 +3121,34 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   }
 }
 
+.tool-layout-reserved-rail .piano-roll-edit-target-tab {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 72%,
+    var(--scheme-color-surface)
+  );
+
+  &:hover {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-surface) 64%,
+      transparent
+    );
+  }
+
+  &.active {
+    background: color-mix(
+      in oklch,
+      var(--scheme-color-secondary) 10%,
+      var(--scheme-color-surface-container-highest)
+    );
+    color: var(--scheme-color-on-surface);
+  }
+}
+
 .edit-target-button-content {
   display: grid;
   place-items: center;
@@ -3093,7 +3158,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .edit-target-button-label {
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1;
 }
 
@@ -3837,6 +3902,49 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .tool-layout-reserved-rail .sequencer-horizontal-controls {
   grid-column: 4;
+}
+
+.tool-layout-header-tools .score-sequencer,
+.tool-layout-header-tools .piano-roll-toolbar {
+  grid-template-columns: var(--editor-tool-rail-width) 56px minmax(0, 1fr);
+}
+
+.tool-layout-header-tools .piano-roll-tool-zone {
+  grid-row: 1 / -1;
+  grid-column: 2;
+  align-items: center;
+  padding-top: 8px;
+  background: transparent;
+  border-right: 0;
+  pointer-events: none;
+}
+
+.tool-layout-header-tools .piano-roll-tool-zone :deep(.tool-palette) {
+  padding: 1px;
+  border-color: color-mix(
+    in oklch,
+    var(--scheme-color-outline-variant) 48%,
+    transparent
+  );
+  background: var(--scheme-color-surface-container-high);
+  box-shadow: 0 1px 4px oklch(0% 0 0 / 0.12);
+}
+
+.tool-layout-header-tools .sequencer-corner,
+.tool-layout-header-tools .sequencer-keys {
+  grid-column: 2;
+}
+
+.tool-layout-header-tools .sequencer-ruler,
+.tool-layout-header-tools .sequencer-grid,
+.tool-layout-header-tools .sequencer-character-portrait,
+.tool-layout-header-tools .sequencer-guideline-container,
+.tool-layout-header-tools .sequencer-body,
+.tool-layout-header-tools .audio-alignment-sequencer-layer,
+.tool-layout-header-tools .sequencer-pitch,
+.tool-layout-header-tools .sequencer-overlay,
+.tool-layout-header-tools .sequencer-horizontal-controls {
+  grid-column: 3;
 }
 
 .tool-layout-docked .sequencer-horizontal-controls,

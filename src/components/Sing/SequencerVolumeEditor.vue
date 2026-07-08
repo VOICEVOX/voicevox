@@ -72,10 +72,18 @@ import { useTimelineWheel } from "@/composables/useTimelineWheel";
 import type { VolumeEditValueMode } from "@/components/Sing/parameterPanelViewMode";
 import type { PositionOnVolumeEditor } from "@/sing/volumeEditorStateMachine/common";
 
-const props = defineProps<{
-  offsetX: number;
-  valueMode: VolumeEditValueMode;
-}>();
+const DEFAULT_KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
+
+const props = withDefaults(
+  defineProps<{
+    offsetX: number;
+    valueMode: VolumeEditValueMode;
+    keyColumnWidthPx?: number;
+  }>(),
+  {
+    keyColumnWidthPx: DEFAULT_KEY_COLUMN_WIDTH_PX,
+  },
+);
 
 const emit = defineEmits<{
   "update:needsAutoScroll": [value: boolean];
@@ -92,7 +100,6 @@ const MAX_DISPLAY_DB = -0.5;
 const ABSOLUTE_VOLUME_LEVEL_BASE_DB = -36;
 const MIN_RELATIVE_DISPLAY_DB = -12;
 const MAX_RELATIVE_DISPLAY_DB = 12;
-const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
 const VOLUME_VALUE_TOOLTIP_WIDTH_PX = 54;
 const VOLUME_VALUE_TOOLTIP_HEIGHT_PX = 22;
 const VOLUME_VALUE_TOOLTIP_OFFSET_PX = 10;
@@ -116,6 +123,7 @@ const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const editorFrameRate = computed(() => store.state.editorFrameRate);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const isDark = computed(() => store.state.currentTheme === "Dark");
+const keyColumnWidthPx = computed(() => props.keyColumnWidthPx);
 
 const numMeasuresContext = inject(numMeasuresInjectionKey, null);
 const numMeasures = computed(() => numMeasuresContext?.numMeasures.value ?? 0);
@@ -218,7 +226,7 @@ const cursorClass = computed(() => {
 });
 
 const { handleWheel } = useTimelineWheel({
-  leftPaddingPx: KEY_COLUMN_WIDTH_PX,
+  leftPaddingPx: () => keyColumnWidthPx.value,
   isWheelDisabled: () => previewMode.value !== "IDLE",
   onPanX: (deltaX) => emit("panTimeline", deltaX),
   onZoomX: (anchorX, deltaY) => emit("zoomTimeline", anchorX, deltaY),
@@ -279,7 +287,7 @@ const volumeValueGuideLineStyle = computed(() => {
     return undefined;
   }
   return {
-    left: `${KEY_COLUMN_WIDTH_PX}px`,
+    left: `${keyColumnWidthPx.value}px`,
     top: `${tooltip.guideY}px`,
   };
 });
@@ -467,7 +475,7 @@ const frameToScreenX = (frame: number, frameRate: number) => {
   return (
     frameToBaseX(frame, frameRate) * sequencerZoomX.value -
     props.offsetX +
-    KEY_COLUMN_WIDTH_PX
+    keyColumnWidthPx.value
   );
 };
 
@@ -634,7 +642,7 @@ const updateGrid = () => {
 
   if (width > 0 && height > 0) {
     volumeDbLabelBackground
-      .rect(0, 0, Math.min(KEY_COLUMN_WIDTH_PX, width), height)
+      .rect(0, 0, Math.min(keyColumnWidthPx.value, width), height)
       .fill({ color: labelBackgroundColor, alpha: 1 });
   }
   volumeDbLabelContainer.renderable = showLabels;
@@ -643,7 +651,7 @@ const updateGrid = () => {
     for (const db of minorGridDbValues) {
       const y = Math.round((1 - valueModeDbToNormalizedY(db)) * height) + 0.5;
       gridGraphics
-        .moveTo(KEY_COLUMN_WIDTH_PX, y)
+        .moveTo(keyColumnWidthPx.value, y)
         .lineTo(width, y)
         .stroke({ width: 1, color: volumeGridColor, alpha: 0.09 });
     }
@@ -654,7 +662,7 @@ const updateGrid = () => {
     const isBaseline =
       props.valueMode === "relative" ? db === 0 : db === MAX_DISPLAY_DB;
     gridGraphics
-      .moveTo(KEY_COLUMN_WIDTH_PX, y)
+      .moveTo(keyColumnWidthPx.value, y)
       .lineTo(width, y)
       .stroke({
         width: 1,
@@ -670,7 +678,7 @@ const updateGrid = () => {
     label.text = formatVolumeDbLabel(db);
     label.style = labelStyle;
     label.anchor.set(1, 0.5);
-    label.x = KEY_COLUMN_WIDTH_PX - 6;
+    label.x = keyColumnWidthPx.value - 6;
     label.y = height >= 16 ? clamp(y, 8, height - 8) : y;
   }
   for (let i = majorGridDbValues.length; i < volumeDbLabelTexts.length; i++) {
@@ -684,7 +692,7 @@ const updateGrid = () => {
         pattern.x +
         pattern.patternWidth * m -
         props.offsetX +
-        KEY_COLUMN_WIDTH_PX;
+        keyColumnWidthPx.value;
       if (measureX < -1 || measureX > width + 1) {
         continue;
       }
@@ -723,7 +731,7 @@ const render = () => {
     viewportHeight: viewportHeight.value,
     zoomX: sequencerZoomX.value,
     offsetX: props.offsetX,
-    leftPadding: KEY_COLUMN_WIDTH_PX,
+    leftPadding: keyColumnWidthPx.value,
   };
 
   // 編集不可区間のオーバーレイ
@@ -1078,7 +1086,7 @@ const computeViewportPointerInfo = (pointerEvent: PointerEvent) => {
   const clampedX = clamp(localX, 0, width);
   const clampedY = clamp(localY, 0, height);
 
-  const timelineX = props.offsetX + clampedX - KEY_COLUMN_WIDTH_PX;
+  const timelineX = props.offsetX + clampedX - keyColumnWidthPx.value;
   const baseX = Math.max(0, timelineX) / sequencerZoomX.value;
   const ticks = baseXToTick(baseX, tpqn.value);
   const seconds = tickToSecond(ticks, tempos.value, tpqn.value);
@@ -1161,6 +1169,7 @@ watch(
     () => store.state.sequencerZoomX,
     () => props.offsetX,
     () => props.valueMode,
+    () => props.keyColumnWidthPx,
     isDark,
     () => viewportWidth.value,
     () => viewportHeight.value,

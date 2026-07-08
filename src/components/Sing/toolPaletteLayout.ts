@@ -23,7 +23,8 @@ export type ToolPaletteLayout =
   | "sideLeft"
   | "sideRight"
   | "sideLeftToolbarRight"
-  | "reservedRail";
+  | "reservedRail"
+  | "reservedRailHeaderTools";
 
 export const TOOL_PALETTE_LAYOUT_OPTIONS: {
   value: ToolPaletteLayout;
@@ -42,4 +43,5 @@ export const TOOL_PALETTE_LAYOUT_OPTIONS: {
   { value: "sideLeftToolbarRight", label: "Rail - Left rail, right tools" },
   { value: "sideRight", label: "Rail - Right side" },
   { value: "reservedRail", label: "Rail - Reserved" },
+  { value: "reservedRailHeaderTools", label: "Rail - Header tools" },
 ];

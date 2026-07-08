@@ -7,12 +7,14 @@ import { getXInBorderBox } from "@/sing/viewHelper";
  * 実際のスクロール/ズーム処理は親（ScoreSequencer）が行う。
  */
 export const useTimelineWheel = (options: {
-  leftPaddingPx: number;
+  leftPaddingPx: number | (() => number);
   isWheelDisabled: () => boolean;
   onPanX: (deltaX: number) => void;
   onZoomX: (anchorX: number, deltaY: number) => void;
 }) => {
   const { leftPaddingPx, isWheelDisabled, onPanX, onZoomX } = options;
+  const getLeftPaddingPx =
+    typeof leftPaddingPx === "function" ? leftPaddingPx : () => leftPaddingPx;
 
   type TimelineWheelAction =
     | { type: "none" }
@@ -30,7 +32,8 @@ export const useTimelineWheel = (options: {
     if (isOnCommandOrCtrlKeyDown(event)) {
       const anchorX = Math.max(
         0,
-        getXInBorderBox(event.clientX, event.currentTarget) - leftPaddingPx,
+        getXInBorderBox(event.clientX, event.currentTarget) -
+          getLeftPaddingPx(),
       );
 
       return {

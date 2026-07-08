@@ -126,7 +126,7 @@ const targetOptions = computed(() => {
 
 .edit-target-button-label {
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1;
 }
 

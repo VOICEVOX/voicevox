@@ -6,6 +6,7 @@
       { 'tool-layout-docked': isParameterDockLayout },
       { 'tool-layout-header-rail': isParameterHeaderRailLayout },
       { 'tool-layout-reserved-rail': isParameterReservedRailLayout },
+      { 'tool-layout-header-tools': isParameterHeaderToolsLayout },
       { 'tool-layout-surface-strip': isParameterSurfaceStripLayout },
       { 'tool-layout-command-bar': isParameterTrueCommandLayout },
       { 'tool-layout-mode-context': isParameterModeContextLayout },
@@ -106,7 +107,7 @@
       />
     </div>
     <div
-      v-if="toolPaletteLayout === 'reservedRail'"
+      v-if="isParameterReservedToolZoneLayout"
       class="parameter-panel-tool-zone"
     >
       <SequencerVolumeToolPalette
@@ -132,7 +133,7 @@
         toolPaletteLayout !== 'proposalH' &&
         toolPaletteLayout !== 'proposalI' &&
         toolPaletteLayout !== 'proposalJ' &&
-        toolPaletteLayout !== 'reservedRail'
+        !isParameterReservedToolZoneLayout
       "
       class="parameter-panel-floating-tools"
       :class="[
@@ -171,6 +172,7 @@
               class="volume-editor-layer"
               :offsetX="viewportInfo.offsetX"
               :valueMode="volumeEditValueMode"
+              :keyColumnWidthPx="parameterKeyColumnWidthPx"
               @update:needsAutoScroll="
                 (value) => emit('update:needsAutoScroll', value)
               "
@@ -201,6 +203,7 @@
             class="volume-editor-layer"
             :offsetX="viewportInfo.offsetX"
             :valueMode="volumeEditValueMode"
+            :keyColumnWidthPx="parameterKeyColumnWidthPx"
             @update:needsAutoScroll="
               (value) => emit('update:needsAutoScroll', value)
             "
@@ -271,7 +274,17 @@ const isParameterHeaderRailLayout = computed(
     props.toolPaletteLayout === "zoneHeader",
 );
 const isParameterReservedRailLayout = computed(
-  () => props.toolPaletteLayout === "reservedRail",
+  () =>
+    props.toolPaletteLayout === "reservedRail" ||
+    props.toolPaletteLayout === "reservedRailHeaderTools",
+);
+const isParameterHeaderToolsLayout = computed(
+  () => props.toolPaletteLayout === "reservedRailHeaderTools",
+);
+const isParameterReservedToolZoneLayout = computed(
+  () =>
+    props.toolPaletteLayout === "reservedRail" ||
+    props.toolPaletteLayout === "reservedRailHeaderTools",
 );
 const isParameterSurfaceStripLayout = computed(
   () =>
@@ -315,6 +328,9 @@ const parameterToolPaletteOrientation = computed<"vertical" | "horizontal">(
     props.toolPaletteLayout === "dockCenter"
       ? "horizontal"
       : "vertical",
+);
+const parameterKeyColumnWidthPx = computed(() =>
+  isParameterHeaderToolsLayout.value ? 56 : 48,
 );
 
 const changeEditTarget = (editTarget: ParameterPanelEditTarget) => {
@@ -361,7 +377,7 @@ const currentParameterToolIcon = computed(() => {
 
 <style scoped lang="scss">
 .parameter-panel {
-  --editor-tool-rail-width: 48px;
+  --editor-tool-rail-width: 56px;
   --editor-reserved-tool-rail-width: 40px;
   --editor-zone-header-width: 176px;
 
@@ -426,6 +442,17 @@ const currentParameterToolIcon = computed(() => {
     color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
 }
 
+.tool-layout-reserved-rail .tool-area {
+  align-items: center;
+  padding-top: 8px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-low) 72%,
+    transparent
+  );
+  border-right: 0;
+}
+
 .tool-layout-globalRail .tool-area {
   visibility: hidden;
   pointer-events: none;
@@ -473,6 +500,13 @@ const currentParameterToolIcon = computed(() => {
     color-mix(in oklch, var(--scheme-color-outline-variant) 42%, transparent);
   pointer-events: auto;
   z-index: 4;
+}
+
+.tool-layout-reserved-rail .parameter-panel-tool-zone {
+  padding-top: 8px;
+  background: var(--scheme-color-surface);
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 36%, transparent);
 }
 
 .tool-layout-docked .tool-area {
@@ -591,6 +625,37 @@ const currentParameterToolIcon = computed(() => {
 .tool-area :deep(.edit-target-switcher),
 .tool-area :deep(.tool-palette) {
   pointer-events: auto;
+}
+
+.tool-layout-reserved-rail .tool-area :deep(.edit-target-switcher) {
+  align-items: center;
+  gap: 4px;
+  width: var(--editor-tool-rail-width);
+  padding: 0;
+}
+
+.tool-layout-reserved-rail .tool-area :deep(.segment-switch) {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: color-mix(
+    in oklch,
+    var(--scheme-color-on-surface-variant) 72%,
+    var(--scheme-color-surface)
+  );
+}
+
+.tool-layout-reserved-rail .tool-area :deep(.segment-switch:hover) {
+  background: color-mix(in oklch, var(--scheme-color-surface) 64%, transparent);
+}
+
+.tool-layout-reserved-rail .tool-area :deep(.segment-switch.active) {
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-secondary) 10%,
+    var(--scheme-color-surface-container-highest)
+  );
+  color: var(--scheme-color-on-surface);
 }
 
 .tool-area :deep(.tool-palette),
@@ -952,6 +1017,37 @@ const currentParameterToolIcon = computed(() => {
 
 .tool-layout-reserved-rail .edit-area {
   grid-column: 3;
+}
+
+.parameter-panel.tool-layout-header-tools {
+  grid-template-columns: var(--editor-tool-rail-width) minmax(0, 1fr);
+}
+
+.tool-layout-header-tools .parameter-panel-tool-zone {
+  grid-column: 2;
+  grid-row: 1;
+  align-items: flex-start;
+  width: 56px;
+  padding-top: 8px;
+  padding-left: 10px;
+  background: transparent;
+  border-right: 0;
+  pointer-events: none;
+}
+
+.tool-layout-header-tools .parameter-panel-tool-zone :deep(.tool-palette) {
+  padding: 1px;
+  border-color: color-mix(
+    in oklch,
+    var(--scheme-color-outline-variant) 48%,
+    transparent
+  );
+  background: var(--scheme-color-surface-container-high);
+  box-shadow: 0 1px 4px oklch(0% 0 0 / 0.12);
+}
+
+.tool-layout-header-tools .edit-area {
+  grid-column: 2;
 }
 
 .tool-layout-docked .edit-area,

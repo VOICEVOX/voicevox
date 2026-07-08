@@ -39,6 +39,7 @@
       <div
         class="sing-track-strip"
         :class="`mode-${arrangementDisclosureMode}`"
+        @wheel="onMultitrackStripWheel"
       >
         <div
           class="sing-multitrack-header-column"
@@ -624,6 +625,11 @@
                       </div>
                     </template>
                   </div>
+                  <div
+                    v-if="arrangementDisclosureMode === 'expanded'"
+                    class="sing-multitrack-map-footer-spacer"
+                    aria-hidden="true"
+                  ></div>
                 </div>
               </div>
             </div>
@@ -1030,17 +1036,11 @@ const syncMultitrackVerticalScroll = (
   if (target == undefined || isSyncingMultitrackVerticalScroll) return;
 
   isSyncingMultitrackVerticalScroll = true;
-  const sourceScrollMax = Math.max(
-    source.scrollHeight - source.clientHeight,
-    0,
-  );
   const targetScrollMax = Math.max(
     target.scrollHeight - target.clientHeight,
     0,
   );
-  const scrollRatio =
-    sourceScrollMax === 0 ? 0 : source.scrollTop / sourceScrollMax;
-  target.scrollTop = targetScrollMax * scrollRatio;
+  target.scrollTop = Math.min(source.scrollTop, targetScrollMax);
   requestAnimationFrame(() => {
     isSyncingMultitrackVerticalScroll = false;
   });
@@ -1054,6 +1054,30 @@ const onMultitrackHeaderScroll = (event: Event) => {
 const onMultitrackMapScroll = (event: Event) => {
   syncMultitrackVerticalScroll(
     event.currentTarget as HTMLElement,
+    multitrackHeaderScrollRef.value,
+  );
+};
+const onMultitrackStripWheel = (event: WheelEvent) => {
+  if (arrangementDisclosureMode.value !== "expanded") return;
+  if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+
+  const targetElement =
+    event.target instanceof Element ? event.target : undefined;
+  if (
+    targetElement?.closest(
+      ".sing-multitrack-header-scroll, .sing-multitrack-map-scroll",
+    ) != undefined
+  ) {
+    return;
+  }
+
+  const mapScrollElement = multitrackMapScrollRef.value;
+  if (mapScrollElement == undefined) return;
+
+  event.preventDefault();
+  mapScrollElement.scrollTop += event.deltaY;
+  syncMultitrackVerticalScroll(
+    mapScrollElement,
     multitrackHeaderScrollRef.value,
   );
 };
@@ -1807,35 +1831,27 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  min-height: calc(var(--sing-collapsed-arrangement-height) + 16px);
-  padding: 8px 14px 8px 0;
+  min-height: var(--sing-collapsed-arrangement-height);
+  padding: 0;
   width: 100%;
   border-bottom: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 54%, transparent);
   letter-spacing: 0.01em;
 
   &.mode-expanded {
-    min-height: calc(var(--sing-multitrack-arrangement-height) + 16px);
-  }
-
-  &.arrangement-mode-right {
-    padding-right: 0;
-  }
-
-  &.mode-collapsed.arrangement-mode-right {
-    padding-left: 12px;
+    min-height: var(--sing-multitrack-arrangement-height);
   }
 }
 
 .sing-track-lane {
   align-items: stretch;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-columns: 56px minmax(0, 1fr);
   position: relative;
   width: 100%;
 
   .sing-toolbar.arrangement-mode-right & {
-    grid-template-columns: minmax(0, 1fr) 48px;
+    grid-template-columns: minmax(0, 1fr) 56px;
   }
 }
 
@@ -1897,11 +1913,6 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
     box-shadow: 0 0 0 2px var(--scheme-color-primary-container);
   }
 
-  &.active {
-    background: var(--scheme-color-secondary-container);
-    color: var(--scheme-color-on-secondary-container);
-  }
-
   .material-symbols-rounded {
     display: block;
     font-size: 22px;
@@ -1921,11 +1932,12 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
   display: flex;
   align-items: stretch;
   min-width: 0;
+  min-height: 0;
   height: var(--sing-collapsed-arrangement-height);
   border: 1px solid
     color-mix(in oklch, var(--scheme-color-outline-variant) 38%, transparent);
   border-left: 0;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0;
   background: var(--scheme-color-surface-container-highest);
   overflow: hidden;
 
@@ -1938,7 +1950,7 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
     border-right: 0;
     border-left: 1px solid
       color-mix(in oklch, var(--scheme-color-outline-variant) 38%, transparent);
-    border-radius: 6px 0 0 6px;
+    border-radius: 0;
   }
 }
 
@@ -2092,6 +2104,7 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
 }
 
 .sing-multitrack-header-row {
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) 72px;
   align-items: start;
@@ -2753,6 +2766,8 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
   display: grid;
   padding: 0;
   background: color-mix(
@@ -2768,6 +2783,7 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
   grid-template-rows: minmax(0, 1fr);
   height: 100%;
   min-width: 0;
+  min-height: 0;
   background:
     linear-gradient(
       180deg,
@@ -2790,6 +2806,7 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
   grid-row: 1;
   min-width: 0;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -2818,8 +2835,10 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
 
 .sing-multitrack-map-scroll {
   position: relative;
+  box-sizing: border-box;
   height: 100%;
   min-width: 0;
+  min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -2933,6 +2952,7 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
 }
 
 .sing-multitrack-map-row {
+  box-sizing: border-box;
   position: relative;
   z-index: 1;
   min-width: 0;
@@ -2957,6 +2977,10 @@ const jumpToFirstTrackError = (row: ArrangementRow) => {
       transparent
     );
   }
+}
+
+.sing-multitrack-map-footer-spacer {
+  height: 32px;
 }
 
 .sing-multitrack-phrase-lyric {
