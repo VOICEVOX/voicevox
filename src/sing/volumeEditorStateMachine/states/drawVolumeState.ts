@@ -32,6 +32,7 @@ export class DrawVolumeState implements State<
 
   private currentCursorPos: PositionOnVolumeEditor;
   private applyPreview: boolean;
+  private useStraightLine: boolean;
 
   private innerContext:
     | {
@@ -53,6 +54,7 @@ export class DrawVolumeState implements State<
     this.returnStateId = args.returnStateId;
     this.currentCursorPos = this.cursorPosAtStart;
     this.applyPreview = false;
+    this.useStraightLine = false;
   }
 
   onEnter(context: VolumeEditorContext) {
@@ -116,12 +118,20 @@ export class DrawVolumeState implements State<
     if (targetArea === "Window") {
       if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
+        this.useStraightLine = pointerEvent.shiftKey;
         this.innerContext.executePreviewProcess = true;
         this.updateTooltipData(context, pointerInfo);
       } else if (
         (pointerEvent.type === "pointerup" && mouseButton === "LEFT_BUTTON") ||
         pointerEvent.type === "pointercancel"
       ) {
+        // pointermoveのプレビュー処理が次のanimation frameを待っている場合でも、
+        // 確定位置を取りこぼさないように同期的に反映する
+        this.currentCursorPos = position;
+        this.useStraightLine = pointerEvent.shiftKey;
+        this.previewDrawVolume(context);
+        this.innerContext.executePreviewProcess = false;
+
         // NOTE: ピッチと同様
         // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
         // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
@@ -135,6 +145,7 @@ export class DrawVolumeState implements State<
     if (targetArea === "Editor") {
       if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
+        this.useStraightLine = pointerEvent.shiftKey;
         this.innerContext.executePreviewProcess = true;
         this.updateTooltipData(context, pointerInfo);
       }
@@ -193,9 +204,11 @@ export class DrawVolumeState implements State<
       return;
     }
     context.tooltipData.value = {
-      db: pointerInfo.db,
+      db: this.useStraightLine ? this.tooltipDataAtStart.db : pointerInfo.db,
       pointerX: pointerInfo.x,
-      pointerY: pointerInfo.y,
+      pointerY: this.useStraightLine
+        ? this.tooltipDataAtStart.pointerY
+        : pointerInfo.y,
     };
   }
 
@@ -214,6 +227,25 @@ export class DrawVolumeState implements State<
     const cursorValue = this.currentCursorPos.value;
     const prevCursorFrame = this.innerContext.prevCursorPos.frame;
     const prevCursorValue = this.innerContext.prevCursorPos.value;
+
+    if (this.useStraightLine) {
+      const startFrame = Math.min(this.cursorPosAtStart.frame, cursorFrame);
+      const endFrame = Math.max(this.cursorPosAtStart.frame, cursorFrame);
+      context.previewVolumeEdit.value = {
+        ...context.previewVolumeEdit.value,
+        startFrame,
+        data: createArray(
+          endFrame - startFrame + 1,
+          () => this.cursorPosAtStart.value,
+        ),
+      };
+      this.innerContext.prevCursorPos = {
+        frame: cursorFrame,
+        value: this.cursorPosAtStart.value,
+      };
+      return;
+    }
+
     const tempPreviewEdit = {
       ...context.previewVolumeEdit.value,
       data: [...context.previewVolumeEdit.value.data],
