@@ -16,16 +16,18 @@ export type VolumeViewInfo = {
   readonly leftPadding: number;
 };
 
+export const volumeNormalizedYToScreenY = (
+  normalizedY: number,
+  viewportHeight: number,
+) => (1 - normalizedY) * viewportHeight;
+
 type VolumeLineOptions = {
   color: Color;
   width: number;
   dashed?: boolean;
-  // TODO: 見た目調整のための暫定オプション。
-  // TODO: 調整完了後に isVisible / areaAlpha は削除し、必要最小限に整理する。
+  // 絶対値編集モードでは原音との差分を面で示す可能性があるため、面塗りオプションを残している。
   showArea?: boolean;
   areaAlpha?: number;
-  /** 面の塗りつぶしの基準となるnormalizedY。省略時は0（下端） */
-  areaBaseNormalizedY?: number;
   isVisible?: boolean;
 };
 
@@ -38,7 +40,6 @@ export class VolumeLine {
   dashed: boolean;
   showArea: boolean;
   areaAlpha: number;
-  areaBaseNormalizedY: number;
   isVisible: boolean;
 
   readonly container: PIXI.Container;
@@ -51,7 +52,6 @@ export class VolumeLine {
     this.dashed = options.dashed ?? false;
     this.showArea = options.showArea ?? false;
     this.areaAlpha = options.areaAlpha ?? 0.15;
-    this.areaBaseNormalizedY = options.areaBaseNormalizedY ?? 0;
     this.isVisible = options.isVisible ?? true;
 
     this.container = new PIXI.Container();
@@ -102,19 +102,20 @@ export class VolumeLine {
           point.baseX * viewInfo.zoomX -
           viewInfo.offsetX +
           viewInfo.leftPadding,
-        y: (1 - point.normalizedY) * viewInfo.viewportHeight,
+        y: volumeNormalizedYToScreenY(
+          point.normalizedY,
+          viewInfo.viewportHeight,
+        ),
       }));
 
       if (this.showArea) {
-        const areaBaseY =
-          (1 - this.areaBaseNormalizedY) * viewInfo.viewportHeight;
         this.area
           .poly([
-            { x: screenPoints[0].x, y: areaBaseY },
+            { x: screenPoints[0].x, y: viewInfo.viewportHeight },
             ...screenPoints,
             {
               x: screenPoints[screenPoints.length - 1].x,
-              y: areaBaseY,
+              y: viewInfo.viewportHeight,
             },
           ])
           .fill({ color: this.color.toRgbNumber(), alpha: this.areaAlpha });
