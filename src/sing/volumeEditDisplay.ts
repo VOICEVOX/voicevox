@@ -1,12 +1,21 @@
+import type { Note, Tempo } from "@/domain/project/type";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import type { VolumePreviewEdit } from "@/sing/volumeEditorStateMachine/common";
 import type { VolumeEditMode } from "@/sing/volumeEditMode";
 import {
+  moveVolumeEditData,
+  noteToVolumeEditFrameRange,
+  type VolumeEditMove,
+} from "@/sing/volumeEditNoteFollow";
+import {
   getOverlappingVolumeEditableFrameRanges,
   maskVolumeEditDataByEditableRanges,
+  mergeVolumeEditableFrameRanges,
   type VolumeEditFrameRange,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
+
+type VolumeEditDisplayNote = Pick<Note, "id" | "position" | "duration">;
 
 export type VolumeEditDisplayData = {
   effectiveFramewise: number[];
@@ -16,7 +25,12 @@ export type VolumeEditDisplayData = {
 type BuildVolumeEditDisplayDataOptions = {
   volumeEditData: readonly number[];
   previewEdit?: VolumePreviewEdit;
+  noteMovePreview?: readonly VolumeEditDisplayNote[];
+  notes: readonly VolumeEditDisplayNote[];
   editableRanges: readonly VolumeEditableFrameRange[];
+  tempos: Tempo[];
+  tpqn: number;
+  frameRate: number;
   volumeEditMode: VolumeEditMode;
 };
 
@@ -79,6 +93,131 @@ const applyPreviewEdit = (
   return { editFramewise, previewEraseRanges };
 };
 
+const subtractVolumeEditableFrameRange = (
+  ranges: readonly VolumeEditableFrameRange[],
+  rangeToSubtract: VolumeEditFrameRange,
+) => {
+  const result: VolumeEditableFrameRange[] = [];
+  for (const range of ranges) {
+    if (
+      range.endFrame <= rangeToSubtract.startFrame ||
+      rangeToSubtract.endFrame <= range.startFrame
+    ) {
+      result.push({ ...range });
+      continue;
+    }
+    if (range.startFrame < rangeToSubtract.startFrame) {
+      result.push({
+        startFrame: range.startFrame,
+        endFrame: rangeToSubtract.startFrame,
+      });
+    }
+    if (rangeToSubtract.endFrame < range.endFrame) {
+      result.push({
+        startFrame: rangeToSubtract.endFrame,
+        endFrame: range.endFrame,
+      });
+    }
+  }
+  return result;
+};
+
+const moveVolumeEditableRangesForPreview = (
+  editableRanges: readonly VolumeEditableFrameRange[],
+  moves: readonly VolumeEditMove[],
+) => {
+  let remainingRanges = [...editableRanges];
+  for (const move of moves) {
+    remainingRanges = subtractVolumeEditableFrameRange(
+      remainingRanges,
+      move.srcRange,
+    );
+  }
+
+  const movedRanges: VolumeEditableFrameRange[] = [];
+  for (const move of moves) {
+    const srcLength = move.srcRange.endFrame - move.srcRange.startFrame;
+    const destLength = move.destRange.endFrame - move.destRange.startFrame;
+    if (srcLength <= 0 || destLength <= 0) {
+      continue;
+    }
+    const sourceOverlaps = getOverlappingVolumeEditableFrameRanges(
+      move.srcRange.startFrame,
+      srcLength,
+      editableRanges,
+    );
+    for (const sourceOverlap of sourceOverlaps) {
+      const startFrame =
+        move.destRange.startFrame +
+        Math.floor(
+          ((sourceOverlap.startFrame - move.srcRange.startFrame) * destLength) /
+            srcLength,
+        );
+      const endFrame =
+        move.destRange.startFrame +
+        Math.ceil(
+          ((sourceOverlap.endFrame - move.srcRange.startFrame) * destLength) /
+            srcLength,
+        );
+      if (startFrame < endFrame) {
+        movedRanges.push({ startFrame, endFrame });
+      }
+    }
+  }
+  return mergeVolumeEditableFrameRanges([...remainingRanges, ...movedRanges]);
+};
+
+const applyNoteMovePreview = (
+  editFramewise: readonly number[],
+  noteMovePreview: readonly VolumeEditDisplayNote[] | undefined,
+  notes: readonly VolumeEditDisplayNote[],
+  editableRanges: readonly VolumeEditableFrameRange[],
+  tempos: Tempo[],
+  tpqn: number,
+  frameRate: number,
+) => {
+  if (noteMovePreview == undefined || noteMovePreview.length === 0) {
+    return { editFramewise, previewEditableRanges: editableRanges };
+  }
+
+  const currentNotes = new Map(notes.map((note) => [note.id, note]));
+  const moves: VolumeEditMove[] = [];
+  for (const previewNote of noteMovePreview) {
+    const currentNote = currentNotes.get(previewNote.id);
+    if (
+      currentNote == undefined ||
+      currentNote.position === previewNote.position
+    ) {
+      continue;
+    }
+    moves.push({
+      srcRange: noteToVolumeEditFrameRange(
+        currentNote,
+        tempos,
+        tpqn,
+        frameRate,
+      ),
+      destRange: noteToVolumeEditFrameRange(
+        previewNote,
+        tempos,
+        tpqn,
+        frameRate,
+      ),
+    });
+  }
+  if (moves.length === 0) {
+    return { editFramewise, previewEditableRanges: editableRanges };
+  }
+
+  return {
+    editFramewise: moveVolumeEditData(editFramewise, moves),
+    previewEditableRanges: moveVolumeEditableRangesForPreview(
+      editableRanges,
+      moves,
+    ),
+  };
+};
+
 const buildEffectiveFramewise = (
   editFramewise: readonly number[],
   editableRanges: readonly VolumeEditableFrameRange[],
@@ -106,7 +245,12 @@ const buildEffectiveFramewise = (
 export const buildVolumeEditDisplayData = ({
   volumeEditData,
   previewEdit,
+  noteMovePreview,
+  notes,
   editableRanges,
+  tempos,
+  tpqn,
+  frameRate,
   volumeEditMode,
 }: BuildVolumeEditDisplayDataOptions): VolumeEditDisplayData => {
   const { editFramewise, previewEraseRanges } = applyPreviewEdit(
@@ -119,10 +263,21 @@ export const buildVolumeEditDisplayData = ({
     { values: editFramewise, startFrame: 0 },
     editableRanges,
   );
+  const { editFramewise: previewedEdit, previewEditableRanges } =
+    applyNoteMovePreview(
+      maskedEdit,
+      noteMovePreview,
+      notes,
+      editableRanges,
+      tempos,
+      tpqn,
+      frameRate,
+    );
+
   return {
     effectiveFramewise: buildEffectiveFramewise(
-      maskedEdit,
-      editableRanges,
+      previewedEdit,
+      previewEditableRanges,
       volumeEditMode,
     ),
     previewEraseRanges,

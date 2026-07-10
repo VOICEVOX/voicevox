@@ -14,6 +14,7 @@
         <SequencerVolumeEditor
           class="volume-editor-layer"
           :viewportInfo
+          :noteMovePreview
           @update:needsAutoScroll="
             (value) => emit('update:needsAutoScroll', value)
           "
@@ -42,10 +43,12 @@ import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEd
 import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimingEditor.vue";
 import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
 import type { ViewportInfo } from "@/sing/viewHelper";
+import type { Note } from "@/domain/project/type";
 import { VOLUME_EDITOR_LAYOUT } from "@/components/Sing/SequencerVolumeEditor/style";
 
 defineProps<{
   viewportInfo: ViewportInfo;
+  noteMovePreview?: Note[];
 }>();
 
 const emit = defineEmits<{

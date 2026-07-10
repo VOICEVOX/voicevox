@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { store } from "@/store";
 import { NoteId, TrackId } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
@@ -324,6 +324,184 @@ describe("COMMAND_ERASE_VOLUME_EDIT_DATA", () => {
       VALUE_INDICATING_NO_DATA,
       0.7,
     ]);
+  });
+});
+
+describe("COMMAND_PASTE_NOTES_FROM_CLIPBOARD", () => {
+  const note = {
+    position: 0,
+    duration: 480,
+    noteNumber: 60,
+    lyric: "ど",
+  };
+
+  const setClipboardText = (text: string) => {
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        readText: vi.fn().mockResolvedValue(text),
+      },
+    });
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test("ボリューム編集を含む形式を貼り付ける", async () => {
+    setClipboardText(
+      JSON.stringify({
+        notes: [note],
+        volumeEditSlices: [[1.5, 1.5]],
+      }),
+    );
+
+    await store.actions.COMMAND_PASTE_NOTES_FROM_CLIPBOARD();
+
+    const trackId = store.state.trackOrder[0];
+    const track = getOrThrow(store.state.tracks, trackId);
+    expect(track.notes).toHaveLength(1);
+    expect(track.notes[0]).toMatchObject(note);
+    expect(track.volumeEditData).toContain(1.5);
+  });
+
+  test("ノート配列だけの旧形式は拒否する", async () => {
+    setClipboardText(JSON.stringify([note]));
+
+    await expect(
+      store.actions.COMMAND_PASTE_NOTES_FROM_CLIPBOARD(),
+    ).rejects.toThrow("Failed to parse the clipboard text as JSON.");
+  });
+});
+
+describe("ノート操作へのボリューム編集の追随", () => {
+  // デフォルト状態: 120BPM, TPQN 480, フレームレート93.75
+  // 四分音符(480tick) = 46.875フレーム → 丸めて47フレーム
+  const quarterNote = {
+    position: 0,
+    duration: 480,
+    noteNumber: 60,
+    lyric: "ど",
+  };
+
+  test("ノートを移動するとボリューム編集も追随する", async () => {
+    const trackId = store.state.trackOrder[0];
+    const note = { id: NoteId(uuid4()), ...quarterNote };
+    await store.actions.COMMAND_ADD_NOTES({ notes: [note], trackId });
+    store.mutations.SET_VOLUME_EDIT_DATA({
+      volumeArray: [1.5, 1.5, 1.5],
+      startFrame: 0,
+      trackId,
+    });
+
+    await store.actions.COMMAND_UPDATE_NOTES({
+      notes: [{ ...note, position: 480 }],
+      trackId,
+    });
+
+    const track = getOrThrow(store.state.tracks, trackId);
+    expect(track.volumeEditData.slice(0, 3)).toEqual([
+      VALUE_INDICATING_NO_DATA,
+      VALUE_INDICATING_NO_DATA,
+      VALUE_INDICATING_NO_DATA,
+    ]);
+    expect(track.volumeEditData.slice(47, 50)).toEqual([1.5, 1.5, 1.5]);
+  });
+
+  test("右端を延長すると共通範囲を保持し、追加範囲を未編集にする", async () => {
+    const trackId = store.state.trackOrder[0];
+    const note = { id: NoteId(uuid4()), ...quarterNote };
+    await store.actions.COMMAND_ADD_NOTES({ notes: [note], trackId });
+    store.mutations.SET_VOLUME_EDIT_DATA({
+      volumeArray: [1.5, 1.7],
+      startFrame: 46,
+      trackId,
+    });
+
+    await store.actions.COMMAND_UPDATE_NOTES({
+      notes: [{ ...note, duration: 960 }],
+      trackId,
+    });
+
+    const track = getOrThrow(store.state.tracks, trackId);
+    expect(track.volumeEditData[46]).toBe(1.5);
+    expect(track.volumeEditData[47]).toBe(VALUE_INDICATING_NO_DATA);
+  });
+
+  test("左端を短縮すると共通範囲を保持し、除外範囲を削除する", async () => {
+    const trackId = store.state.trackOrder[0];
+    const note = { id: NoteId(uuid4()), ...quarterNote };
+    await store.actions.COMMAND_ADD_NOTES({ notes: [note], trackId });
+    store.mutations.SET_VOLUME_EDIT_DATA({
+      volumeArray: [1.5, 1.7],
+      startFrame: 22,
+      trackId,
+    });
+
+    await store.actions.COMMAND_UPDATE_NOTES({
+      notes: [{ ...note, position: 240, duration: 240 }],
+      trackId,
+    });
+
+    const track = getOrThrow(store.state.tracks, trackId);
+    expect(track.volumeEditData[22]).toBe(VALUE_INDICATING_NO_DATA);
+    expect(track.volumeEditData[23]).toBe(1.7);
+  });
+
+  test("ノートを削除すると帰属するボリューム編集も削除される", async () => {
+    const trackId = store.state.trackOrder[0];
+    const note = { id: NoteId(uuid4()), ...quarterNote };
+    await store.actions.COMMAND_ADD_NOTES({ notes: [note], trackId });
+    store.mutations.SET_VOLUME_EDIT_DATA({
+      volumeArray: [1.5, 1.5, 1.5],
+      startFrame: 0,
+      trackId,
+    });
+
+    await store.actions.COMMAND_REMOVE_NOTES({ noteIds: [note.id], trackId });
+
+    const track = getOrThrow(store.state.tracks, trackId);
+    expect(track.volumeEditData).toEqual([
+      VALUE_INDICATING_NO_DATA,
+      VALUE_INDICATING_NO_DATA,
+      VALUE_INDICATING_NO_DATA,
+    ]);
+  });
+
+  test("ノート追加時にボリューム編集スライスを書き込める", async () => {
+    const trackId = store.state.trackOrder[0];
+    const note = { id: NoteId(uuid4()), ...quarterNote, position: 480 };
+
+    await store.actions.COMMAND_ADD_NOTES({
+      notes: [note],
+      trackId,
+      volumeEditSlices: [[1.5, 1.5]],
+    });
+
+    const track = getOrThrow(store.state.tracks, trackId);
+    expect(track.volumeEditData.slice(47, 49)).toEqual([1.5, 1.5]);
+  });
+
+  test("テンポ変更と削除で同じtick位置へボリューム編集が追随する", async () => {
+    const trackId = store.state.trackOrder[0];
+    store.mutations.SET_VOLUME_EDIT_DATA({
+      volumeArray: new Array<number>(47).fill(1.5),
+      startFrame: 0,
+      trackId,
+    });
+
+    store.mutations.COMMAND_SET_TEMPO({
+      tempo: { position: 0, bpm: 60 },
+    });
+
+    let track = getOrThrow(store.state.tracks, trackId);
+    expect(track.volumeEditData).toHaveLength(94);
+    expect(track.volumeEditData[92]).toBeCloseTo(1.5);
+
+    store.mutations.COMMAND_REMOVE_TEMPO({ position: 0 });
+
+    track = getOrThrow(store.state.tracks, trackId);
+    expect(track.volumeEditData).toHaveLength(47);
+    expect(track.volumeEditData[46]).toBeCloseTo(1.5);
   });
 });
 

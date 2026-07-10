@@ -27,6 +27,7 @@ import {
   onBeforeUnmount,
   onMounted,
   shallowRef,
+  toRaw,
   watch,
 } from "vue";
 import Presentation from "./Presentation.vue";
@@ -46,6 +47,7 @@ import {
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
 import type { ViewportInfo } from "@/sing/viewHelper";
+import type { Note } from "@/domain/project/type";
 
 defineOptions({
   name: "SequencerVolumeEditor",
@@ -53,6 +55,7 @@ defineOptions({
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
+  noteMovePreview?: Note[];
 }>();
 
 const emit = defineEmits<{
@@ -155,7 +158,12 @@ const refreshVolumeEditDisplay = () => {
   const displayData = buildVolumeEditDisplayData({
     volumeEditData: selectedTrack.value.volumeEditData,
     previewEdit: volumePreviewEdit.value,
+    noteMovePreview: props.noteMovePreview,
+    notes: selectedTrack.value.notes,
     editableRanges: editableFrameRanges.value,
+    tempos: toRaw(tempos.value),
+    tpqn: tpqn.value,
+    frameRate: editorFrameRate.value,
     volumeEditMode,
   });
   effectiveFramewise.value = displayData.effectiveFramewise;
@@ -191,6 +199,7 @@ watch(
     selectedTrackId,
     () => selectedTrack.value.volumeEditData,
     volumePreviewEdit,
+    () => props.noteMovePreview,
   ],
   async () => {
     await using _lock = await refreshVolumeSegmentsLock.acquire();
