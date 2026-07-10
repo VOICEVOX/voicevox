@@ -1,5 +1,12 @@
 import type { UpdateInfo } from "@/type/preload";
 
+export type OssLicenseInfo = {
+  name: string;
+  version?: string | null;
+  license?: string | null;
+  text: string;
+};
+
 const loadDefault = async <T>(
   loader: () => Promise<{ default: T }>,
 ): Promise<T> => {
@@ -23,7 +30,7 @@ export const loadPolicyText = async (): Promise<string> => {
   return await loadDefault(() => import("../../public/policy.md?raw"));
 };
 
-export const loadOssLicenses = async (): Promise<Record<string, string>[]> => {
+export const loadOssLicenses = async (): Promise<OssLicenseInfo[]> => {
   return await loadDefault(() => import("../../public/licenses.json"));
 };
 
