@@ -1,10 +1,30 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { store } from "@/store";
 import { NoteId, TrackId } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { createDefaultTrack, VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import { getOrThrow } from "@/helpers/mapHelper";
+
+// ノートや編集データの変更はstore.watch経由でRENDERを起動する。
+// awaitされない非同期のレンダリング処理がテスト終了後にログを出し、
+// ワーカーの終了処理と競合するため、レンダラーを何もしないモックに差し替える。
+vi.mock("@/sing/songTrackRendering", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/sing/songTrackRendering")>();
+  return {
+    ...actual,
+    SongTrackRenderer: class {
+      get isRendering() {
+        return false;
+      }
+      addEventListener() {}
+      removeEventListener() {}
+      requestRenderingInterruption() {}
+      async render() {}
+    },
+  };
+});
 
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {

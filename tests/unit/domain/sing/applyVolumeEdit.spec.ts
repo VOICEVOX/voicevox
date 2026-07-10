@@ -15,7 +15,7 @@ const createQuery = (volume: number[]): EditorFrameAudioQuery => ({
 });
 
 describe("applyVolumeEdit", () => {
-  it("絶対値の編集データをクエリのボリュームへ適用する", () => {
+  it("倍率の編集データをクエリのボリュームへ適用する", () => {
     const query = createQuery([0.1, 0.2, 0.3]);
 
     applyVolumeEdit(
@@ -27,14 +27,6 @@ describe("applyVolumeEdit", () => {
       undefined,
     );
 
-    expect(query.volume).toEqual([0.5, 0.2, 0.7]);
-  });
-
-  it("負の編集値は0にクランプする", () => {
-    const query = createQuery([0.1]);
-
-    applyVolumeEdit(query, 0, [-0.1], frameRate, undefined, undefined);
-
-    expect(query.volume).toEqual([0]);
+    expect(query.volume).toEqual([0.05, 0.2, 0.21]);
   });
 });

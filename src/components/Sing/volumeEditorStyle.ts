@@ -12,7 +12,6 @@ export const VOLUME_EDITOR_LAYOUT = {
 } as const;
 
 export const VOLUME_EDITOR_LINE_WIDTH = {
-  originalVolume: 1,
   editedVolume: 1.5,
   horizontalGrid: 1,
   tooltipGuide: 1,
