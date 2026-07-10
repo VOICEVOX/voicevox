@@ -135,11 +135,10 @@ export function isValidPitchEditData(pitchEditData: number[]) {
 }
 
 export function isValidVolumeEditData(volumeEditData: number[]) {
-  // NOTE: APIの返却が0未満になる場合があるため、0以上かどうかのみ検証する
   return volumeEditData.every(
     (value) =>
-      Number.isFinite(value) &&
-      (value >= 0 || value === VALUE_INDICATING_NO_DATA),
+      value === VALUE_INDICATING_NO_DATA ||
+      (Number.isFinite(value) && value > 0),
   );
 }
 
@@ -675,9 +674,7 @@ export function applyVolumeEdit(
     if (editedVolume === VALUE_INDICATING_NO_DATA) {
       continue;
     }
-    const indexInPhrase = i - phraseQueryStartFrame;
-    // NOTE: 編集結果が負値になるケースに備えて0以上にクランプする
-    volume[indexInPhrase] = Math.max(editedVolume, 0);
+    volume[i - phraseQueryStartFrame] *= editedVolume;
   }
 }
 

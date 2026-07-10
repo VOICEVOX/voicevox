@@ -1,15 +1,13 @@
-import { decibelToLinear } from "@/sing/audio";
+import { decibelToLinear, linearToDecibel } from "@/sing/audio";
+import { clamp, linearInterpolation } from "@/sing/utility";
 import {
-  absoluteVolumeValueScale,
+  relativeVolumeValueScale,
   type VolumeValueScale,
 } from "@/sing/volumeValueScale";
 
 /**
  * ボリューム編集の入力と表示の定義。
- * UI上でポインタが示すdBはここで編集値へ変換されてvolumeEditDataに保存される。
- *
- * TODO: 後続PRで編集値の意味を「元のボリューム（エンジン出力）に掛ける倍率」へ
- * 変更し、toStoredValueの変換とapplyVolumeEditの適用を差し替える。
+ * UI上でポインタが示すdBは、原音に掛ける倍率へ変換してvolumeEditDataに保存する。
  */
 export type VolumeEditMode = {
   /**
@@ -19,18 +17,52 @@ export type VolumeEditMode = {
   valueScale: VolumeValueScale;
   /** エディタ上のポインタ位置が示すdBを、volumeEditDataに保存する編集値へ変換する。 */
   toStoredValue: (db: number) => number;
+  /** 編集値を表示スケールの範囲内にクランプする。 */
+  clampStoredValue: (value: number) => number;
+  /**
+   * 2つの編集値の間をxの位置で補間する。
+   * カーソル入力間を知覚に沿うdB空間で補うために使用する。
+   */
+  interpolateStoredValues: (
+    x0: number,
+    value0: number,
+    x1: number,
+    value1: number,
+    x: number,
+  ) => number;
 };
 
 /**
- * 絶対値編集：描いた形状がそのまま最終的なボリュームになる方式。
- * ポインタが示すdBを振幅へ変換して編集値とする。
+ * 相対値編集
+ * 編集値は元のボリュームに掛ける倍率（リニア比、1で原音のまま）として保存される。
+ * 倍率は常に正のため、VALUE_INDICATING_NO_DATAと衝突しない。
  */
-export const absoluteVolumeEditMode: VolumeEditMode = {
-  valueScale: absoluteVolumeValueScale,
+export const relativeVolumeEditMode: VolumeEditMode = {
+  valueScale: relativeVolumeValueScale,
   toStoredValue: (db) => {
     if (!Number.isFinite(db)) {
       throw new Error("db must be finite.");
     }
     return decibelToLinear(db);
   },
+  clampStoredValue: (value) =>
+    clamp(
+      value,
+      decibelToLinear(relativeVolumeValueScale.minDb),
+      decibelToLinear(relativeVolumeValueScale.maxDb),
+    ),
+  // 倍率のまま補間すると持ち上げ側に膨らむため、知覚に沿うdB空間で線形補間する
+  interpolateStoredValues: (x0, value0, x1, value1, x) =>
+    decibelToLinear(
+      linearInterpolation(
+        x0,
+        linearToDecibel(value0),
+        x1,
+        linearToDecibel(value1),
+        x,
+      ),
+    ),
 };
+
+/** 現在使用するボリューム編集モード。 */
+export const currentVolumeEditMode = relativeVolumeEditMode;
