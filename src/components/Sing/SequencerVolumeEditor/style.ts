@@ -5,29 +5,19 @@ export const VOLUME_EDITOR_LAYOUT = {
   tooltipHeightPx: 20,
   tooltipOffsetPx: 16,
   tooltipPaddingPx: 4,
-  denseGridLabelMinHeightPx: 120,
   sparseGridLabelMinHeightPx: 80,
   gridLabelEdgeMarginPx: 8,
-  editableRangeBandHeightPx: 3,
 } as const;
 
 export const VOLUME_EDITOR_LINE_WIDTH = {
-  editedVolume: 1.5,
+  editedVolume: 2,
+  hoveredVolume: 2,
   horizontalGrid: 1,
   tooltipGuide: 1,
 } as const;
 
 export const VOLUME_EDITOR_ALPHA = {
-  horizontalGrid: 0.16,
-  horizontalGridBaseline: 0.28,
+  minorGrid: 0.55,
   tooltipGuide: 0.45,
   erasePreviewOverlay: 0.12,
-  editableRangeBand: 0.4,
-} as const;
-
-// NOTE: PIXI.GraphicsはCSS変数を参照できないため、sing-colors.scssの色の近似hex値をハードコードしている
-export const VOLUME_GRAPHICS_COLORS = {
-  horizontalLineLight: 0xadadad,
-  horizontalLineDark: 0x585858,
-  erasePreviewOverlay: 0x000000,
 } as const;

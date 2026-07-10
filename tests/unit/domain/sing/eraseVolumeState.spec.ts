@@ -99,7 +99,6 @@ function createPointerInfo(frame: number): VolumeEditorPointerInfo {
   return {
     position: { frame, value: 1 },
     db: 0,
-    isInParameterArea: true,
     x: 100,
     y: 50,
   };

@@ -16,6 +16,11 @@ export type VolumeViewInfo = {
   readonly leftPadding: number;
 };
 
+export const volumeNormalizedYToScreenY = (
+  normalizedY: number,
+  viewportHeight: number,
+) => (1 - normalizedY) * viewportHeight;
+
 type VolumeLineOptions = {
   color: Color;
   width: number;
@@ -83,7 +88,10 @@ export class VolumeLine {
           point.baseX * viewInfo.zoomX -
           viewInfo.offsetX +
           viewInfo.leftPadding,
-        y: (1 - point.normalizedY) * viewInfo.viewportHeight,
+        y: volumeNormalizedYToScreenY(
+          point.normalizedY,
+          viewInfo.viewportHeight,
+        ),
       }));
 
       this.line.moveTo(screenPoints[0].x, screenPoints[0].y);
