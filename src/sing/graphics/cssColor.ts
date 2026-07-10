@@ -16,8 +16,7 @@ const getSharedContext = () => {
   return sharedContext;
 };
 
-// 無効な色指定を検出するための番兵色
-const SENTINEL_COLOR = "#010203";
+const COLOR_VALIDATION_MARKER = "#010203";
 
 /**
  * CSS変数に定義された色をピクセル値として解決する。
@@ -37,9 +36,14 @@ export const resolveColorFromCssVariable = (
   }
 
   const context = getSharedContext();
-  context.fillStyle = SENTINEL_COLOR;
+  // 無効な色文字列はfillStyleに代入しても無視され、直前の値が残る。
+  // 先に比較用の色を設定し、値が変わらなければ無効と判定する。
+  context.fillStyle = COLOR_VALIDATION_MARKER;
   context.fillStyle = value;
-  if (context.fillStyle === SENTINEL_COLOR && value !== SENTINEL_COLOR) {
+  if (
+    context.fillStyle === COLOR_VALIDATION_MARKER &&
+    value !== COLOR_VALIDATION_MARKER
+  ) {
     throw new Error(`Invalid color value: ${value} (${variableName})`);
   }
   context.clearRect(0, 0, 1, 1);

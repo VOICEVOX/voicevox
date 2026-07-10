@@ -157,7 +157,7 @@ const phraseSignature = computed(() =>
   ),
 );
 
-// ボリューム線の色はテーマのCSS変数から解決する
+// CSS変数の解決はcanvasへの描画と読み取りを伴うため、テーマごとに結果をキャッシュする。
 let volumeLineColorsCache:
   | { isDark: boolean; original: Color; edited: Color; editing: Color }
   | undefined;
@@ -357,7 +357,11 @@ const horizontalGridLabels = computed(() => {
       return {
         label: line.label,
         // ラベルはheight >= sparseGridLabelMinHeightPxのときのみ存在するため、clampの範囲は逆転しない
-        y: clamp(y, 8, height - 8),
+        y: clamp(
+          y,
+          VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx,
+          height - VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx,
+        ),
       };
     },
   );
@@ -552,7 +556,6 @@ const render = () => {
     }
   }
 
-  // 削除中のプレビューオーバーレイ
   if (erasePreviewOverlay != undefined) {
     erasePreviewOverlay.clear();
     for (const range of previewEraseRanges.value) {
@@ -1165,8 +1168,8 @@ onUnmounted(() => {
   inset: 0 auto 0 0;
   z-index: 2;
   width: v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
-  // dB目盛りの軸エリア。グリッド背景と同じ色で塗り、鍵盤と同じ右罫線を付ける
-  // カーブが左へスクロールした分はこの下に隠れる
+  // 鍵盤・グリッドと配色を揃え、シーケンサ本体と連続した軸として見せる。
+  // 左へスクロールしたカーブを軸の下へ隠すため、背景は不透明にする。
   background: var(--scheme-color-sing-grid-cell-white);
   border-right: 1px solid var(--scheme-color-sing-piano-keys-right-border);
   pointer-events: none;

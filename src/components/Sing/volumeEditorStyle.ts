@@ -7,6 +7,7 @@ export const VOLUME_EDITOR_LAYOUT = {
   tooltipPaddingPx: 4,
   denseGridLabelMinHeightPx: 120,
   sparseGridLabelMinHeightPx: 80,
+  gridLabelEdgeMarginPx: 8,
   editableRangeBandHeightPx: 3,
 } as const;
 

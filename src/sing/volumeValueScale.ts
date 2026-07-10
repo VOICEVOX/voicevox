@@ -24,9 +24,12 @@ export type VolumeValueScale = {
 // エディタ側の表示や編集の問題ではないためエンジンが変わったら変更可能だが、既存のプロジェクトで表示が変わる点には注意。
 // 最大値: 0dB相当でのエンジン出力品質があまりよくなさそうなため、-0.5dB相当に設定。
 // 最小値: -36dB程度以下はエンジンの出力がノイズっぽいのと、オリジナルボリューム（エンジン出力デフォルト）の典型的な範囲で見やすい程度の高さにするため。
+// 上端は内部的には-0.5dBだが、UIでは実用上の最大値を0dBと表記する。
 export const ABSOLUTE_VOLUME_MIN_DB = -36.5;
 export const ABSOLUTE_VOLUME_MAX_DB = -0.5;
 
+// レーンが低い場合はprimaryだけを表示し、12dB間隔に間引く。
+// 上下端はビューポートの縁と重なって見えるため、ラベルだけを表示して線は引かない。
 export const ABSOLUTE_VOLUME_GRID_LINES = [
   {
     db: ABSOLUTE_VOLUME_MAX_DB,
@@ -109,6 +112,7 @@ const valueToNormalizedY = (value: number) => {
     throw new Error("value must be greater than or equal to 0.");
   }
 
+  // 絶対値編集の表示上限は0dB相当なので、1を超える値は上端に飽和させる。
   return dbToNormalizedY(linearToDecibel(Math.min(value, 1)));
 };
 
