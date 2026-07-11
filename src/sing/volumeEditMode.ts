@@ -15,11 +15,8 @@ export type VolumeEditMode = {
    * モードごとに有効なスケールは1つなので、不正な組み合わせを防ぐためモード側が持つ。
    */
   valueScale: VolumeValueScale;
-  /**
-   * エディタ上のポインタ位置が示すdBを、volumeEditDataに保存する編集値へ変換する。
-   * 相対値編集では変換に元のボリュームが必要になるため、originalValueも受け取る。
-   */
-  toStoredValue: (db: number, originalValue: number | undefined) => number;
+  /** エディタ上のポインタ位置が示すdBを、volumeEditDataに保存する編集値へ変換する。 */
+  toStoredValue: (db: number) => number;
   /**
    * 編集値と元のボリュームから、実際に適用する実ボリュームを計算する。
    * 実ボリュームが定まらない場合（元のボリュームを必要とするモードでoriginalValueがない場合）はundefinedを返す。

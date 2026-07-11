@@ -912,7 +912,7 @@ const computeViewportPointerInfo = (
   const normalizedY = 1 - clampedY / height;
   const db = volumeValueScale.normalizedYToDb(normalizedY);
   const originalValue = getOriginalValueAtFrame(frame);
-  const value = volumeEditMode.toStoredValue(db, originalValue);
+  const value = volumeEditMode.toStoredValue(db);
 
   return {
     position: {

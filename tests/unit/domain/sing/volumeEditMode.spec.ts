@@ -12,27 +12,21 @@ describe("absoluteVolumeEditMode", () => {
   });
 
   it("dBを保存値のlinear volumeに変換する", () => {
-    expect(absoluteVolumeEditMode.toStoredValue(-6, undefined)).toBeCloseTo(
+    expect(absoluteVolumeEditMode.toStoredValue(-6)).toBeCloseTo(
       decibelToLinear(-6),
-    );
-  });
-
-  it("dBから保存値への変換は元ボリュームに依存しない", () => {
-    expect(absoluteVolumeEditMode.toStoredValue(-6, 0.5)).toBeCloseTo(
-      absoluteVolumeEditMode.toStoredValue(-6, undefined),
     );
   });
 
   it("スケール上端のdBの保存値は1を超えない", () => {
     expect(
-      absoluteVolumeEditMode.toStoredValue(ABSOLUTE_VOLUME_MAX_DB, undefined),
+      absoluteVolumeEditMode.toStoredValue(ABSOLUTE_VOLUME_MAX_DB),
     ).toBeLessThanOrEqual(1);
   });
 
   it("非有限のdBはエラーにする", () => {
-    expect(() =>
-      absoluteVolumeEditMode.toStoredValue(Number.NaN, undefined),
-    ).toThrow("db must be finite.");
+    expect(() => absoluteVolumeEditMode.toStoredValue(Number.NaN)).toThrow(
+      "db must be finite.",
+    );
   });
 
   it("保存値をそのまま実効値にする", () => {
