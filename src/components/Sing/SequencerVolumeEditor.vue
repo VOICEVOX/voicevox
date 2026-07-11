@@ -380,27 +380,25 @@ const tooltipStyle = computed(() => {
   if (tooltip == undefined || width == undefined || height == undefined) {
     return undefined;
   }
-  const maxX = Math.max(
-    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
-    width -
-      VOLUME_EDITOR_LAYOUT.tooltipWidthPx -
-      VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+  const minLeft = VOLUME_EDITOR_LAYOUT.tooltipPaddingPx;
+  const maxLeft = Math.max(
+    minLeft,
+    width - VOLUME_EDITOR_LAYOUT.tooltipWidthPx - minLeft,
   );
-  const maxY = Math.max(
-    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
-    height -
-      VOLUME_EDITOR_LAYOUT.tooltipHeightPx -
-      VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
+  const minTop = VOLUME_EDITOR_LAYOUT.tooltipPaddingPx;
+  const maxTop = Math.max(
+    minTop,
+    height - VOLUME_EDITOR_LAYOUT.tooltipHeightPx - minTop,
   );
   const left = clamp(
     tooltip.pointerX + VOLUME_EDITOR_LAYOUT.tooltipOffsetPx,
-    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
-    maxX,
+    minLeft,
+    maxLeft,
   );
   const top = clamp(
     tooltip.pointerY + VOLUME_EDITOR_LAYOUT.tooltipOffsetPx,
-    VOLUME_EDITOR_LAYOUT.tooltipPaddingPx,
-    maxY,
+    minTop,
+    maxTop,
   );
   return {
     left: `${left}px`,
