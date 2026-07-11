@@ -73,14 +73,10 @@ export const ABSOLUTE_VOLUME_GRID_LINES = [
   },
 ] as const satisfies readonly DbGridLine[];
 
-const assertFinite = (value: number, name: string) => {
-  if (!Number.isFinite(value)) {
-    throw new Error(`${name} must be finite.`);
-  }
-};
-
 const normalizedYToDb = (normalizedY: number) => {
-  assertFinite(normalizedY, "normalizedY");
+  if (!Number.isFinite(normalizedY)) {
+    throw new Error("normalizedY must be finite.");
+  }
   const clampedY = clamp(normalizedY, 0, 1);
   return (
     ABSOLUTE_VOLUME_MIN_DB +
@@ -89,7 +85,9 @@ const normalizedYToDb = (normalizedY: number) => {
 };
 
 const dbToNormalizedY = (db: number) => {
-  assertFinite(db, "db");
+  if (!Number.isFinite(db)) {
+    throw new Error("db must be finite.");
+  }
   const clampedDb = clamp(db, ABSOLUTE_VOLUME_MIN_DB, ABSOLUTE_VOLUME_MAX_DB);
   return (
     (clampedDb - ABSOLUTE_VOLUME_MIN_DB) /
@@ -98,7 +96,9 @@ const dbToNormalizedY = (db: number) => {
 };
 
 const valueToDb = (value: number) => {
-  assertFinite(value, "value");
+  if (!Number.isFinite(value)) {
+    throw new Error("value must be finite.");
+  }
   if (value < 0) {
     throw new Error("value must be greater than or equal to 0.");
   }
