@@ -51,11 +51,11 @@ describe("volumeValueScale", () => {
     expect(
       absoluteVolumeValueScale.gridLines.map((line) => line.label),
     ).toEqual(["0", "-6", "-12", "-18", "-24", "-30", "-36"]);
-    expect(absoluteVolumeValueScale.gridLines[0].drawLine).toBe(false);
-    expect(absoluteVolumeValueScale.gridLines.at(-1)?.drawLine).toBe(false);
+    expect(absoluteVolumeValueScale.gridLines[0].labelOnly).toBe(true);
+    expect(absoluteVolumeValueScale.gridLines.at(-1)?.labelOnly).toBe(true);
     expect(
       absoluteVolumeValueScale.gridLines
-        .filter((line) => line.displayPriority === "primary")
+        .filter((line) => line.kind !== "minor")
         .map((line) => line.label),
     ).toEqual(["0", "-12", "-24", "-36"]);
   });

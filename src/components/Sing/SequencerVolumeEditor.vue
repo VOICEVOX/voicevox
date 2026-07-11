@@ -339,9 +339,7 @@ const getVisibleHorizontalGridLines = (
     height >= VOLUME_EDITOR_LAYOUT.sparseGridLabelMinHeightPx ||
     !options.includesLabels
   ) {
-    return volumeValueScale.gridLines.filter(
-      (line) => line.displayPriority === "primary",
-    );
+    return volumeValueScale.gridLines.filter((line) => line.kind !== "minor");
   }
   return [];
 };
@@ -482,7 +480,7 @@ const updateHorizontalGrid = () => {
   for (const line of getVisibleHorizontalGridLines(height, {
     includesLabels: false,
   })) {
-    if (!line.drawLine) {
+    if (line.labelOnly === true) {
       continue;
     }
     const y =

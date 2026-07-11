@@ -1,18 +1,20 @@
 import { linearToDecibel } from "@/sing/audio";
 import { clamp, round } from "@/sing/utility";
 
-export type VolumeGridLine = {
+/** dB軸の目盛り。ラベルと、その高さでボリューム編集レーンを横切る水平線を定義する。 */
+export type DbGridLine = {
   db: number;
-  kind: "major" | "baseline";
+  /** TODO: 後続PRの相対編集化で0dB基準線を描き分けるため、baselineを独立した種別として先に定義する。 */
+  kind: "major" | "minor" | "baseline";
   label: string;
-  drawLine: boolean;
-  displayPriority: "primary" | "secondary";
+  /** 水平線を引かず、左dB軸の目盛りラベルだけを表示する。省略時は水平線も表示する。 */
+  labelOnly?: true;
 };
 
 export type VolumeValueScale = {
   minDb: number;
   maxDb: number;
-  gridLines: readonly VolumeGridLine[];
+  gridLines: readonly DbGridLine[];
   normalizedYToDb: (normalizedY: number) => number;
   dbToNormalizedY: (db: number) => number;
   valueToNormalizedY: (value: number) => number;
@@ -28,59 +30,48 @@ export type VolumeValueScale = {
 export const ABSOLUTE_VOLUME_MIN_DB = -36.5;
 export const ABSOLUTE_VOLUME_MAX_DB = -0.5;
 
-// レーンが低い場合はprimaryだけを表示し、12dB間隔に間引く。
-// 上下端はビューポートの縁と重なって見えるため、ラベルだけを表示して線は引かない。
+// 定規と同じ3段構成: baseline=表示上の0、major=主目盛り、minor=補助目盛り。
+// レーンが低いときはminorの線とラベルを省き、さらに低いときはラベルをすべて省く。
+// 上下端付近はレーン境界と重なって見えるため、labelOnlyでラベルだけ表示する。
 export const ABSOLUTE_VOLUME_GRID_LINES = [
   {
     db: ABSOLUTE_VOLUME_MAX_DB,
     kind: "baseline",
     label: "0",
-    drawLine: false,
-    displayPriority: "primary",
+    labelOnly: true,
   },
   {
     db: -6,
-    kind: "major",
+    kind: "minor",
     label: "-6",
-    drawLine: true,
-    displayPriority: "secondary",
   },
   {
     db: -12,
     kind: "major",
     label: "-12",
-    drawLine: true,
-    displayPriority: "primary",
   },
   {
     db: -18,
-    kind: "major",
+    kind: "minor",
     label: "-18",
-    drawLine: true,
-    displayPriority: "secondary",
   },
   {
     db: -24,
     kind: "major",
     label: "-24",
-    drawLine: true,
-    displayPriority: "primary",
   },
   {
     db: -30,
-    kind: "major",
+    kind: "minor",
     label: "-30",
-    drawLine: true,
-    displayPriority: "secondary",
   },
   {
     db: -36,
     kind: "major",
     label: "-36",
-    drawLine: false,
-    displayPriority: "primary",
+    labelOnly: true,
   },
-] as const satisfies readonly VolumeGridLine[];
+] as const satisfies readonly DbGridLine[];
 
 const assertFinite = (value: number, name: string) => {
   if (!Number.isFinite(value)) {
