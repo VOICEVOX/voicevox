@@ -352,14 +352,14 @@ const horizontalGridLabels = computed(() => {
   return getVisibleHorizontalGridLines(height, { includesLabels: true }).map(
     (line) => {
       const y = (1 - volumeValueScale.dbToNormalizedY(line.db)) * height;
+      const min = VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx;
+      const max = height - VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx;
+      if (min > max) {
+        throw UnreachableError("The min value is greater than the max value. The condition `height >= sparseGridLabelMinHeightPx` may not be met.");
+      }
       return {
         label: line.label,
-        // ラベルはheight >= sparseGridLabelMinHeightPxのときのみ存在するため、clampの範囲は逆転しない
-        y: clamp(
-          y,
-          VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx,
-          height - VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx,
-        ),
+        y: clamp(y, min, max),
       };
     },
   );
