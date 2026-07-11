@@ -11,18 +11,32 @@ export type PositionOnVolumeEditor = {
   readonly value: number;
 };
 
+export type VolumeEditorPointerInfo = {
+  readonly position: PositionOnVolumeEditor;
+  readonly db: number;
+  readonly isInParameterArea: boolean;
+  readonly x: number;
+  readonly y: number;
+};
+
+export type VolumeEditorTooltipData = {
+  readonly db: number;
+  readonly pointerX: number;
+  readonly pointerY: number;
+};
+
 export type VolumeEditorInput =
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "Editor";
       readonly pointerEvent: PointerEvent;
-      readonly position: PositionOnVolumeEditor;
+      readonly pointerInfo: VolumeEditorPointerInfo;
     }
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "Window";
       readonly pointerEvent: PointerEvent;
-      readonly position: PositionOnVolumeEditor;
+      readonly pointerInfo: VolumeEditorPointerInfo;
     };
 
 export type VolumePreviewEdit =
@@ -35,6 +49,7 @@ export type VolumeEditorRefs = {
   readonly previewVolumeEdit: Ref<VolumePreviewEdit | undefined>;
   readonly previewMode: Ref<VolumeEditorPreviewMode>;
   readonly cursorState: Ref<CursorState>;
+  readonly tooltipData: Ref<VolumeEditorTooltipData | undefined>;
 };
 
 export type VolumeEditorComputedRefs = {
@@ -89,6 +104,7 @@ export type VolumeEditorStateDefinitions = StateDefinitions<
       id: "drawVolume";
       factoryArgs: {
         startPosition: PositionOnVolumeEditor;
+        startTooltipData: VolumeEditorTooltipData;
         targetTrackId: TrackId;
         returnStateId: VolumeEditorIdleStateId;
       };

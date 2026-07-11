@@ -100,7 +100,7 @@ import {
   mergeVolumeEditableFrameRanges,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
-import type { PositionOnVolumeEditor } from "@/sing/volumeEditorStateMachine/common";
+import type { VolumeEditorPointerInfo } from "@/sing/volumeEditorStateMachine/common";
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
@@ -116,10 +116,15 @@ const volumeEditMode = absoluteVolumeEditMode;
 const volumeValueScale = volumeEditMode.valueScale;
 
 const store = useStore();
-const { volumePreviewEdit, stateMachineProcess, previewMode, cursorState } =
-  useVolumeEditorStateMachine(store, {
-    getEditableFrameRanges: () => editableFrameRanges.value,
-  });
+const {
+  volumePreviewEdit,
+  stateMachineProcess,
+  previewMode,
+  cursorState,
+  tooltipData,
+} = useVolumeEditorStateMachine(store, {
+  getEditableFrameRanges: () => editableFrameRanges.value,
+});
 
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
@@ -213,17 +218,16 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 const isPointerInParameterArea = ref(false);
 
 const cursorClass = computed(() => {
-  if (!isPointerInParameterArea.value && previewMode.value === "IDLE") {
-    return "cursor-default";
-  }
   switch (cursorState.value) {
+    case "DRAW":
+      // 精密な位置指定がしやすいよう、描画時もペンアイコンではなくcrosshairにする
+      return "cursor-crosshair";
     case "ERASE":
       return "cursor-erase";
     case "NOT_ALLOWED":
       return "cursor-not-allowed";
     default:
-      // 精密な位置指定がしやすいよう、描画時もペンアイコンではなくcrosshairにする
-      return "cursor-crosshair";
+      return "cursor-default";
   }
 });
 
@@ -273,21 +277,27 @@ type VolumeTooltipState = {
   pointerY: number;
 };
 
-type VolumePointerInfo = {
-  position: PositionOnVolumeEditor;
-  db: number;
+type VolumePointerInfo = VolumeEditorPointerInfo & {
   originalValue: number | undefined;
   isEditable: boolean;
-  x: number;
-  y: number;
 };
 
-const tooltipState = ref<VolumeTooltipState>();
-
-watch(previewMode, (mode) => {
-  if (mode !== "VOLUME_DRAW") {
-    tooltipState.value = undefined;
+// ツールチップには、ポインタ位置で設定されるボリューム(dB)を表示する。
+// 絶対値編集においては以下は検討したが行わない:
+// - 原音との差分: 原音はフレームごとに異なるため、ポインタを1フレーム横に動かした
+//   だけで値が揺れて読み取りづらい(例: +1.0 → +3.0 → -1.5...)
+// - 差分と絶対値の併記: 一目で何の値か分からなくなる
+// ※ 相対値編集においては上記知見からベースとなる0dBラインとの差分のみの表示にする
+const tooltipState = computed<VolumeTooltipState | undefined>(() => {
+  const data = tooltipData.value;
+  if (data == undefined) {
+    return undefined;
   }
+  return {
+    value: `${volumeValueScale.formatDbLabel(data.db)} dB`,
+    pointerX: data.pointerX,
+    pointerY: data.pointerY,
+  };
 });
 
 const frameToBaseX = (frame: number, frameRate: number) => {
@@ -418,30 +428,6 @@ const tooltipGuideLineStyle = computed(() => {
     top: `${tooltip.pointerY}px`,
   };
 });
-
-// ツールチップには、ポインタ位置で設定されるボリューム(dB)を表示する。
-// 絶対値編集においては以下は検討したが行わない:
-// - 原音との差分: 原音はフレームごとに異なるため、ポインタを1フレーム横に動かした
-//   だけで値が揺れて読み取りづらい(例: +1.0 → +3.0 → -1.5...)
-// - 差分と絶対値の併記: 一目で何の値か分からなくなる
-// ※ 相対値編集においては上記知見からベースとなる0dBラインとの差分のみの表示にする
-const formatTooltipValue = (pointerInfo: VolumePointerInfo) => {
-  return `${volumeValueScale.formatDbLabel(pointerInfo.db)} dB`;
-};
-
-const updateTooltip = (pointerInfo: VolumePointerInfo) => {
-  const isDrawing = previewMode.value === "VOLUME_DRAW";
-  if (!isDrawing || !pointerInfo.isEditable) {
-    tooltipState.value = undefined;
-    return;
-  }
-
-  tooltipState.value = {
-    value: formatTooltipValue(pointerInfo),
-    pointerX: pointerInfo.x,
-    pointerY: pointerInfo.y,
-  };
-};
 
 const buildSegments = (framewiseData: number[], frameRate: number) => {
   const segments: VolumeSegment[] = [];
@@ -843,9 +829,8 @@ const dispatchVolumeEditorEvent = (
     type: "pointerEvent",
     targetArea,
     pointerEvent,
-    position: pointerInfo.position,
+    pointerInfo,
   });
-  updateTooltip(pointerInfo);
 };
 
 const getViewportRect = () => {
@@ -888,11 +873,6 @@ const isPointerEventInParameterArea = (pointerEvent: PointerEvent) => {
   );
 };
 
-const hidePointerFeedback = () => {
-  isPointerInParameterArea.value = false;
-  tooltipState.value = undefined;
-};
-
 const computeViewportPointerInfo = (
   pointerEvent: PointerEvent,
 ): VolumePointerInfo => {
@@ -927,6 +907,7 @@ const computeViewportPointerInfo = (
     db,
     originalValue,
     isEditable: isFrameInVolumeEditableRange(frame, editableFrameRanges.value),
+    isInParameterArea: isPointerInParameterArea.value,
     x: clampedX,
     y: clampedY,
   };
@@ -938,10 +919,6 @@ const onSurfacePointerDown = (event: PointerEvent) => {
   }
   updateViewportRectCache();
   isPointerInParameterArea.value = isPointerEventInParameterArea(event);
-  if (!isPointerInParameterArea.value) {
-    hidePointerFeedback();
-    return;
-  }
   if (store.state.parameterPanelEditTarget !== "VOLUME") {
     void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({
       editTarget: "VOLUME",
@@ -953,10 +930,6 @@ const onSurfacePointerDown = (event: PointerEvent) => {
 const onSurfacePointerMove = (event: PointerEvent) => {
   if (previewMode.value === "IDLE") {
     isPointerInParameterArea.value = isPointerEventInParameterArea(event);
-    if (!isPointerInParameterArea.value) {
-      hidePointerFeedback();
-      return;
-    }
     dispatchVolumeEditorEvent(event, "Editor");
   }
 };
