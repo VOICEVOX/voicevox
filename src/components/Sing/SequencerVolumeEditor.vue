@@ -381,6 +381,8 @@ const tooltipStyle = computed(() => {
     return undefined;
   }
   const minLeft = VOLUME_EDITOR_LAYOUT.tooltipPaddingPx;
+  // エリアが狭くてツールチップが余白内に収まらない場合は、
+  // 左上の余白位置に置き、右下へのはみ出しは許容する
   const maxLeft = Math.max(
     minLeft,
     width - VOLUME_EDITOR_LAYOUT.tooltipWidthPx - minLeft,
