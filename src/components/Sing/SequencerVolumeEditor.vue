@@ -419,7 +419,12 @@ const tooltipGuideLineStyle = computed(() => {
   };
 });
 
-// 元ボリュームとの差分は連続編集では曲線になりスカラーで表せないため、絶対dBを表示する
+// ツールチップには、ポインタ位置で設定されるボリューム(dB)を表示する。
+// 絶対値編集においては以下は検討したが行わない:
+// - 原音との差分: 原音はフレームごとに異なるため、ポインタを1フレーム横に動かした
+//   だけで値が揺れて読み取りづらい(例: +1.0 → +3.0 → -1.5...)
+// - 差分と絶対値の併記: 一目で何の値か分からなくなる
+// ※ 相対値編集においては上記知見からベースとなる0dBラインとの差分のみの表示にする
 const formatTooltipValue = (pointerInfo: VolumePointerInfo) => {
   return `${volumeValueScale.formatDbLabel(pointerInfo.db)} dB`;
 };
