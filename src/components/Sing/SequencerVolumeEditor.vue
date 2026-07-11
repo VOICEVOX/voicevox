@@ -72,7 +72,11 @@ import { secondToTick, tickToSecond } from "@/sing/music";
 import { getTotalTicks } from "@/sing/rulerHelper";
 import { clamp } from "@/sing/utility";
 import { baseXToTick, tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
-import { assertNonNullable, ensureNotNullish } from "@/type/utility";
+import {
+  assertNonNullable,
+  ensureNotNullish,
+  UnreachableError,
+} from "@/type/utility";
 import type { TrackId } from "@/type/preload";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
 import { VolumeLine } from "@/sing/graphics/volumeLine";
@@ -355,7 +359,9 @@ const horizontalGridLabels = computed(() => {
       const min = VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx;
       const max = height - VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx;
       if (min > max) {
-        throw UnreachableError("The min value is greater than the max value. The condition `height >= sparseGridLabelMinHeightPx` may not be met.");
+        throw new UnreachableError(
+          "The grid label range is invalid. The viewport height must satisfy sparseGridLabelMinHeightPx.",
+        );
       }
       return {
         label: line.label,
