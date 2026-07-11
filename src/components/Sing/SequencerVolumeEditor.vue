@@ -806,6 +806,7 @@ const refreshEffectiveVolumeSegments = () => {
   );
   for (const [i] of effectiveFramewise.entries()) {
     const edited = editFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
+    // TODO: 後続PRの相対編集化で実効値の導出処理を置き換える際に、getOriginalValueFromFramewiseとの重複を解消する。
     const original = originalFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
     if (edited !== VALUE_INDICATING_NO_DATA) {
       effectiveFramewise[i] =
@@ -852,6 +853,7 @@ const getViewportRect = () => {
   return rect;
 };
 
+// TODO: 後続PRで、ResizeObserverからrectキャッシュを更新する形に変更する。
 // NOTE: サイズ0のrectはキャッシュしない
 // レイアウト途中の値でポインタ座標計算を壊さないようにし、ドラッグ中は直前の有効なrectで継続させる
 const updateViewportRectCache = () => {
