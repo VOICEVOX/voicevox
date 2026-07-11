@@ -17,7 +17,7 @@ export type VolumeValueScale = {
   gridLines: readonly DbGridLine[];
   normalizedYToDb: (normalizedY: number) => number;
   dbToNormalizedY: (db: number) => number;
-  valueToNormalizedY: (value: number) => number;
+  valueToDb: (value: number) => number;
   /** ツールチップなどに表示するdB値を整形する */
   formatDbLabel: (db: number) => string;
 };
@@ -97,14 +97,13 @@ const dbToNormalizedY = (db: number) => {
   );
 };
 
-const valueToNormalizedY = (value: number) => {
+const valueToDb = (value: number) => {
   assertFinite(value, "value");
   if (value < 0) {
     throw new Error("value must be greater than or equal to 0.");
   }
 
-  // 絶対値編集の表示上限は0dB相当なので、1を超える値は上端に飽和させる。
-  return dbToNormalizedY(linearToDecibel(Math.min(value, 1)));
+  return linearToDecibel(value);
 };
 
 const formatDbLabel = (db: number) => {
@@ -119,6 +118,6 @@ export const absoluteVolumeValueScale: VolumeValueScale = {
   gridLines: ABSOLUTE_VOLUME_GRID_LINES,
   normalizedYToDb,
   dbToNormalizedY,
-  valueToNormalizedY,
+  valueToDb,
   formatDbLabel,
 };

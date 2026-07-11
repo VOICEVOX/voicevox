@@ -449,7 +449,8 @@ const buildSegments = (framewiseData: number[], frameRate: number) => {
     if (!Number.isFinite(baseX)) {
       throw new Error("baseX must be finite.");
     }
-    const normalizedY = volumeValueScale.valueToNormalizedY(value);
+    const db = volumeValueScale.valueToDb(value);
+    const normalizedY = volumeValueScale.dbToNormalizedY(db);
 
     if (current == undefined) {
       current = [];

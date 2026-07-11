@@ -22,20 +22,32 @@ describe("volumeValueScale", () => {
     expect(actual).toBeLessThan(1);
   });
 
-  it("0の保存値は表示下端に変換する", () => {
-    expect(absoluteVolumeValueScale.valueToNormalizedY(0)).toBe(0);
+  it("保存値をdBに変換する", () => {
+    expect(absoluteVolumeValueScale.valueToDb(1)).toBe(0);
+  });
+
+  it("0の保存値はdB変換と表示スケールの合成で表示下端に変換する", () => {
+    const db = absoluteVolumeValueScale.valueToDb(0);
+
+    expect(absoluteVolumeValueScale.dbToNormalizedY(db)).toBe(0);
+  });
+
+  it("表示範囲を超える保存値はdB変換と表示スケールの合成で表示上端に変換する", () => {
+    const db = absoluteVolumeValueScale.valueToDb(2);
+
+    expect(absoluteVolumeValueScale.dbToNormalizedY(db)).toBe(1);
   });
 
   it("負の保存値はエラーにする", () => {
-    expect(() => absoluteVolumeValueScale.valueToNormalizedY(-1)).toThrow(
+    expect(() => absoluteVolumeValueScale.valueToDb(-1)).toThrow(
       "value must be greater than or equal to 0.",
     );
   });
 
   it("非有限の保存値はエラーにする", () => {
-    expect(() =>
-      absoluteVolumeValueScale.valueToNormalizedY(Number.NaN),
-    ).toThrow("value must be finite.");
+    expect(() => absoluteVolumeValueScale.valueToDb(Number.NaN)).toThrow(
+      "value must be finite.",
+    );
   });
 
   it("dBをラベル文字列に整形する", () => {
