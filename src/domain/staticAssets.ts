@@ -1,5 +1,5 @@
-import type { UpdateInfo } from "@/type/preload";
 import { z } from "zod";
+import type { UpdateInfo } from "@/type/preload";
 
 const ossLicenseInfoSchema = z.object({
   name: z.string(),
