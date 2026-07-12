@@ -54,7 +54,6 @@ jobs:
             voicevox_engine_asset_name: linux-nvidia
             package_name: voicevox
             compressed_artifact_name: voicevox-linux-nvidia
-            app_asar_dir: prepackage/resources
             installer_artifact_name: linux-nvidia-appimage
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
@@ -66,7 +65,6 @@ jobs:
             voicevox_engine_asset_name: linux-cpu-x64
             package_name: voicevox-cpu
             compressed_artifact_name: voicevox-linux-cpu-x64
-            app_asar_dir: prepackage/resources
             installer_artifact_name: linux-cpu-x64-appimage
             linux_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             linux_executable_name: voicevox
@@ -78,7 +76,6 @@ jobs:
             voicevox_engine_asset_name: linux-cpu-arm64
             package_name: voicevox-cpu
             compressed_artifact_name: voicevox-linux-cpu-arm64
-            app_asar_dir: prepackage/resources
             installer_artifact_name: linux-cpu-arm64-appimage
             linux_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
             linux_executable_name: voicevox
@@ -90,7 +87,6 @@ jobs:
             voicevox_engine_asset_name: windows-nvidia
             package_name: voicevox-cuda
             compressed_artifact_name: voicevox-windows-nvidia
-            app_asar_dir: prepackage/resources
             installer_artifact_name: windows-nvidia-nsis-web
             nsis_web_artifact_name: "VOICEVOX-CUDA.Web.Setup.${version}.${ext}"
             os: windows-2022
@@ -100,7 +96,6 @@ jobs:
             voicevox_engine_asset_name: windows-cpu
             package_name: voicevox-cpu
             compressed_artifact_name: voicevox-windows-cpu
-            app_asar_dir: prepackage/resources
             installer_artifact_name: windows-cpu-nsis-web
             nsis_web_artifact_name: "VOICEVOX-CPU.Web.Setup.${version}.${ext}"
             os: windows-2022
@@ -110,7 +105,6 @@ jobs:
             voicevox_engine_asset_name: windows-directml
             package_name: voicevox
             compressed_artifact_name: voicevox-windows-directml
-            app_asar_dir: prepackage/resources
             installer_artifact_name: windows-directml-nsis-web
             nsis_web_artifact_name: "VOICEVOX.Web.Setup.${version}.${ext}"
             os: windows-2022
@@ -120,7 +114,6 @@ jobs:
             voicevox_engine_asset_name: macos-x64
             package_name: voicevox-cpu
             compressed_artifact_name: voicevox-macos-cpu-x64
-            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-x64-dmg
             macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             os: macos-15-intel
@@ -130,7 +123,6 @@ jobs:
             voicevox_engine_asset_name: macos-arm64
             package_name: voicevox-cpu
             compressed_artifact_name: voicevox-macos-cpu-arm64
-            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-arm64-dmg
             macos_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
             os: macos-14
@@ -200,6 +192,15 @@ jobs:
           ref: ${{ env.VOICEVOX_RESOURCE_VERSION }}
           path: resource
 
+      # Download VOICEVOX ENGINE
+      - name: Download VOICEVOX ENGINE
+        id: download-engine
+        uses: ./.github/actions/download-engine
+        with:
+          version: ${{ env.VOICEVOX_ENGINE_VERSION }}
+          dest: ${{ github.workspace }}/voicevox_engine
+          target: ${{ matrix.voicevox_engine_asset_name }}
+
       - name: Create and replace software resources
         run: |
           rm build/README.txt
@@ -231,7 +232,9 @@ jobs:
           $sed -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
 
       - name: Generate public/licenses.json
-        run: pnpm run license:generate -o public/licenses.json
+        run: |
+          pnpm run license:generate -o public/licenses.json
+          pnpm run license:merge -o public/licenses.json -i public/licenses.json -i voicevox_engine/licenses.json
 
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
@@ -276,29 +279,6 @@ jobs:
       - name: Rename NoEngine Prepackage
         run: |
           mv ${{ matrix.artifact_path }} ./prepackage
-
-      # Download VOICEVOX ENGINE
-      - name: Download VOICEVOX ENGINE
-        id: download-engine
-        uses: ./.github/actions/download-engine
-        with:
-          version: ${{ env.VOICEVOX_ENGINE_VERSION }}
-          dest: ${{ github.workspace }}/voicevox_engine
-          target: ${{ matrix.voicevox_engine_asset_name }}
-
-      # FIXME: asarをextract/packせず、ビルド前にengine_licenses.jsonとlicenses.jsonを結合する
-      - name: Merge licenses.json (ENGINE, VOICEVOX)
-        run: |
-          # Unpack asar
-          npx asar extract "${{ matrix.app_asar_dir }}/app.asar" "${{ matrix.app_asar_dir }}/app"
-          rm "${{ matrix.app_asar_dir }}/app.asar"
-
-          mv voicevox_engine/licenses.json engine_licenses.json
-          pnpm run license:merge -o "${{ matrix.app_asar_dir }}/app/dist/licenses.json" -i engine_licenses.json -i "${{ matrix.app_asar_dir }}/app/dist/licenses.json"
-
-          # Repack asar
-          npx asar pack "${{ matrix.app_asar_dir }}/app" "${{ matrix.app_asar_dir }}/app.asar"
-          rm -rf "${{ matrix.app_asar_dir }}/app"
 
       - name: Merge VOICEVOX ENGINE into prepackage/
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
