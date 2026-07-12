@@ -1,11 +1,14 @@
+import { z } from "zod";
 import type { UpdateInfo } from "@/type/preload";
 
-export type OssLicenseInfo = {
-  name: string;
-  version?: string | null;
-  license?: string | null;
-  text: string;
-};
+const ossLicenseInfoSchema = z.object({
+  name: z.string(),
+  version: z.string().nullable().optional(),
+  license: z.string().nullable().optional(),
+  text: z.string(),
+});
+
+export type OssLicenseInfo = z.infer<typeof ossLicenseInfoSchema>;
 
 const loadDefault = async <T>(
   loader: () => Promise<{ default: T }>,
@@ -31,7 +34,9 @@ export const loadPolicyText = async (): Promise<string> => {
 };
 
 export const loadOssLicenses = async (): Promise<OssLicenseInfo[]> => {
-  return await loadDefault(() => import("../../public/licenses.json"));
+  return ossLicenseInfoSchema
+    .array()
+    .parse(await loadDefault(() => import("../../public/licenses.json")));
 };
 
 export const loadUpdateInfos = async (): Promise<UpdateInfo[]> => {

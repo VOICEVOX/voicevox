@@ -378,10 +378,6 @@ export function adjustPhonemeTimings(
       ) {
         phonemeTiming.startFrame = maxNonPauseEndFrame;
       }
-      // フレーム長が1以上になるように終了フレームを調整する
-      if (phonemeTiming.endFrame <= phonemeTiming.startFrame) {
-        phonemeTiming.endFrame = phonemeTiming.startFrame + 1;
-      }
     }
 
     // 音素（pauを含む）のフレーム長が1以上になるように開始フレームを調整する

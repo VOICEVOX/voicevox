@@ -1,5 +1,9 @@
+import type { ComputedRef, Ref } from "vue";
+import type { Store } from "@/store";
+import type { StateDefinitions } from "@/sing/stateMachine";
+import type { CursorState, ViewportInfo } from "@/sing/viewHelper";
 import { NoteId, TrackId } from "@/type/preload";
-import type { Note, PhonemeTimingEditData } from "@/domain/project/type";
+import type { PhonemeTimingEditData, Tempo } from "@/domain/project/type";
 import type {
   EditorFrameAudioQuery,
   EditorFrameAudioQueryKey,
@@ -16,31 +20,137 @@ import {
 } from "@/sing/domain";
 import { getPrev } from "@/sing/utility";
 
+// 音素タイミング編集のプレビューデータ
+export type PhonemeTimingPreview =
+  | {
+      type: "move";
+      noteId: NoteId;
+      phonemeIndexInNote: number;
+      offsetSeconds: number;
+    }
+  | {
+      type: "erase";
+      targets: {
+        noteId: NoteId;
+        phonemeIndexInNote: number;
+      }[];
+    };
+
 // 音素タイミングの計算に必要なフレーズ情報
 export type PhraseInfo = Readonly<{
   startTime: number;
   query?: EditorFrameAudioQuery;
-  // NOTE: notesは現時点では未使用。今後の編集機能の実装で使う予定の先行定義
-  notes: Note[];
   minNonPauseStartFrame: number | undefined;
   maxNonPauseEndFrame: number | undefined;
 }>;
 
 // 1音素分のタイミング情報
 export type PhonemeTimingInfo = {
-  // NOTE: phraseKeyは現時点では未使用。今後の編集機能の実装で使う予定の先行定義
   phraseKey: PhraseKey;
   phoneme: string;
   noteId: NoteId | undefined;
-  // NOTE: phonemeIndexInNoteは現時点では未使用。今後の編集機能の実装で使う予定の先行定義
   phonemeIndexInNote: number;
   isEdited: boolean;
   editedStartTimeSeconds: number;
-  // NOTE: originalStartTimeSecondsは現時点では未使用。今後の編集機能の実装で使う予定の先行定義
   originalStartTimeSeconds: number;
-  // NOTE: editedEndTimeSecondsは現時点では未使用。今後の編集機能の実装で使う予定の先行定義
   editedEndTimeSeconds: number;
 };
+
+export type PhonemeTimingEditorInput =
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "PhonemeTimingArea";
+      readonly pointerEvent: PointerEvent;
+      readonly positionX: number;
+    }
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "Window";
+      readonly pointerEvent: PointerEvent;
+      readonly positionX: number;
+    };
+
+export type PhonemeTimingEditorPreviewMode =
+  | "IDLE"
+  | "MOVE_PHONEME_TIMING"
+  | "ERASE_PHONEME_TIMING";
+
+export type PhonemeTimingEditorRefs = {
+  readonly previewPhonemeTiming: Ref<PhonemeTimingPreview | undefined>;
+  readonly previewMode: Ref<PhonemeTimingEditorPreviewMode>;
+  readonly cursorState: Ref<CursorState>;
+};
+
+export type PhonemeTimingEditorComputedRefs = {
+  readonly selectedTrackId: ComputedRef<TrackId>;
+  readonly tempos: ComputedRef<Tempo[]>;
+  readonly tpqn: ComputedRef<number>;
+  readonly viewportInfo: ComputedRef<ViewportInfo>;
+  readonly phonemeTimingEditData: ComputedRef<PhonemeTimingEditData>;
+  readonly editorFrameRate: ComputedRef<number>;
+  readonly phonemeTimingInfos: ComputedRef<PhonemeTimingInfo[]>;
+  readonly phraseInfos: ComputedRef<Map<PhraseKey, PhraseInfo>>;
+};
+
+export type PhonemeTimingEditorPartialStore = {
+  readonly state: Pick<
+    Store["state"],
+    | "tpqn"
+    | "tempos"
+    | "phrases"
+    | "phraseQueries"
+    | "editorFrameRate"
+    | "sequencerPhonemeTimingTool"
+  >;
+  readonly getters: Pick<
+    Store["getters"],
+    "SELECTED_TRACK_ID" | "SELECTED_TRACK"
+  >;
+  readonly actions: Pick<
+    Store["actions"],
+    "COMMAND_UPSERT_PHONEME_TIMING_EDIT" | "COMMAND_ERASE_PHONEME_TIMING_EDITS"
+  >;
+};
+
+export type PhonemeTimingEditorContext = PhonemeTimingEditorRefs &
+  PhonemeTimingEditorComputedRefs & {
+    readonly store: PhonemeTimingEditorPartialStore;
+  };
+
+export type PhonemeTimingEditorIdleStateId =
+  | "movePhonemeTimingToolIdle"
+  | "erasePhonemeTimingToolIdle";
+
+export type PhonemeTimingEditorStateDefinitions = StateDefinitions<
+  [
+    {
+      id: "movePhonemeTimingToolIdle";
+      factoryArgs: undefined;
+    },
+    {
+      id: "movePhonemeTiming";
+      factoryArgs: {
+        targetTrackId: TrackId;
+        noteId: NoteId;
+        phonemeIndexInNote: number;
+        startPositionX: number;
+        returnStateId: PhonemeTimingEditorIdleStateId;
+      };
+    },
+    {
+      id: "erasePhonemeTimingToolIdle";
+      factoryArgs: undefined;
+    },
+    {
+      id: "erasePhonemeTiming";
+      factoryArgs: {
+        targetTrackId: TrackId;
+        startPositionX: number;
+        returnStateId: PhonemeTimingEditorIdleStateId;
+      };
+    },
+  ]
+>;
 
 /**
  * 指定トラックのフレーズ情報を取得する。
@@ -62,7 +172,6 @@ export function getPhraseInfosForTrack(
     phraseInfos.set(phraseKey, {
       startTime: phrase.startTime,
       query,
-      notes: phrase.notes,
       minNonPauseStartFrame: phrase.minNonPauseStartFrame,
       maxNonPauseEndFrame: phrase.maxNonPauseEndFrame,
     });

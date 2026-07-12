@@ -14,9 +14,12 @@ import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
 import { clamp, getNext } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { UnreachableError, assertNonNullable } from "@/type/utility";
-import type { PhonemeTimingInfo } from "@/sing/phonemeTimingEditorStateMachine/common";
+import type {
+  PhonemeTimingPreview,
+  PhonemeTimingInfo,
+} from "@/sing/phonemeTimingEditorStateMachine/common";
 
-type PhonemeDisplayState = "default" | "edited";
+type PhonemeDisplayState = "default" | "edited" | "movePreview";
 
 type PhonemeDisplayInfo = {
   readonly phoneme: string;
@@ -26,6 +29,7 @@ type PhonemeDisplayInfo = {
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
+  previewPhonemeTiming?: PhonemeTimingPreview;
   phonemeTimingInfos: PhonemeTimingInfo[];
   phonemeTextY: number;
 }>();
@@ -34,6 +38,7 @@ const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const isDark = computed(() => store.state.currentTheme === "Dark");
 const tempos = computed(() => store.state.tempos);
+const previewPhonemeTiming = computed(() => props.previewPhonemeTiming);
 const phonemeTimingInfos = computed(() => props.phonemeTimingInfos);
 const editorFrameRate = computed(() => store.state.editorFrameRate);
 
@@ -45,10 +50,12 @@ const phonemeTimingLineStyles: Record<
   light: {
     default: { color: 0x8bc796, alpha: 1, width: 1 },
     edited: { color: 0x00a73f, alpha: 1, width: 2 },
+    movePreview: { color: 0x3d7eff, alpha: 1, width: 2 },
   },
   dark: {
     default: { color: 0x547359, alpha: 1, width: 1 },
     edited: { color: 0x28a652, alpha: 1, width: 2 },
+    movePreview: { color: 0x699ff0, alpha: 1, width: 2 },
   },
 };
 
@@ -99,6 +106,7 @@ const render = () => {
 
   const rawTempos = toRaw(tempos.value);
   const rawPhonemeTimingInfos = toRaw(phonemeTimingInfos.value);
+  const preview = previewPhonemeTiming.value;
   const viewportInfo = props.viewportInfo;
   const editorFrameRateValue = editorFrameRate.value;
   const oneFrameSeconds = 1 / editorFrameRateValue;
@@ -130,11 +138,35 @@ const render = () => {
       continue;
     }
 
-    const startTime = phonemeTimingInfo.editedStartTimeSeconds;
+    const isMovePreview =
+      preview?.type === "move" &&
+      preview.noteId === phonemeTimingInfo.noteId &&
+      preview.phonemeIndexInNote === phonemeTimingInfo.phonemeIndexInNote;
+    const isErasePreview =
+      preview?.type === "erase" &&
+      preview.targets.some(
+        (target) =>
+          target.noteId === phonemeTimingInfo.noteId &&
+          target.phonemeIndexInNote === phonemeTimingInfo.phonemeIndexInNote,
+      );
 
-    const displayState: PhonemeDisplayState = phonemeTimingInfo.isEdited
-      ? "edited"
-      : "default";
+    // 削除プレビュー中は元の位置、移動プレビュー中は元の位置にオフセットを加えた位置、それ以外は編集後の位置を使う
+    let startTime: number;
+    if (isErasePreview) {
+      startTime = phonemeTimingInfo.originalStartTimeSeconds;
+    } else if (isMovePreview) {
+      startTime =
+        phonemeTimingInfo.originalStartTimeSeconds + preview.offsetSeconds;
+    } else {
+      startTime = phonemeTimingInfo.editedStartTimeSeconds;
+    }
+
+    let displayState: PhonemeDisplayState = "default";
+    if (isMovePreview) {
+      displayState = "movePreview";
+    } else if (phonemeTimingInfo.isEdited && !isErasePreview) {
+      displayState = "edited";
+    }
 
     phonemeDisplayInfos.push({
       phoneme: phonemeTimingInfo.phoneme,
@@ -322,6 +354,7 @@ watch(
   [
     mounted,
     phonemeTimingInfos,
+    previewPhonemeTiming,
     tempos,
     tpqn,
     editorFrameRate,
