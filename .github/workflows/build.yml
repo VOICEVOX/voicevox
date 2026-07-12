@@ -304,46 +304,6 @@ jobs:
           SIGNTOOL_PATH_PATH: /tmp/signtool_path.txt
 
       # Build result will be exported to ${{ matrix.artifact_path }}
-      - name: Build Engineless Electron
-        env:
-          NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
-          LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
-          LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
-          MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
-
-          # https://github.com/electron-userland/electron-builder/issues/3179
-          USE_HARD_LINKS: false
-        run: pnpm run electron:build
-
-      - name: Reset Code Signing Envs
-        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
-        run: |
-          bash tools/codesign_cleanup.bash
-          echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
-          echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
-          echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
-        env:
-          THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
-
-      - name: Define Code Signing Envs
-        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
-        run: |
-          bash tools/codesign_setup.bash
-          THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
-          SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
-          echo "::add-mask::$THUMBPRINT"
-
-          echo "WIN_CERTIFICATE_SHA1=$THUMBPRINT" >> $GITHUB_ENV
-          echo 'WIN_SIGNING_HASH_ALGORITHMS=["sha256"]' >> $GITHUB_ENV
-          echo "SIGNTOOL_PATH=$SIGNTOOL_PATH" >> $GITHUB_ENV
-        env:
-          ESIGNERCKA_USERNAME: ${{ secrets.ESIGNERCKA_USERNAME }}
-          ESIGNERCKA_PASSWORD: ${{ secrets.ESIGNERCKA_PASSWORD }}
-          ESIGNERCKA_TOTP_SECRET: ${{ secrets.ESIGNERCKA_TOTP_SECRET }}
-          THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
-          SIGNTOOL_PATH_PATH: /tmp/signtool_path.txt
-
-      # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
         env:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
