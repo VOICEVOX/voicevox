@@ -275,7 +275,7 @@ jobs:
             pnpm run license:merge -o public/licenses.json -i public/licenses.json -i voicevox_engine/licenses.json
           fi
 
-      - name: Overwrite .env.production for installler
+      - name: Overwrite .env.production for installer
         run: |
           cp ./build/${{ matrix.env }} .env.production
 
