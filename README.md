@@ -63,7 +63,7 @@ pnpm run setup-agents
 
 ### エンジンの準備
 
-`.env.production`をコピーして`.env`を作成し、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に
+`.env.example`をコピーして`.env`を作成し、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) 内の`vv-engine/run.exe`を指定すれば動きます。
 
 Windows でインストール先を変更していない場合は`%LOCALAPPDATA%/Programs/VOICEVOX/vv-engine/run.exe`を指定してください。  
