@@ -797,16 +797,12 @@ const refreshEffectiveVolumeSegments = () => {
   );
   for (const [i] of effectiveFramewise.entries()) {
     const edited = editFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
-    // TODO: 後続PRの相対編集化で実効値の導出処理を置き換える際に、getOriginalValueFromFramewiseとの重複を解消する。
-    const original = originalFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
     if (edited !== VALUE_INDICATING_NO_DATA) {
-      effectiveFramewise[i] =
-        volumeEditMode.toEffectiveValue(
-          edited,
-          original === VALUE_INDICATING_NO_DATA ? undefined : original,
-        ) ?? VALUE_INDICATING_NO_DATA;
+      // NOTE: 再生結果と一致させるため、applyVolumeEditと同じ規則で0以上にクランプする
+      effectiveFramewise[i] = Math.max(edited, 0);
     } else {
-      effectiveFramewise[i] = original;
+      effectiveFramewise[i] =
+        originalFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
     }
   }
 

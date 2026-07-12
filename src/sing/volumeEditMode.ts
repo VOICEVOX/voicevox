@@ -5,9 +5,14 @@ import {
 } from "@/sing/volumeValueScale";
 
 /**
- * ボリューム編集値の解釈を定義する。
- * 相対値編集を追加する場合はこの実装を差し替える。
- * 表示と合成が同じ実装を参照するため、表示と再生結果はズレない。
+ * ボリューム編集の入力と表示の定義。
+ * UI上でポインタが示すdBはここで編集値へ変換されてvolumeEditDataに保存され、
+ * 合成時にapplyVolumeEditがエンジンに渡すクエリのボリュームへ適用する。
+ * VolumeEditModeが扱うのはこの流れの前半、入力の変換と表示スケールのみ。
+ * 合成処理が編集UIの実装に依存しないよう、この型を合成側へは渡さない。
+ *
+ * TODO: 後続PRで編集値の意味を「元のボリューム（エンジン出力）に掛ける倍率」へ
+ * 変更し、toStoredValueの変換とapplyVolumeEditの適用を差し替える。
  */
 export type VolumeEditMode = {
   /**
@@ -17,20 +22,12 @@ export type VolumeEditMode = {
   valueScale: VolumeValueScale;
   /** エディタ上のポインタ位置が示すdBを、volumeEditDataに保存する編集値へ変換する。 */
   toStoredValue: (db: number) => number;
-  /**
-   * 編集値と元のボリュームから、実際に適用する実ボリュームを計算する。
-   * 実ボリュームが定まらない場合（元のボリュームを必要とするモードでoriginalValueがない場合）はundefinedを返す。
-   * originalValueにVALUE_INDICATING_NO_DATAは渡さず、呼び出し側でundefinedに変換すること。
-   */
-  toEffectiveValue: (
-    editValue: number,
-    originalValue: number | undefined,
-  ) => number | undefined;
 };
 
 /**
- * 絶対値編集
- * 編集値はlinear volumeそのものとして保存され、元のボリュームに依存せずそのまま適用される
+ * 絶対値編集：描いた形状がそのまま最終的なボリュームになる方式。
+ * ポインタが示すdBを振幅へ変換して編集値とする。
+ * クエリのボリュームと同じ単位なので、適用時は変換なしで置き換えられる。
  */
 export const absoluteVolumeEditMode: VolumeEditMode = {
   valueScale: absoluteVolumeValueScale,
@@ -40,6 +37,4 @@ export const absoluteVolumeEditMode: VolumeEditMode = {
     }
     return decibelToLinear(db);
   },
-  // NOTE: 編集結果が負値になるケースに備えて0以上にクランプする
-  toEffectiveValue: (editValue) => Math.max(editValue, 0),
 };

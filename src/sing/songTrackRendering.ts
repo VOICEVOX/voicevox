@@ -29,7 +29,6 @@ import {
   selectPriorPhrase,
   getDefaultLyric,
 } from "@/sing/domain";
-import { absoluteVolumeEditMode } from "@/sing/volumeEditMode";
 import type { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import type { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
@@ -776,7 +775,6 @@ const generateSingingVoiceSource = (
     snapshot.editorFrameRate,
     phrase.minNonPauseStartFrame,
     phrase.maxNonPauseEndFrame,
-    absoluteVolumeEditMode,
   );
 
   shiftVolume(clonedQuery.volume, track.volumeRangeAdjustment);

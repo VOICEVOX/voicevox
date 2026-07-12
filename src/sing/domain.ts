@@ -22,7 +22,6 @@ import type {
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import { ExhaustiveError } from "@/type/utility";
 import { getRepresentableNoteTypes, isValidNotes } from "@/sing/music";
-import type { VolumeEditMode } from "@/sing/volumeEditMode";
 
 const MAX_SNAP_TYPE = 32;
 
@@ -627,6 +626,18 @@ export function applyPitchEdit(
   }
 }
 
+/**
+ * ユーザーによるボリューム編集データを、クエリのvolumeに適用する。
+ * 編集値が保存されているフレームのみ、元のボリュームを編集値で置き換える。
+ * 音声が不自然になるのを防ぐため、隣接フレーズ境界のpau区間には適用しない。
+ *
+ * @param phraseQuery - 適用対象のクエリ
+ * @param phraseStartTime - フレーズの開始時刻（秒）
+ * @param volumeEditData - ユーザーが編集したボリュームデータの配列
+ * @param editorFrameRate - エディターのフレームレート
+ * @param minNonPauseStartFrame - 適用してよい非pau区間の開始フレーム（フレーズ先頭からのフレーム数）。undefinedなら制限しない
+ * @param maxNonPauseEndFrame - 適用してよい非pau区間の終了フレーム（フレーズ先頭からのフレーム数）。undefinedなら制限しない
+ */
 export function applyVolumeEdit(
   phraseQuery: EditorFrameAudioQuery,
   phraseStartTime: number,
@@ -634,7 +645,6 @@ export function applyVolumeEdit(
   editorFrameRate: number,
   minNonPauseStartFrame: number | undefined,
   maxNonPauseEndFrame: number | undefined,
-  volumeEditMode: VolumeEditMode,
 ) {
   if (phraseQuery.frameRate !== editorFrameRate) {
     throw new Error(
@@ -666,15 +676,8 @@ export function applyVolumeEdit(
       continue;
     }
     const indexInPhrase = i - phraseQueryStartFrame;
-    const effectiveVolume = volumeEditMode.toEffectiveValue(
-      editedVolume,
-      volume[indexInPhrase],
-    );
-    // 実効値が定まらないフレームは元のボリュームを維持する
-    if (effectiveVolume == undefined) {
-      continue;
-    }
-    volume[indexInPhrase] = effectiveVolume;
+    // NOTE: 編集結果が負値になるケースに備えて0以上にクランプする
+    volume[indexInPhrase] = Math.max(editedVolume, 0);
   }
 }
 
