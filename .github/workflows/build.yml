@@ -95,7 +95,7 @@ jobs:
             compressed_artifact_name: voicevox-linux-nvidia
             installer_artifact_name: linux-nvidia-appimage
             linux_artifact_name: "VOICEVOX-CUDA.${ext}"
-            linux_executable_name: voicevox-cuda
+            linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX-CUDA.AppImage
             os: ubuntu-22.04
             env: .env.embed-engine.linux
