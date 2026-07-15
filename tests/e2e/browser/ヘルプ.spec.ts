@@ -31,11 +31,11 @@ test("「ヘルプ」メニューから各項目をクリックすると、そ�
   await expect(page.getByText("ヘルプ / 開発コミュニティ")).toBeVisible();
 
   // ライセンス情報
-  await page.getByText("ライセンス情報", { exact: true }).click();
+  await page.getByText("ライセンス情報").first().click();
   await expect(page.getByText("ヘルプ / ライセンス情報")).toBeVisible();
 
   // アップデート情報
-  await page.getByText("アップデート情報", { exact: true }).click();
+  await page.getByText("アップデート情報").first().click();
   await expect(page.getByText("ヘルプ / アップデート情報")).toBeVisible();
 
   // よくあるご質問
