@@ -1,11 +1,6 @@
 <template>
-  <QDialog
-    v-model="dialogOpened"
-    maximized
-    transitionShow="jump-up"
-    transitionHide="jump-down"
-    class="help-dialog transparent-backdrop"
-  >
+  <QDialog v-model="dialogOpened" maximized transitionShow="jump-up" transitionHide="jump-down"
+    class="help-dialog transparent-backdrop">
     <QLayout container view="hHh Lpr lff">
       <QPageContainer>
         <QHeader class="q-pa-sm">
@@ -15,35 +10,19 @@
               {{ selectedPage.parent ? selectedPage.parent + " / " : ""
               }}{{ selectedPage.name }}
             </QToolbarTitle>
-            <QBtn
-              v-if="selectedPage.shouldShowOpenLogDirectoryButton"
-              unelevated
-              color="toolbar-button"
-              textColor="toolbar-button-display"
-              class="text-no-wrap text-bold q-mr-sm"
-              @click="openLogDirectory"
-            >
+            <QBtn v-if="selectedPage.shouldShowOpenLogDirectoryButton" unelevated color="toolbar-button"
+              textColor="toolbar-button-display" class="text-no-wrap text-bold q-mr-sm" @click="openLogDirectory">
               ログフォルダを開く
             </QBtn>
             <!-- close button -->
-            <QBtn
-              round
-              flat
-              icon="close"
-              color="display"
-              aria-label="ヘルプを閉じる"
-              @click="dialogOpened = false"
-            />
+            <QBtn round flat icon="close" color="display" aria-label="ヘルプを閉じる" @click="dialogOpened = false" />
           </QToolbar>
         </QHeader>
         <BaseNavigationView>
           <template #sidebar>
             <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
-              <BaseListItem
-                v-if="page.type === 'item'"
-                :selected="selectedPageIndex === pageIndex"
-                @click="selectedPageIndex = pageIndex"
-              >
+              <BaseListItem v-if="page.type === 'item'" :selected="selectedPageIndex === pageIndex"
+                @click="selectedPageIndex = pageIndex">
                 {{ page.name }}
               </BaseListItem>
               <div v-else-if="page.type === 'separator'" class="list-label">
@@ -52,17 +31,8 @@
             </template>
           </template>
           <QTabPanels v-model="selectedPageIndex">
-            <QTabPanel
-              v-for="(page, pageIndex) of pagedata"
-              :key="pageIndex"
-              :name="pageIndex"
-              class="q-pa-none"
-            >
-              <Component
-                :is="page.component"
-                v-if="page.type === 'item'"
-                v-bind="page.props"
-              />
+            <QTabPanel v-for="(page, pageIndex) of pagedata" :key="pageIndex" :name="pageIndex" class="q-pa-none">
+              <Component :is="page.component" v-if="page.type === 'item'" v-bind="page.props" />
             </QTabPanel>
           </QTabPanels>
         </BaseNavigationView>
@@ -189,13 +159,13 @@ const pagedata = computed(() => {
         updateInfos: updateInfos.value,
         ...(newUpdateResult.value.status == "updateAvailable"
           ? {
-              isUpdateAvailable: true,
-              latestVersion: newUpdateResult.value.latestVersion,
-            }
+            isUpdateAvailable: true,
+            latestVersion: newUpdateResult.value.latestVersion,
+          }
           : {
-              isUpdateAvailable: false,
-              latestVersion: "",
-            }),
+            isUpdateAvailable: false,
+            latestVersion: "",
+          }),
       },
     },
     {
@@ -216,52 +186,49 @@ const pagedata = computed(() => {
       shouldShowOpenLogDirectoryButton: true,
     },
   ];
-  // エンジンが一つだけの場合は従来の表示のみ
-  if (store.state.engineIds.length > 1) {
-    for (const id of store.getters.GET_SORTED_ENGINE_INFOS.map((m) => m.uuid)) {
-      const manifest = store.state.engineManifests[id];
-      if (!manifest) {
-        warn(`manifest not found: ${id}`);
-        continue;
-      }
-
-      data.push(
-        {
-          type: "separator",
-          name: manifest.name,
-        },
-        {
-          type: "item",
-          name: "利用規約",
-          parent: manifest.name,
-          component: MarkdownView,
-          props: {
-            markdown: manifest.termsOfService,
-          },
-        },
-        {
-          type: "item",
-          name: "ライセンス情報",
-          parent: manifest.name,
-          component: OssLicense,
-          props: {
-            licenses: manifest.dependencyLicenses,
-          },
-        },
-        {
-          type: "item",
-          name: "アップデート情報",
-          parent: manifest.name,
-          component: UpdateInfo,
-          props: {
-            updateInfos: manifest.updateInfos,
-            // TODO: エンジン側で最新バージョンチェックAPIが出来たら実装する。
-            //       https://github.com/VOICEVOX/voicevox_engine/issues/476
-            isUpdateAvailable: false,
-          },
-        },
-      );
+  for (const id of store.getters.GET_SORTED_ENGINE_INFOS.map((m) => m.uuid)) {
+    const manifest = store.state.engineManifests[id];
+    if (!manifest) {
+      warn(`manifest not found: ${id}`);
+      continue;
     }
+
+    data.push(
+      {
+        type: "separator",
+        name: manifest.name,
+      },
+      {
+        type: "item",
+        name: "利用規約",
+        parent: manifest.name,
+        component: MarkdownView,
+        props: {
+          markdown: manifest.termsOfService,
+        },
+      },
+      {
+        type: "item",
+        name: "ライセンス情報",
+        parent: manifest.name,
+        component: OssLicense,
+        props: {
+          licenses: manifest.dependencyLicenses,
+        },
+      },
+      {
+        type: "item",
+        name: "アップデート情報",
+        parent: manifest.name,
+        component: UpdateInfo,
+        props: {
+          updateInfos: manifest.updateInfos,
+          // TODO: エンジン側で最新バージョンチェックAPIが出来たら実装する。
+          //       https://github.com/VOICEVOX/voicevox_engine/issues/476
+          isUpdateAvailable: false,
+        },
+      },
+    );
   }
   return data;
 });
@@ -291,6 +258,7 @@ const openLogDirectory = () => window.backend.openLogDirectory();
 
 .help-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
+
   .scroll {
     left: unset !important;
     right: unset !important;
