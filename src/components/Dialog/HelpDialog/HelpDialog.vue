@@ -1,6 +1,11 @@
 <template>
-  <QDialog v-model="dialogOpened" maximized transitionShow="jump-up" transitionHide="jump-down"
-    class="help-dialog transparent-backdrop">
+  <QDialog
+    v-model="dialogOpened"
+    maximized
+    transitionShow="jump-up"
+    transitionHide="jump-down"
+    class="help-dialog transparent-backdrop"
+  >
     <QLayout container view="hHh Lpr lff">
       <QPageContainer>
         <QHeader class="q-pa-sm">
@@ -10,19 +15,35 @@
               {{ selectedPage.parent ? selectedPage.parent + " / " : ""
               }}{{ selectedPage.name }}
             </QToolbarTitle>
-            <QBtn v-if="selectedPage.shouldShowOpenLogDirectoryButton" unelevated color="toolbar-button"
-              textColor="toolbar-button-display" class="text-no-wrap text-bold q-mr-sm" @click="openLogDirectory">
+            <QBtn
+              v-if="selectedPage.shouldShowOpenLogDirectoryButton"
+              unelevated
+              color="toolbar-button"
+              textColor="toolbar-button-display"
+              class="text-no-wrap text-bold q-mr-sm"
+              @click="openLogDirectory"
+            >
               ログフォルダを開く
             </QBtn>
             <!-- close button -->
-            <QBtn round flat icon="close" color="display" aria-label="ヘルプを閉じる" @click="dialogOpened = false" />
+            <QBtn
+              round
+              flat
+              icon="close"
+              color="display"
+              aria-label="ヘルプを閉じる"
+              @click="dialogOpened = false"
+            />
           </QToolbar>
         </QHeader>
         <BaseNavigationView>
           <template #sidebar>
             <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
-              <BaseListItem v-if="page.type === 'item'" :selected="selectedPageIndex === pageIndex"
-                @click="selectedPageIndex = pageIndex">
+              <BaseListItem
+                v-if="page.type === 'item'"
+                :selected="selectedPageIndex === pageIndex"
+                @click="selectedPageIndex = pageIndex"
+              >
                 {{ page.name }}
               </BaseListItem>
               <div v-else-if="page.type === 'separator'" class="list-label">
@@ -31,8 +52,17 @@
             </template>
           </template>
           <QTabPanels v-model="selectedPageIndex">
-            <QTabPanel v-for="(page, pageIndex) of pagedata" :key="pageIndex" :name="pageIndex" class="q-pa-none">
-              <Component :is="page.component" v-if="page.type === 'item'" v-bind="page.props" />
+            <QTabPanel
+              v-for="(page, pageIndex) of pagedata"
+              :key="pageIndex"
+              :name="pageIndex"
+              class="q-pa-none"
+            >
+              <Component
+                :is="page.component"
+                v-if="page.type === 'item'"
+                v-bind="page.props"
+              />
             </QTabPanel>
           </QTabPanels>
         </BaseNavigationView>
@@ -159,13 +189,13 @@ const pagedata = computed(() => {
         updateInfos: updateInfos.value,
         ...(newUpdateResult.value.status == "updateAvailable"
           ? {
-            isUpdateAvailable: true,
-            latestVersion: newUpdateResult.value.latestVersion,
-          }
+              isUpdateAvailable: true,
+              latestVersion: newUpdateResult.value.latestVersion,
+            }
           : {
-            isUpdateAvailable: false,
-            latestVersion: "",
-          }),
+              isUpdateAvailable: false,
+              latestVersion: "",
+            }),
       },
     },
     {
