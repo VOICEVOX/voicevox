@@ -1,4 +1,4 @@
-import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
+import type { VolumeAdjustmentValue } from "@/domain/project/type";
 
 export type VolumeEditableFrameRange = {
   readonly startFrame: number;
@@ -10,8 +10,8 @@ export type VolumeEditFrameRange = {
   endFrame: number;
 };
 
-export type FramewiseVolumeData = {
-  readonly values: readonly number[];
+export type FramewiseVolumeAdjustmentData = {
+  readonly values: readonly VolumeAdjustmentValue[];
   readonly startFrame: number;
 };
 
@@ -79,14 +79,14 @@ export const getOverlappingVolumeEditableFrameRanges = (
 };
 
 /**
- * 編集可能区間外のデータを VALUE_INDICATING_NO_DATA で埋めた新しい配列を返す。
+ * 編集可能区間外の変更量をnullで埋めた新しい配列を返す。
  */
-export const maskVolumeEditDataByEditableRanges = (
-  data: FramewiseVolumeData,
+export const maskVolumeAdjustmentDataByEditableRanges = (
+  data: FramewiseVolumeAdjustmentData,
   ranges: readonly VolumeEditableFrameRange[],
 ) => {
-  const masked = new Array<number>(data.values.length).fill(
-    VALUE_INDICATING_NO_DATA,
+  const masked = new Array<VolumeAdjustmentValue>(data.values.length).fill(
+    null,
   );
   for (const overlap of getOverlappingVolumeEditableFrameRanges(
     data.startFrame,
@@ -102,7 +102,9 @@ export const maskVolumeEditDataByEditableRanges = (
   return masked;
 };
 
-/** データ配列中の有効な編集データ点数（VALUE_INDICATING_NO_DATA でない要素数）を返す。 */
-export const countVolumeEditDataPoints = (data: readonly number[]) => {
-  return data.filter((value) => value !== VALUE_INDICATING_NO_DATA).length;
+/** データ配列中の有効なボリューム変更量の数を返す。 */
+export const countVolumeAdjustmentDataPoints = (
+  data: readonly VolumeAdjustmentValue[],
+) => {
+  return data.filter((value) => value !== null).length;
 };

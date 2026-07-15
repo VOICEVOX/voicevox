@@ -18,10 +18,12 @@ import type {
   Tempo,
   TimeSignature,
   Track,
+  VolumeAdjustmentValue,
 } from "@/domain/project/type";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import { ExhaustiveError } from "@/type/utility";
 import { getRepresentableNoteTypes, isValidNotes } from "@/sing/music";
+import { decibelToLinear } from "@/sing/audio";
 
 const MAX_SNAP_TYPE = 32;
 
@@ -90,7 +92,7 @@ export function createDefaultTrack(): Track {
     volumeRangeAdjustment: 0,
     notes: [],
     pitchEditData: [],
-    volumeEditData: [],
+    volumeAdjustmentData: [],
     phonemeTimingEditData: new Map(),
 
     solo: false,
@@ -134,11 +136,11 @@ export function isValidPitchEditData(pitchEditData: number[]) {
   );
 }
 
-export function isValidVolumeEditData(volumeEditData: number[]) {
-  return volumeEditData.every(
-    (value) =>
-      value === VALUE_INDICATING_NO_DATA ||
-      (Number.isFinite(value) && value > 0),
+export function isValidVolumeAdjustmentData(
+  volumeAdjustmentData: VolumeAdjustmentValue[],
+) {
+  return volumeAdjustmentData.every(
+    (value) => value == null || Number.isFinite(value),
   );
 }
 
@@ -626,13 +628,13 @@ export function applyPitchEdit(
 }
 
 /**
- * ユーザーによるボリューム編集データを、クエリのvolumeに適用する。
- * 編集値が保存されているフレームのみ、元のボリュームを編集値で置き換える。
+ * ユーザーによるボリューム変更量を、クエリのvolumeに適用する。
+ * 変更量が保存されているフレームのみ、元のボリュームへdB変化量を適用する。
  * 音声が不自然になるのを防ぐため、隣接フレーズ境界のpau区間には適用しない。
  *
  * @param phraseQuery - 適用対象のクエリ
  * @param phraseStartTime - フレーズの開始時刻（秒）
- * @param volumeEditData - ユーザーが編集したボリュームデータの配列
+ * @param volumeAdjustmentData - ユーザーが編集したボリューム変更量（dB）の配列
  * @param editorFrameRate - エディターのフレームレート
  * @param minNonPauseStartFrame - 適用してよい非pau区間の開始フレーム（フレーズ先頭からのフレーム数）。undefinedなら制限しない
  * @param maxNonPauseEndFrame - 適用してよい非pau区間の終了フレーム（フレーズ先頭からのフレーム数）。undefinedなら制限しない
@@ -640,7 +642,7 @@ export function applyPitchEdit(
 export function applyVolumeEdit(
   phraseQuery: EditorFrameAudioQuery,
   phraseStartTime: number,
-  volumeEditData: number[],
+  volumeAdjustmentData: VolumeAdjustmentValue[],
   editorFrameRate: number,
   minNonPauseStartFrame: number | undefined,
   maxNonPauseEndFrame: number | undefined,
@@ -665,16 +667,16 @@ export function applyVolumeEdit(
     phraseQueryStartFrame + (minNonPauseStartFrame ?? 0),
   );
   const endFrame = Math.min(
-    volumeEditData.length,
+    volumeAdjustmentData.length,
     phraseQueryStartFrame + (maxNonPauseEndFrame ?? phraseQueryFrameLength),
     phraseQueryEndFrame,
   );
   for (let i = startFrame; i < endFrame; i++) {
-    const editedVolume = volumeEditData[i];
-    if (editedVolume === VALUE_INDICATING_NO_DATA) {
+    const volumeAdjustmentDb = volumeAdjustmentData[i];
+    if (volumeAdjustmentDb == null) {
       continue;
     }
-    volume[i - phraseQueryStartFrame] *= editedVolume;
+    volume[i - phraseQueryStartFrame] *= decibelToLinear(volumeAdjustmentDb);
   }
 }
 

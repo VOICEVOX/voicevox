@@ -67,7 +67,6 @@ import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateM
 import { useMounted } from "@/composables/useMounted";
 import { Mutex } from "@/helpers/mutex";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import { secondToTick, tickToSecond } from "@/sing/music";
 import { clamp } from "@/sing/utility";
 import { baseXToTick, tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
@@ -93,7 +92,7 @@ import type { Color } from "@/sing/graphics/lineStrip";
 import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 import {
   getOverlappingVolumeEditableFrameRanges,
-  maskVolumeEditDataByEditableRanges,
+  maskVolumeAdjustmentDataByEditableRanges,
   mergeVolumeEditableFrameRanges,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
@@ -248,7 +247,7 @@ let isUnmounted = false;
 let viewportRectCache:
   | { left: number; top: number; width: number; height: number }
   | undefined;
-// NOTE: 編集データ（倍率）のセグメントデータ。
+// NOTE: ボリューム変更量（dB）のセグメントデータ。
 // リアクティビティは不要なため（renderInNextFrame経由で描画される）、refではなくplain変数で管理する。
 let volumeEditSegmentsData: VolumeSegment[] = [];
 const editableFrameRanges = ref<VolumeEditableFrameRange[]>([]);
@@ -372,12 +371,12 @@ const tooltipGuideLineStyle = computed(() => {
   };
 });
 
-const buildSegments = (framewiseData: number[], frameRate: number) => {
+const buildSegments = (framewiseData: (number | null)[], frameRate: number) => {
   const segments: VolumeSegment[] = [];
   let current: VolumeSegment | undefined;
 
   for (const [frame, value] of framewiseData.entries()) {
-    if (value === VALUE_INDICATING_NO_DATA) {
+    if (value === null) {
       if (current != undefined && current.length >= 2) {
         segments.push(current);
       }
@@ -389,8 +388,7 @@ const buildSegments = (framewiseData: number[], frameRate: number) => {
     if (!Number.isFinite(baseX)) {
       throw new Error("baseX must be finite.");
     }
-    const db = volumeValueScale.valueToDb(value);
-    const normalizedY = volumeValueScale.dbToNormalizedY(db);
+    const normalizedY = volumeValueScale.dbToNormalizedY(value);
 
     if (current == undefined) {
       current = [];
@@ -581,7 +579,7 @@ const refreshVolumeEditSegments = () => {
   const frameRate = editorFrameRate.value;
   const editableRanges = editableFrameRanges.value;
 
-  const editFramewise = [...selectedTrack.value.volumeEditData];
+  const editFramewise = [...selectedTrack.value.volumeAdjustmentData];
 
   const preview = volumePreviewEdit.value;
   if (preview != undefined) {
@@ -590,18 +588,16 @@ const refreshVolumeEditSegments = () => {
       const endFrame = startFrame + preview.data.length;
       if (editFramewise.length < endFrame) {
         editFramewise.push(
-          ...new Array(endFrame - editFramewise.length).fill(
-            VALUE_INDICATING_NO_DATA,
-          ),
+          ...new Array<null>(endFrame - editFramewise.length).fill(null),
         );
       }
       // プレビューデータを editableRanges でマスクして適用
-      const maskedPreview = maskVolumeEditDataByEditableRanges(
+      const maskedPreview = maskVolumeAdjustmentDataByEditableRanges(
         { values: preview.data, startFrame: preview.startFrame },
         editableRanges,
       );
       for (const [i, rawValue] of maskedPreview.entries()) {
-        if (rawValue === VALUE_INDICATING_NO_DATA) continue;
+        if (rawValue === null) continue;
         editFramewise[startFrame + i] =
           volumeEditMode.clampStoredValue(rawValue);
       }
@@ -611,9 +607,7 @@ const refreshVolumeEditSegments = () => {
       const end = start + preview.frameLength;
       if (editFramewise.length < end) {
         editFramewise.push(
-          ...new Array(end - editFramewise.length).fill(
-            VALUE_INDICATING_NO_DATA,
-          ),
+          ...new Array<null>(end - editFramewise.length).fill(null),
         );
       }
       const overlaps = getOverlappingVolumeEditableFrameRanges(
@@ -622,11 +616,7 @@ const refreshVolumeEditSegments = () => {
         editableRanges,
       );
       for (const overlap of overlaps) {
-        editFramewise.fill(
-          VALUE_INDICATING_NO_DATA,
-          overlap.startFrame,
-          overlap.endFrame,
-        );
+        editFramewise.fill(null, overlap.startFrame, overlap.endFrame);
       }
       previewEraseRanges.value = overlaps.map((overlap) => ({
         startBaseX: frameToBaseX(overlap.startFrame, frameRate),
@@ -639,7 +629,7 @@ const refreshVolumeEditSegments = () => {
   }
 
   // 編集不可区間の編集データを非表示にする
-  const maskedEdit = maskVolumeEditDataByEditableRanges(
+  const maskedEdit = maskVolumeAdjustmentDataByEditableRanges(
     { values: editFramewise, startFrame: 0 },
     editableRanges,
   );
@@ -812,7 +802,7 @@ watch(
 watch(
   [
     selectedTrackId,
-    () => selectedTrack.value.volumeEditData,
+    () => selectedTrack.value.volumeAdjustmentData,
     volumePreviewEdit,
   ],
   async () => {

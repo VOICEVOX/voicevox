@@ -3,7 +3,7 @@ import { store } from "@/store";
 import { NoteId, TrackId } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { createDefaultTrack, VALUE_INDICATING_NO_DATA } from "@/sing/domain";
+import { createDefaultTrack } from "@/sing/domain";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 // ノートや編集データの変更はstore.watch経由でRENDERを起動する。
@@ -300,9 +300,9 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
 describe("COMMAND_ERASE_VOLUME_EDIT_DATA", () => {
   test("複数範囲を1コマンドで削除し範囲外のデータを保持する", async () => {
     const trackId = store.state.trackOrder[0];
-    const volumeEditData = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7];
+    const volumeAdjustmentData = [-6, -3, 0, 3, 6, 9, 12];
     store.mutations.SET_VOLUME_EDIT_DATA({
-      volumeArray: volumeEditData,
+      volumeAdjustmentArray: volumeAdjustmentData,
       startFrame: 0,
       trackId,
     });
@@ -315,14 +315,14 @@ describe("COMMAND_ERASE_VOLUME_EDIT_DATA", () => {
     });
 
     const track = getOrThrow(store.state.tracks, trackId);
-    expect(track.volumeEditData).toEqual([
-      0.1,
-      VALUE_INDICATING_NO_DATA,
-      VALUE_INDICATING_NO_DATA,
-      0.4,
-      0.5,
-      VALUE_INDICATING_NO_DATA,
-      0.7,
+    expect(track.volumeAdjustmentData).toEqual([
+      -6,
+      null,
+      null,
+      3,
+      6,
+      null,
+      12,
     ]);
   });
 });
@@ -384,7 +384,7 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   // ピッチ・音量編集データ
   const sourceTrackClone = cloneWithUnwrapProxy(sourceTrack);
   sourceTrackClone.pitchEditData = [440, 442, 440];
-  sourceTrackClone.volumeEditData = [1.0, 1.2, 1.0];
+  sourceTrackClone.volumeAdjustmentData = [0, 1.2, 0];
   // 音素タイミング編集データ
   const noteId = notes[0].id;
   sourceTrackClone.phonemeTimingEditData.set(noteId, [
@@ -413,7 +413,7 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   expect(newTrack.notes[0].id).not.toBe(noteId);
   expect(newTrack.notes[0].lyric).toBe("test");
   expect(newTrack.pitchEditData).toEqual([440, 442, 440]);
-  expect(newTrack.volumeEditData).toEqual([1.0, 1.2, 1.0]);
+  expect(newTrack.volumeAdjustmentData).toEqual([0, 1.2, 0]);
 
   // 音素タイミング編集データが新しいノートIDで引き継がれているか
   const newNoteId = newTrack.notes[0].id;

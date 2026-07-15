@@ -1,6 +1,5 @@
 import { computed, ref } from "vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { decibelToLinear } from "@/sing/audio";
 import type {
   VolumeEditorContext,
   VolumeEditorPointerInfo,
@@ -26,7 +25,7 @@ describe("DrawVolumeState", () => {
 
     const context = createContext();
     const state = new DrawVolumeState({
-      startPosition: { frame: 10, value: decibelToLinear(0) },
+      startPosition: { frame: 10, value: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -48,11 +47,7 @@ describe("DrawVolumeState", () => {
     expect(context.previewVolumeEdit.value).toEqual({
       type: "draw",
       startFrame: 8,
-      data: [
-        expect.closeTo(decibelToLinear(6)),
-        expect.closeTo(decibelToLinear(3)),
-        expect.closeTo(decibelToLinear(0)),
-      ],
+      data: [6, 3, 0],
     });
   });
 });
@@ -94,9 +89,8 @@ function createContext(): VolumeEditorContext {
 
 function createPointerInfo(frame: number, db: number): VolumeEditorPointerInfo {
   return {
-    position: { frame, value: decibelToLinear(db) },
+    position: { frame, value: db },
     db,
-    isInParameterArea: true,
     x: frame * 10,
     y: 60,
   };

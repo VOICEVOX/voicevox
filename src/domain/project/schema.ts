@@ -95,7 +95,7 @@ export const trackSchema = z.object({
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
   pitchEditData: z.array(z.number()), // 値の単位はHzで、データが無いところはVALUE_INDICATING_NO_DATAの値
-  volumeEditData: z.array(z.number()), // 値は元のボリュームに掛ける倍率（正の値）、データが無いところはVALUE_INDICATING_NO_DATAの値
+  volumeAdjustmentData: z.array(z.number().nullable()), // 値は元のボリュームからのdB変化量、データが無いところはnull
   phonemeTimingEditData: z.map(noteIdSchema, z.array(phonemeTimingEditSchema)), // 音素タイミングの編集データはノートと紐づけて保持
 
   solo: z.boolean(),

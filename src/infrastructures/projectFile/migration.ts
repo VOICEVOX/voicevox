@@ -292,13 +292,13 @@ export const migrateProjectFileObject = async (
     }
   }
 
-  if (semver.satisfies(projectAppVersion, "<0.25.0", semverSatisfiesOptions)) {
-    // ボリューム編集値の追加
-    for (const trackId in projectData.song.tracks) {
-      if (projectData.song.tracks[trackId].volumeEditData == undefined) {
-        projectData.song.tracks[trackId].volumeEditData = [];
-      }
+  // ボリューム編集は未リリースのため、解釈の異なる旧形式は引き継がず変更量を初期化する。
+  for (const trackId in projectData.song.tracks) {
+    const track = projectData.song.tracks[trackId];
+    if (track.volumeAdjustmentData == undefined) {
+      track.volumeAdjustmentData = [];
     }
+    delete track.volumeEditData;
   }
 
   // Validation check

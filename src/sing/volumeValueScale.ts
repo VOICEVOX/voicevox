@@ -1,4 +1,3 @@
-import { linearToDecibel } from "@/sing/audio";
 import { clamp, round } from "@/sing/utility";
 
 /** dB軸の目盛り。ラベルと、その高さでボリューム編集レーンを横切る水平線を定義する。 */
@@ -16,7 +15,6 @@ export type VolumeValueScale = {
   gridLines: readonly DbGridLine[];
   normalizedYToDb: (normalizedY: number) => number;
   dbToNormalizedY: (db: number) => number;
-  valueToDb: (value: number) => number;
   /** ツールチップなどに表示するdB値を整形する */
   formatDbLabel: (db: number) => string;
 };
@@ -99,17 +97,6 @@ const dbToNormalizedY = (db: number) => {
   );
 };
 
-const valueToDb = (value: number) => {
-  if (!Number.isFinite(value)) {
-    throw new Error("value must be finite.");
-  }
-  if (value < 0) {
-    throw new Error("value must be greater than or equal to 0.");
-  }
-
-  return linearToDecibel(value);
-};
-
 const formatDbLabel = (db: number) => {
   const roundedDb = round(db, 1);
   const text = roundedDb.toFixed(1);
@@ -122,6 +109,5 @@ export const relativeVolumeValueScale: VolumeValueScale = {
   gridLines: RELATIVE_VOLUME_GRID_LINES,
   normalizedYToDb,
   dbToNormalizedY,
-  valueToDb,
   formatDbLabel,
 };

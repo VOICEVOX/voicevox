@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { decibelToLinear } from "@/sing/audio";
 import {
   currentVolumeEditMode,
   relativeVolumeEditMode,
@@ -19,17 +18,9 @@ describe("relativeVolumeEditMode", () => {
     expect(relativeVolumeEditMode.valueScale).toBe(relativeVolumeValueScale);
   });
 
-  it("dBオフセットを保存値の倍率に変換する", () => {
-    expect(relativeVolumeEditMode.toStoredValue(0)).toBe(1);
-    expect(relativeVolumeEditMode.toStoredValue(-6)).toBeCloseTo(
-      decibelToLinear(-6),
-    );
-  });
-
-  it("保存値は常に正になり、データなしを示す値と衝突しない", () => {
-    expect(
-      relativeVolumeEditMode.toStoredValue(RELATIVE_VOLUME_MIN_DB),
-    ).toBeGreaterThan(0);
+  it("dBオフセットをそのまま保存値にする", () => {
+    expect(relativeVolumeEditMode.toStoredValue(0)).toBe(0);
+    expect(relativeVolumeEditMode.toStoredValue(-6)).toBe(-6);
   });
 
   it("非有限のdBはエラーにする", () => {
@@ -38,24 +29,18 @@ describe("relativeVolumeEditMode", () => {
     );
   });
   it("保存値をスケール範囲内にクランプする", () => {
-    expect(relativeVolumeEditMode.clampStoredValue(100)).toBeCloseTo(
-      decibelToLinear(RELATIVE_VOLUME_MAX_DB),
+    expect(relativeVolumeEditMode.clampStoredValue(100)).toBe(
+      RELATIVE_VOLUME_MAX_DB,
     );
-    expect(relativeVolumeEditMode.clampStoredValue(0.001)).toBeCloseTo(
-      decibelToLinear(RELATIVE_VOLUME_MIN_DB),
+    expect(relativeVolumeEditMode.clampStoredValue(-100)).toBe(
+      RELATIVE_VOLUME_MIN_DB,
     );
-    expect(relativeVolumeEditMode.clampStoredValue(1)).toBe(1);
+    expect(relativeVolumeEditMode.clampStoredValue(0)).toBe(0);
   });
 
-  it("保存値の間をdB空間で線形補間する", () => {
-    expect(
-      relativeVolumeEditMode.interpolateStoredValues(
-        0,
-        decibelToLinear(-6),
-        2,
-        decibelToLinear(0),
-        1,
-      ),
-    ).toBeCloseTo(decibelToLinear(-3));
+  it("dB変更量を線形補間する", () => {
+    expect(relativeVolumeEditMode.interpolateStoredValues(0, -6, 2, 0, 1)).toBe(
+      -3,
+    );
   });
 });
