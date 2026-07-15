@@ -64,7 +64,7 @@ describe("DrawVolumeState", () => {
 
     const context = createContext();
     const state = new DrawVolumeState({
-      startPosition: { frame: 10, value: decibelToLinear(3) },
+      startPosition: { frame: 10, value: 3 },
       startTooltipData: { db: 3, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -90,11 +90,7 @@ describe("DrawVolumeState", () => {
     expect(context.previewVolumeEdit.value).toEqual({
       type: "draw",
       startFrame: 10,
-      data: [
-        expect.closeTo(decibelToLinear(3)),
-        expect.closeTo(decibelToLinear(3)),
-        expect.closeTo(decibelToLinear(3)),
-      ],
+      data: [3, 3, 3],
     });
     expect(context.tooltipData.value).toEqual({
       db: 3,
@@ -112,7 +108,7 @@ describe("DrawVolumeState", () => {
 
     const context = createContext();
     const state = new DrawVolumeState({
-      startPosition: { frame: 10, value: decibelToLinear(0) },
+      startPosition: { frame: 10, value: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -146,11 +142,7 @@ describe("DrawVolumeState", () => {
     expect(
       context.store.actions.COMMAND_SET_VOLUME_EDIT_DATA,
     ).toHaveBeenCalledWith({
-      volumeArray: [
-        expect.closeTo(decibelToLinear(0)),
-        expect.closeTo(decibelToLinear(3)),
-        expect.closeTo(decibelToLinear(6)),
-      ],
+      volumeAdjustmentArray: [0, 3, 6],
       startFrame: 10,
       trackId: TrackId("trackId"),
     });
