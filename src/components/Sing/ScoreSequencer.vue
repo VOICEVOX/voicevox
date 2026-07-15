@@ -219,6 +219,7 @@
       <SequencerParameterPanel
         v-if="isParameterPanelOpen"
         :viewportInfo
+        :noteMovePreview
         @update:needsAutoScroll="
           (value) => (parameterPanelNeedsAutoScroll = value)
         "
@@ -506,6 +507,12 @@ const {
 } = useSequencerStateMachine({ store, viewportInfo });
 
 const nowPreviewing = computed(() => previewMode.value !== "IDLE");
+
+// ノート移動中のプレビューノート（パラメータパネルでのボリューム編集追随プレビュー用）
+// NOTE: 毎ポインタ操作で更新されるため、storeを介さずステートマシンのrefから導出して渡す
+const noteMovePreview = computed(() =>
+  previewMode.value === "MOVE_NOTE" ? previewNotes.value : undefined,
+);
 
 const previewNoteIds = computed(() => {
   return new Set(previewNotes.value.map((note) => note.id));

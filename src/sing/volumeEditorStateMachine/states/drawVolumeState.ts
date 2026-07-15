@@ -4,14 +4,17 @@ import type {
   VolumeEditorContext,
   PositionOnVolumeEditor,
   VolumeEditorIdleStateId,
+  VolumeEditorPointerInfo,
+  VolumeEditorTooltipData,
 } from "../common";
 import type { SetNextState, State } from "@/sing/stateMachine";
 import type { TrackId } from "@/type/preload";
-import { decibelToLinear, linearToDecibel } from "@/sing/audio";
-import { createArray, linearInterpolation } from "@/sing/utility";
+import { createArray } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
+import { currentVolumeEditMode } from "@/sing/volumeEditMode";
 import {
   countVolumeEditDataPoints,
+  isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
 } from "@/sing/volumeEditRanges";
 
@@ -23,11 +26,13 @@ export class DrawVolumeState implements State<
   readonly id = "drawVolume";
 
   private readonly cursorPosAtStart: PositionOnVolumeEditor;
+  private readonly tooltipDataAtStart: VolumeEditorTooltipData;
   private readonly trackId: TrackId;
   private readonly returnStateId: VolumeEditorIdleStateId;
 
   private currentCursorPos: PositionOnVolumeEditor;
   private applyPreview: boolean;
+  private useStraightLine: boolean;
 
   private innerContext:
     | {
@@ -39,14 +44,17 @@ export class DrawVolumeState implements State<
 
   constructor(args: {
     startPosition: PositionOnVolumeEditor;
+    startTooltipData: VolumeEditorTooltipData;
     targetTrackId: TrackId;
     returnStateId: VolumeEditorIdleStateId;
   }) {
     this.cursorPosAtStart = args.startPosition;
+    this.tooltipDataAtStart = args.startTooltipData;
     this.trackId = args.targetTrackId;
     this.returnStateId = args.returnStateId;
     this.currentCursorPos = this.cursorPosAtStart;
     this.applyPreview = false;
+    this.useStraightLine = false;
   }
 
   onEnter(context: VolumeEditorContext) {
@@ -55,8 +63,9 @@ export class DrawVolumeState implements State<
       data: [this.cursorPosAtStart.value],
       startFrame: this.cursorPosAtStart.frame,
     };
-    context.cursorState.value = "UNSET";
+    context.cursorState.value = "DRAW";
     context.previewMode.value = "VOLUME_DRAW";
+    context.tooltipData.value = this.tooltipDataAtStart;
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -101,18 +110,28 @@ export class DrawVolumeState implements State<
       return;
     }
 
-    const { pointerEvent, position, targetArea } = input;
+    const { pointerEvent, pointerInfo, targetArea } = input;
+    const { position } = pointerInfo;
     const mouseButton = getButton(pointerEvent);
 
     // 対象がWindow
     if (targetArea === "Window") {
       if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
+        this.useStraightLine = pointerEvent.shiftKey;
         this.innerContext.executePreviewProcess = true;
+        this.updateTooltipData(context, pointerInfo);
       } else if (
         (pointerEvent.type === "pointerup" && mouseButton === "LEFT_BUTTON") ||
         pointerEvent.type === "pointercancel"
       ) {
+        // pointermoveのプレビュー処理が次のanimation frameを待っている場合でも、
+        // 確定位置を取りこぼさないように同期的に反映する
+        this.currentCursorPos = position;
+        this.useStraightLine = pointerEvent.shiftKey;
+        this.previewDrawVolume(context);
+        this.innerContext.executePreviewProcess = false;
+
         // NOTE: ピッチと同様
         // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
         // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
@@ -126,7 +145,9 @@ export class DrawVolumeState implements State<
     if (targetArea === "Editor") {
       if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
+        this.useStraightLine = pointerEvent.shiftKey;
         this.innerContext.executePreviewProcess = true;
+        this.updateTooltipData(context, pointerInfo);
       }
     }
   }
@@ -166,6 +187,29 @@ export class DrawVolumeState implements State<
     context.previewVolumeEdit.value = undefined;
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+    context.tooltipData.value = undefined;
+  }
+
+  private updateTooltipData(
+    context: VolumeEditorContext,
+    pointerInfo: VolumeEditorPointerInfo,
+  ) {
+    if (
+      !isFrameInVolumeEditableRange(
+        pointerInfo.position.frame,
+        context.getEditableFrameRanges(),
+      )
+    ) {
+      context.tooltipData.value = undefined;
+      return;
+    }
+    context.tooltipData.value = {
+      db: this.useStraightLine ? this.tooltipDataAtStart.db : pointerInfo.db,
+      pointerX: pointerInfo.x,
+      pointerY: this.useStraightLine
+        ? this.tooltipDataAtStart.pointerY
+        : pointerInfo.y,
+    };
   }
 
   private previewDrawVolume(context: VolumeEditorContext) {
@@ -183,6 +227,25 @@ export class DrawVolumeState implements State<
     const cursorValue = this.currentCursorPos.value;
     const prevCursorFrame = this.innerContext.prevCursorPos.frame;
     const prevCursorValue = this.innerContext.prevCursorPos.value;
+
+    if (this.useStraightLine) {
+      const startFrame = Math.min(this.cursorPosAtStart.frame, cursorFrame);
+      const endFrame = Math.max(this.cursorPosAtStart.frame, cursorFrame);
+      context.previewVolumeEdit.value = {
+        ...context.previewVolumeEdit.value,
+        startFrame,
+        data: createArray(
+          endFrame - startFrame + 1,
+          () => this.cursorPosAtStart.value,
+        ),
+      };
+      this.innerContext.prevCursorPos = {
+        frame: cursorFrame,
+        value: this.cursorPosAtStart.value,
+      };
+      return;
+    }
+
     const tempPreviewEdit = {
       ...context.previewVolumeEdit.value,
       data: [...context.previewVolumeEdit.value.data],
@@ -209,37 +272,30 @@ export class DrawVolumeState implements State<
     }
 
     // NOTE: カーソル入力はrequestAnimationFrame単位で処理されるため、
-    // 前回位置との間をdBスケールで補間してフレーム抜けによるギザつきを防ぐ。
+    // 前回位置との間を補間してフレーム抜けによるギザつきを防ぐ。
     if (cursorFrame === prevCursorFrame) {
       const i = cursorFrame - tempPreviewEdit.startFrame;
       tempPreviewEdit.data[i] = cursorValue;
-    } else if (cursorFrame < prevCursorFrame) {
-      const cursorDb = linearToDecibel(cursorValue);
-      const prevCursorDb = linearToDecibel(prevCursorValue);
-      for (let i = cursorFrame; i <= prevCursorFrame; i++) {
-        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] = decibelToLinear(
-          linearInterpolation(
-            cursorFrame,
-            cursorDb,
-            prevCursorFrame,
-            prevCursorDb,
-            i,
-          ),
-        );
-      }
     } else {
-      const prevCursorDb = linearToDecibel(prevCursorValue);
-      const cursorDb = linearToDecibel(cursorValue);
-      for (let i = prevCursorFrame; i <= cursorFrame; i++) {
-        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] = decibelToLinear(
-          linearInterpolation(
-            prevCursorFrame,
-            prevCursorDb,
-            cursorFrame,
-            cursorDb,
+      const startFrame = Math.min(prevCursorFrame, cursorFrame);
+      const endFrame = Math.max(prevCursorFrame, cursorFrame);
+      const interpolationStart =
+        prevCursorFrame < cursorFrame
+          ? { frame: prevCursorFrame, value: prevCursorValue }
+          : { frame: cursorFrame, value: cursorValue };
+      const interpolationEnd =
+        prevCursorFrame < cursorFrame
+          ? { frame: cursorFrame, value: cursorValue }
+          : { frame: prevCursorFrame, value: prevCursorValue };
+      for (let i = startFrame; i <= endFrame; i++) {
+        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] =
+          currentVolumeEditMode.interpolateStoredValues(
+            interpolationStart.frame,
+            interpolationStart.value,
+            interpolationEnd.frame,
+            interpolationEnd.value,
             i,
-          ),
-        );
+          );
       }
     }
     context.previewVolumeEdit.value = tempPreviewEdit;

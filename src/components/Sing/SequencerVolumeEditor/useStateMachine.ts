@@ -7,6 +7,7 @@ import type {
   VolumeEditorPreviewMode,
   VolumeEditorInput,
   VolumeEditorComputedRefs,
+  VolumeEditorTooltipData,
 } from "@/sing/volumeEditorStateMachine/common";
 import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
@@ -25,6 +26,7 @@ export const useVolumeEditorStateMachine = (
     previewVolumeEdit: shallowRef<VolumePreviewEdit | undefined>(undefined),
     previewMode: ref<VolumeEditorPreviewMode>("IDLE"),
     cursorState: ref<CursorState>("UNSET"),
+    tooltipData: ref<VolumeEditorTooltipData>(),
   };
 
   const computedRefs: VolumeEditorComputedRefs = {
@@ -66,5 +68,6 @@ export const useVolumeEditorStateMachine = (
     volumePreviewEdit: computed(() => refs.previewVolumeEdit.value),
     previewMode: computed(() => refs.previewMode.value),
     cursorState: computed(() => refs.cursorState.value),
+    tooltipData: computed(() => refs.tooltipData.value),
   };
 };

@@ -19,15 +19,38 @@ import {
 } from "@/sing/waveformPeaks";
 import { Mutex } from "@/helpers/mutex";
 import { createLogger } from "@/helpers/log";
-import { calculateHash } from "@/sing/utility";
+import { calculateHash, clamp } from "@/sing/utility";
 import type { SequenceId } from "@/store/type";
 import type { Tempo } from "@/domain/project/type";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { linearToDecibel } from "@/sing/audio";
 
-const props = defineProps<{
-  viewportInfo: ViewportInfo;
-}>();
+type WaveformDisplayMode = "SYMMETRIC" | "BOTTOM_ALIGNED";
+
+const BOTTOM_ALIGNED_MIN_DB = -48;
+
+const normalizeBottomAlignedAmplitude = (amplitude: number) => {
+  if (amplitude <= 0) {
+    return 0;
+  }
+  return clamp(
+    (linearToDecibel(amplitude) - BOTTOM_ALIGNED_MIN_DB) /
+      -BOTTOM_ALIGNED_MIN_DB,
+    0,
+    1,
+  );
+};
+
+const props = withDefaults(
+  defineProps<{
+    viewportInfo: ViewportInfo;
+    displayMode?: WaveformDisplayMode;
+  }>(),
+  {
+    displayMode: "SYMMETRIC",
+  },
+);
 
 const { warn } = createLogger("SequencerWaveform");
 
@@ -299,13 +322,39 @@ function drawWaveform(
   canvasHeight: number,
   color: number,
   alpha: number,
+  displayMode: WaveformDisplayMode,
 ) {
   const { minValues, maxValues } = waveformData;
-  const centerY = canvasHeight / 2;
-  const amplitudeScale = canvasHeight / 2;
   const cullingMargin = 2;
 
   graphic.clear();
+
+  if (displayMode === "BOTTOM_ALIGNED") {
+    const topPoints: number[] = [];
+    for (let i = 0; i < waveformData.width; i++) {
+      const x = startScreenX + i;
+      if (x < -cullingMargin || x > canvasWidth + cullingMargin) {
+        continue;
+      }
+      // 片側表示でも負側の振幅を失わないよう、正負のピークの絶対値を使う。
+      const amplitude = normalizeBottomAlignedAmplitude(
+        Math.max(Math.abs(minValues[i]), Math.abs(maxValues[i])),
+      );
+      topPoints.push(x, canvasHeight * (1 - amplitude));
+    }
+
+    if (topPoints.length / 2 >= 2) {
+      const firstX = topPoints[0];
+      const lastX = topPoints[topPoints.length - 2];
+      graphic
+        .poly([firstX, canvasHeight, ...topPoints, lastX, canvasHeight])
+        .fill({ color, alpha });
+    }
+    return;
+  }
+
+  const centerY = canvasHeight / 2;
+  const amplitudeScale = canvasHeight / 2;
   const points: number[] = [];
 
   // 最大値をたどって上半分の頂点を作成
@@ -376,6 +425,7 @@ const render = () => {
         canvasHeight,
         waveformColorsValue.color,
         waveformColorsValue.alpha,
+        props.displayMode,
       );
     }
   }
@@ -389,7 +439,13 @@ const render = () => {
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
 watch(
-  [mounted, waveformDataMap, isDark, () => props.viewportInfo.offsetX],
+  [
+    mounted,
+    waveformDataMap,
+    isDark,
+    () => props.viewportInfo.offsetX,
+    () => props.displayMode,
+  ],
   ([mountedValue]) => {
     if (mountedValue) {
       renderInNextFrame = true;

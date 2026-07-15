@@ -51,6 +51,7 @@ export class EraseVolumeState implements State<
     };
     context.cursorState.value = "ERASE";
     context.previewMode.value = "VOLUME_ERASE";
+    context.tooltipData.value = undefined;
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -91,7 +92,8 @@ export class EraseVolumeState implements State<
     }
 
     if (input.type === "pointerEvent") {
-      const { pointerEvent, position, targetArea } = input;
+      const { pointerEvent, pointerInfo, targetArea } = input;
+      const { position } = pointerInfo;
       const mouseButton = getButton(pointerEvent);
 
       if (targetArea === "Window") {
@@ -103,6 +105,12 @@ export class EraseVolumeState implements State<
             mouseButton === "LEFT_BUTTON") ||
           pointerEvent.type === "pointercancel"
         ) {
+          // pointermoveのプレビュー処理が次のanimation frameを待っている場合でも、
+          // 確定位置を取りこぼさないように同期的に反映する
+          this.currentCursorPos = position;
+          this.previewEraseVolume(context);
+          this.innerContext.executePreviewProcess = false;
+
           this.applyPreview = true;
           setNextState(this.returnStateId, undefined);
         }
@@ -147,6 +155,7 @@ export class EraseVolumeState implements State<
     context.previewVolumeEdit.value = undefined;
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+    context.tooltipData.value = undefined;
   }
 
   private previewEraseVolume(context: VolumeEditorContext) {

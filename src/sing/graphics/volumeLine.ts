@@ -16,19 +16,19 @@ export type VolumeViewInfo = {
   readonly leftPadding: number;
 };
 
+export const volumeNormalizedYToScreenY = (
+  normalizedY: number,
+  viewportHeight: number,
+) => (1 - normalizedY) * viewportHeight;
+
 type VolumeLineOptions = {
   color: Color;
   width: number;
   dashed?: boolean;
-  // TODO: 見た目調整のための暫定オプション。
-  // TODO: 調整完了後に isVisible / areaAlpha は削除し、必要最小限に整理する。
+  // 絶対値編集モードでは原音との差分を面で示す可能性があるため、面塗りオプションを残している。
   showArea?: boolean;
   areaAlpha?: number;
   isVisible?: boolean;
-};
-
-const colorToHex = (color: Color) => {
-  return (color.r << 16) + (color.g << 8) + color.b;
 };
 
 /**
@@ -74,7 +74,7 @@ export class VolumeLine {
 
     const strokeStyle = {
       width: this.width,
-      color: colorToHex(this.color),
+      color: this.color.toRgbNumber(),
       alpha,
       alignment: 0.5,
     };
@@ -102,7 +102,10 @@ export class VolumeLine {
           point.baseX * viewInfo.zoomX -
           viewInfo.offsetX +
           viewInfo.leftPadding,
-        y: (1 - point.normalizedY) * viewInfo.viewportHeight,
+        y: volumeNormalizedYToScreenY(
+          point.normalizedY,
+          viewInfo.viewportHeight,
+        ),
       }));
 
       if (this.showArea) {
@@ -115,7 +118,7 @@ export class VolumeLine {
               y: viewInfo.viewportHeight,
             },
           ])
-          .fill({ color: colorToHex(this.color), alpha: this.areaAlpha });
+          .fill({ color: this.color.toRgbNumber(), alpha: this.areaAlpha });
       }
 
       if (this.dashed) {

@@ -1575,8 +1575,17 @@ export type SingingCommandStoreTypes = {
   };
 
   COMMAND_ADD_NOTES: {
-    mutation: { notes: Note[]; trackId: TrackId };
-    action(payload: { notes: Note[]; trackId: TrackId }): void;
+    mutation: {
+      notes: Note[];
+      trackId: TrackId;
+      // notesと同じ並びの、各ノートに帰属するボリューム編集（ペースト時の追随用）
+      volumeEditSlices?: number[][];
+    };
+    action(payload: {
+      notes: Note[];
+      trackId: TrackId;
+      volumeEditSlices?: number[][];
+    }): void;
   };
 
   COMMAND_UPDATE_NOTES: {

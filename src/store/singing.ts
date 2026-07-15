@@ -1,4 +1,5 @@
 import { ref } from "vue";
+import { z } from "zod";
 import { createPartialStore, type StorePlugins } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -137,8 +138,26 @@ import type {
 } from "@/domain/project/type";
 import { noteSchema } from "@/domain/project/schema";
 import { toEditorTrack } from "@/infrastructures/projectFile/conversion";
+import {
+  eraseVolumeEditRanges,
+  getVolumeEditFrameRangeSymmetricDifference,
+  moveVolumeEditData,
+  noteToVolumeEditFrameRange,
+  remapVolumeEditDataForTempoChange,
+  resampleVolumeEditValues,
+  sliceVolumeEditData,
+  writeVolumeEditSlice,
+  type VolumeEditMove,
+} from "@/sing/volumeEditNoteFollow";
+import type { VolumeEditFrameRange } from "@/sing/volumeEditRanges";
 
 const logger = createLogger("store/singing");
+
+// ノートと、それぞれのノートに帰属するボリューム編集を含むクリップボード形式。
+const notesClipboardSchema = z.object({
+  notes: noteSchema.omit({ id: true }).array(),
+  volumeEditSlices: z.array(z.array(z.number())),
+});
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -3084,7 +3103,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COPY_NOTES_TO_CLIPBOARD: {
-    async action({ getters }) {
+    async action({ state, getters }) {
       const selectedTrack = getters.SELECTED_TRACK;
       const noteIds = getters.SELECTED_NOTE_IDS;
       // ノートが選択されていない場合は何もしない
@@ -3092,15 +3111,31 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return;
       }
       // 選択されたノートのみをコピーする
-      const selectedNotes = selectedTrack.notes
-        .filter((note: Note) => noteIds.has(note.id))
-        .map((note: Note) => {
-          // idのみコピーしない
-          const { id, ...noteWithoutId } = note;
-          return noteWithoutId;
-        });
+      const selectedNotes = selectedTrack.notes.filter((note: Note) =>
+        noteIds.has(note.id),
+      );
+      const notesWithoutId = selectedNotes.map((note: Note) => {
+        // idのみコピーしない
+        const { id, ...noteWithoutId } = note;
+        return noteWithoutId;
+      });
+      // 各ノートに帰属するボリューム編集も一緒にコピーする
+      const volumeEditSlices = selectedNotes.map((note: Note) =>
+        sliceVolumeEditData(
+          selectedTrack.volumeEditData,
+          noteToVolumeEditFrameRange(
+            note,
+            state.tempos,
+            state.tpqn,
+            state.editorFrameRate,
+          ),
+        ),
+      );
       // ノートをJSONにシリアライズしてクリップボードにコピーする
-      const serializedNotes = JSON.stringify(selectedNotes);
+      const serializedNotes = JSON.stringify({
+        notes: notesWithoutId,
+        volumeEditSlices,
+      });
       // クリップボードにテキストとしてコピーする
       // NOTE: Electronのclipboardも使用する必要ある？
       await navigator.clipboard.writeText(serializedNotes);
@@ -3128,17 +3163,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       // クリップボードのテキストをJSONとしてパースする(失敗した場合はエラーを返す)
-      let notes;
+      let parsedClipboard: z.infer<typeof notesClipboardSchema>;
       try {
-        notes = noteSchema
-          .omit({ id: true })
-          .array()
-          .parse(JSON.parse(clipboardText));
+        parsedClipboard = notesClipboardSchema.parse(JSON.parse(clipboardText));
       } catch (error) {
         throw new Error("Failed to parse the clipboard text as JSON.", {
           cause: error,
         });
       }
+      const { notes, volumeEditSlices } = parsedClipboard;
 
       // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
       const currentPlayheadPosition = Math.round(getters.PLAYHEAD_POSITION);
@@ -3183,10 +3216,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         );
       }
 
+      if (
+        volumeEditSlices.length !== notesToPaste.length ||
+        !volumeEditSlices.every((slice) => isValidVolumeEditData(slice))
+      ) {
+        throw new Error("Failed to paste notes: invalid volume edit slices.");
+      }
+
       // ノートを追加する
       mutations.COMMAND_ADD_NOTES({
         notes: notesToPaste,
         trackId: getters.SELECTED_TRACK_ID,
+        volumeEditSlices,
       });
 
       // 貼り付けたノートを選択する
@@ -3574,7 +3615,17 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_SET_TEMPO: {
       mutation(draft, { tempo }) {
+        const previousTempos = draft.tempos.map((value) => ({ ...value }));
         singingStore.mutations.SET_TEMPO(draft, { tempo });
+        for (const track of draft.tracks.values()) {
+          track.volumeEditData = remapVolumeEditDataForTempoChange(
+            track.volumeEditData,
+            previousTempos,
+            draft.tempos,
+            draft.tpqn,
+            draft.editorFrameRate,
+          );
+        }
       },
       // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
       action({ state, getters, mutations }, { tempo }: { tempo: Tempo }) {
@@ -3593,7 +3644,17 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_REMOVE_TEMPO: {
       mutation(draft, { position }) {
+        const previousTempos = draft.tempos.map((value) => ({ ...value }));
         singingStore.mutations.REMOVE_TEMPO(draft, { position });
+        for (const track of draft.tracks.values()) {
+          track.volumeEditData = remapVolumeEditDataForTempoChange(
+            track.volumeEditData,
+            previousTempos,
+            draft.tempos,
+            draft.tpqn,
+            draft.editorFrameRate,
+          );
+        }
       },
       // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
       action(
@@ -3649,10 +3710,36 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_ADD_NOTES: {
-      mutation(draft, { notes, trackId }) {
+      mutation(draft, { notes, trackId, volumeEditSlices }) {
         singingStore.mutations.ADD_NOTES(draft, { notes, trackId });
+        // 貼り付けたノートに帰属するボリューム編集を書き込む
+        if (volumeEditSlices != undefined) {
+          const track = getOrThrow(draft.tracks, trackId);
+          let volumeEditData: number[] = [...track.volumeEditData];
+          for (const [i, note] of notes.entries()) {
+            const slice = volumeEditSlices.at(i);
+            if (slice == undefined || slice.length === 0) {
+              continue;
+            }
+            const destRange = noteToVolumeEditFrameRange(
+              note,
+              draft.tempos,
+              draft.tpqn,
+              draft.editorFrameRate,
+            );
+            volumeEditData = writeVolumeEditSlice(
+              volumeEditData,
+              destRange.startFrame,
+              resampleVolumeEditValues(
+                slice,
+                destRange.endFrame - destRange.startFrame,
+              ),
+            );
+          }
+          track.volumeEditData = volumeEditData;
+        }
       },
-      action({ getters, mutations }, { notes, trackId }) {
+      action({ getters, mutations }, { notes, trackId, volumeEditSlices }) {
         const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return !existingNoteIds.has(value.id) && isValidNote(value);
@@ -3660,11 +3747,75 @@ export const singingCommandStore = transformCommandStore(
         if (!isValidNotes) {
           throw new Error("The notes are invalid.");
         }
-        mutations.COMMAND_ADD_NOTES({ notes, trackId });
+        if (volumeEditSlices != undefined) {
+          if (volumeEditSlices.length !== notes.length) {
+            throw new Error(
+              "The number of volume edit slices does not match the number of notes.",
+            );
+          }
+          if (
+            !volumeEditSlices.every((slice) => isValidVolumeEditData(slice))
+          ) {
+            throw new Error("The volume edit slices are invalid.");
+          }
+        }
+        mutations.COMMAND_ADD_NOTES({ notes, trackId, volumeEditSlices });
       },
     },
     COMMAND_UPDATE_NOTES: {
       mutation(draft, { notes, trackId }) {
+        const track = getOrThrow(draft.tracks, trackId);
+        const previousNotes = new Map(
+          track.notes.map((note) => [note.id, note]),
+        );
+        const moves: VolumeEditMove[] = [];
+        const resizeRangesToErase: VolumeEditFrameRange[] = [];
+        for (const note of notes) {
+          const previousNote = previousNotes.get(note.id);
+          if (previousNote == undefined) {
+            continue;
+          }
+          const previousRange = noteToVolumeEditFrameRange(
+            previousNote,
+            draft.tempos,
+            draft.tpqn,
+            draft.editorFrameRate,
+          );
+          const nextRange = noteToVolumeEditFrameRange(
+            note,
+            draft.tempos,
+            draft.tpqn,
+            draft.editorFrameRate,
+          );
+          if (
+            previousNote.position !== note.position &&
+            previousNote.duration === note.duration
+          ) {
+            moves.push({
+              srcRange: previousRange,
+              destRange: nextRange,
+            });
+          } else if (previousNote.duration !== note.duration) {
+            resizeRangesToErase.push(
+              ...getVolumeEditFrameRangeSymmetricDifference(
+                previousRange,
+                nextRange,
+              ),
+            );
+          }
+        }
+        if (moves.length !== 0) {
+          track.volumeEditData = moveVolumeEditData(
+            track.volumeEditData,
+            moves,
+          );
+        }
+        if (resizeRangesToErase.length !== 0) {
+          track.volumeEditData = eraseVolumeEditRanges(
+            track.volumeEditData,
+            resizeRangesToErase,
+          );
+        }
         singingStore.mutations.UPDATE_NOTES(draft, { notes, trackId });
       },
       action({ getters, mutations }, { notes, trackId }) {
@@ -3680,6 +3831,25 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_REMOVE_NOTES: {
       mutation(draft, { noteIds, trackId }) {
+        // 削除されるノートに帰属するボリューム編集も削除する
+        const track = getOrThrow(draft.tracks, trackId);
+        const noteIdsSet = new Set(noteIds);
+        const ranges = track.notes
+          .filter((note) => noteIdsSet.has(note.id))
+          .map((note) =>
+            noteToVolumeEditFrameRange(
+              note,
+              draft.tempos,
+              draft.tpqn,
+              draft.editorFrameRate,
+            ),
+          );
+        if (ranges.length !== 0) {
+          track.volumeEditData = eraseVolumeEditRanges(
+            track.volumeEditData,
+            ranges,
+          );
+        }
         singingStore.mutations.REMOVE_NOTES(draft, { noteIds, trackId });
       },
       action({ getters, mutations }, { noteIds, trackId }) {
