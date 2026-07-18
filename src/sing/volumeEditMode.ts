@@ -6,10 +6,7 @@ import {
 
 /**
  * ボリューム編集の入力と表示の定義。
- * UI上でポインタが示すdBはここで編集値へ変換されてvolumeEditDataに保存され、
- * 合成時にapplyVolumeEditがエンジンに渡すクエリのボリュームへ適用する。
- * VolumeEditModeが扱うのはこの流れの前半、入力の変換と表示スケールのみ。
- * 合成処理が編集UIの実装に依存しないよう、この型を合成側へは渡さない。
+ * UI上でポインタが示すdBはここで編集値へ変換されてvolumeEditDataに保存される。
  *
  * TODO: 後続PRで編集値の意味を「元のボリューム（エンジン出力）に掛ける倍率」へ
  * 変更し、toStoredValueの変換とapplyVolumeEditの適用を差し替える。
