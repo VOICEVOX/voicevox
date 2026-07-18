@@ -14,6 +14,8 @@ const createQuery = (volume: number[]): EditorFrameAudioQuery => ({
   frameRate,
 });
 
+// TODO: 後続PRのdBオフセット適用への変更にあわせて、
+// フレーズ開始位置・非pau区間などのテストを追加する。
 describe("applyVolumeEdit", () => {
   it("絶対値の編集データをクエリのボリュームへ適用する", () => {
     const query = createQuery([0.1, 0.2, 0.3]);
