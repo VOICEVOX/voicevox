@@ -24,7 +24,6 @@ export type VolumeEditMode = {
 /**
  * 絶対値編集：描いた形状がそのまま最終的なボリュームになる方式。
  * ポインタが示すdBを振幅へ変換して編集値とする。
- * クエリのボリュームと同じ単位なので、適用時は変換なしで置き換えられる。
  */
 export const absoluteVolumeEditMode: VolumeEditMode = {
   valueScale: absoluteVolumeValueScale,
