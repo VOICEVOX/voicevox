@@ -131,8 +131,8 @@ export class DrawVolumeState implements State<
       }
     }
 
-    // 対象がEditor
-    if (targetArea === "Editor") {
+    // 対象がVolumeEditorArea
+    if (targetArea === "VolumeEditorArea") {
       if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;

@@ -3,19 +3,19 @@
     ref="canvasContainer"
     class="volume-editor"
     :class="cursorClass"
-    @pointerdown="onSurfacePointerDown"
-    @pointermove="onSurfacePointerMove"
-    @pointerleave="onSurfacePointerLeave"
+    @wheel="handleWheel"
   >
     <SequencerParameterGrid
       class="volume-time-grid"
       :viewportInfo="props.viewportInfo"
     />
-    <canvas
-      ref="canvas"
-      class="volume-editor-canvas"
-      @wheel="handleWheel"
-    ></canvas>
+    <canvas ref="canvas" class="volume-editor-canvas"></canvas>
+    <div
+      class="volume-editor-area"
+      @pointerdown="onSurfacePointerDown"
+      @pointermove="onSurfacePointerMove"
+      @pointerleave="onSurfacePointerLeave"
+    ></div>
     <div
       v-if="tooltipState != undefined"
       class="volume-value-guide-line"
@@ -214,8 +214,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
     disableWhenUiLocked: false,
   },
 ]);
-
-const isPointerInParameterArea = ref(false);
 
 const cursorClass = computed(() => {
   switch (cursorState.value) {
@@ -818,7 +816,7 @@ const refreshEffectiveVolumeSegments = () => {
 
 const dispatchVolumeEditorEvent = (
   pointerEvent: PointerEvent,
-  targetArea: "Editor" | "Window",
+  targetArea: "VolumeEditorArea" | "Window",
 ) => {
   const pointerInfo = computeViewportPointerInfo(pointerEvent);
   stateMachineProcess({
@@ -857,18 +855,6 @@ const updateViewportRectCache = () => {
   };
 };
 
-const isPointerEventInParameterArea = (pointerEvent: PointerEvent) => {
-  const rect = getViewportRect();
-  const localX = pointerEvent.clientX - rect.left;
-  const localY = pointerEvent.clientY - rect.top;
-  return (
-    localX >= VOLUME_EDITOR_LAYOUT.keyColumnWidthPx &&
-    localX <= rect.width &&
-    localY >= 0 &&
-    localY <= rect.height
-  );
-};
-
 const computeViewportPointerInfo = (
   pointerEvent: PointerEvent,
 ): VolumePointerInfo => {
@@ -903,7 +889,6 @@ const computeViewportPointerInfo = (
     db,
     originalValue,
     isEditable: isFrameInVolumeEditableRange(frame, editableFrameRanges.value),
-    isInParameterArea: isPointerInParameterArea.value,
     x: clampedX,
     y: clampedY,
   };
@@ -914,26 +899,23 @@ const onSurfacePointerDown = (event: PointerEvent) => {
     return;
   }
   updateViewportRectCache();
-  isPointerInParameterArea.value = isPointerEventInParameterArea(event);
   if (store.state.parameterPanelEditTarget !== "VOLUME") {
     void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({
       editTarget: "VOLUME",
     });
   }
-  dispatchVolumeEditorEvent(event, "Editor");
+  dispatchVolumeEditorEvent(event, "VolumeEditorArea");
 };
 
 const onSurfacePointerMove = (event: PointerEvent) => {
   if (previewMode.value === "IDLE") {
-    isPointerInParameterArea.value = isPointerEventInParameterArea(event);
-    dispatchVolumeEditorEvent(event, "Editor");
+    dispatchVolumeEditorEvent(event, "VolumeEditorArea");
   }
 };
 
 const onSurfacePointerLeave = (event: PointerEvent) => {
-  isPointerInParameterArea.value = false;
   if (previewMode.value === "IDLE") {
-    dispatchVolumeEditorEvent(event, "Editor");
+    dispatchVolumeEditorEvent(event, "VolumeEditorArea");
   }
 };
 
@@ -1142,6 +1124,12 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.volume-editor-area {
+  position: absolute;
+  inset: 0 0 0 v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
+  z-index: 2;
 }
 
 .volume-grid-labels {

@@ -109,7 +109,7 @@ export class EraseVolumeState implements State<
           setNextState(this.returnStateId, undefined);
         }
       } else if (
-        targetArea === "Editor" &&
+        targetArea === "VolumeEditorArea" &&
         pointerEvent.type === "pointermove"
       ) {
         this.currentCursorPos = position;

@@ -31,16 +31,13 @@ export class DrawVolumeIdleState implements State<
     if (input.type !== "pointerEvent") {
       return;
     }
-    if (input.targetArea !== "Editor") {
+    if (input.targetArea !== "VolumeEditorArea") {
       return;
     }
 
     const { pointerEvent, pointerInfo } = input;
 
-    if (
-      pointerEvent.type === "pointerleave" ||
-      !pointerInfo.isInParameterArea
-    ) {
+    if (pointerEvent.type === "pointerleave") {
       context.cursorState.value = "UNSET";
       return;
     }
