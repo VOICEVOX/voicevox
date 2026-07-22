@@ -32,7 +32,13 @@ import {
 import type { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import type { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
-import type { Note, Singer, Tempo, Track } from "@/domain/project/type";
+import type {
+  Note,
+  Singer,
+  SingingTeacher,
+  Tempo,
+  Track,
+} from "@/domain/project/type";
 import { UnreachableError } from "@/type/utility";
 
 /**
@@ -75,7 +81,7 @@ export type PhraseForRender = {
  * クエリの生成に必要なデータ
  */
 type QuerySource = Readonly<{
-  engineId: EngineId;
+  singingTeacher: SingingTeacher;
   engineFrameRate: number;
   tpqn: number;
   tempos: Tempo[];
@@ -91,7 +97,7 @@ type QuerySource = Readonly<{
  * 歌唱ピッチの生成に必要なデータ
  */
 type SingingPitchSource = Readonly<{
-  engineId: EngineId;
+  singingTeacher: SingingTeacher;
   engineFrameRate: number;
   tpqn: number;
   tempos: Tempo[];
@@ -106,7 +112,7 @@ type SingingPitchSource = Readonly<{
  * 歌唱ボリュームの生成に必要なデータ
  */
 type SingingVolumeSource = Readonly<{
-  engineId: EngineId;
+  singingTeacher: SingingTeacher;
   engineFrameRate: number;
   tpqn: number;
   tempos: Tempo[];
@@ -162,7 +168,6 @@ type EngineSongApi = Readonly<{
  * ソングトラックのレンダリングの設定。
  */
 type SongTrackRenderingConfig = Readonly<{
-  singingTeacherStyleId: StyleId;
   firstRestMinDurationSeconds: number;
   lastRestDurationSeconds: number;
   fadeOutDurationSeconds: number;
@@ -453,10 +458,14 @@ const createPhrasesFromNotes = async (
   const track = getOrThrow(snapshot.tracks, trackId);
 
   let engineFrameRate: number | undefined = undefined;
-  if (track.singer != undefined) {
+  if (
+    phraseNotesList.length > 0 &&
+    track.singer != undefined &&
+    track.singingTeacher != undefined
+  ) {
     engineFrameRate = getOrThrow(
       snapshot.engineFrameRates,
-      track.singer.engineId,
+      track.singingTeacher.engineId,
     );
   }
 
@@ -603,15 +612,15 @@ const generateQuerySource = (
   snapshot: SnapshotForRender,
 ): QuerySource => {
   const track = getOrThrow(snapshot.tracks, phrase.trackId);
-  if (track.singer == undefined) {
-    throw new Error("track.singer is undefined.");
+  if (track.singingTeacher == undefined) {
+    throw new Error("track.singingTeacher is undefined.");
   }
   const engineFrameRate = getOrThrow(
     snapshot.engineFrameRates,
-    track.singer.engineId,
+    track.singingTeacher.engineId,
   );
   return {
-    engineId: track.singer.engineId,
+    singingTeacher: track.singingTeacher,
     engineFrameRate,
     tpqn: snapshot.tpqn,
     tempos: snapshot.tempos,
@@ -629,8 +638,8 @@ const generateSingingPitchSource = (
   snapshot: SnapshotForRender,
 ): SingingPitchSource => {
   const track = getOrThrow(snapshot.tracks, phrase.trackId);
-  if (track.singer == undefined) {
-    throw new Error("track.singer is undefined.");
+  if (track.singingTeacher == undefined) {
+    throw new Error("track.singingTeacher is undefined.");
   }
   if (phrase.query == undefined) {
     throw new Error("phrase.query is undefined.");
@@ -653,7 +662,7 @@ const generateSingingPitchSource = (
   clonedQuery.phonemes = toPhonemes(phonemeTimings);
 
   return {
-    engineId: track.singer.engineId,
+    singingTeacher: track.singingTeacher,
     engineFrameRate: phrase.query.frameRate,
     tpqn: snapshot.tpqn,
     tempos: snapshot.tempos,
@@ -670,8 +679,8 @@ const generateSingingVolumeSource = (
   snapshot: SnapshotForRender,
 ): SingingVolumeSource => {
   const track = getOrThrow(snapshot.tracks, phrase.trackId);
-  if (track.singer == undefined) {
-    throw new Error("track.singer is undefined.");
+  if (track.singingTeacher == undefined) {
+    throw new Error("track.singingTeacher is undefined.");
   }
   if (phrase.query == undefined) {
     throw new Error("phrase.query is undefined.");
@@ -708,7 +717,7 @@ const generateSingingVolumeSource = (
   );
 
   return {
-    engineId: track.singer.engineId,
+    singingTeacher: track.singingTeacher,
     engineFrameRate: phrase.query.frameRate,
     tpqn: snapshot.tpqn,
     tempos: snapshot.tempos,
@@ -803,8 +812,8 @@ const generateQuery = async (
   shiftKeyOfNotes(notesForRequestToEngine, -querySource.keyRangeAdjustment);
 
   const query = await engineSongApi.fetchFrameAudioQuery({
-    engineId: querySource.engineId,
-    styleId: config.singingTeacherStyleId,
+    engineId: querySource.singingTeacher.engineId,
+    styleId: querySource.singingTeacher.styleId,
     engineFrameRate: querySource.engineFrameRate,
     notes: notesForRequestToEngine,
   });
@@ -846,8 +855,8 @@ const generateSingingPitch = async (
   const singingPitch = await engineSongApi.fetchSingFrameF0({
     notes: notesForRequestToEngine,
     query: queryForPitchGeneration,
-    engineId: singingPitchSource.engineId,
-    styleId: config.singingTeacherStyleId,
+    engineId: singingPitchSource.singingTeacher.engineId,
+    styleId: singingPitchSource.singingTeacher.styleId,
   });
 
   shiftPitch(singingPitch, singingPitchSource.keyRangeAdjustment);
@@ -883,8 +892,8 @@ const generateSingingVolume = async (
   const singingVolume = await engineSongApi.fetchSingFrameVolume({
     notes: notesForRequestToEngine,
     query: queryForVolumeGeneration,
-    engineId: singingVolumeSource.engineId,
-    styleId: config.singingTeacherStyleId,
+    engineId: singingVolumeSource.singingTeacher.engineId,
+    styleId: singingVolumeSource.singingTeacher.styleId,
   });
 
   muteLastPauSection(
@@ -1203,9 +1212,9 @@ export class SongTrackRenderer {
   ) {
     const renderablePhrases = new Map<PhraseKey, PhraseForRender>();
     for (const [phraseKey, phrase] of phrases) {
-      // フレーズが属するトラックにシンガーが割り当てられていれば、レンダリング可能とする
+      // フレーズが属するトラックにシンガーと歌い方が割り当てられていれば、レンダリング可能とする
       const track = getOrThrow(snapshot.tracks, phrase.trackId);
-      if (track.singer != undefined) {
+      if (track.singer != undefined && track.singingTeacher != undefined) {
         renderablePhrases.set(phraseKey, phrase);
       }
     }

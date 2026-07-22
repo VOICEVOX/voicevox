@@ -1638,7 +1638,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       // SongTrackRenderer を作成
       songTrackRenderer = new SongTrackRenderer({
         config: {
-          singingTeacherStyleId: StyleId(6000), // TODO: UIで設定できるようにする
           lastRestDurationSeconds: 0.5,
           fadeOutDurationSeconds: 0.15,
           firstRestMinDurationSeconds: 0.12,
@@ -3494,6 +3493,7 @@ export const singingStorePlugins: StorePlugins = [
         state.tempos,
         [...state.tracks.values()].map((track) => [
           track.singer,
+          track.singingTeacher,
           track.keyRangeAdjustment,
           track.volumeRangeAdjustment,
           track.notes,

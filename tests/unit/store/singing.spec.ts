@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { nextTick } from "vue";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { store } from "@/store";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
@@ -28,6 +29,9 @@ test("COMMAND_SET_SINGING_TEACHER", async () => {
   expect(getOrThrow(store.state.tracks, trackId).singingTeacher).toEqual(
     singingTeacher,
   );
+
+  await nextTick();
+  await vi.waitFor(() => expect(store.state.nowRendering).toBe(false));
 });
 
 describe("COMMAND_UPSERT_PHONEME_TIMING_EDIT", () => {

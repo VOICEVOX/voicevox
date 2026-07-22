@@ -26,7 +26,23 @@ import {
 import { ExhaustiveError } from "@/type/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { createDefaultTrack } from "@/sing/domain";
-import type { Note, Singer, Tempo, Track } from "@/domain/project/type";
+import type {
+  Note,
+  Singer,
+  SingingTeacher,
+  Tempo,
+  Track,
+} from "@/domain/project/type";
+
+export type EngineSongApiCall = {
+  operation:
+    | "fetchFrameAudioQuery"
+    | "fetchSingFrameF0"
+    | "fetchSingFrameVolume"
+    | "frameSynthesis";
+  engineId: EngineId;
+  styleId: StyleId;
+};
 
 /**
  * SongTrackRenderer のテスト用のユーティリティー。
@@ -34,8 +50,7 @@ import type { Note, Singer, Tempo, Track } from "@/domain/project/type";
 export class SongTrackRendererTestUtility {
   private readonly tpqn: number;
   private readonly tempos: Tempo[];
-  private readonly engineId: EngineId;
-  private readonly singingTeacherStyleId: StyleId;
+  private readonly singingTeacher: SingingTeacher;
   private readonly frameRate: number;
 
   constructor(constants: {
@@ -47,8 +62,10 @@ export class SongTrackRendererTestUtility {
   }) {
     this.tpqn = constants.tpqn;
     this.tempos = constants.tempos;
-    this.engineId = constants.engineId;
-    this.singingTeacherStyleId = constants.singingTeacherStyleId;
+    this.singingTeacher = {
+      engineId: constants.engineId,
+      styleId: constants.singingTeacherStyleId,
+    };
     this.frameRate = constants.frameRate;
   }
 
@@ -60,20 +77,26 @@ export class SongTrackRendererTestUtility {
    */
   createSongTrackRendererUsingMock({
     playheadPositionGetter,
+    onEngineSongApiCall,
   }: {
     playheadPositionGetter: () => number;
+    onEngineSongApiCall?: (call: EngineSongApiCall) => void;
   }) {
     const mock = createOpenAPIEngineMock();
 
     const songTrackRenderer = new SongTrackRenderer({
       config: {
-        singingTeacherStyleId: this.singingTeacherStyleId,
         lastRestDurationSeconds: 0.5,
         fadeOutDurationSeconds: 0.15,
         firstRestMinDurationSeconds: 0.12,
       },
       engineSongApi: {
         fetchFrameAudioQuery: async (args) => {
+          onEngineSongApiCall?.({
+            operation: "fetchFrameAudioQuery",
+            engineId: args.engineId,
+            styleId: args.styleId,
+          });
           const query = await mock.singFrameAudioQuery({
             speaker: 0,
             score: { notes: args.notes },
@@ -81,6 +104,11 @@ export class SongTrackRendererTestUtility {
           return { ...query, frameRate: this.frameRate };
         },
         fetchSingFrameF0: async (args) => {
+          onEngineSongApiCall?.({
+            operation: "fetchSingFrameF0",
+            engineId: args.engineId,
+            styleId: args.styleId,
+          });
           return await mock.singFrameF0({
             speaker: 0,
             bodySingFrameF0SingFrameF0Post: {
@@ -90,6 +118,11 @@ export class SongTrackRendererTestUtility {
           });
         },
         fetchSingFrameVolume: async (args) => {
+          onEngineSongApiCall?.({
+            operation: "fetchSingFrameVolume",
+            engineId: args.engineId,
+            styleId: args.styleId,
+          });
           return await mock.singFrameVolume({
             speaker: 0,
             bodySingFrameVolumeSingFrameVolumePost: {
@@ -99,6 +132,11 @@ export class SongTrackRendererTestUtility {
           });
         },
         frameSynthesis: async (args) => {
+          onEngineSongApiCall?.({
+            operation: "frameSynthesis",
+            engineId: args.engineId,
+            styleId: args.styleId,
+          });
           return await mock.frameSynthesis({
             speaker: 0,
             frameAudioQuery: args.query,
@@ -118,12 +156,16 @@ export class SongTrackRendererTestUtility {
    * @returns スナップショットオブジェクト。
    */
   createSnapshotObject(
-    trackEntries: [TrackId, { singer?: Singer; notes: Note[] }][],
+    trackEntries: [
+      TrackId,
+      { singer?: Singer; singingTeacher?: SingingTeacher; notes: Note[] },
+    ][],
   ): SnapshotForRender {
     const tracks = new Map<TrackId, Track>();
     for (const trackEntry of trackEntries) {
       tracks.set(trackEntry[0], {
         ...createDefaultTrack(),
+        singingTeacher: this.singingTeacher,
         ...trackEntry[1],
       });
     }
@@ -135,12 +177,23 @@ export class SongTrackRendererTestUtility {
       ]),
     );
 
+    const engineIds = new Set(
+      [...tracks.values()].flatMap((track) => [
+        ...(track.singer != undefined ? [track.singer.engineId] : []),
+        ...(track.singingTeacher != undefined
+          ? [track.singingTeacher.engineId]
+          : []),
+      ]),
+    );
+
     return {
       tpqn: this.tpqn,
       tempos: this.tempos,
       tracks,
       trackOverlappingNoteIds,
-      engineFrameRates: new Map([[this.engineId, this.frameRate]]),
+      engineFrameRates: new Map(
+        [...engineIds].map((engineId) => [engineId, this.frameRate]),
+      ),
       editorFrameRate: this.frameRate,
       defaultLyricMode: "doremi",
     };
