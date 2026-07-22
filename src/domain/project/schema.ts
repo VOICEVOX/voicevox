@@ -78,10 +78,14 @@ export const noteSchema = z.object({
   lyric: z.string().nullable(), // 歌詞未入力のときはnull
 });
 
-export const singerSchema = z.object({
+const engineStyleSchema = z.object({
   engineId: engineIdSchema,
   styleId: styleIdSchema,
 });
+
+export const singerSchema = engineStyleSchema;
+
+export const singingTeacherSchema = engineStyleSchema;
 
 export const phonemeTimingEditSchema = z.object({
   phonemeIndexInNote: z.number(), // ノート内での音素の順番
@@ -91,6 +95,7 @@ export const phonemeTimingEditSchema = z.object({
 export const trackSchema = z.object({
   name: z.string(),
   singer: singerSchema.optional(),
+  singingTeacher: singingTeacherSchema.optional(),
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),

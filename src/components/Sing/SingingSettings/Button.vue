@@ -1,8 +1,8 @@
 <template>
   <QBtn flat noCaps class="singing-settings-button" :disable="uiLocked">
-    <div class="setting-summary">
+    <div class="setting-summary teacher-summary">
       <span class="setting-label">歌い方</span>
-      <span class="setting-value">未設定</span>
+      <span class="setting-value">{{ singingTeacherName }}</span>
     </div>
     <QSeparator vertical />
     <div class="setting-summary">
@@ -41,6 +41,30 @@ const props = defineProps<{
 const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 const track = computed(() => getOrThrow(store.state.tracks, props.trackId));
+
+const singingTeacherName = computed(() => {
+  const singingTeacher = track.value.singingTeacher;
+  if (singingTeacher == undefined) {
+    return "未設定";
+  }
+
+  const characterInfo = store.getters.CHARACTER_INFO(
+    singingTeacher.engineId,
+    singingTeacher.styleId,
+  );
+  if (characterInfo == undefined) {
+    return "読み込み中";
+  }
+
+  const styleName = characterInfo.metas.styles.find(
+    (style) =>
+      style.engineId === singingTeacher.engineId &&
+      style.styleId === singingTeacher.styleId,
+  )?.styleName;
+  return styleName == undefined
+    ? characterInfo.metas.speakerName
+    : `${characterInfo.metas.speakerName}（${styleName}）`;
+});
 
 const formatAdjustment = (value: number) => {
   return value > 0 ? `+${value}` : value.toString();
@@ -87,6 +111,12 @@ const formatAdjustment = (value: number) => {
   color: var(--scheme-color-on-surface);
   font-size: 12px;
   line-height: 16px;
+}
+
+.teacher-summary .setting-value {
+  max-width: 112px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dropdown-icon {

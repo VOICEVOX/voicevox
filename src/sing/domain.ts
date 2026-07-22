@@ -86,6 +86,7 @@ export function createDefaultTrack(): Track {
   return {
     name: DEFAULT_TRACK_NAME,
     singer: undefined,
+    singingTeacher: undefined,
     keyRangeAdjustment: 0,
     volumeRangeAdjustment: 0,
     notes: [],

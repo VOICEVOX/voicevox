@@ -472,14 +472,46 @@ export const isOnCommandOrCtrlKeyDown = (event: {
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
 
 /**
+ * スタイルが歌声の生成に利用可能かどうかを判定します。
+ */
+export const isSingingVoiceStyle = (styleInfo: StyleInfo) => {
+  return (
+    styleInfo.styleType === "frame_decode" || styleInfo.styleType === "sing"
+  );
+};
+
+/**
+ * スタイルが歌い方の生成に利用可能かどうかを判定します。
+ */
+export const isSingingTeacherStyle = (styleInfo: StyleInfo) => {
+  return (
+    styleInfo.styleType === "singing_teacher" || styleInfo.styleType === "sing"
+  );
+};
+
+/**
  * スタイルがシングエディタで利用可能なスタイルかどうかを判定します。
  */
 export const isSingingStyle = (styleInfo: StyleInfo) => {
-  return (
-    styleInfo.styleType === "frame_decode" ||
-    styleInfo.styleType === "sing" ||
-    styleInfo.styleType === "singing_teacher"
-  );
+  return isSingingVoiceStyle(styleInfo) || isSingingTeacherStyle(styleInfo);
+};
+
+/**
+ * CharacterInfo内のスタイルを条件で絞り込み、該当スタイルがないキャラクターを除外します。
+ */
+export const filterCharacterInfosByStyle = (
+  characterInfos: CharacterInfo[],
+  predicate: (styleInfo: StyleInfo) => boolean,
+): CharacterInfo[] => {
+  return characterInfos
+    .map((characterInfo) => ({
+      ...characterInfo,
+      metas: {
+        ...characterInfo.metas,
+        styles: characterInfo.metas.styles.filter(predicate),
+      },
+    }))
+    .filter((characterInfo) => characterInfo.metas.styles.length > 0);
 };
 
 /**
@@ -492,27 +524,16 @@ export const filterCharacterInfosByStyleType = (
   characterInfos: CharacterInfo[],
   styleType: StyleType | "singerLike",
 ): CharacterInfo[] => {
-  const withStylesFiltered: CharacterInfo[] = characterInfos.map(
-    (characterInfo) => {
-      const styles = characterInfo.metas.styles.filter((styleInfo) => {
-        if (styleType === "singerLike") {
-          return isSingingStyle(styleInfo);
-        }
-        // 過去のエンジンにはstyleTypeが存在しないので、「singerLike以外」をtalkとして扱っている。
-        if (styleType === "talk") {
-          return !isSingingStyle(styleInfo);
-        }
-        return styleInfo.styleType === styleType;
-      });
-      return { ...characterInfo, metas: { ...characterInfo.metas, styles } };
-    },
-  );
-
-  const withoutEmptyStyles = withStylesFiltered.filter(
-    (characterInfo) => characterInfo.metas.styles.length > 0,
-  );
-
-  return withoutEmptyStyles;
+  return filterCharacterInfosByStyle(characterInfos, (styleInfo) => {
+    if (styleType === "singerLike") {
+      return isSingingVoiceStyle(styleInfo);
+    }
+    // 過去のエンジンにはstyleTypeが存在しないので、「singerLike以外」をtalkとして扱っている。
+    if (styleType === "talk") {
+      return !isSingingStyle(styleInfo);
+    }
+    return styleInfo.styleType === styleType;
+  });
 };
 
 export type PhonemeTimingLabel = {

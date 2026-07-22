@@ -297,7 +297,13 @@ test("isOnCommandOrCtrlKeyDown", () => {
 
 describe("filterCharacterInfosByStyleType", () => {
   const createCharacterInfo = (
-    styleTypes: (undefined | "talk" | "frame_decode" | "sing")[],
+    styleTypes: (
+      | undefined
+      | "talk"
+      | "frame_decode"
+      | "singing_teacher"
+      | "sing"
+    )[],
   ): CharacterInfo => {
     const engineId = EngineId(uuid4());
     return {
@@ -321,12 +327,17 @@ describe("filterCharacterInfosByStyleType", () => {
   const characterInfos: CharacterInfo[] = [
     createCharacterInfo(["talk"]),
     createCharacterInfo(["frame_decode"]),
+    createCharacterInfo(["singing_teacher"]),
     createCharacterInfo(["sing"]),
-    createCharacterInfo(["talk", "frame_decode", "sing"]),
+    createCharacterInfo(["talk", "frame_decode", "singing_teacher", "sing"]),
     createCharacterInfo([undefined]),
   ];
 
-  for (const styleType of ["frame_decode", "sing"] as const) {
+  for (const styleType of [
+    "frame_decode",
+    "singing_teacher",
+    "sing",
+  ] as const) {
     test(`${styleType}のキャラクターが取得できる`, () => {
       const filtered = filterCharacterInfosByStyleType(
         characterInfos,
@@ -352,6 +363,11 @@ describe("filterCharacterInfosByStyleType", () => {
     expect(filtered[0].metas.styles.length).toBe(1);
     expect(filtered[1].metas.styles.length).toBe(1);
     expect(filtered[2].metas.styles.length).toBe(2);
+    expect(
+      filtered.flatMap((characterInfo) => characterInfo.metas.styles),
+    ).not.toContainEqual(
+      expect.objectContaining({ styleType: "singing_teacher" }),
+    );
   });
 
   test(`talkを指定するとsingerLike以外のキャラクターが取得できる`, () => {

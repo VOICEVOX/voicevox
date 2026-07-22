@@ -73,6 +73,7 @@ import type {
   Note,
   PhonemeTimingEdit,
   Singer,
+  SingingTeacher,
   Tempo,
   TimeSignature,
   Track,
@@ -942,6 +943,17 @@ export type SingingStoreTypes = {
     }): void;
   };
 
+  SET_SINGING_TEACHER: {
+    mutation: {
+      singingTeacher?: SingingTeacher;
+      trackId: TrackId;
+    };
+    action(payload: {
+      singingTeacher?: SingingTeacher;
+      trackId: TrackId;
+    }): void;
+  };
+
   SET_KEY_RANGE_ADJUSTMENT: {
     mutation: { keyRangeAdjustment: number; trackId: TrackId };
     action(payload: { keyRangeAdjustment: number; trackId: TrackId }): void;
@@ -1542,6 +1554,11 @@ export type SingingCommandStoreTypes = {
       withRelated?: boolean;
       trackId: TrackId;
     }): void;
+  };
+
+  COMMAND_SET_SINGING_TEACHER: {
+    mutation: { singingTeacher: SingingTeacher; trackId: TrackId };
+    action(payload: { singingTeacher: SingingTeacher; trackId: TrackId }): void;
   };
 
   COMMAND_SET_KEY_RANGE_ADJUSTMENT: {

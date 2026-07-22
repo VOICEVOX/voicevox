@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { store } from "@/store";
-import { NoteId, TrackId } from "@/type/preload";
+import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { createDefaultTrack, VALUE_INDICATING_NO_DATA } from "@/sing/domain";
@@ -11,6 +11,23 @@ beforeEach(() => {
   store.replaceState(cloneWithUnwrapProxy(initialState));
 
   resetMockMode();
+});
+
+test("COMMAND_SET_SINGING_TEACHER", async () => {
+  const trackId = store.state.trackOrder[0];
+  const singingTeacher = {
+    engineId: EngineId(uuid4()),
+    styleId: StyleId(1),
+  };
+
+  await store.actions.COMMAND_SET_SINGING_TEACHER({
+    trackId,
+    singingTeacher,
+  });
+
+  expect(getOrThrow(store.state.tracks, trackId).singingTeacher).toEqual(
+    singingTeacher,
+  );
 });
 
 describe("COMMAND_UPSERT_PHONEME_TIMING_EDIT", () => {

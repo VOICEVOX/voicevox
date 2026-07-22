@@ -857,6 +857,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_SINGING_TEACHER: {
+    mutation(state, { singingTeacher, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.singingTeacher = singingTeacher;
+    },
+    action({ mutations }, { singingTeacher, trackId }) {
+      mutations.SET_SINGING_TEACHER({ singingTeacher, trackId });
+    },
+  },
+
   SET_KEY_RANGE_ADJUSTMENT: {
     mutation(state, { keyRangeAdjustment, trackId }) {
       const track = getOrThrow(state.tracks, trackId);
@@ -3538,6 +3548,20 @@ export const singingCommandStore = transformCommandStore(
         mutations.COMMAND_SET_SINGER({ singer, withRelated, trackId });
       },
     },
+    COMMAND_SET_SINGING_TEACHER: {
+      mutation(draft, { singingTeacher, trackId }) {
+        singingStore.mutations.SET_SINGING_TEACHER(draft, {
+          singingTeacher,
+          trackId,
+        });
+      },
+      action({ mutations }, { singingTeacher, trackId }) {
+        mutations.COMMAND_SET_SINGING_TEACHER({
+          singingTeacher,
+          trackId,
+        });
+      },
+    },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
       mutation(draft, { keyRangeAdjustment, trackId }) {
         singingStore.mutations.SET_KEY_RANGE_ADJUSTMENT(draft, {
@@ -3883,6 +3907,7 @@ export const singingCommandStore = transformCommandStore(
         const { trackId, track } = await actions.CREATE_TRACK();
         const sourceTrack = getOrThrow(state.tracks, prevTrackId);
         track.singer = sourceTrack.singer;
+        track.singingTeacher = sourceTrack.singingTeacher;
         track.keyRangeAdjustment = sourceTrack.keyRangeAdjustment;
         track.volumeRangeAdjustment = sourceTrack.volumeRangeAdjustment;
         mutations.COMMAND_INSERT_EMPTY_TRACK({
