@@ -15,7 +15,7 @@
     <div class="setting-summary">
       <span class="setting-label">声量</span>
       <span class="setting-value">
-        {{ formatAdjustment(track.volumeRangeAdjustment) }} dB
+        {{ formatAdjustment(track.volumeRangeAdjustment) }}
       </span>
     </div>
     <QIcon name="arrow_drop_down" size="sm" class="dropdown-icon" />

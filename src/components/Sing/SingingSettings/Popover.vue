@@ -19,31 +19,31 @@
         :disable="uiLocked || singingTeacherOptions.length === 0"
         @update:modelValue="setSingingTeacher"
       />
-      <QSelect
+      <QInput
+        type="number"
         :modelValue="track.keyRangeAdjustment"
-        :options="keyRangeAdjustmentOptions"
         label="音域"
         outlined
         dense
         hideBottomSpace
-        optionsDense
-        emitValue
-        mapOptions
+        :min="MIN_KEY_RANGE_ADJUSTMENT"
+        :max="MAX_KEY_RANGE_ADJUSTMENT"
+        step="1"
         :disable="uiLocked"
-        @update:modelValue="setKeyRangeAdjustment"
+        @change="setKeyRangeAdjustment"
       />
-      <QSelect
+      <QInput
+        type="number"
         :modelValue="track.volumeRangeAdjustment"
-        :options="volumeRangeAdjustmentOptions"
         label="声量"
         outlined
         dense
         hideBottomSpace
-        optionsDense
-        emitValue
-        mapOptions
+        :min="MIN_VOLUME_RANGE_ADJUSTMENT"
+        :max="MAX_VOLUME_RANGE_ADJUSTMENT"
+        step="1"
         :disable="uiLocked"
-        @update:modelValue="setVolumeRangeAdjustment"
+        @change="setVolumeRangeAdjustment"
       />
     </div>
   </QMenu>
@@ -53,6 +53,14 @@
 import { computed } from "vue";
 import type { SingingTeacher } from "@/domain/project/type";
 import { getOrThrow } from "@/helpers/mapHelper";
+import {
+  isValidKeyRangeAdjustment,
+  isValidVolumeRangeAdjustment,
+  MAX_KEY_RANGE_ADJUSTMENT,
+  MAX_VOLUME_RANGE_ADJUSTMENT,
+  MIN_KEY_RANGE_ADJUSTMENT,
+  MIN_VOLUME_RANGE_ADJUSTMENT,
+} from "@/sing/domain";
 import { useStore } from "@/store";
 import {
   filterCharacterInfosByStyle,
@@ -122,17 +130,6 @@ const singingTeacherKey = computed(() => {
     : getSingingTeacherKey(singingTeacher);
 });
 
-const createAdjustmentOptions = (min: number, max: number, unit: string) => {
-  return Array.from({ length: max - min + 1 }, (_, index) => {
-    const value = min + index;
-    const label = value > 0 ? `+${value}` : value.toString();
-    return { label: `${label}${unit}`, value };
-  });
-};
-
-const keyRangeAdjustmentOptions = createAdjustmentOptions(-28, 28, "");
-const volumeRangeAdjustmentOptions = createAdjustmentOptions(-20, 20, " dB");
-
 const setSingingTeacher = (key: string) => {
   const { singingTeacher } = getOrThrow(singingTeacherOptionsByKey.value, key);
   void store.actions.COMMAND_SET_SINGING_TEACHER({
@@ -141,14 +138,30 @@ const setSingingTeacher = (key: string) => {
   });
 };
 
-const setKeyRangeAdjustment = (keyRangeAdjustment: number) => {
+type AdjustmentInputValue = string | number | null;
+
+const setKeyRangeAdjustment = (value: AdjustmentInputValue) => {
+  if (value == undefined || value === "") {
+    return;
+  }
+  const keyRangeAdjustment = Number(value);
+  if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
+    return;
+  }
   void store.actions.COMMAND_SET_KEY_RANGE_ADJUSTMENT({
     trackId: props.trackId,
     keyRangeAdjustment,
   });
 };
 
-const setVolumeRangeAdjustment = (volumeRangeAdjustment: number) => {
+const setVolumeRangeAdjustment = (value: AdjustmentInputValue) => {
+  if (value == undefined || value === "") {
+    return;
+  }
+  const volumeRangeAdjustment = Number(value);
+  if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
+    return;
+  }
   void store.actions.COMMAND_SET_VOLUME_RANGE_ADJUSTMENT({
     trackId: props.trackId,
     volumeRangeAdjustment,
