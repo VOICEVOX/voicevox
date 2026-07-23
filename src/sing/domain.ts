@@ -34,7 +34,8 @@ export const isValidTrack = (track: Track) => {
   return (
     isValidKeyRangeAdjustment(track.keyRangeAdjustment) &&
     isValidVolumeRangeAdjustment(track.volumeRangeAdjustment) &&
-    isValidNotes(track.notes)
+    isValidNotes(track.notes) &&
+    isValidVolumeAdjustmentData(track.volumeAdjustmentData)
   );
 };
 
@@ -139,8 +140,11 @@ export function isValidPitchEditData(pitchEditData: number[]) {
 export function isValidVolumeAdjustmentData(
   volumeAdjustmentData: VolumeAdjustmentValue[],
 ) {
+  // UIの表示範囲とは分け、音声へ有限な倍率として適用できる値を受け入れる。
   return volumeAdjustmentData.every(
-    (value) => value == null || Number.isFinite(value),
+    (value) =>
+      value == null ||
+      (Number.isFinite(value) && Number.isFinite(decibelToLinear(value))),
   );
 }
 

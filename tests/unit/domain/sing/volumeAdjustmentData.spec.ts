@@ -10,4 +10,8 @@ describe("isValidVolumeAdjustmentData", () => {
     expect(isValidVolumeAdjustmentData([Number.NaN])).toBe(false);
     expect(isValidVolumeAdjustmentData([Number.POSITIVE_INFINITY])).toBe(false);
   });
+
+  it("有限な倍率へ変換できないdB変更量を拒否する", () => {
+    expect(isValidVolumeAdjustmentData([Number.MAX_VALUE])).toBe(false);
+  });
 });

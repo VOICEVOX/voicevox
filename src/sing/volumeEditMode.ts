@@ -1,4 +1,3 @@
-import { clamp, linearInterpolation } from "@/sing/utility";
 import {
   relativeVolumeValueScale,
   type VolumeValueScale,
@@ -14,21 +13,11 @@ export type VolumeEditMode = {
    * モードごとに有効なスケールは1つなので、不正な組み合わせを防ぐためモード側が持つ。
    */
   valueScale: VolumeValueScale;
-  /** エディタ上のポインタ位置が示すdBを、volumeAdjustmentDataに保存する編集値へ変換する。 */
-  toStoredValue: (db: number) => number;
-  /** 編集値を表示スケールの範囲内にクランプする。 */
-  clampStoredValue: (value: number) => number;
   /**
-   * 2つの編集値の間をxの位置で補間する。
-   * カーソル入力間を補うために使用する。
+   * エディタ上のポインタ位置が示すdBを、volumeAdjustmentDataに保存する編集値へ変換する。
+   * 相対値編集ではdBをそのまま保存する。
    */
-  interpolateStoredValues: (
-    x0: number,
-    value0: number,
-    x1: number,
-    value1: number,
-    x: number,
-  ) => number;
+  toStoredValue: (db: number) => number;
 };
 
 /**
@@ -37,21 +26,5 @@ export type VolumeEditMode = {
  */
 export const relativeVolumeEditMode: VolumeEditMode = {
   valueScale: relativeVolumeValueScale,
-  toStoredValue: (db) => {
-    if (!Number.isFinite(db)) {
-      throw new Error("db must be finite.");
-    }
-    return db;
-  },
-  clampStoredValue: (value) =>
-    clamp(
-      value,
-      relativeVolumeValueScale.minDb,
-      relativeVolumeValueScale.maxDb,
-    ),
-  interpolateStoredValues: (x0, value0, x1, value1, x) =>
-    linearInterpolation(x0, value0, x1, value1, x),
+  toStoredValue: (db) => db,
 };
-
-/** 現在使用するボリューム編集モード。 */
-export const currentVolumeEditMode = relativeVolumeEditMode;

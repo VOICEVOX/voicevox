@@ -5,11 +5,6 @@ export type VolumeEditableFrameRange = {
   readonly endFrame: number;
 };
 
-export type VolumeEditFrameRange = {
-  startFrame: number;
-  endFrame: number;
-};
-
 export type FramewiseVolumeAdjustmentData = {
   readonly values: readonly VolumeAdjustmentValue[];
   readonly startFrame: number;
@@ -106,5 +101,5 @@ export const maskVolumeAdjustmentDataByEditableRanges = (
 export const countVolumeAdjustmentDataPoints = (
   data: readonly VolumeAdjustmentValue[],
 ) => {
-  return data.filter((value) => value !== null).length;
+  return data.filter((value) => value != null).length;
 };

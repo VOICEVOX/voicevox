@@ -21,7 +21,6 @@ export type VolumeValueScale = {
 
 // NOTE: 表示範囲はヒューリスティックなもの。
 // 0dB（原音のまま）が中央に来るように上下対称とし、持ち上げすぎ・下げすぎで破綻しない±12dBに設定。
-// 範囲を変えると既存のプロジェクトで表示が変わる点には注意。
 export const RELATIVE_VOLUME_MIN_DB = -12;
 export const RELATIVE_VOLUME_MAX_DB = 12;
 

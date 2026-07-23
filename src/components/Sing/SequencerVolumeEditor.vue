@@ -259,12 +259,12 @@ type VolumeTooltipState = {
   pointerY: number;
 };
 
-// ツールチップには、ポインタ位置で設定されるボリューム(dB)を表示する。
-// 絶対値編集においては以下は検討したが行わない:
-// - 原音との差分: 原音はフレームごとに異なるため、ポインタを1フレーム横に動かした
-//   だけで値が揺れて読み取りづらい(例: +1.0 → +3.0 → -1.5...)
-// - 差分と絶対値の併記: 一目で何の値か分からなくなる
-// ※ 相対値編集においては上記知見からベースとなる0dBラインとの差分のみの表示にする
+// ツールチップには、ポインタ位置で設定されるボリューム変更量(dB)を表示する。
+// 相対値編集においては以下は検討したが行わない:
+// - 変更後の絶対値: 原音はフレームごとに異なるため、ポインタを1フレーム横に動かした
+//   だけで値が揺れて読み取りづらい(例: -18.0 → -16.0 → -20.5...)
+// - 変更量と絶対値の併記: 一目で何の値か分からなくなる
+// ※ 上記知見からベースとなる0dBラインとの差分のみの表示にする
 const tooltipState = computed<VolumeTooltipState | undefined>(() => {
   const data = tooltipData.value;
   if (data == undefined) {
@@ -376,7 +376,7 @@ const buildSegments = (framewiseData: (number | null)[], frameRate: number) => {
   let current: VolumeSegment | undefined;
 
   for (const [frame, value] of framewiseData.entries()) {
-    if (value === null) {
+    if (value == null) {
       if (current != undefined && current.length >= 2) {
         segments.push(current);
       }
@@ -422,9 +422,7 @@ const updateHorizontalGrid = () => {
     if (line.labelOnly === true) {
       continue;
     }
-    const y =
-      Math.round((1 - volumeValueScale.dbToNormalizedY(line.db)) * height) +
-      0.5;
+    const y = (1 - volumeValueScale.dbToNormalizedY(line.db)) * height;
     gridGraphics
       .moveTo(VOLUME_EDITOR_LAYOUT.keyColumnWidthPx, y)
       .lineTo(width, y)
@@ -597,9 +595,8 @@ const refreshVolumeEditSegments = () => {
         editableRanges,
       );
       for (const [i, rawValue] of maskedPreview.entries()) {
-        if (rawValue === null) continue;
-        editFramewise[startFrame + i] =
-          volumeEditMode.clampStoredValue(rawValue);
+        if (rawValue == null) continue;
+        editFramewise[startFrame + i] = rawValue;
       }
       previewEraseRanges.value = [];
     } else if (preview.type === "erase") {
@@ -848,10 +845,6 @@ onMounted(async () => {
   editedVolumeLine = new VolumeLine({
     color: initialLineColors.edited,
     width: VOLUME_EDITOR_LINE_WIDTH.editedVolume,
-    showArea: true,
-    areaAlpha: VOLUME_EDITOR_ALPHA.editedVolumeArea,
-    // 面は0dB（原音のまま）の基準線に向かって塗る
-    areaBaseNormalizedY: volumeValueScale.dbToNormalizedY(0),
     isVisible: true,
   });
 
