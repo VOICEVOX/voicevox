@@ -1,7 +1,14 @@
 import { nextTick } from "vue";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import { store } from "@/store";
-import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
+import {
+  type CharacterInfo,
+  EngineId,
+  NoteId,
+  SpeakerId,
+  StyleId,
+  TrackId,
+} from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { createDefaultTrack, VALUE_INDICATING_NO_DATA } from "@/sing/domain";
@@ -14,10 +21,79 @@ beforeEach(() => {
   resetMockMode();
 });
 
+test("SET_SINGERで未設定の歌い方を同じキャラクターから補完する", async () => {
+  const trackId = store.state.trackOrder[0];
+  const engineId = EngineId(uuid4());
+  const singer = { engineId, styleId: StyleId(1) };
+  const characterInfo: CharacterInfo = {
+    portraitPath: "path/to/portrait",
+    metas: {
+      policy: "policy",
+      speakerName: "speakerName",
+      speakerUuid: SpeakerId(uuid4()),
+      styles: [
+        {
+          styleType: "frame_decode",
+          styleName: "singer",
+          engineId,
+          styleId: singer.styleId,
+          iconPath: "path/to/icon",
+          portraitPath: "path/to/portrait",
+          voiceSamplePaths: [],
+        },
+        {
+          styleType: "singing_teacher",
+          styleName: "teacher",
+          engineId,
+          styleId: StyleId(6000),
+          iconPath: "path/to/icon",
+          portraitPath: "path/to/portrait",
+          voiceSamplePaths: [],
+        },
+      ],
+    },
+  };
+  store.mutations.SET_CHARACTER_INFOS({
+    engineId,
+    characterInfos: [characterInfo],
+  });
+
+  store.mutations.SET_SINGER({ trackId, singer });
+
+  expect(getOrThrow(store.state.tracks, trackId).singingTeacher).toEqual({
+    styleId: StyleId(6000),
+  });
+
+  // シンガーを設定したままだとwatcher経由のRENDERが未登録エンジンを参照して落ちるため、リセットしてwatcherを流す
+  store.mutations.SET_SINGER({ trackId, singer: undefined });
+  await nextTick();
+});
+
+test("SET_SINGERで設定済みの歌い方を上書きしない", async () => {
+  const trackId = store.state.trackOrder[0];
+  const engineId = EngineId(uuid4());
+  const singingTeacher = {
+    styleId: StyleId(2),
+  };
+  store.mutations.SET_SINGING_TEACHER({ trackId, singingTeacher });
+
+  store.mutations.SET_SINGER({
+    trackId,
+    singer: { engineId, styleId: StyleId(1) },
+  });
+
+  expect(getOrThrow(store.state.tracks, trackId).singingTeacher).toEqual(
+    singingTeacher,
+  );
+
+  // シンガーを設定したままだとwatcher経由のRENDERが未登録エンジンを参照して落ちるため、リセットしてwatcherを流す
+  store.mutations.SET_SINGER({ trackId, singer: undefined });
+  await nextTick();
+});
+
 test("COMMAND_SET_SINGING_TEACHER", async () => {
   const trackId = store.state.trackOrder[0];
   const singingTeacher = {
-    engineId: EngineId(uuid4()),
     styleId: StyleId(1),
   };
 
@@ -29,9 +105,6 @@ test("COMMAND_SET_SINGING_TEACHER", async () => {
   expect(getOrThrow(store.state.tracks, trackId).singingTeacher).toEqual(
     singingTeacher,
   );
-
-  await nextTick();
-  await vi.waitFor(() => expect(store.state.nowRendering).toBe(false));
 });
 
 describe("COMMAND_UPSERT_PHONEME_TIMING_EDIT", () => {

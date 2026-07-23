@@ -57,14 +57,13 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
     expect({ renderingResultInfo }).toMatchSnapshot();
   });
 
-  test("歌い方の生成と歌声の合成でそれぞれのengineとstyleが使われる", async () => {
+  test("歌い方の生成と歌声の合成でそれぞれのstyleが使われる", async () => {
     const trackId = TrackId(uuid4());
     const singer = {
-      engineId: EngineId("singer-engine"),
+      engineId: constants.engineId,
       styleId: StyleId(100),
     };
     const singingTeacher = {
-      engineId: EngineId("teacher-engine"),
       styleId: StyleId(200),
     };
     const engineSongApiCalls: EngineSongApiCall[] = [];
@@ -88,19 +87,19 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
     expect(engineSongApiCalls).toEqual([
       {
         operation: "fetchFrameAudioQuery",
-        ...singingTeacher,
+        styleId: singingTeacher.styleId,
       },
       {
         operation: "fetchSingFrameF0",
-        ...singingTeacher,
+        styleId: singingTeacher.styleId,
       },
       {
         operation: "fetchSingFrameVolume",
-        ...singingTeacher,
+        styleId: singingTeacher.styleId,
       },
       {
         operation: "frameSynthesis",
-        ...singer,
+        styleId: singer.styleId,
       },
     ]);
   });
@@ -125,7 +124,6 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           {
             singer,
             singingTeacher: {
-              engineId: constants.engineId,
               styleId: StyleId(1),
             },
             notes,
@@ -142,7 +140,6 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           {
             singer,
             singingTeacher: {
-              engineId: constants.engineId,
               styleId: StyleId(2),
             },
             notes,
@@ -521,6 +518,7 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
         trackId3,
         {
           singer: singer3,
+          singingTeacher: { styleId: constants.singingTeacherStyleId },
           notes: trackNotes3,
         },
       ],

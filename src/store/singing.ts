@@ -28,6 +28,7 @@ import {
   currentDateString,
   DEFAULT_PROJECT_NAME,
   DEFAULT_STYLE_NAME,
+  findInitialSingingTeacher,
   generateLabelFileData,
   type PhonemeTimingLabel,
   sanitizeFileName,
@@ -818,9 +819,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_SINGER: {
     // 歌手をセットする。
     // withRelatedがtrueの場合、関連する情報もセットする。
+    // 歌い方が未設定の場合は初期値を補完する。設定済みの歌い方は上書きしない。
     mutation(state, { singer, withRelated, trackId }) {
       const track = getOrThrow(state.tracks, trackId);
       track.singer = singer;
+
+      if (singer != undefined && track.singingTeacher == undefined) {
+        track.singingTeacher = findInitialSingingTeacher(
+          singer.styleId,
+          state.characterInfos[singer.engineId] ?? [],
+        );
+      }
 
       if (withRelated == true && singer != undefined) {
         // 音域調整量マジックナンバーを設定するワークアラウンド

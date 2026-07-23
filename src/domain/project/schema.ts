@@ -85,7 +85,10 @@ const engineStyleSchema = z.object({
 
 export const singerSchema = engineStyleSchema;
 
-export const singingTeacherSchema = engineStyleSchema;
+export const singingTeacherSchema = z.object({
+  // NOTE: 歌い方教師のエンジンはシンガーのエンジンに従う形とし、engineIdはもたない
+  styleId: styleIdSchema,
+});
 
 export const phonemeTimingEditSchema = z.object({
   phonemeIndexInNote: z.number(), // ノート内での音素の順番

@@ -301,6 +301,19 @@ export const migrateProjectFileObject = async (
     }
   }
 
+  // TODO: 歌い方変更のバージョンは未定で、仮で0.26.0以下に指定しているため、バージョンが決まったら修正
+  if (semver.satisfies(projectAppVersion, "<0.26.0", semverSatisfiesOptions)) {
+    // 歌い方設定がない場合、歌い方変更実装前のデフォルトである波音リツ(id:6000)に設定する
+    for (const trackId in projectData.song.tracks) {
+      const track = projectData.song.tracks[trackId];
+      if (track.singer != undefined && track.singingTeacher == undefined) {
+        track.singingTeacher = {
+          styleId: 6000,
+        };
+      }
+    }
+  }
+
   // Validation check
   // トークはvalidateTalkProjectで検証する
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される

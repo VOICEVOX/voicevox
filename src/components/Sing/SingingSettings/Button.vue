@@ -43,13 +43,14 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 const track = computed(() => getOrThrow(store.state.tracks, props.trackId));
 
 const singingTeacherName = computed(() => {
+  const singer = track.value.singer;
   const singingTeacher = track.value.singingTeacher;
-  if (singingTeacher == undefined) {
+  if (singer == undefined || singingTeacher == undefined) {
     return "未設定";
   }
 
   const characterInfo = store.getters.CHARACTER_INFO(
-    singingTeacher.engineId,
+    singer.engineId,
     singingTeacher.styleId,
   );
   if (characterInfo == undefined) {
@@ -57,9 +58,7 @@ const singingTeacherName = computed(() => {
   }
 
   const styleName = characterInfo.metas.styles.find(
-    (style) =>
-      style.engineId === singingTeacher.engineId &&
-      style.styleId === singingTeacher.styleId,
+    (style) => style.styleId === singingTeacher.styleId,
   )?.styleName;
   return styleName == undefined
     ? characterInfo.metas.speakerName

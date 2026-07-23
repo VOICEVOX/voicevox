@@ -6,7 +6,7 @@
   >
     <div class="settings">
       <QSelect
-        :modelValue="singingTeacherKey"
+        :modelValue="singingTeacherStyleId"
         :options="singingTeacherOptions"
         label="歌い方"
         placeholder="未設定"
@@ -51,7 +51,6 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import type { SingingTeacher } from "@/domain/project/type";
 import { getOrThrow } from "@/helpers/mapHelper";
 import {
   isValidKeyRangeAdjustment,
@@ -66,7 +65,7 @@ import {
   filterCharacterInfosByStyle,
   isSingingTeacherStyle,
 } from "@/store/utility";
-import type { StyleInfo, TrackId } from "@/type/preload";
+import type { StyleId, StyleInfo, TrackId } from "@/type/preload";
 
 defineOptions({
   name: "SingingSettingsPopover",
@@ -82,12 +81,7 @@ const track = computed(() => getOrThrow(store.state.tracks, props.trackId));
 
 type SingingTeacherOption = {
   label: string;
-  value: string;
-  singingTeacher: SingingTeacher;
-};
-
-const getSingingTeacherKey = (singingTeacher: SingingTeacher) => {
-  return `${singingTeacher.engineId}:${singingTeacher.styleId}`;
+  value: StyleId;
 };
 
 const getSingingTeacherLabel = (speakerName: string, style: StyleInfo) => {
@@ -97,44 +91,32 @@ const getSingingTeacherLabel = (speakerName: string, style: StyleInfo) => {
 };
 
 const singingTeacherOptions = computed<SingingTeacherOption[]>(() => {
+  const singer = track.value.singer;
+  if (singer == undefined) {
+    return [];
+  }
   const characterInfos =
     store.getters.USER_ORDERED_CHARACTER_INFOS("all") ?? [];
   return filterCharacterInfosByStyle(
     characterInfos,
-    isSingingTeacherStyle,
+    (style) =>
+      style.engineId === singer.engineId && isSingingTeacherStyle(style),
   ).flatMap((characterInfo) =>
-    characterInfo.metas.styles.map((style) => {
-      const singingTeacher = {
-        engineId: style.engineId,
-        styleId: style.styleId,
-      };
-      return {
-        label: getSingingTeacherLabel(characterInfo.metas.speakerName, style),
-        value: getSingingTeacherKey(singingTeacher),
-        singingTeacher,
-      };
-    }),
+    characterInfo.metas.styles.map((style) => ({
+      label: getSingingTeacherLabel(characterInfo.metas.speakerName, style),
+      value: style.styleId,
+    })),
   );
 });
 
-const singingTeacherOptionsByKey = computed(() => {
-  return new Map(
-    singingTeacherOptions.value.map((option) => [option.value, option]),
-  );
+const singingTeacherStyleId = computed(() => {
+  return track.value.singingTeacher?.styleId;
 });
 
-const singingTeacherKey = computed(() => {
-  const singingTeacher = track.value.singingTeacher;
-  return singingTeacher == undefined
-    ? undefined
-    : getSingingTeacherKey(singingTeacher);
-});
-
-const setSingingTeacher = (key: string) => {
-  const { singingTeacher } = getOrThrow(singingTeacherOptionsByKey.value, key);
+const setSingingTeacher = (styleId: StyleId) => {
   void store.actions.COMMAND_SET_SINGING_TEACHER({
     trackId: props.trackId,
-    singingTeacher,
+    singingTeacher: { styleId },
   });
 };
 

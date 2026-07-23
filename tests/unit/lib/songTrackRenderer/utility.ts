@@ -35,12 +35,9 @@ import type {
 } from "@/domain/project/type";
 
 export type EngineSongApiCall = {
-  operation:
-    | "fetchFrameAudioQuery"
-    | "fetchSingFrameF0"
-    | "fetchSingFrameVolume"
-    | "frameSynthesis";
-  engineId: EngineId;
+  operation: keyof ConstructorParameters<
+    typeof SongTrackRenderer
+  >[0]["engineSongApi"];
   styleId: StyleId;
 };
 
@@ -50,6 +47,7 @@ export type EngineSongApiCall = {
 export class SongTrackRendererTestUtility {
   private readonly tpqn: number;
   private readonly tempos: Tempo[];
+  private readonly engineId: EngineId;
   private readonly singingTeacher: SingingTeacher;
   private readonly frameRate: number;
 
@@ -62,8 +60,8 @@ export class SongTrackRendererTestUtility {
   }) {
     this.tpqn = constants.tpqn;
     this.tempos = constants.tempos;
+    this.engineId = constants.engineId;
     this.singingTeacher = {
-      engineId: constants.engineId,
       styleId: constants.singingTeacherStyleId,
     };
     this.frameRate = constants.frameRate;
@@ -94,7 +92,6 @@ export class SongTrackRendererTestUtility {
         fetchFrameAudioQuery: async (args) => {
           onEngineSongApiCall?.({
             operation: "fetchFrameAudioQuery",
-            engineId: args.engineId,
             styleId: args.styleId,
           });
           const query = await mock.singFrameAudioQuery({
@@ -106,7 +103,6 @@ export class SongTrackRendererTestUtility {
         fetchSingFrameF0: async (args) => {
           onEngineSongApiCall?.({
             operation: "fetchSingFrameF0",
-            engineId: args.engineId,
             styleId: args.styleId,
           });
           return await mock.singFrameF0({
@@ -120,7 +116,6 @@ export class SongTrackRendererTestUtility {
         fetchSingFrameVolume: async (args) => {
           onEngineSongApiCall?.({
             operation: "fetchSingFrameVolume",
-            engineId: args.engineId,
             styleId: args.styleId,
           });
           return await mock.singFrameVolume({
@@ -134,7 +129,6 @@ export class SongTrackRendererTestUtility {
         frameSynthesis: async (args) => {
           onEngineSongApiCall?.({
             operation: "frameSynthesis",
-            engineId: args.engineId,
             styleId: args.styleId,
           });
           return await mock.frameSynthesis({
@@ -177,23 +171,12 @@ export class SongTrackRendererTestUtility {
       ]),
     );
 
-    const engineIds = new Set(
-      [...tracks.values()].flatMap((track) => [
-        ...(track.singer != undefined ? [track.singer.engineId] : []),
-        ...(track.singingTeacher != undefined
-          ? [track.singingTeacher.engineId]
-          : []),
-      ]),
-    );
-
     return {
       tpqn: this.tpqn,
       tempos: this.tempos,
       tracks,
       trackOverlappingNoteIds,
-      engineFrameRates: new Map(
-        [...engineIds].map((engineId) => [engineId, this.frameRate]),
-      ),
+      engineFrameRates: new Map([[this.engineId, this.frameRate]]),
       editorFrameRate: this.frameRate,
       defaultLyricMode: "doremi",
     };

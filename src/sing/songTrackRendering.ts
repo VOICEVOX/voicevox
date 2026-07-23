@@ -81,6 +81,7 @@ export type PhraseForRender = {
  * クエリの生成に必要なデータ
  */
 type QuerySource = Readonly<{
+  engineId: EngineId;
   singingTeacher: SingingTeacher;
   engineFrameRate: number;
   tpqn: number;
@@ -97,6 +98,7 @@ type QuerySource = Readonly<{
  * 歌唱ピッチの生成に必要なデータ
  */
 type SingingPitchSource = Readonly<{
+  engineId: EngineId;
   singingTeacher: SingingTeacher;
   engineFrameRate: number;
   tpqn: number;
@@ -112,6 +114,7 @@ type SingingPitchSource = Readonly<{
  * 歌唱ボリュームの生成に必要なデータ
  */
 type SingingVolumeSource = Readonly<{
+  engineId: EngineId;
   singingTeacher: SingingTeacher;
   engineFrameRate: number;
   tpqn: number;
@@ -458,14 +461,10 @@ const createPhrasesFromNotes = async (
   const track = getOrThrow(snapshot.tracks, trackId);
 
   let engineFrameRate: number | undefined = undefined;
-  if (
-    phraseNotesList.length > 0 &&
-    track.singer != undefined &&
-    track.singingTeacher != undefined
-  ) {
+  if (track.singer != undefined && track.singingTeacher != undefined) {
     engineFrameRate = getOrThrow(
       snapshot.engineFrameRates,
-      track.singingTeacher.engineId,
+      track.singer.engineId,
     );
   }
 
@@ -612,14 +611,18 @@ const generateQuerySource = (
   snapshot: SnapshotForRender,
 ): QuerySource => {
   const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
   if (track.singingTeacher == undefined) {
     throw new Error("track.singingTeacher is undefined.");
   }
   const engineFrameRate = getOrThrow(
     snapshot.engineFrameRates,
-    track.singingTeacher.engineId,
+    track.singer.engineId,
   );
   return {
+    engineId: track.singer.engineId,
     singingTeacher: track.singingTeacher,
     engineFrameRate,
     tpqn: snapshot.tpqn,
@@ -638,6 +641,9 @@ const generateSingingPitchSource = (
   snapshot: SnapshotForRender,
 ): SingingPitchSource => {
   const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
   if (track.singingTeacher == undefined) {
     throw new Error("track.singingTeacher is undefined.");
   }
@@ -662,6 +668,7 @@ const generateSingingPitchSource = (
   clonedQuery.phonemes = toPhonemes(phonemeTimings);
 
   return {
+    engineId: track.singer.engineId,
     singingTeacher: track.singingTeacher,
     engineFrameRate: phrase.query.frameRate,
     tpqn: snapshot.tpqn,
@@ -679,6 +686,9 @@ const generateSingingVolumeSource = (
   snapshot: SnapshotForRender,
 ): SingingVolumeSource => {
   const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
   if (track.singingTeacher == undefined) {
     throw new Error("track.singingTeacher is undefined.");
   }
@@ -717,6 +727,7 @@ const generateSingingVolumeSource = (
   );
 
   return {
+    engineId: track.singer.engineId,
     singingTeacher: track.singingTeacher,
     engineFrameRate: phrase.query.frameRate,
     tpqn: snapshot.tpqn,
@@ -737,6 +748,9 @@ const generateSingingVoiceSource = (
   const track = getOrThrow(snapshot.tracks, phrase.trackId);
   if (track.singer == undefined) {
     throw new Error("track.singer is undefined.");
+  }
+  if (track.singingTeacher == undefined) {
+    throw new Error("track.singingTeacher is undefined.");
   }
   if (phrase.query == undefined) {
     throw new Error("phrase.query is undefined.");
@@ -812,7 +826,7 @@ const generateQuery = async (
   shiftKeyOfNotes(notesForRequestToEngine, -querySource.keyRangeAdjustment);
 
   const query = await engineSongApi.fetchFrameAudioQuery({
-    engineId: querySource.singingTeacher.engineId,
+    engineId: querySource.engineId,
     styleId: querySource.singingTeacher.styleId,
     engineFrameRate: querySource.engineFrameRate,
     notes: notesForRequestToEngine,
@@ -855,7 +869,7 @@ const generateSingingPitch = async (
   const singingPitch = await engineSongApi.fetchSingFrameF0({
     notes: notesForRequestToEngine,
     query: queryForPitchGeneration,
-    engineId: singingPitchSource.singingTeacher.engineId,
+    engineId: singingPitchSource.engineId,
     styleId: singingPitchSource.singingTeacher.styleId,
   });
 
@@ -892,7 +906,7 @@ const generateSingingVolume = async (
   const singingVolume = await engineSongApi.fetchSingFrameVolume({
     notes: notesForRequestToEngine,
     query: queryForVolumeGeneration,
-    engineId: singingVolumeSource.singingTeacher.engineId,
+    engineId: singingVolumeSource.engineId,
     styleId: singingVolumeSource.singingTeacher.styleId,
   });
 
