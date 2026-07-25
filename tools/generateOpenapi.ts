@@ -43,6 +43,17 @@ async function updateOpenapiJson(engineBase: string) {
   console.log("OpenAPI JSON updated successfully.");
 }
 
+/**
+ * URIとして解釈されても壊れないよう、パスの区切り文字を`/`に統一する。
+ *
+ * NOTE: OpenAPI Generator は入力のOpenAPIのパスをURIとして解釈するため、
+ * Windowsの区切り文字`\`を含むパスをそのまま渡すと不正な文字として扱われて失敗する。
+ * 参考: https://github.com/swagger-api/swagger-parser/issues/2136
+ */
+function toUriSafePath(targetPath: string) {
+  return targetPath.replaceAll(path.sep, "/");
+}
+
 async function runOpenapiGenerator() {
   console.log("Generating OpenAPI client...");
   execSync(
@@ -52,7 +63,7 @@ async function runOpenapiGenerator() {
       "openapi-generator-cli",
       "generate",
       "-i",
-      openapiJsonPath,
+      toUriSafePath(openapiJsonPath),
       "-o",
       openapiDir,
       "-g",
