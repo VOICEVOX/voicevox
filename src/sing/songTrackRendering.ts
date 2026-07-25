@@ -58,7 +58,7 @@ export type SnapshotForRender = Readonly<{
  * レンダリング用のフレーズ
  */
 export type PhraseForRender = {
-  readonly singer: Singer | undefined;
+  readonly isRenderable: boolean;
   readonly firstRestDuration: number;
   readonly notes: Note[];
   readonly startTicks: number;
@@ -460,12 +460,13 @@ const createPhrasesFromNotes = async (
 ) => {
   const track = getOrThrow(snapshot.tracks, trackId);
 
+  // シンガーと歌い方が揃っていないとエンジンにリクエストできない
+  const singer = track.singer;
+  const isRenderable = singer != undefined && track.singingTeacher != undefined;
+
   let engineFrameRate: number | undefined = undefined;
-  if (track.singer != undefined && track.singingTeacher != undefined) {
-    engineFrameRate = getOrThrow(
-      snapshot.engineFrameRates,
-      track.singer.engineId,
-    );
+  if (isRenderable) {
+    engineFrameRate = getOrThrow(snapshot.engineFrameRates, singer.engineId);
   }
 
   const phrases = new Map<PhraseKey, PhraseForRender>();
@@ -548,7 +549,7 @@ const createPhrasesFromNotes = async (
     }
 
     const phrase: PhraseForRender = {
-      singer: track.singer,
+      isRenderable,
       firstRestDuration: phraseFirstRestDuration,
       notes: phraseNotes,
       startTicks: phraseFirstNote.position,
@@ -1120,7 +1121,7 @@ export class SongTrackRenderer {
       });
 
       // レンダリング可能なフレーズを抽出
-      const renderablePhrases = this.filterRenderablePhrases(phrases, snapshot);
+      const renderablePhrases = this.filterRenderablePhrases(phrases);
 
       // 既存のキャッシュデータをフレーズに適用
       await this.applyCachedDataToPhrases(renderablePhrases, snapshot);
@@ -1220,15 +1221,10 @@ export class SongTrackRenderer {
    * @param phrases 全てのフレーズを含むマップ。
    * @returns レンダリング可能なフレーズのみを含む新しいマップ。
    */
-  private filterRenderablePhrases(
-    phrases: Map<PhraseKey, PhraseForRender>,
-    snapshot: SnapshotForRender,
-  ) {
+  private filterRenderablePhrases(phrases: Map<PhraseKey, PhraseForRender>) {
     const renderablePhrases = new Map<PhraseKey, PhraseForRender>();
     for (const [phraseKey, phrase] of phrases) {
-      // フレーズが属するトラックにシンガーと歌い方が割り当てられていれば、レンダリング可能とする
-      const track = getOrThrow(snapshot.tracks, phrase.trackId);
-      if (track.singer != undefined && track.singingTeacher != undefined) {
+      if (phrase.isRenderable) {
         renderablePhrases.set(phraseKey, phrase);
       }
     }
