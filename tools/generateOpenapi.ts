@@ -49,6 +49,8 @@ async function updateOpenapiJson(engineBase: string) {
  * NOTE: OpenAPI Generator は入力のOpenAPIのパスをURIとして解釈するため、
  * Windowsの区切り文字`\`を含むパスをそのまま渡すと不正な文字として扱われて失敗する。
  * 参考: https://github.com/swagger-api/swagger-parser/issues/2136
+ *
+ * TODO: OpenAPI Generator 側で修正されたらこの関数を削除する。
  */
 function toUriSafePath(targetPath: string) {
   return targetPath.replaceAll(path.sep, "/");
