@@ -20,6 +20,7 @@ export * from './Note';
 export * from './ParseKanaBadRequest';
 export * from './Preset';
 export * from './Score';
+export * from './Seeding';
 export * from './Speaker';
 export * from './SpeakerInfo';
 export * from './SpeakerStyle';
