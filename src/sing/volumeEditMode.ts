@@ -5,7 +5,7 @@ import {
 
 /**
  * ボリューム編集の入力と表示の定義。
- * UI上でポインタが示すdBは、原音からの変更量としてvolumeAdjustmentDataに保存する。
+ * UI上でポインタが示すdBは、原音からの変更量としてvolumeEditDataに保存する。
  */
 export type VolumeEditMode = {
   /**
@@ -14,7 +14,7 @@ export type VolumeEditMode = {
    */
   valueScale: VolumeValueScale;
   /**
-   * エディタ上のポインタ位置が示すdBを、volumeAdjustmentDataに保存する編集値へ変換する。
+   * エディタ上のポインタ位置が示すdBを、volumeEditDataに保存する編集値へ変換する。
    * 相対値編集ではdBをそのまま保存する。
    */
   toStoredValue: (db: number) => number;

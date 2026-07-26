@@ -771,7 +771,7 @@ const generateSingingVoiceSource = (
   applyVolumeEdit(
     clonedQuery,
     phrase.startTime,
-    track.volumeAdjustmentData,
+    track.volumeEditData,
     snapshot.editorFrameRate,
     phrase.minNonPauseStartFrame,
     phrase.maxNonPauseEndFrame,

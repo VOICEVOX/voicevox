@@ -92,7 +92,7 @@ import type { Color } from "@/sing/graphics/lineStrip";
 import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 import {
   getOverlappingVolumeEditableFrameRanges,
-  maskVolumeAdjustmentDataByEditableRanges,
+  maskVolumeEditDataByEditableRanges,
   mergeVolumeEditableFrameRanges,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
@@ -577,7 +577,7 @@ const refreshVolumeEditSegments = () => {
   const frameRate = editorFrameRate.value;
   const editableRanges = editableFrameRanges.value;
 
-  const editFramewise = [...selectedTrack.value.volumeAdjustmentData];
+  const editFramewise = [...selectedTrack.value.volumeEditData];
 
   const preview = volumePreviewEdit.value;
   if (preview != undefined) {
@@ -590,7 +590,7 @@ const refreshVolumeEditSegments = () => {
         );
       }
       // プレビューデータを editableRanges でマスクして適用
-      const maskedPreview = maskVolumeAdjustmentDataByEditableRanges(
+      const maskedPreview = maskVolumeEditDataByEditableRanges(
         { values: preview.data, startFrame: preview.startFrame },
         editableRanges,
       );
@@ -626,7 +626,7 @@ const refreshVolumeEditSegments = () => {
   }
 
   // 編集不可区間の編集データを非表示にする
-  const maskedEdit = maskVolumeAdjustmentDataByEditableRanges(
+  const maskedEdit = maskVolumeEditDataByEditableRanges(
     { values: editFramewise, startFrame: 0 },
     editableRanges,
   );
@@ -799,7 +799,7 @@ watch(
 watch(
   [
     selectedTrackId,
-    () => selectedTrack.value.volumeAdjustmentData,
+    () => selectedTrack.value.volumeEditData,
     volumePreviewEdit,
   ],
   async () => {

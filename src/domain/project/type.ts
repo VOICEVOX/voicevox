@@ -20,7 +20,7 @@ export type Singer = z.infer<typeof singerSchema>;
 
 export type Track = z.infer<typeof trackSchema>;
 
-export type VolumeAdjustmentValue = Track["volumeAdjustmentData"][number];
+export type VolumeEditValue = Track["volumeEditData"][number];
 
 export type PhonemeTimingEdit = z.infer<typeof phonemeTimingEditSchema>;
 

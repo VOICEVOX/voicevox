@@ -73,7 +73,7 @@ import {
   isValidVolumeRangeAdjustment,
   VALUE_INDICATING_NO_DATA,
   isValidPitchEditData,
-  isValidVolumeAdjustmentData,
+  isValidVolumeEditData,
   DEFAULT_TPQN,
   DEPRECATED_DEFAULT_EDITOR_FRAME_RATE,
   createDefaultTrack,
@@ -1268,38 +1268,31 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_VOLUME_EDIT_DATA: {
-    // ボリューム変更量をセットする。
-    // track.volumeAdjustmentDataの長さが足りない場合は、伸長も行う。
-    mutation(state, { volumeAdjustmentArray, startFrame, trackId }) {
+    // ボリューム編集データをセットする。
+    // track.volumeEditDataの長さが足りない場合は、伸長も行う。
+    mutation(state, { volumeArray, startFrame, trackId }) {
       const track = getOrThrow(state.tracks, trackId);
-      const volumeAdjustmentData = track.volumeAdjustmentData;
-      const tempData = [...volumeAdjustmentData];
-      const endFrame = startFrame + volumeAdjustmentArray.length;
+      const volumeEditData = track.volumeEditData;
+      const tempData = [...volumeEditData];
+      const endFrame = startFrame + volumeArray.length;
       if (tempData.length < endFrame) {
         const valuesToPush = new Array<null>(endFrame - tempData.length).fill(
           null,
         );
         tempData.push(...valuesToPush);
       }
-      tempData.splice(
-        startFrame,
-        volumeAdjustmentArray.length,
-        ...volumeAdjustmentArray,
-      );
-      track.volumeAdjustmentData = tempData;
+      tempData.splice(startFrame, volumeArray.length, ...volumeArray);
+      track.volumeEditData = tempData;
     },
-    async action(
-      { mutations },
-      { volumeAdjustmentArray, startFrame, trackId },
-    ) {
+    async action({ mutations }, { volumeArray, startFrame, trackId }) {
       if (startFrame < 0) {
         throw new Error("startFrame must be greater than or equal to 0.");
       }
-      if (!isValidVolumeAdjustmentData(volumeAdjustmentArray)) {
-        throw new Error("The volume adjustment data is invalid.");
+      if (!isValidVolumeEditData(volumeArray)) {
+        throw new Error("The volume edit data is invalid.");
       }
       mutations.SET_VOLUME_EDIT_DATA({
-        volumeAdjustmentArray,
+        volumeArray,
         startFrame,
         trackId,
       });
@@ -1320,13 +1313,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   ERASE_VOLUME_EDIT_DATA: {
     mutation(state, { ranges, trackId }) {
       const track = getOrThrow(state.tracks, trackId);
-      const volumeAdjustmentData = track.volumeAdjustmentData;
-      const tempData = [...volumeAdjustmentData];
+      const volumeEditData = track.volumeEditData;
+      const tempData = [...volumeEditData];
       for (const range of ranges) {
         const endFrame = Math.min(range.endFrame, tempData.length);
         tempData.fill(null, range.startFrame, endFrame);
       }
-      track.volumeAdjustmentData = tempData;
+      track.volumeEditData = tempData;
     },
   },
 
@@ -1342,10 +1335,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   CLEAR_VOLUME_EDIT_DATA: {
-    // ボリューム変更量をクリア
+    // ボリューム編集データをクリア
     mutation(state, { trackId }) {
       const track = getOrThrow(state.tracks, trackId);
-      track.volumeAdjustmentData = [];
+      track.volumeEditData = [];
     },
     async action({ mutations }, { trackId }) {
       mutations.CLEAR_VOLUME_EDIT_DATA({ trackId });
@@ -3500,7 +3493,7 @@ export const singingStorePlugins: StorePlugins = [
           track.notes,
           track.phonemeTimingEditData,
           track.pitchEditData,
-          track.volumeAdjustmentData,
+          track.volumeEditData,
         ]),
         state.defaultLyricMode,
       ],
@@ -3809,22 +3802,22 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_SET_VOLUME_EDIT_DATA: {
-      mutation(draft, { volumeAdjustmentArray, startFrame, trackId }) {
+      mutation(draft, { volumeArray, startFrame, trackId }) {
         singingStore.mutations.SET_VOLUME_EDIT_DATA(draft, {
-          volumeAdjustmentArray,
+          volumeArray,
           startFrame,
           trackId,
         });
       },
-      action({ mutations }, { volumeAdjustmentArray, startFrame, trackId }) {
+      action({ mutations }, { volumeArray, startFrame, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
-        if (!isValidVolumeAdjustmentData(volumeAdjustmentArray)) {
-          throw new Error("The volume adjustment data is invalid.");
+        if (!isValidVolumeEditData(volumeArray)) {
+          throw new Error("The volume edit data is invalid.");
         }
         mutations.COMMAND_SET_VOLUME_EDIT_DATA({
-          volumeAdjustmentArray,
+          volumeArray,
           startFrame,
           trackId,
         });

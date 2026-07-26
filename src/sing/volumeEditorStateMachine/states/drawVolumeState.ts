@@ -12,9 +12,9 @@ import type { TrackId } from "@/type/preload";
 import { createArray, linearInterpolation } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
 import {
-  countVolumeAdjustmentDataPoints,
+  countVolumeEditDataPoints,
   isFrameInVolumeEditableRange,
-  maskVolumeAdjustmentDataByEditableRanges,
+  maskVolumeEditDataByEditableRanges,
 } from "@/sing/volumeEditRanges";
 
 export class DrawVolumeState implements State<
@@ -155,17 +155,17 @@ export class DrawVolumeState implements State<
     this.innerContext = undefined;
 
     if (this.applyPreview) {
-      const maskedPreviewData = maskVolumeAdjustmentDataByEditableRanges(
+      const maskedPreviewData = maskVolumeEditDataByEditableRanges(
         {
           values: context.previewVolumeEdit.value.data,
           startFrame: context.previewVolumeEdit.value.startFrame,
         },
         context.getEditableFrameRanges(),
       );
-      if (countVolumeAdjustmentDataPoints(maskedPreviewData) >= 2) {
+      if (countVolumeEditDataPoints(maskedPreviewData) >= 2) {
         // TODO: 平滑化を行う...特にdBスケールにするのであれば他も見直す必要がある
         void context.store.actions.COMMAND_SET_VOLUME_EDIT_DATA({
-          volumeAdjustmentArray: maskedPreviewData,
+          volumeArray: maskedPreviewData,
           startFrame: context.previewVolumeEdit.value.startFrame,
           trackId: this.trackId,
         });

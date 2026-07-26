@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getOverlappingVolumeEditableFrameRanges,
   isFrameInVolumeEditableRange,
-  maskVolumeAdjustmentDataByEditableRanges,
+  maskVolumeEditDataByEditableRanges,
   mergeVolumeEditableFrameRanges,
 } from "@/sing/volumeEditRanges";
 
@@ -35,7 +35,7 @@ describe("volumeEditRanges", () => {
   });
 
   it("編集可能区間外のデータをマスクする", () => {
-    const actual = maskVolumeAdjustmentDataByEditableRanges(
+    const actual = maskVolumeEditDataByEditableRanges(
       { values: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6], startFrame: 8 },
       [
         { startFrame: 9, endFrame: 11 },
@@ -73,7 +73,7 @@ describe("volumeEditRanges", () => {
   });
 
   it("編集可能区間が空の場合は全データがマスクされる", () => {
-    const actual = maskVolumeAdjustmentDataByEditableRanges(
+    const actual = maskVolumeEditDataByEditableRanges(
       { values: [0.1, 0.2, 0.3], startFrame: 0 },
       [],
     );
@@ -88,7 +88,7 @@ describe("volumeEditRanges", () => {
       { startFrame: 5, endFrame: 6 },
     ];
 
-    const actual = maskVolumeAdjustmentDataByEditableRanges(
+    const actual = maskVolumeEditDataByEditableRanges(
       { values: editData, startFrame: 0 },
       ranges,
     );

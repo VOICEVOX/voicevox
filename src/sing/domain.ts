@@ -18,7 +18,7 @@ import type {
   Tempo,
   TimeSignature,
   Track,
-  VolumeAdjustmentValue,
+  VolumeEditValue,
 } from "@/domain/project/type";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import { ExhaustiveError } from "@/type/utility";
@@ -35,7 +35,7 @@ export const isValidTrack = (track: Track) => {
     isValidKeyRangeAdjustment(track.keyRangeAdjustment) &&
     isValidVolumeRangeAdjustment(track.volumeRangeAdjustment) &&
     isValidNotes(track.notes) &&
-    isValidVolumeAdjustmentData(track.volumeAdjustmentData)
+    isValidVolumeEditData(track.volumeEditData)
   );
 };
 
@@ -93,7 +93,7 @@ export function createDefaultTrack(): Track {
     volumeRangeAdjustment: 0,
     notes: [],
     pitchEditData: [],
-    volumeAdjustmentData: [],
+    volumeEditData: [],
     phonemeTimingEditData: new Map(),
 
     solo: false,
@@ -137,11 +137,9 @@ export function isValidPitchEditData(pitchEditData: number[]) {
   );
 }
 
-export function isValidVolumeAdjustmentData(
-  volumeAdjustmentData: VolumeAdjustmentValue[],
-) {
+export function isValidVolumeEditData(volumeEditData: VolumeEditValue[]) {
   // UIの表示範囲とは分け、音声へ有限な倍率として適用できる値を受け入れる。
-  return volumeAdjustmentData.every(
+  return volumeEditData.every(
     (value) =>
       value == null ||
       (Number.isFinite(value) && Number.isFinite(decibelToLinear(value))),
@@ -638,7 +636,7 @@ export function applyPitchEdit(
  *
  * @param phraseQuery - 適用対象のクエリ
  * @param phraseStartTime - フレーズの開始時刻（秒）
- * @param volumeAdjustmentData - ユーザーが編集したボリューム変更量（dB）の配列
+ * @param volumeEditData - ユーザーが編集したボリューム変更量（dB）の配列
  * @param editorFrameRate - エディターのフレームレート
  * @param minNonPauseStartFrame - 適用してよい非pau区間の開始フレーム（フレーズ先頭からのフレーム数）。undefinedなら制限しない
  * @param maxNonPauseEndFrame - 適用してよい非pau区間の終了フレーム（フレーズ先頭からのフレーム数）。undefinedなら制限しない
@@ -646,7 +644,7 @@ export function applyPitchEdit(
 export function applyVolumeEdit(
   phraseQuery: EditorFrameAudioQuery,
   phraseStartTime: number,
-  volumeAdjustmentData: VolumeAdjustmentValue[],
+  volumeEditData: VolumeEditValue[],
   editorFrameRate: number,
   minNonPauseStartFrame: number | undefined,
   maxNonPauseEndFrame: number | undefined,
@@ -671,12 +669,12 @@ export function applyVolumeEdit(
     phraseQueryStartFrame + (minNonPauseStartFrame ?? 0),
   );
   const endFrame = Math.min(
-    volumeAdjustmentData.length,
+    volumeEditData.length,
     phraseQueryStartFrame + (maxNonPauseEndFrame ?? phraseQueryFrameLength),
     phraseQueryEndFrame,
   );
   for (let i = startFrame; i < endFrame; i++) {
-    const volumeAdjustmentDb = volumeAdjustmentData[i];
+    const volumeAdjustmentDb = volumeEditData[i];
     if (volumeAdjustmentDb == null) {
       continue;
     }

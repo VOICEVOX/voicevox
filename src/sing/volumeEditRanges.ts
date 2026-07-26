@@ -1,12 +1,12 @@
-import type { VolumeAdjustmentValue } from "@/domain/project/type";
+import type { VolumeEditValue } from "@/domain/project/type";
 
 export type VolumeEditableFrameRange = {
   readonly startFrame: number;
   readonly endFrame: number;
 };
 
-export type FramewiseVolumeAdjustmentData = {
-  readonly values: readonly VolumeAdjustmentValue[];
+export type FramewiseVolumeEditData = {
+  readonly values: readonly VolumeEditValue[];
   readonly startFrame: number;
 };
 
@@ -76,13 +76,11 @@ export const getOverlappingVolumeEditableFrameRanges = (
 /**
  * 編集可能区間外の変更量をnullで埋めた新しい配列を返す。
  */
-export const maskVolumeAdjustmentDataByEditableRanges = (
-  data: FramewiseVolumeAdjustmentData,
+export const maskVolumeEditDataByEditableRanges = (
+  data: FramewiseVolumeEditData,
   ranges: readonly VolumeEditableFrameRange[],
 ) => {
-  const masked = new Array<VolumeAdjustmentValue>(data.values.length).fill(
-    null,
-  );
+  const masked = new Array<VolumeEditValue>(data.values.length).fill(null);
   for (const overlap of getOverlappingVolumeEditableFrameRanges(
     data.startFrame,
     data.values.length,
@@ -98,8 +96,6 @@ export const maskVolumeAdjustmentDataByEditableRanges = (
 };
 
 /** データ配列中の有効なボリューム変更量の数を返す。 */
-export const countVolumeAdjustmentDataPoints = (
-  data: readonly VolumeAdjustmentValue[],
-) => {
+export const countVolumeEditDataPoints = (data: readonly VolumeEditValue[]) => {
   return data.filter((value) => value != null).length;
 };

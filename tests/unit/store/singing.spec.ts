@@ -280,9 +280,9 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
 describe("COMMAND_ERASE_VOLUME_EDIT_DATA", () => {
   test("複数範囲を1コマンドで削除し範囲外のデータを保持する", async () => {
     const trackId = store.state.trackOrder[0];
-    const volumeAdjustmentData = [-6, -3, 0, 3, 6, 9, 12];
+    const volumeEditData = [-6, -3, 0, 3, 6, 9, 12];
     store.mutations.SET_VOLUME_EDIT_DATA({
-      volumeAdjustmentArray: volumeAdjustmentData,
+      volumeArray: volumeEditData,
       startFrame: 0,
       trackId,
     });
@@ -295,15 +295,7 @@ describe("COMMAND_ERASE_VOLUME_EDIT_DATA", () => {
     });
 
     const track = getOrThrow(store.state.tracks, trackId);
-    expect(track.volumeAdjustmentData).toEqual([
-      -6,
-      null,
-      null,
-      3,
-      6,
-      null,
-      12,
-    ]);
+    expect(track.volumeEditData).toEqual([-6, null, null, 3, 6, null, 12]);
   });
 });
 
@@ -364,7 +356,7 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   // ピッチ・音量編集データ
   const sourceTrackClone = cloneWithUnwrapProxy(sourceTrack);
   sourceTrackClone.pitchEditData = [440, 442, 440];
-  sourceTrackClone.volumeAdjustmentData = [0, 1.2, 0];
+  sourceTrackClone.volumeEditData = [0, 1.2, 0];
   // 音素タイミング編集データ
   const noteId = notes[0].id;
   sourceTrackClone.phonemeTimingEditData.set(noteId, [
@@ -393,7 +385,7 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   expect(newTrack.notes[0].id).not.toBe(noteId);
   expect(newTrack.notes[0].lyric).toBe("test");
   expect(newTrack.pitchEditData).toEqual([440, 442, 440]);
-  expect(newTrack.volumeAdjustmentData).toEqual([0, 1.2, 0]);
+  expect(newTrack.volumeEditData).toEqual([0, 1.2, 0]);
 
   // 音素タイミング編集データが新しいノートIDで引き継がれているか
   const newNoteId = newTrack.notes[0].id;
