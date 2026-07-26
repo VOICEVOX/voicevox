@@ -35,6 +35,7 @@ export const isValidTrack = (track: Track) => {
     isValidKeyRangeAdjustment(track.keyRangeAdjustment) &&
     isValidVolumeRangeAdjustment(track.volumeRangeAdjustment) &&
     isValidNotes(track.notes) &&
+    isValidPitchEditData(track.pitchEditData) &&
     isValidVolumeEditData(track.volumeEditData)
   );
 };
