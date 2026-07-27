@@ -8,29 +8,27 @@ test.beforeEach(gotoHome);
 test("ループ範囲をドラッグして追加できる", async ({ page }) => {
   await navigateToSong(page);
 
-  // レーンの親要素を取得
   const loopLane = page.locator(".sequencer-ruler-loop .loop-lane");
-
-  // 初期状態ではループが存在しないことを確認
-  const initialLoopRange = loopLane.locator(".loop-range");
-  await expect(initialLoopRange).toHaveCount(0);
-
-  const startPos = { x: 100, y: 5 };
-  const endPos = { x: 200, y: 5 };
-
-  // ドラッグをエミュレート startPos から endPos までドラッグ
-  await loopLane.hover({ position: startPos });
-  await page.mouse.down();
-  await page.mouse.move(endPos.x, endPos.y);
-  await page.mouse.up();
-
-  // ループが追加されたことを確認
   const loopRange = loopLane.locator(".loop-range");
-  await expect(loopRange).toHaveCount(1);
 
-  // 追加されたループの長さが適切か確認
-  const loopBox = ensureNotNullish(await loopRange.first().boundingBox());
-  expect(loopBox.width).toBeGreaterThanOrEqual(50); // スナップ考慮しても50pxはあるはず...
+  await test.step("初期状態ではループが存在しない", async () => {
+    await expect(loopRange).toHaveCount(0);
+  });
+
+  await test.step("ドラッグしてループを追加する", async () => {
+    const startPos = { x: 100, y: 5 };
+    const endPos = { x: 200, y: 5 };
+    await loopLane.hover({ position: startPos });
+    await page.mouse.down();
+    await page.mouse.move(endPos.x, endPos.y);
+    await page.mouse.up();
+  });
+
+  await test.step("ループが追加される", async () => {
+    await expect(loopRange).toHaveCount(1);
+    const loopBox = ensureNotNullish(await loopRange.first().boundingBox());
+    expect(loopBox.width).toBeGreaterThanOrEqual(50); // スナップ考慮しても50pxはあるはず
+  });
 });
 
 // NOTE: 他に追加したいものとして

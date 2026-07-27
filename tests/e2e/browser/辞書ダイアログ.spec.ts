@@ -469,7 +469,6 @@ test("追加した単語がテキストの読みに反映され、削除する�
 
   await navigateToMain(page);
 
-  // 文字列を入力して読み方を記憶する
   const yomi = await test.step("登録前の読みを取得する", async () => {
     return await getYomi(page, targetString);
   });
@@ -486,14 +485,12 @@ test("追加した単語がテキストの読みに反映され、削除する�
   await openDictDialog(page);
   const dialog = await openDeleteWordDialog(page, targetString);
 
-  await test.step("単語を削除してダイアログを閉じる", async () => {
+  await test.step("単語を削除する", async () => {
     await dialog.getByRole("button").filter({ hasText: "削除する" }).click();
   });
 
   await closeDictDialog(page);
 
-  // 辞書から削除されていることを確認
-  // （＝最初の読み方と同じになっていることを確認）
   await test.step("削除した単語が読みに反映されない", async () => {
     await page.getByRole("button").filter({ hasText: "add" }).click();
     expect(await getYomi(page, targetString)).toBe(yomi);
