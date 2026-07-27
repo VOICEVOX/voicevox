@@ -287,9 +287,8 @@ const openLogDirectory = () => window.backend.openLogDirectory();
 }
 
 .help-dialog .q-layout-container :deep(.absolute-full) {
-  right: 0 !important;
-
-  .scroll {
+ right: 0 !important;
+ .scroll {
     left: unset !important;
     right: unset !important;
     width: unset !important;
