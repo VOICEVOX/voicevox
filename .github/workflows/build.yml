@@ -276,9 +276,6 @@ jobs:
       - name: Generate public/licenses.json
         run: |
           pnpm run license:generate -o public/licenses.json
-          if [ -d voicevox_engine ]; then
-            pnpm run license:merge -o public/licenses.json -i public/licenses.json -i voicevox_engine/licenses.json
-          fi
 
       - name: Overwrite .env.production for installer
         run: |
