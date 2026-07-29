@@ -1276,8 +1276,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const tempData = [...volumeEditData];
       const endFrame = startFrame + volumeArray.length;
       if (tempData.length < endFrame) {
-        const valuesToPush = new Array<number>(endFrame - tempData.length).fill(
-          VALUE_INDICATING_NO_DATA,
+        const valuesToPush = new Array<null>(endFrame - tempData.length).fill(
+          null,
         );
         tempData.push(...valuesToPush);
       }
@@ -1291,7 +1291,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!isValidVolumeEditData(volumeArray)) {
         throw new Error("The volume edit data is invalid.");
       }
-      mutations.SET_VOLUME_EDIT_DATA({ volumeArray, startFrame, trackId });
+      mutations.SET_VOLUME_EDIT_DATA({
+        volumeArray,
+        startFrame,
+        trackId,
+      });
     },
   },
 
@@ -1313,7 +1317,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const tempData = [...volumeEditData];
       for (const range of ranges) {
         const endFrame = Math.min(range.endFrame, tempData.length);
-        tempData.fill(VALUE_INDICATING_NO_DATA, range.startFrame, endFrame);
+        tempData.fill(null, range.startFrame, endFrame);
       }
       track.volumeEditData = tempData;
     },

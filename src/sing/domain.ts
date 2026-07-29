@@ -18,10 +18,12 @@ import type {
   Tempo,
   TimeSignature,
   Track,
+  VolumeEditValue,
 } from "@/domain/project/type";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import { ExhaustiveError } from "@/type/utility";
 import { getRepresentableNoteTypes, isValidNotes } from "@/sing/music";
+import { decibelToLinear } from "@/sing/audio";
 
 const MAX_SNAP_TYPE = 32;
 
@@ -32,7 +34,9 @@ export const isValidTrack = (track: Track) => {
   return (
     isValidKeyRangeAdjustment(track.keyRangeAdjustment) &&
     isValidVolumeRangeAdjustment(track.volumeRangeAdjustment) &&
-    isValidNotes(track.notes)
+    isValidNotes(track.notes) &&
+    isValidPitchEditData(track.pitchEditData) &&
+    isValidVolumeEditData(track.volumeEditData)
   );
 };
 
@@ -134,12 +138,12 @@ export function isValidPitchEditData(pitchEditData: number[]) {
   );
 }
 
-export function isValidVolumeEditData(volumeEditData: number[]) {
-  // NOTE: APIの返却が0未満になる場合があるため、0以上かどうかのみ検証する
+export function isValidVolumeEditData(volumeEditData: VolumeEditValue[]) {
+  // UIの表示範囲とは分け、音声へ有限な倍率として適用できる値を受け入れる。
   return volumeEditData.every(
     (value) =>
-      Number.isFinite(value) &&
-      (value >= 0 || value === VALUE_INDICATING_NO_DATA),
+      value == null ||
+      (Number.isFinite(value) && Number.isFinite(decibelToLinear(value))),
   );
 }
 
@@ -627,13 +631,13 @@ export function applyPitchEdit(
 }
 
 /**
- * ユーザーによるボリューム編集データを、クエリのvolumeに適用する。
- * 編集値が保存されているフレームのみ、元のボリュームを編集値で置き換える。
+ * ユーザーによるボリューム変更量を、クエリのvolumeに適用する。
+ * 変更量が保存されているフレームのみ、元のボリュームへdB変化量を適用する。
  * 音声が不自然になるのを防ぐため、隣接フレーズ境界のpau区間には適用しない。
  *
  * @param phraseQuery - 適用対象のクエリ
  * @param phraseStartTime - フレーズの開始時刻（秒）
- * @param volumeEditData - ユーザーが編集したボリュームデータの配列
+ * @param volumeEditData - ユーザーが編集したボリューム変更量（dB）の配列
  * @param editorFrameRate - エディターのフレームレート
  * @param minNonPauseStartFrame - 適用してよい非pau区間の開始フレーム（フレーズ先頭からのフレーム数）。undefinedなら制限しない
  * @param maxNonPauseEndFrame - 適用してよい非pau区間の終了フレーム（フレーズ先頭からのフレーム数）。undefinedなら制限しない
@@ -641,7 +645,7 @@ export function applyPitchEdit(
 export function applyVolumeEdit(
   phraseQuery: EditorFrameAudioQuery,
   phraseStartTime: number,
-  volumeEditData: number[],
+  volumeEditData: VolumeEditValue[],
   editorFrameRate: number,
   minNonPauseStartFrame: number | undefined,
   maxNonPauseEndFrame: number | undefined,
@@ -671,13 +675,11 @@ export function applyVolumeEdit(
     phraseQueryEndFrame,
   );
   for (let i = startFrame; i < endFrame; i++) {
-    const editedVolume = volumeEditData[i];
-    if (editedVolume === VALUE_INDICATING_NO_DATA) {
+    const volumeAdjustmentDb = volumeEditData[i];
+    if (volumeAdjustmentDb == null) {
       continue;
     }
-    const indexInPhrase = i - phraseQueryStartFrame;
-    // NOTE: 編集結果が負値になるケースに備えて0以上にクランプする
-    volume[indexInPhrase] = Math.max(editedVolume, 0);
+    volume[i - phraseQueryStartFrame] *= decibelToLinear(volumeAdjustmentDb);
   }
 }
 

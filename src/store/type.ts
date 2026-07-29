@@ -76,6 +76,7 @@ import type {
   Tempo,
   TimeSignature,
   Track,
+  VolumeEditValue,
 } from "@/domain/project/type";
 import type { LatestProjectType } from "@/infrastructures/projectFile/type";
 import type { WavFormat } from "@/helpers/fileDataGenerator";
@@ -1050,9 +1051,13 @@ export type SingingStoreTypes = {
   };
 
   SET_VOLUME_EDIT_DATA: {
-    mutation: { volumeArray: number[]; startFrame: number; trackId: TrackId };
+    mutation: {
+      volumeArray: VolumeEditValue[];
+      startFrame: number;
+      trackId: TrackId;
+    };
     action(payload: {
-      volumeArray: number[];
+      volumeArray: VolumeEditValue[];
       startFrame: number;
       trackId: TrackId;
     }): void;
@@ -1627,9 +1632,13 @@ export type SingingCommandStoreTypes = {
   };
 
   COMMAND_SET_VOLUME_EDIT_DATA: {
-    mutation: { volumeArray: number[]; startFrame: number; trackId: TrackId };
+    mutation: {
+      volumeArray: VolumeEditValue[];
+      startFrame: number;
+      trackId: TrackId;
+    };
     action(payload: {
-      volumeArray: number[];
+      volumeArray: VolumeEditValue[];
       startFrame: number;
       trackId: TrackId;
     }): void;
