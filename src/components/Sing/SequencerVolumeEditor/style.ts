@@ -5,8 +5,10 @@ export const VOLUME_EDITOR_LAYOUT = {
   tooltipHeightPx: 20,
   tooltipOffsetPx: 16,
   tooltipPaddingPx: 4,
+  denseGridLabelMinHeightPx: 120,
   sparseGridLabelMinHeightPx: 80,
   gridLabelEdgeMarginPx: 8,
+  waveformReferenceHeightPx: 40,
 } as const;
 
 export const VOLUME_EDITOR_LINE_WIDTH = {
@@ -20,4 +22,5 @@ export const VOLUME_EDITOR_ALPHA = {
   minorGrid: 0.55,
   tooltipGuide: 0.45,
   erasePreviewOverlay: 0.12,
+  waveformReference: 0.7,
 } as const;

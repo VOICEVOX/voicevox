@@ -30,10 +30,7 @@ describe("EraseVolumeState", () => {
     });
 
     expect(context.cursorState.value).toBe("ERASE");
-    expect(context.highlightedEditableRange.value).toEqual({
-      startFrame: 0,
-      endFrame: 100,
-    });
+    expect(context.highlightedFrame.value).toBe(10);
   });
 
   it("pointerup時にanimation frame待ちの確定位置を反映する", () => {
@@ -44,10 +41,7 @@ describe("EraseVolumeState", () => {
     vi.stubGlobal("cancelAnimationFrame", vi.fn());
 
     const context = createContext();
-    context.highlightedEditableRange.value = {
-      startFrame: 0,
-      endFrame: 100,
-    };
+    context.highlightedFrame.value = 10;
     const state = new EraseVolumeState({
       startPosition: { frame: 10, value: 1 },
       targetTrackId: TrackId("trackId"),
@@ -55,7 +49,7 @@ describe("EraseVolumeState", () => {
     });
 
     state.onEnter(context);
-    expect(context.highlightedEditableRange.value).toBeUndefined();
+    expect(context.highlightedFrame.value).toBeUndefined();
     state.process({
       input: {
         type: "pointerEvent",
@@ -95,7 +89,7 @@ function createContext(): VolumeEditorContext {
     previewMode: ref("IDLE"),
     cursorState: ref("UNSET"),
     tooltipData: ref(undefined),
-    highlightedEditableRange: ref(undefined),
+    highlightedFrame: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     playheadTicks: computed(() => 0),
     tempos: computed(() => [{ position: 0, bpm: 120 }]),

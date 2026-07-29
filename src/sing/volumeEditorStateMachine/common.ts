@@ -49,7 +49,7 @@ export type VolumeEditorRefs = {
   readonly previewMode: Ref<VolumeEditorPreviewMode>;
   readonly cursorState: Ref<CursorState>;
   readonly tooltipData: Ref<VolumeEditorTooltipData | undefined>;
-  readonly highlightedEditableRange: Ref<VolumeEditableFrameRange | undefined>;
+  readonly highlightedFrame: Ref<number | undefined>;
 };
 
 export type VolumeEditorComputedRefs = {

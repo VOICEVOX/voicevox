@@ -5,10 +5,12 @@
     :class="cursorClass"
     @wheel="handleWheel"
   >
-    <SequencerParameterGrid
-      class="volume-time-grid"
-      :viewportInfo="props.viewportInfo"
-    />
+    <div class="volume-waveform-reference" aria-hidden="true">
+      <slot name="waveform" />
+    </div>
+    <div class="volume-time-grid" aria-hidden="true">
+      <slot name="grid" />
+    </div>
     <canvas ref="canvas" class="volume-editor-canvas" />
     <div
       class="volume-editor-area"
@@ -60,11 +62,10 @@ import {
   VolumeEditorRenderer,
   type VolumeEditorBaseXRange,
 } from "./renderer";
-import { VOLUME_EDITOR_LAYOUT } from "./style";
+import { VOLUME_EDITOR_ALPHA, VOLUME_EDITOR_LAYOUT } from "./style";
 import ContextMenu, {
   type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
-import SequencerParameterGrid from "@/components/Sing/SequencerParameterGrid.vue";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
 import { useTimelineWheel } from "@/composables/useTimelineWheel";
 import type { Tempo, VolumeEditValue } from "@/domain/project/type";
@@ -76,7 +77,7 @@ import {
   type ViewportInfo,
 } from "@/sing/viewHelper";
 import { createThemeColorResolver } from "@/sing/graphics/cssColor";
-import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
+import type { VolumeEditMode } from "@/sing/volumeEditMode";
 import type {
   VolumeEditableFrameRange,
   VolumeEditFrameRange,
@@ -106,6 +107,7 @@ const props = defineProps<{
   tool: VolumeEditTool;
   isDark: boolean;
   uiLocked: boolean;
+  volumeEditMode: VolumeEditMode;
 }>();
 
 const emit = defineEmits<{
@@ -115,8 +117,8 @@ const emit = defineEmits<{
   zoomTimeline: [anchorX: number, deltaY: number];
 }>();
 
-const volumeEditMode = relativeVolumeEditMode;
-const volumeValueScale = volumeEditMode.valueScale;
+const volumeEditMode = toRef(() => props.volumeEditMode);
+const volumeValueScale = computed(() => volumeEditMode.value.valueScale);
 
 const resolveVolumeLineColors = createThemeColorResolver({
   edited: "--scheme-color-sing-volume-edited-line",
@@ -154,7 +156,7 @@ const tooltipState = computed(() => {
     return undefined;
   }
   return {
-    value: `${volumeValueScale.formatDbLabel(data.db)} dB`,
+    value: `${volumeValueScale.value.formatDbLabel(data.db)} dB`,
     pointerX: data.pointerX,
     pointerY: data.pointerY,
   };
@@ -179,7 +181,8 @@ const {
 const volumeSegments = computed(() =>
   buildVolumeSegments(props.effectiveFramewise, {
     frameToBaseX,
-    valueToNormalizedY: (value) => volumeValueScale.dbToNormalizedY(value),
+    valueToNormalizedY: (value) =>
+      volumeValueScale.value.dbToNormalizedY(value),
   }),
 );
 
@@ -213,6 +216,19 @@ const getVolumeEditorLineColors = (element: HTMLElement) => {
   };
 };
 
+const visibleGridLines = computed(() => {
+  const height = viewportHeight.value;
+  if (
+    height != undefined &&
+    height >= VOLUME_EDITOR_LAYOUT.denseGridLabelMinHeightPx
+  ) {
+    return volumeValueScale.value.gridLines;
+  }
+  return volumeValueScale.value.gridLines.filter(
+    (line) => line.kind !== "minor",
+  );
+});
+
 const horizontalGridLabels = computed(() => {
   const height = viewportHeight.value;
   if (
@@ -221,22 +237,20 @@ const horizontalGridLabels = computed(() => {
   ) {
     return [];
   }
-  return volumeValueScale.gridLines
-    .filter((line) => line.kind !== "minor")
-    .map((line) => {
-      const y = (1 - volumeValueScale.dbToNormalizedY(line.db)) * height;
-      const min = VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx;
-      const max = height - VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx;
-      if (min > max) {
-        throw new UnreachableError(
-          "The grid label range is invalid. The viewport height must satisfy sparseGridLabelMinHeightPx.",
-        );
-      }
-      return {
-        label: line.label,
-        y: clamp(y, min, max),
-      };
-    });
+  return visibleGridLines.value.map((line) => {
+    const y = (1 - volumeValueScale.value.dbToNormalizedY(line.db)) * height;
+    const min = VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx;
+    const max = height - VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx;
+    if (min > max) {
+      throw new UnreachableError(
+        "The grid label range is invalid. The viewport height must satisfy sparseGridLabelMinHeightPx.",
+      );
+    }
+    return {
+      label: line.label,
+      y: clamp(y, min, max),
+    };
+  });
 });
 
 const cursorClass = computed(() => {
@@ -304,8 +318,8 @@ const updateRenderer = (renderImmediately = false) => {
       volumeSegments: volumeSegments.value,
       feedbackRange: feedbackBaseXRange.value,
       erasePreviewRanges: erasePreviewBaseXRanges.value,
-      gridLines: volumeValueScale.gridLines,
-      valueScale: volumeValueScale,
+      gridLines: visibleGridLines.value,
+      valueScale: volumeValueScale.value,
       colors: getVolumeEditorLineColors(containerElement),
     },
     renderImmediately,
@@ -383,6 +397,21 @@ onUnmounted(() => {
   position: relative;
   user-select: none;
   overflow: hidden;
+  background: var(--scheme-color-sing-grid-cell-white);
+}
+
+.volume-waveform-reference {
+  position: absolute;
+  inset: auto 0 0 v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
+  z-index: 0;
+  height: v-bind("`${VOLUME_EDITOR_LAYOUT.waveformReferenceHeightPx}px`");
+  opacity: v-bind("VOLUME_EDITOR_ALPHA.waveformReference");
+  pointer-events: none;
+
+  > :deep(*) {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .volume-time-grid {
@@ -390,6 +419,11 @@ onUnmounted(() => {
   inset: 0 0 0 v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
   z-index: 0;
   pointer-events: none;
+
+  > :deep(*) {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .volume-editor-canvas {

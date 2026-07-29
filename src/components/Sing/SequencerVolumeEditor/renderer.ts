@@ -2,6 +2,8 @@ import * as PIXI from "pixi.js";
 import { VOLUME_EDITOR_ALPHA, VOLUME_EDITOR_LINE_WIDTH } from "./style";
 import type { VolumeEditValue } from "@/domain/project/type";
 import {
+  findFirstVolumePointAfter,
+  findFirstVolumePointAtOrAfter,
   VolumeLine,
   volumeNormalizedYToScreenY,
 } from "@/sing/graphics/volumeLine";
@@ -92,10 +94,9 @@ const filterVolumeSegmentsByBaseXRange = (
       continue;
     }
 
-    const clippedSegment = segment.filter(
-      (point) =>
-        range.startBaseX <= point.baseX && point.baseX <= range.endBaseX,
-    );
+    const startIndex = findFirstVolumePointAtOrAfter(segment, range.startBaseX);
+    const endIndex = findFirstVolumePointAfter(segment, range.endBaseX);
+    const clippedSegment = segment.slice(startIndex, endIndex);
     if (clippedSegment.length >= 2) {
       clippedSegments.push(clippedSegment);
     }
@@ -108,7 +109,7 @@ export class VolumeEditorRenderer {
   private readonly stage: PIXI.Container;
   private readonly erasePreviewOverlay: PIXI.Graphics;
   private readonly gridGraphics: PIXI.Graphics;
-  private readonly editedVolumeLine: VolumeLine;
+  private readonly effectiveVolumeLine: VolumeLine;
   private readonly volumeFeedbackLine: VolumeLine;
 
   private requestId: number | undefined;
@@ -124,7 +125,7 @@ export class VolumeEditorRenderer {
     this.stage = new PIXI.Container();
     this.erasePreviewOverlay = new PIXI.Graphics();
     this.gridGraphics = new PIXI.Graphics();
-    this.editedVolumeLine = new VolumeLine({
+    this.effectiveVolumeLine = new VolumeLine({
       color: initialColors.edited,
       width: VOLUME_EDITOR_LINE_WIDTH.editedVolume,
       isVisible: true,
@@ -137,7 +138,7 @@ export class VolumeEditorRenderer {
 
     this.stage.addChild(this.erasePreviewOverlay);
     this.stage.addChild(this.gridGraphics);
-    this.stage.addChild(this.editedVolumeLine.container);
+    this.stage.addChild(this.effectiveVolumeLine.container);
     this.stage.addChild(this.volumeFeedbackLine.container);
 
     const renderIfNeeded = () => {
@@ -198,7 +199,7 @@ export class VolumeEditorRenderer {
     if (this.requestId != undefined) {
       window.cancelAnimationFrame(this.requestId);
     }
-    this.editedVolumeLine.destroy();
+    this.effectiveVolumeLine.destroy();
     this.volumeFeedbackLine.destroy();
     this.gridGraphics.destroy();
     this.erasePreviewOverlay.destroy();
@@ -215,9 +216,9 @@ export class VolumeEditorRenderer {
     this.renderHorizontalGrid(options);
     this.renderErasePreview(options);
 
-    this.editedVolumeLine.color = options.colors.edited;
-    this.editedVolumeLine.width = VOLUME_EDITOR_LINE_WIDTH.editedVolume;
-    this.editedVolumeLine.update(options.volumeSegments, options.viewInfo);
+    this.effectiveVolumeLine.color = options.colors.edited;
+    this.effectiveVolumeLine.width = VOLUME_EDITOR_LINE_WIDTH.editedVolume;
+    this.effectiveVolumeLine.update(options.volumeSegments, options.viewInfo);
 
     const feedbackSegments = filterVolumeSegmentsByBaseXRange(
       options.volumeSegments,

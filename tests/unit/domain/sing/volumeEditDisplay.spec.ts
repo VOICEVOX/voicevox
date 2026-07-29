@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { buildVolumeEditDisplayData } from "@/sing/volumeEditDisplay";
-import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 
 const buildDisplayData = (
   options: Partial<Parameters<typeof buildVolumeEditDisplayData>[0]>,
@@ -8,7 +7,6 @@ const buildDisplayData = (
   buildVolumeEditDisplayData({
     volumeEditData: [],
     editableRanges: [],
-    volumeEditMode: relativeVolumeEditMode,
     ...options,
   });
 

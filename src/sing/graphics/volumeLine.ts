@@ -21,6 +21,40 @@ export const volumeNormalizedYToScreenY = (
   viewportHeight: number,
 ) => (1 - normalizedY) * viewportHeight;
 
+export const findFirstVolumePointAtOrAfter = (
+  segment: VolumeSegment,
+  targetBaseX: number,
+) => {
+  let low = 0;
+  let high = segment.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (segment[middle].baseX < targetBaseX) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  return low;
+};
+
+export const findFirstVolumePointAfter = (
+  segment: VolumeSegment,
+  targetBaseX: number,
+) => {
+  let low = 0;
+  let high = segment.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (segment[middle].baseX <= targetBaseX) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  return low;
+};
+
 type VolumeLineOptions = {
   color: Color;
   width: number;
@@ -82,8 +116,22 @@ export class VolumeLine {
         continue;
       }
 
+      const viewportStartBaseX =
+        (viewInfo.offsetX - viewInfo.leftPadding) / viewInfo.zoomX;
+      const viewportEndBaseX =
+        (viewInfo.offsetX + viewInfo.viewportWidth - viewInfo.leftPadding) /
+        viewInfo.zoomX;
+      const startIndex = Math.max(
+        0,
+        findFirstVolumePointAtOrAfter(segment, viewportStartBaseX) - 1,
+      );
+      const endIndex = Math.min(
+        segment.length,
+        findFirstVolumePointAtOrAfter(segment, viewportEndBaseX) + 1,
+      );
+
       // 画面座標に変換
-      const screenPoints = segment.map((point) => ({
+      const screenPoints = segment.slice(startIndex, endIndex).map((point) => ({
         x:
           point.baseX * viewInfo.zoomX -
           viewInfo.offsetX +

@@ -1,6 +1,5 @@
 import type { VolumeEditValue } from "@/domain/project/type";
 import type { VolumePreviewEdit } from "@/sing/volumeEditorStateMachine/common";
-import type { VolumeEditMode } from "@/sing/volumeEditMode";
 import {
   getOverlappingVolumeEditableFrameRanges,
   maskVolumeEditDataByEditableRanges,
@@ -9,6 +8,7 @@ import {
 } from "@/sing/volumeEditRanges";
 
 export type VolumeEditDisplayData = {
+  /** 編集可能区間における現在の変更意図。未編集フレームは0dB相当の値で表す。 */
   effectiveFramewise: VolumeEditValue[];
   previewEraseRanges: VolumeEditFrameRange[];
 };
@@ -17,7 +17,6 @@ type BuildVolumeEditDisplayDataOptions = {
   volumeEditData: readonly VolumeEditValue[];
   previewEdit?: VolumePreviewEdit;
   editableRanges: readonly VolumeEditableFrameRange[];
-  volumeEditMode: VolumeEditMode;
 };
 
 const applyPreviewEdit = (
@@ -73,7 +72,6 @@ const applyPreviewEdit = (
 const buildEffectiveFramewise = (
   editFramewise: readonly VolumeEditValue[],
   editableRanges: readonly VolumeEditableFrameRange[],
-  volumeEditMode: VolumeEditMode,
 ) => {
   const lastRangeEndFrame = editableRanges.at(-1)?.endFrame ?? 0;
   const effectiveFramewise = new Array<VolumeEditValue>(
@@ -83,22 +81,24 @@ const buildEffectiveFramewise = (
     effectiveFramewise[i] = value;
   }
 
-  const neutralStoredValue = volumeEditMode.toStoredValue(0);
   for (const range of editableRanges) {
     for (let i = range.startFrame; i < range.endFrame; i++) {
       if (effectiveFramewise[i] == null) {
-        effectiveFramewise[i] = neutralStoredValue;
+        effectiveFramewise[i] = 0;
       }
     }
   }
   return effectiveFramewise;
 };
 
+/**
+ * 保存値と操作中のプレビューから表示データを構築する。
+ * editableRangesは開始フレーム順にソート済みであること。
+ */
 export const buildVolumeEditDisplayData = ({
   volumeEditData,
   previewEdit,
   editableRanges,
-  volumeEditMode,
 }: BuildVolumeEditDisplayDataOptions): VolumeEditDisplayData => {
   const { editFramewise, previewEraseRanges } = applyPreviewEdit(
     volumeEditData,
@@ -110,11 +110,7 @@ export const buildVolumeEditDisplayData = ({
     editableRanges,
   );
   return {
-    effectiveFramewise: buildEffectiveFramewise(
-      maskedEdit,
-      editableRanges,
-      volumeEditMode,
-    ),
+    effectiveFramewise: buildEffectiveFramewise(maskedEdit, editableRanges),
     previewEraseRanges,
   };
 };

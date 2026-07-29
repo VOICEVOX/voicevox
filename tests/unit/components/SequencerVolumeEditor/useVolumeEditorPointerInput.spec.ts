@@ -30,7 +30,7 @@ describe("useVolumeEditorPointerInput", () => {
             tempos: ref([{ position: 0, bpm: 120 }]),
             tpqn: ref(480),
             frameRate: ref(93.75),
-            volumeEditMode: relativeVolumeEditMode,
+            volumeEditMode: ref(relativeVolumeEditMode),
             onPointerEvent,
           });
           pointerInput = mountedPointerInput;

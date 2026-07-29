@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { buildVolumeSegments } from "@/components/Sing/SequencerVolumeEditor/renderer";
-import { volumeNormalizedYToScreenY } from "@/sing/graphics/volumeLine";
+import {
+  findFirstVolumePointAfter,
+  findFirstVolumePointAtOrAfter,
+  volumeNormalizedYToScreenY,
+} from "@/sing/graphics/volumeLine";
 import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 
 describe("buildVolumeSegments", () => {
@@ -35,5 +39,19 @@ describe("buildVolumeSegments", () => {
     const normalizedY = relativeVolumeEditMode.valueScale.dbToNormalizedY(0);
 
     expect(volumeNormalizedYToScreenY(normalizedY, 101)).toBe(50.5);
+  });
+
+  it("baseXでソート済みの線分から表示範囲の境界位置を検索できる", () => {
+    const segment = [
+      { baseX: 0, normalizedY: 0 },
+      { baseX: 10, normalizedY: 0 },
+      { baseX: 20, normalizedY: 0 },
+      { baseX: 30, normalizedY: 0 },
+    ];
+
+    expect(findFirstVolumePointAtOrAfter(segment, 20)).toBe(2);
+    expect(findFirstVolumePointAtOrAfter(segment, 21)).toBe(3);
+    expect(findFirstVolumePointAfter(segment, 20)).toBe(3);
+    expect(findFirstVolumePointAfter(segment, 30)).toBe(4);
   });
 });

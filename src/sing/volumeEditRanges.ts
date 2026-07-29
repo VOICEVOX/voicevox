@@ -1,5 +1,13 @@
 import type { VolumeEditValue } from "@/domain/project/type";
 import { getOrThrow } from "@/helpers/mapHelper";
+import type {
+  EditorFrameAudioQuery,
+  EditorFrameAudioQueryKey,
+  Phrase,
+  SingingVolume,
+  SingingVolumeKey,
+} from "@/store/type";
+import type { TrackId } from "@/type/preload";
 
 export type VolumeEditableFrameRange = {
   readonly startFrame: number;
@@ -16,32 +24,23 @@ export type FramewiseVolumeEditData = {
   readonly startFrame: number;
 };
 
-type VolumeEditablePhrase<QueryKey, SingingVolumeKey, TrackId> = {
-  readonly trackId: TrackId;
-  readonly queryKey?: QueryKey;
-  readonly singingVolumeKey?: SingingVolumeKey;
-  readonly startTime: number;
-  readonly minNonPauseStartFrame: number | undefined;
-  readonly maxNonPauseEndFrame: number | undefined;
-};
+type VolumeEditablePhrase = Pick<
+  Phrase,
+  | "trackId"
+  | "queryKey"
+  | "singingVolumeKey"
+  | "startTime"
+  | "minNonPauseStartFrame"
+  | "maxNonPauseEndFrame"
+>;
 
-type VolumeEditablePhraseQuery = {
-  readonly frameRate: number;
-};
-
-type DeriveVolumeEditableFrameRangesOptions<
-  QueryKey,
-  SingingVolumeKey,
-  TrackId,
-> = {
-  readonly phrases: Iterable<
-    VolumeEditablePhrase<QueryKey, SingingVolumeKey, TrackId>
+type DeriveVolumeEditableFrameRangesOptions = {
+  readonly phrases: Iterable<VolumeEditablePhrase>;
+  readonly phraseQueries: ReadonlyMap<
+    EditorFrameAudioQueryKey,
+    Pick<EditorFrameAudioQuery, "frameRate">
   >;
-  readonly phraseQueries: ReadonlyMap<QueryKey, VolumeEditablePhraseQuery>;
-  readonly phraseSingingVolumes: ReadonlyMap<
-    SingingVolumeKey,
-    readonly number[]
-  >;
+  readonly phraseSingingVolumes: ReadonlyMap<SingingVolumeKey, SingingVolume>;
   readonly trackId: TrackId;
   readonly frameRate: number;
 };
@@ -70,21 +69,13 @@ export const mergeVolumeEditableFrameRanges = (
 /**
  * フレーズの歌唱ボリュームが存在し、かつ非pau区間に対応するフレーム範囲を編集可能区間として返す。
  */
-export const deriveVolumeEditableFrameRanges = <
-  QueryKey,
-  SingingVolumeKey,
-  TrackId,
->({
+export const deriveVolumeEditableFrameRanges = ({
   phrases,
   phraseQueries,
   phraseSingingVolumes,
   trackId,
   frameRate,
-}: DeriveVolumeEditableFrameRangesOptions<
-  QueryKey,
-  SingingVolumeKey,
-  TrackId
->) => {
+}: DeriveVolumeEditableFrameRangesOptions) => {
   const ranges: VolumeEditableFrameRange[] = [];
   for (const phrase of phrases) {
     if (phrase.trackId !== trackId) {

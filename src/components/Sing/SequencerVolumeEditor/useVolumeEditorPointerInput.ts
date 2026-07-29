@@ -26,7 +26,7 @@ export const useVolumeEditorPointerInput = (options: {
   tempos: ReadonlyRef<readonly Tempo[]>;
   tpqn: ReadonlyRef<number>;
   frameRate: ReadonlyRef<number>;
-  volumeEditMode: VolumeEditMode;
+  volumeEditMode: ReadonlyRef<VolumeEditMode>;
   onPointerEvent: (event: VolumeEditorPointerEvent) => void;
 }) => {
   const canvasContainer = ref<HTMLElement | null>(null);
@@ -89,8 +89,9 @@ export const useVolumeEditorPointerInput = (options: {
     const frame = Math.max(0, Math.round(seconds * options.frameRate.value));
 
     const normalizedY = 1 - clampedY / height;
-    const db = options.volumeEditMode.valueScale.normalizedYToDb(normalizedY);
-    const value = options.volumeEditMode.toStoredValue(db);
+    const db =
+      options.volumeEditMode.value.valueScale.normalizedYToDb(normalizedY);
+    const value = options.volumeEditMode.value.toStoredValue(db);
 
     return {
       position: { frame, value },

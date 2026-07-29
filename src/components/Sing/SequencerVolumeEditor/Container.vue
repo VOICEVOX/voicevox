@@ -13,36 +13,43 @@
     :tool
     :isDark
     :uiLocked
+    :volumeEditMode
     @pointerEvent="processPointerEvent"
     @update:tool="setTool"
     @panTimeline="(deltaX) => emit('panTimeline', deltaX)"
     @zoomTimeline="(anchorX, deltaY) => emit('zoomTimeline', anchorX, deltaY)"
-  />
+  >
+    <template #grid>
+      <SequencerParameterGrid :viewportInfo="props.viewportInfo" />
+    </template>
+    <template #waveform>
+      <SequencerWaveform
+        :viewportInfo="props.viewportInfo"
+        displayMode="BOTTOM_ALIGNED"
+        aria-hidden="true"
+      />
+    </template>
+  </Presentation>
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  inject,
-  onBeforeUnmount,
-  onMounted,
-  shallowRef,
-  watch,
-} from "vue";
+import { computed, inject, onBeforeUnmount, shallowRef, watch } from "vue";
 import Presentation from "./Presentation.vue";
-import { useVolumeEditorStateMachine } from "./useVolumeEditorStateMachine";
 import type { VolumeEditorPointerEvent } from "./useVolumeEditorPointerInput";
+import SequencerParameterGrid from "@/components/Sing/SequencerParameterGrid.vue";
+import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import type { VolumeEditValue } from "@/domain/project/type";
 import { useMounted } from "@/composables/useMounted";
-import { Mutex } from "@/helpers/mutex";
+import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
 import { ensureNotNullish } from "@/type/utility";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
 import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 import { buildVolumeEditDisplayData } from "@/sing/volumeEditDisplay";
 import {
   deriveVolumeEditableFrameRanges,
+  findVolumeEditableFrameRange,
   type VolumeEditFrameRange,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
@@ -75,9 +82,17 @@ const {
   previewMode,
   cursorState,
   tooltipData,
-  highlightedEditableRange,
+  highlightedFrame,
 } = useVolumeEditorStateMachine(store, {
   getEditableFrameRanges: () => editableFrameRanges.value,
+});
+
+const highlightedEditableRange = computed(() => {
+  const frame = highlightedFrame.value;
+  if (frame == undefined) {
+    return undefined;
+  }
+  return findVolumeEditableFrameRange(frame, editableFrameRanges.value);
 });
 
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
@@ -116,15 +131,6 @@ const setTool = (value: VolumeEditTool) => {
 };
 
 const processPointerEvent = (event: VolumeEditorPointerEvent) => {
-  if (
-    event.targetArea === "VolumeEditorArea" &&
-    event.pointerEvent.type === "pointerdown" &&
-    store.state.parameterPanelEditTarget !== "VOLUME"
-  ) {
-    void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({
-      editTarget: "VOLUME",
-    });
-  }
   stateMachineProcess({
     type: "pointerEvent",
     targetArea: event.targetArea,
@@ -141,8 +147,6 @@ const phraseSignature = computed(() =>
   ),
 );
 
-const refreshVolumeSegmentsLock = new Mutex();
-
 const refreshEditableFrameRanges = () => {
   editableFrameRanges.value = deriveVolumeEditableFrameRanges({
     phrases: store.state.phrases.values(),
@@ -158,7 +162,6 @@ const refreshVolumeEditDisplay = () => {
     volumeEditData: selectedTrack.value.volumeEditData,
     previewEdit: volumePreviewEdit.value,
     editableRanges: editableFrameRanges.value,
-    volumeEditMode,
   });
   effectiveFramewise.value = displayData.effectiveFramewise;
   previewEraseRanges.value = displayData.previewEraseRanges;
@@ -179,8 +182,7 @@ watch(
     numMeasures,
     editorFrameRate,
   ],
-  async ([isMounted]) => {
-    await using _lock = await refreshVolumeSegmentsLock.acquire();
+  ([isMounted]) => {
     if (isMounted) {
       refreshEditableFrameRanges();
       refreshVolumeEditDisplay();
@@ -194,17 +196,8 @@ watch(
     () => selectedTrack.value.volumeEditData,
     volumePreviewEdit,
   ],
-  async () => {
-    await using _lock = await refreshVolumeSegmentsLock.acquire();
+  () => {
     refreshVolumeEditDisplay();
   },
 );
-
-onMounted(() => {
-  if (store.state.parameterPanelEditTarget !== "VOLUME") {
-    void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({
-      editTarget: "VOLUME",
-    });
-  }
-});
 </script>

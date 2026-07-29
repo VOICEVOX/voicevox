@@ -30,10 +30,7 @@ describe("DrawVolumeState", () => {
     });
 
     expect(context.cursorState.value).toBe("DRAW");
-    expect(context.highlightedEditableRange.value).toEqual({
-      startFrame: 0,
-      endFrame: 100,
-    });
+    expect(context.highlightedFrame.value).toBe(10);
 
     state.process({
       input: {
@@ -47,7 +44,7 @@ describe("DrawVolumeState", () => {
     });
 
     expect(context.cursorState.value).toBe("UNSET");
-    expect(context.highlightedEditableRange.value).toBeUndefined();
+    expect(context.highlightedFrame.value).toBeUndefined();
   });
 
   it("描画中は現在の編集可能区間へハイライトを追随させる", () => {
@@ -69,10 +66,7 @@ describe("DrawVolumeState", () => {
     });
 
     state.onEnter(context);
-    expect(context.highlightedEditableRange.value).toEqual({
-      startFrame: 0,
-      endFrame: 50,
-    });
+    expect(context.highlightedFrame.value).toBe(10);
 
     state.process({
       input: {
@@ -85,13 +79,10 @@ describe("DrawVolumeState", () => {
       setNextState: vi.fn(),
     });
 
-    expect(context.highlightedEditableRange.value).toEqual({
-      startFrame: 100,
-      endFrame: 200,
-    });
+    expect(context.highlightedFrame.value).toBe(120);
 
     state.onExit(context);
-    expect(context.highlightedEditableRange.value).toBeUndefined();
+    expect(context.highlightedFrame.value).toBeUndefined();
   });
 
   it("左方向へ戻しながら描画しても補間できる", () => {
@@ -130,54 +121,6 @@ describe("DrawVolumeState", () => {
       type: "draw",
       startFrame: 8,
       data: [6, 3, 0],
-    });
-  });
-
-  it("Shiftを押しながら描画すると開始値の水平線になる", () => {
-    const animationFrameCallbacks: FrameRequestCallback[] = [];
-    vi.stubGlobal(
-      "requestAnimationFrame",
-      vi.fn((callback: FrameRequestCallback) => {
-        animationFrameCallbacks.push(callback);
-        return animationFrameCallbacks.length;
-      }),
-    );
-    vi.stubGlobal("cancelAnimationFrame", vi.fn());
-
-    const context = createContext();
-    const state = new DrawVolumeState({
-      startPosition: { frame: 10, value: 3 },
-      startTooltipData: { db: 3, pointerX: 100, pointerY: 50 },
-      targetTrackId: TrackId("trackId"),
-      returnStateId: "drawVolumeIdle",
-    });
-
-    state.onEnter(context);
-    state.process({
-      input: {
-        type: "pointerEvent",
-        targetArea: "Window",
-        pointerEvent: {
-          type: "pointermove",
-          button: 0,
-          shiftKey: true,
-        } as PointerEvent,
-        pointerInfo: createPointerInfo(12, -3),
-      },
-      context,
-      setNextState: vi.fn(),
-    });
-
-    expect(() => animationFrameCallbacks[0]?.(0)).not.toThrow();
-    expect(context.previewVolumeEdit.value).toEqual({
-      type: "draw",
-      startFrame: 10,
-      data: [3, 3, 3],
-    });
-    expect(context.tooltipData.value).toEqual({
-      db: 3,
-      pointerX: 120,
-      pointerY: 50,
     });
   });
 
@@ -239,7 +182,7 @@ function createContext(
     previewMode: ref("IDLE"),
     cursorState: ref("UNSET"),
     tooltipData: ref(undefined),
-    highlightedEditableRange: ref(undefined),
+    highlightedFrame: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     playheadTicks: computed(() => 0),
     tempos: computed(() => [{ position: 0, bpm: 120 }]),

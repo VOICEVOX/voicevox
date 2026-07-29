@@ -7,20 +7,29 @@ import {
   maskVolumeEditDataByEditableRanges,
   mergeVolumeEditableFrameRanges,
 } from "@/sing/volumeEditRanges";
+import {
+  EditorFrameAudioQueryKey,
+  SingingVolumeKey,
+  type Phrase,
+} from "@/store/type";
+import { TrackId } from "@/type/preload";
 
 const phrase = (
-  options: Partial<{
-    trackId: string;
-    queryKey: string;
-    singingVolumeKey: string;
-    startTime: number;
-    minNonPauseStartFrame: number | undefined;
-    maxNonPauseEndFrame: number | undefined;
-  }>,
+  options: Partial<
+    Pick<
+      Phrase,
+      | "trackId"
+      | "queryKey"
+      | "singingVolumeKey"
+      | "startTime"
+      | "minNonPauseStartFrame"
+      | "maxNonPauseEndFrame"
+    >
+  >,
 ) => ({
-  trackId: "track-1",
-  queryKey: "query-1",
-  singingVolumeKey: "volume-1",
+  trackId: TrackId("track-1"),
+  queryKey: EditorFrameAudioQueryKey("query-1"),
+  singingVolumeKey: SingingVolumeKey("volume-1"),
   startTime: 0,
   minNonPauseStartFrame: undefined,
   maxNonPauseEndFrame: undefined,
@@ -144,13 +153,17 @@ describe("volumeEditRanges", () => {
           maxNonPauseEndFrame: 6,
         }),
         phrase({
-          trackId: "track-2",
+          trackId: TrackId("track-2"),
           startTime: 3,
         }),
       ],
-      phraseQueries: new Map([["query-1", { frameRate: 10 }]]),
-      phraseSingingVolumes: new Map([["volume-1", new Array<number>(8)]]),
-      trackId: "track-1",
+      phraseQueries: new Map([
+        [EditorFrameAudioQueryKey("query-1"), { frameRate: 10 }],
+      ]),
+      phraseSingingVolumes: new Map([
+        [SingingVolumeKey("volume-1"), new Array<number>(8)],
+      ]),
+      trackId: TrackId("track-1"),
       frameRate: 10,
     });
 
@@ -167,7 +180,7 @@ describe("volumeEditRanges", () => {
       ],
       phraseQueries: new Map(),
       phraseSingingVolumes: new Map(),
-      trackId: "track-1",
+      trackId: TrackId("track-1"),
       frameRate: 10,
     });
 
@@ -179,19 +192,21 @@ describe("volumeEditRanges", () => {
       phrases: [
         phrase({
           startTime: 0,
-          singingVolumeKey: "volume-1",
+          singingVolumeKey: SingingVolumeKey("volume-1"),
         }),
         phrase({
           startTime: 1,
-          singingVolumeKey: "volume-2",
+          singingVolumeKey: SingingVolumeKey("volume-2"),
         }),
       ],
-      phraseQueries: new Map([["query-1", { frameRate: 10 }]]),
-      phraseSingingVolumes: new Map([
-        ["volume-1", new Array<number>(10)],
-        ["volume-2", new Array<number>(10)],
+      phraseQueries: new Map([
+        [EditorFrameAudioQueryKey("query-1"), { frameRate: 10 }],
       ]),
-      trackId: "track-1",
+      phraseSingingVolumes: new Map([
+        [SingingVolumeKey("volume-1"), new Array<number>(10)],
+        [SingingVolumeKey("volume-2"), new Array<number>(10)],
+      ]),
+      trackId: TrackId("track-1"),
       frameRate: 10,
     });
 
@@ -203,8 +218,10 @@ describe("volumeEditRanges", () => {
       deriveVolumeEditableFrameRanges({
         phrases: [phrase({ queryKey: undefined })],
         phraseQueries: new Map(),
-        phraseSingingVolumes: new Map([["volume-1", new Array<number>(8)]]),
-        trackId: "track-1",
+        phraseSingingVolumes: new Map([
+          [SingingVolumeKey("volume-1"), new Array<number>(8)],
+        ]),
+        trackId: TrackId("track-1"),
         frameRate: 10,
       }),
     ).toThrow("phrase.queryKey is undefined.");
@@ -214,9 +231,13 @@ describe("volumeEditRanges", () => {
     expect(() =>
       deriveVolumeEditableFrameRanges({
         phrases: [phrase({})],
-        phraseQueries: new Map([["query-1", { frameRate: 20 }]]),
-        phraseSingingVolumes: new Map([["volume-1", new Array<number>(8)]]),
-        trackId: "track-1",
+        phraseQueries: new Map([
+          [EditorFrameAudioQueryKey("query-1"), { frameRate: 20 }],
+        ]),
+        phraseSingingVolumes: new Map([
+          [SingingVolumeKey("volume-1"), new Array<number>(8)],
+        ]),
+        trackId: TrackId("track-1"),
         frameRate: 10,
       }),
     ).toThrow(
