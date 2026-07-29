@@ -27,6 +27,7 @@ export const useVolumeEditorStateMachine = (
     previewMode: ref<VolumeEditorPreviewMode>("IDLE"),
     cursorState: ref<CursorState>("UNSET"),
     tooltipData: ref<VolumeEditorTooltipData>(),
+    highlightedEditableRange: ref<VolumeEditableFrameRange>(),
   };
 
   const computedRefs: VolumeEditorComputedRefs = {
@@ -69,5 +70,8 @@ export const useVolumeEditorStateMachine = (
     previewMode: computed(() => refs.previewMode.value),
     cursorState: computed(() => refs.cursorState.value),
     tooltipData: computed(() => refs.tooltipData.value),
+    highlightedEditableRange: computed(
+      () => refs.highlightedEditableRange.value,
+    ),
   };
 };

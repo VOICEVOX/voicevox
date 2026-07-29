@@ -16,11 +16,7 @@
       @pointermove="onSurfacePointerMove"
       @pointerleave="onSurfacePointerLeave"
     ></div>
-    <Tooltip
-      :state="tooltipState"
-      :tooltipStyle
-      :guideLineStyle="tooltipGuideLineStyle"
-    />
+    <Tooltip :state="tooltipState" :viewportWidth :viewportHeight />
     <div class="volume-grid-labels" aria-hidden="true">
       <div
         v-for="label in horizontalGridLabels"
@@ -55,11 +51,10 @@ import {
   watch,
 } from "vue";
 import Tooltip from "./Tooltip.vue";
-import { useVolumeEditorTooltip } from "./useTooltip";
 import {
-  useVolumeEditorInteraction,
+  useVolumeEditorPointerInput,
   type VolumeEditorPointerEvent,
-} from "./useInteraction";
+} from "./useVolumeEditorPointerInput";
 import {
   buildVolumeSegments,
   VolumeEditorRenderer,
@@ -101,13 +96,13 @@ const props = defineProps<{
   viewportInfo: ViewportInfo;
   effectiveFramewise: readonly VolumeEditValue[];
   previewEraseRanges: readonly VolumeEditFrameRange[];
-  editableFrameRanges: readonly VolumeEditableFrameRange[];
   tempos: Tempo[];
   tpqn: number;
   editorFrameRate: number;
   previewMode: VolumeEditorPreviewMode;
   cursorState: CursorState;
   tooltipData: VolumeEditorTooltipData | undefined;
+  highlightedEditableRange: VolumeEditableFrameRange | undefined;
   tool: VolumeEditTool;
   isDark: boolean;
   uiLocked: boolean;
@@ -136,7 +131,6 @@ const canvas = ref<HTMLCanvasElement | null>(null);
 const viewportWidth = ref<number>();
 const viewportHeight = ref<number>();
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
-const renderRequestToken = ref(0);
 
 let renderer: VolumeEditorRenderer | undefined;
 let resizeObserver: ResizeObserver | undefined;
@@ -166,31 +160,20 @@ const tooltipState = computed(() => {
   };
 });
 
-const { tooltipStyle, tooltipGuideLineStyle } = useVolumeEditorTooltip({
-  tooltipState,
-  viewportWidth,
-  viewportHeight,
-});
-
 const {
   canvasContainer,
-  feedbackRange,
   updateViewportRectCache,
   onSurfacePointerDown,
   onSurfacePointerMove,
   onSurfacePointerLeave,
-} = useVolumeEditorInteraction({
+} = useVolumeEditorPointerInput({
   previewMode: toRef(() => props.previewMode),
   viewportInfo: toRef(() => props.viewportInfo),
   tempos: toRef(() => props.tempos),
   tpqn: toRef(() => props.tpqn),
   frameRate: toRef(() => props.editorFrameRate),
-  editableFrameRanges: toRef(() => props.editableFrameRanges),
   volumeEditMode,
   onPointerEvent: (event) => emit("pointerEvent", event),
-  onRenderRequested: () => {
-    renderRequestToken.value++;
-  },
 });
 
 const volumeSegments = computed(() =>
@@ -201,7 +184,7 @@ const volumeSegments = computed(() =>
 );
 
 const feedbackBaseXRange = computed<VolumeEditorBaseXRange | undefined>(() => {
-  const range = feedbackRange.value;
+  const range = props.highlightedEditableRange;
   if (range == undefined) {
     return undefined;
   }
@@ -217,6 +200,18 @@ const erasePreviewBaseXRanges = computed<VolumeEditorBaseXRange[]>(() =>
     endBaseX: frameToBaseX(range.endFrame),
   })),
 );
+
+const getVolumeEditorLineColors = (element: HTMLElement) => {
+  const colors = resolveVolumeLineColors(element, props.isDark);
+  return {
+    edited: colors.edited,
+    feedback:
+      props.previewMode === "VOLUME_DRAW" ? colors.editing : colors.hovered,
+    gridBaseline: colors.gridBaseline,
+    horizontalGrid: colors.horizontalGrid,
+    erasePreviewOverlay: colors.erasePreviewOverlay,
+  };
+};
 
 const horizontalGridLabels = computed(() => {
   const height = viewportHeight.value;
@@ -311,8 +306,7 @@ const updateRenderer = (renderImmediately = false) => {
       erasePreviewRanges: erasePreviewBaseXRanges.value,
       gridLines: volumeValueScale.gridLines,
       valueScale: volumeValueScale,
-      previewMode: props.previewMode,
-      colors: resolveVolumeLineColors(containerElement, props.isDark),
+      colors: getVolumeEditorLineColors(containerElement),
     },
     renderImmediately,
   );
@@ -329,7 +323,6 @@ watch(
     erasePreviewBaseXRanges,
     viewportWidth,
     viewportHeight,
-    renderRequestToken,
   ],
   () => updateRenderer(),
 );
@@ -349,7 +342,7 @@ onMounted(async () => {
     canvas: canvasElement,
     width: viewportWidth.value,
     height: viewportHeight.value,
-    initialColors: resolveVolumeLineColors(containerElement, props.isDark),
+    initialColors: getVolumeEditorLineColors(containerElement),
     signal: rendererAbortController.signal,
   });
   if (renderer == undefined) {

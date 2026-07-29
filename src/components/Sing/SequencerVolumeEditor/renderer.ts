@@ -8,7 +8,6 @@ import {
 import type { VolumeSegment, VolumeViewInfo } from "@/sing/graphics/volumeLine";
 import type { Color } from "@/sing/graphics/lineStrip";
 import type { DbGridLine, VolumeValueScale } from "@/sing/volumeValueScale";
-import type { VolumeEditorPreviewMode } from "@/sing/volumeEditorStateMachine/common";
 
 export type VolumeEditorBaseXRange = {
   readonly startBaseX: number;
@@ -17,8 +16,7 @@ export type VolumeEditorBaseXRange = {
 
 export type VolumeEditorLineColors = {
   readonly edited: Color;
-  readonly hovered: Color;
-  readonly editing: Color;
+  readonly feedback: Color;
   readonly gridBaseline: Color;
   readonly horizontalGrid: Color;
   readonly erasePreviewOverlay: Color;
@@ -31,7 +29,6 @@ type VolumeEditorRendererUpdateOptions = {
   readonly erasePreviewRanges: readonly VolumeEditorBaseXRange[];
   readonly gridLines: readonly DbGridLine[];
   readonly valueScale: VolumeValueScale;
-  readonly previewMode: VolumeEditorPreviewMode;
   readonly colors: VolumeEditorLineColors;
 };
 
@@ -133,7 +130,7 @@ export class VolumeEditorRenderer {
       isVisible: true,
     });
     this.volumeFeedbackLine = new VolumeLine({
-      color: initialColors.hovered,
+      color: initialColors.feedback,
       width: VOLUME_EDITOR_LINE_WIDTH.hoveredVolume,
       isVisible: false,
     });
@@ -226,14 +223,8 @@ export class VolumeEditorRenderer {
       options.volumeSegments,
       options.feedbackRange,
     );
-    this.volumeFeedbackLine.color =
-      options.previewMode === "VOLUME_DRAW"
-        ? options.colors.editing
-        : options.colors.hovered;
-    this.volumeFeedbackLine.isVisible =
-      (options.previewMode === "IDLE" ||
-        options.previewMode === "VOLUME_DRAW") &&
-      feedbackSegments.length > 0;
+    this.volumeFeedbackLine.color = options.colors.feedback;
+    this.volumeFeedbackLine.isVisible = feedbackSegments.length > 0;
     this.volumeFeedbackLine.update(feedbackSegments, options.viewInfo);
 
     this.renderer.render(this.stage);

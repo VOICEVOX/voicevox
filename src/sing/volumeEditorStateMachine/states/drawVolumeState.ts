@@ -13,6 +13,7 @@ import { createArray, linearInterpolation } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
 import {
   countVolumeEditDataPoints,
+  findVolumeEditableFrameRange,
   isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
 } from "@/sing/volumeEditRanges";
@@ -65,6 +66,7 @@ export class DrawVolumeState implements State<
     context.cursorState.value = "DRAW";
     context.previewMode.value = "VOLUME_DRAW";
     context.tooltipData.value = this.tooltipDataAtStart;
+    this.updateHighlightedEditableRange(context, this.cursorPosAtStart.frame);
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -119,6 +121,7 @@ export class DrawVolumeState implements State<
         this.currentCursorPos = position;
         this.useStraightLine = pointerEvent.shiftKey;
         this.innerContext.executePreviewProcess = true;
+        this.updateHighlightedEditableRange(context, position.frame);
         this.updateTooltipData(context, pointerInfo);
       } else if (
         (pointerEvent.type === "pointerup" && mouseButton === "LEFT_BUTTON") ||
@@ -128,6 +131,7 @@ export class DrawVolumeState implements State<
         // 確定位置を取りこぼさないように同期的に反映する
         this.currentCursorPos = position;
         this.useStraightLine = pointerEvent.shiftKey;
+        this.updateHighlightedEditableRange(context, position.frame);
         this.previewDrawVolume(context);
         this.innerContext.executePreviewProcess = false;
 
@@ -146,6 +150,7 @@ export class DrawVolumeState implements State<
         this.currentCursorPos = position;
         this.useStraightLine = pointerEvent.shiftKey;
         this.innerContext.executePreviewProcess = true;
+        this.updateHighlightedEditableRange(context, position.frame);
         this.updateTooltipData(context, pointerInfo);
       }
     }
@@ -187,6 +192,17 @@ export class DrawVolumeState implements State<
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
     context.tooltipData.value = undefined;
+    context.highlightedEditableRange.value = undefined;
+  }
+
+  private updateHighlightedEditableRange(
+    context: VolumeEditorContext,
+    frame: number,
+  ) {
+    context.highlightedEditableRange.value = findVolumeEditableFrameRange(
+      frame,
+      context.getEditableFrameRanges(),
+    );
   }
 
   private updateTooltipData(

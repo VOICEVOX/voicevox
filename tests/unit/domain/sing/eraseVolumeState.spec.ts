@@ -4,12 +4,36 @@ import type {
   VolumeEditorContext,
   VolumeEditorPointerInfo,
 } from "@/sing/volumeEditorStateMachine/common";
+import { EraseVolumeIdleState } from "@/sing/volumeEditorStateMachine/states/eraseVolumeIdleState";
 import { EraseVolumeState } from "@/sing/volumeEditorStateMachine/states/eraseVolumeState";
 import { TrackId } from "@/type/preload";
 
 describe("EraseVolumeState", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("idle中はポインタ位置の編集可能区間をハイライトする", () => {
+    const context = createContext();
+    const state = new EraseVolumeIdleState();
+
+    state.onEnter(context);
+    state.process({
+      input: {
+        type: "pointerEvent",
+        targetArea: "VolumeEditorArea",
+        pointerEvent: { type: "pointermove" } as PointerEvent,
+        pointerInfo: createPointerInfo(10),
+      },
+      context,
+      setNextState: vi.fn(),
+    });
+
+    expect(context.cursorState.value).toBe("ERASE");
+    expect(context.highlightedEditableRange.value).toEqual({
+      startFrame: 0,
+      endFrame: 100,
+    });
   });
 
   it("pointerup時にanimation frame待ちの確定位置を反映する", () => {
@@ -20,6 +44,10 @@ describe("EraseVolumeState", () => {
     vi.stubGlobal("cancelAnimationFrame", vi.fn());
 
     const context = createContext();
+    context.highlightedEditableRange.value = {
+      startFrame: 0,
+      endFrame: 100,
+    };
     const state = new EraseVolumeState({
       startPosition: { frame: 10, value: 1 },
       targetTrackId: TrackId("trackId"),
@@ -27,6 +55,7 @@ describe("EraseVolumeState", () => {
     });
 
     state.onEnter(context);
+    expect(context.highlightedEditableRange.value).toBeUndefined();
     state.process({
       input: {
         type: "pointerEvent",
@@ -66,6 +95,7 @@ function createContext(): VolumeEditorContext {
     previewMode: ref("IDLE"),
     cursorState: ref("UNSET"),
     tooltipData: ref(undefined),
+    highlightedEditableRange: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     playheadTicks: computed(() => 0),
     tempos: computed(() => [{ position: 0, bpm: 120 }]),

@@ -4,12 +4,94 @@ import type {
   VolumeEditorContext,
   VolumeEditorPointerInfo,
 } from "@/sing/volumeEditorStateMachine/common";
+import { DrawVolumeIdleState } from "@/sing/volumeEditorStateMachine/states/drawVolumeIdleState";
 import { DrawVolumeState } from "@/sing/volumeEditorStateMachine/states/drawVolumeState";
 import { TrackId } from "@/type/preload";
 
 describe("DrawVolumeState", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("idle中はポインタ位置の編集可能区間をハイライトする", () => {
+    const context = createContext();
+    const state = new DrawVolumeIdleState();
+
+    state.onEnter(context);
+    state.process({
+      input: {
+        type: "pointerEvent",
+        targetArea: "VolumeEditorArea",
+        pointerEvent: { type: "pointermove" } as PointerEvent,
+        pointerInfo: createPointerInfo(10, 0),
+      },
+      context,
+      setNextState: vi.fn(),
+    });
+
+    expect(context.cursorState.value).toBe("DRAW");
+    expect(context.highlightedEditableRange.value).toEqual({
+      startFrame: 0,
+      endFrame: 100,
+    });
+
+    state.process({
+      input: {
+        type: "pointerEvent",
+        targetArea: "VolumeEditorArea",
+        pointerEvent: { type: "pointerleave" } as PointerEvent,
+        pointerInfo: createPointerInfo(10, 0),
+      },
+      context,
+      setNextState: vi.fn(),
+    });
+
+    expect(context.cursorState.value).toBe("UNSET");
+    expect(context.highlightedEditableRange.value).toBeUndefined();
+  });
+
+  it("描画中は現在の編集可能区間へハイライトを追随させる", () => {
+    vi.stubGlobal(
+      "requestAnimationFrame",
+      vi.fn(() => 1),
+    );
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+
+    const context = createContext([
+      { startFrame: 0, endFrame: 50 },
+      { startFrame: 100, endFrame: 200 },
+    ]);
+    const state = new DrawVolumeState({
+      startPosition: { frame: 10, value: 0 },
+      startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
+      targetTrackId: TrackId("trackId"),
+      returnStateId: "drawVolumeIdle",
+    });
+
+    state.onEnter(context);
+    expect(context.highlightedEditableRange.value).toEqual({
+      startFrame: 0,
+      endFrame: 50,
+    });
+
+    state.process({
+      input: {
+        type: "pointerEvent",
+        targetArea: "Window",
+        pointerEvent: { type: "pointermove", button: 0 } as PointerEvent,
+        pointerInfo: createPointerInfo(120, 0),
+      },
+      context,
+      setNextState: vi.fn(),
+    });
+
+    expect(context.highlightedEditableRange.value).toEqual({
+      startFrame: 100,
+      endFrame: 200,
+    });
+
+    state.onExit(context);
+    expect(context.highlightedEditableRange.value).toBeUndefined();
   });
 
   it("左方向へ戻しながら描画しても補間できる", () => {
@@ -149,12 +231,15 @@ describe("DrawVolumeState", () => {
   });
 });
 
-function createContext(): VolumeEditorContext {
+function createContext(
+  editableRanges = [{ startFrame: 0, endFrame: 100 }],
+): VolumeEditorContext {
   return {
     previewVolumeEdit: ref(undefined),
     previewMode: ref("IDLE"),
     cursorState: ref("UNSET"),
     tooltipData: ref(undefined),
+    highlightedEditableRange: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     playheadTicks: computed(() => 0),
     tempos: computed(() => [{ position: 0, bpm: 120 }]),
@@ -162,7 +247,7 @@ function createContext(): VolumeEditorContext {
     zoomX: computed(() => 1),
     zoomY: computed(() => 1),
     nowPlaying: computed(() => false),
-    getEditableFrameRanges: () => [{ startFrame: 0, endFrame: 100 }],
+    getEditableFrameRanges: () => editableRanges,
     store: {
       state: {
         tpqn: 480,

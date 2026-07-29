@@ -3,13 +3,13 @@
     :viewportInfo="props.viewportInfo"
     :effectiveFramewise
     :previewEraseRanges
-    :editableFrameRanges
     :tempos
     :tpqn
     :editorFrameRate
     :previewMode
     :cursorState
     :tooltipData
+    :highlightedEditableRange
     :tool
     :isDark
     :uiLocked
@@ -30,8 +30,8 @@ import {
   watch,
 } from "vue";
 import Presentation from "./Presentation.vue";
-import { useVolumeEditorStateMachine } from "./useStateMachine";
-import type { VolumeEditorPointerEvent } from "./useInteraction";
+import { useVolumeEditorStateMachine } from "./useVolumeEditorStateMachine";
+import type { VolumeEditorPointerEvent } from "./useVolumeEditorPointerInput";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import type { VolumeEditValue } from "@/domain/project/type";
@@ -75,6 +75,7 @@ const {
   previewMode,
   cursorState,
   tooltipData,
+  highlightedEditableRange,
 } = useVolumeEditorStateMachine(store, {
   getEditableFrameRanges: () => editableFrameRanges.value,
 });
