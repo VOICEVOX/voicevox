@@ -34,12 +34,12 @@ import { useVolumeEditorStateMachine } from "./useStateMachine";
 import type { VolumeEditorPointerEvent } from "./useInteraction";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
-import type { VolumeAdjustmentValue } from "@/domain/project/type";
+import type { VolumeEditValue } from "@/domain/project/type";
 import { useMounted } from "@/composables/useMounted";
 import { Mutex } from "@/helpers/mutex";
 import { ensureNotNullish } from "@/type/utility";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
-import { currentVolumeEditMode } from "@/sing/volumeEditMode";
+import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 import { buildVolumeEditDisplayData } from "@/sing/volumeEditDisplay";
 import {
   deriveVolumeEditableFrameRanges,
@@ -63,10 +63,10 @@ const emit = defineEmits<{
 }>();
 
 const store = useStore();
-const volumeEditMode = currentVolumeEditMode;
+const volumeEditMode = relativeVolumeEditMode;
 
 const editableFrameRanges = shallowRef<VolumeEditableFrameRange[]>([]);
-const effectiveFramewise = shallowRef<VolumeAdjustmentValue[]>([]);
+const effectiveFramewise = shallowRef<VolumeEditValue[]>([]);
 const previewEraseRanges = shallowRef<VolumeEditFrameRange[]>([]);
 
 const {
@@ -154,7 +154,7 @@ const refreshEditableFrameRanges = () => {
 
 const refreshVolumeEditDisplay = () => {
   const displayData = buildVolumeEditDisplayData({
-    volumeAdjustmentData: selectedTrack.value.volumeAdjustmentData,
+    volumeEditData: selectedTrack.value.volumeEditData,
     previewEdit: volumePreviewEdit.value,
     editableRanges: editableFrameRanges.value,
     volumeEditMode,
@@ -190,7 +190,7 @@ watch(
 watch(
   [
     selectedTrackId,
-    () => selectedTrack.value.volumeAdjustmentData,
+    () => selectedTrack.value.volumeEditData,
     volumePreviewEdit,
   ],
   async () => {

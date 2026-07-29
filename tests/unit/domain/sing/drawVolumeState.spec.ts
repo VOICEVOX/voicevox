@@ -142,7 +142,7 @@ describe("DrawVolumeState", () => {
     expect(
       context.store.actions.COMMAND_SET_VOLUME_EDIT_DATA,
     ).toHaveBeenCalledWith({
-      volumeAdjustmentArray: [0, 3, 6],
+      volumeArray: [0, 3, 6],
       startFrame: 10,
       trackId: TrackId("trackId"),
     });

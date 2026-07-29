@@ -72,7 +72,7 @@ import ContextMenu, {
 import SequencerParameterGrid from "@/components/Sing/SequencerParameterGrid.vue";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
 import { useTimelineWheel } from "@/composables/useTimelineWheel";
-import type { Tempo, VolumeAdjustmentValue } from "@/domain/project/type";
+import type { Tempo, VolumeEditValue } from "@/domain/project/type";
 import { secondToTick } from "@/sing/music";
 import { clamp } from "@/sing/utility";
 import {
@@ -81,7 +81,7 @@ import {
   type ViewportInfo,
 } from "@/sing/viewHelper";
 import { createThemeColorResolver } from "@/sing/graphics/cssColor";
-import { currentVolumeEditMode } from "@/sing/volumeEditMode";
+import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 import type {
   VolumeEditableFrameRange,
   VolumeEditFrameRange,
@@ -99,7 +99,7 @@ defineOptions({
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
-  effectiveFramewise: readonly VolumeAdjustmentValue[];
+  effectiveFramewise: readonly VolumeEditValue[];
   previewEraseRanges: readonly VolumeEditFrameRange[];
   editableFrameRanges: readonly VolumeEditableFrameRange[];
   tempos: Tempo[];
@@ -120,7 +120,7 @@ const emit = defineEmits<{
   zoomTimeline: [anchorX: number, deltaY: number];
 }>();
 
-const volumeEditMode = currentVolumeEditMode;
+const volumeEditMode = relativeVolumeEditMode;
 const volumeValueScale = volumeEditMode.valueScale;
 
 const resolveVolumeLineColors = createThemeColorResolver({

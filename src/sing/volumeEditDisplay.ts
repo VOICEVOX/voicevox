@@ -1,38 +1,37 @@
-import type { VolumeAdjustmentValue } from "@/domain/project/type";
+import type { VolumeEditValue } from "@/domain/project/type";
 import type { VolumePreviewEdit } from "@/sing/volumeEditorStateMachine/common";
 import type { VolumeEditMode } from "@/sing/volumeEditMode";
 import {
   getOverlappingVolumeEditableFrameRanges,
-  maskVolumeAdjustmentDataByEditableRanges,
+  maskVolumeEditDataByEditableRanges,
   type VolumeEditFrameRange,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
 
 export type VolumeEditDisplayData = {
-  effectiveFramewise: VolumeAdjustmentValue[];
+  effectiveFramewise: VolumeEditValue[];
   previewEraseRanges: VolumeEditFrameRange[];
 };
 
 type BuildVolumeEditDisplayDataOptions = {
-  volumeAdjustmentData: readonly VolumeAdjustmentValue[];
+  volumeEditData: readonly VolumeEditValue[];
   previewEdit?: VolumePreviewEdit;
   editableRanges: readonly VolumeEditableFrameRange[];
   volumeEditMode: VolumeEditMode;
 };
 
 const applyPreviewEdit = (
-  volumeAdjustmentData: readonly VolumeAdjustmentValue[],
+  volumeEditData: readonly VolumeEditValue[],
   previewEdit: VolumePreviewEdit | undefined,
   editableRanges: readonly VolumeEditableFrameRange[],
-  volumeEditMode: VolumeEditMode,
 ) => {
   const previewEraseRanges: VolumeEditFrameRange[] = [];
 
   if (previewEdit == undefined) {
-    return { editFramewise: volumeAdjustmentData, previewEraseRanges };
+    return { editFramewise: volumeEditData, previewEraseRanges };
   }
 
-  const editFramewise = [...volumeAdjustmentData];
+  const editFramewise = [...volumeEditData];
   if (previewEdit.type === "draw") {
     const startFrame = Math.max(0, previewEdit.startFrame);
     const endFrame = startFrame + previewEdit.data.length;
@@ -41,13 +40,13 @@ const applyPreviewEdit = (
         ...new Array<null>(endFrame - editFramewise.length).fill(null),
       );
     }
-    const maskedPreview = maskVolumeAdjustmentDataByEditableRanges(
+    const maskedPreview = maskVolumeEditDataByEditableRanges(
       { values: previewEdit.data, startFrame: previewEdit.startFrame },
       editableRanges,
     );
     for (const [i, rawValue] of maskedPreview.entries()) {
       if (rawValue == null) continue;
-      editFramewise[startFrame + i] = volumeEditMode.clampStoredValue(rawValue);
+      editFramewise[startFrame + i] = rawValue;
     }
   } else {
     const startFrame = Math.max(0, previewEdit.startFrame);
@@ -72,12 +71,12 @@ const applyPreviewEdit = (
 };
 
 const buildEffectiveFramewise = (
-  editFramewise: readonly VolumeAdjustmentValue[],
+  editFramewise: readonly VolumeEditValue[],
   editableRanges: readonly VolumeEditableFrameRange[],
   volumeEditMode: VolumeEditMode,
 ) => {
   const lastRangeEndFrame = editableRanges.at(-1)?.endFrame ?? 0;
-  const effectiveFramewise = new Array<VolumeAdjustmentValue>(
+  const effectiveFramewise = new Array<VolumeEditValue>(
     Math.max(editFramewise.length, lastRangeEndFrame),
   ).fill(null);
   for (const [i, value] of editFramewise.entries()) {
@@ -96,18 +95,17 @@ const buildEffectiveFramewise = (
 };
 
 export const buildVolumeEditDisplayData = ({
-  volumeAdjustmentData,
+  volumeEditData,
   previewEdit,
   editableRanges,
   volumeEditMode,
 }: BuildVolumeEditDisplayDataOptions): VolumeEditDisplayData => {
   const { editFramewise, previewEraseRanges } = applyPreviewEdit(
-    volumeAdjustmentData,
+    volumeEditData,
     previewEdit,
     editableRanges,
-    volumeEditMode,
   );
-  const maskedEdit = maskVolumeAdjustmentDataByEditableRanges(
+  const maskedEdit = maskVolumeEditDataByEditableRanges(
     { values: editFramewise, startFrame: 0 },
     editableRanges,
   );

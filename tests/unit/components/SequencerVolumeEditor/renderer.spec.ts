@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildVolumeSegments } from "@/components/Sing/SequencerVolumeEditor/renderer";
 import { volumeNormalizedYToScreenY } from "@/sing/graphics/volumeLine";
-import { currentVolumeEditMode } from "@/sing/volumeEditMode";
+import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 
 describe("buildVolumeSegments", () => {
   it("データなし区間で線分を分け、2点未満の線分を除外する", () => {
@@ -32,7 +32,7 @@ describe("buildVolumeSegments", () => {
   });
 
   it("高さが奇数でも0dBを表示領域の中心に配置する", () => {
-    const normalizedY = currentVolumeEditMode.valueScale.dbToNormalizedY(0);
+    const normalizedY = relativeVolumeEditMode.valueScale.dbToNormalizedY(0);
 
     expect(volumeNormalizedYToScreenY(normalizedY, 101)).toBe(50.5);
   });

@@ -5,7 +5,7 @@ import {
   useVolumeEditorInteraction,
   type VolumeEditorPointerEvent,
 } from "@/components/Sing/SequencerVolumeEditor/useInteraction";
-import { currentVolumeEditMode } from "@/sing/volumeEditMode";
+import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 import type { VolumeEditorPreviewMode } from "@/sing/volumeEditorStateMachine/common";
 
 describe("useVolumeEditorInteraction", () => {
@@ -31,7 +31,7 @@ describe("useVolumeEditorInteraction", () => {
             tpqn: ref(480),
             frameRate: ref(93.75),
             editableFrameRanges: ref([firstEditableRange, secondEditableRange]),
-            volumeEditMode: currentVolumeEditMode,
+            volumeEditMode: relativeVolumeEditMode,
             onPointerEvent,
             onRenderRequested: vi.fn(),
           });

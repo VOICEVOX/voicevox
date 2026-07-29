@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import { VOLUME_EDITOR_ALPHA, VOLUME_EDITOR_LINE_WIDTH } from "./style";
-import type { VolumeAdjustmentValue } from "@/domain/project/type";
+import type { VolumeEditValue } from "@/domain/project/type";
 import {
   VolumeLine,
   volumeNormalizedYToScreenY,
@@ -36,7 +36,7 @@ type VolumeEditorRendererUpdateOptions = {
 };
 
 export const buildVolumeSegments = (
-  framewiseData: readonly VolumeAdjustmentValue[],
+  framewiseData: readonly VolumeEditValue[],
   options: {
     frameToBaseX: (frame: number) => number;
     valueToNormalizedY: (value: number) => number;

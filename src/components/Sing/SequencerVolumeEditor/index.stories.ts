@@ -4,11 +4,11 @@ import Presentation from "./Presentation.vue";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
-import { currentVolumeEditMode } from "@/sing/volumeEditMode";
+import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 import { useStore } from "@/store";
 
 const effectiveFramewise = Array.from({ length: 240 }, (_, frame) =>
-  currentVolumeEditMode.toStoredValue(Math.sin(frame / 24) * 4),
+  relativeVolumeEditMode.toStoredValue(Math.sin(frame / 24) * 4),
 );
 
 const meta = {

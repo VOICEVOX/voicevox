@@ -6,6 +6,11 @@ export type VolumeEditableFrameRange = {
   readonly endFrame: number;
 };
 
+export type VolumeEditFrameRange = {
+  startFrame: number;
+  endFrame: number;
+};
+
 export type FramewiseVolumeEditData = {
   readonly values: readonly VolumeEditValue[];
   readonly startFrame: number;
