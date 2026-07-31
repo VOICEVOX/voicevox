@@ -2,14 +2,17 @@ import { test, expect } from "@playwright/test";
 
 import { gotoHome, navigateToMain } from "../navigators";
 import { ensureNotNullish } from "@/type/utility";
+import { locateQSplitterElements } from "./utils";
 
 test.beforeEach(gotoHome);
 
 test("イントネーション調整欄を縦に広げられる", async ({ page }) => {
   await navigateToMain(page);
 
-  const horizontalSplitter = page.locator(".q-splitter--horizontal").first();
-  const detailPane = horizontalSplitter.locator(":scope > .q-splitter__after");
+  const { handle: separatorHandle } = locateQSplitterElements(
+    page.locator(".q-splitter--horizontal").first(),
+  );
+  const detailPane = page.getByTestId("audio-detail");
 
   await test.step("イントネーション調整欄を表示する", async () => {
     const input = page.getByRole("textbox", { name: "1行目" });
@@ -25,10 +28,7 @@ test("イントネーション調整欄を縦に広げられる", async ({ page 
   });
 
   await test.step("境界を上へドラッグすると調整欄が広がる", async () => {
-    const separatorArea = horizontalSplitter.locator(
-      ":scope > .q-splitter__separator > .q-splitter__separator-area",
-    );
-    const box = ensureNotNullish(await separatorArea.boundingBox());
+    const box = ensureNotNullish(await separatorHandle.boundingBox());
 
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
