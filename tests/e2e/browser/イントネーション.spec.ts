@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
 import { gotoHome, navigateToMain } from "../navigators";
-import { ensureNotNullish } from "@/type/utility";
 import { locateQSplitterElements } from "./utils";
+import { ensureNotNullish } from "@/type/utility";
 
 test.beforeEach(gotoHome);
 
