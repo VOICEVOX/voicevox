@@ -18,6 +18,7 @@
           beforeClass="overflow-hidden"
           :disable="!shouldShowPanes"
           :modelValue="audioDetailPaneHeight"
+          data-testid="audio-detail-pane-splitter"
           @update:modelValue="updateAudioDetailPane"
         >
           <template #before>
