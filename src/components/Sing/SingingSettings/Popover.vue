@@ -21,19 +21,6 @@
       />
       <QInput
         type="number"
-        :modelValue="track.keyRangeAdjustment"
-        label="音域"
-        outlined
-        dense
-        hideBottomSpace
-        :min="MIN_KEY_RANGE_ADJUSTMENT"
-        :max="MAX_KEY_RANGE_ADJUSTMENT"
-        step="1"
-        :disable="uiLocked"
-        @change="setKeyRangeAdjustment"
-      />
-      <QInput
-        type="number"
         :modelValue="track.volumeRangeAdjustment"
         label="声量"
         outlined
@@ -44,6 +31,19 @@
         step="1"
         :disable="uiLocked"
         @change="setVolumeRangeAdjustment"
+      />
+      <QInput
+        type="number"
+        :modelValue="track.keyRangeAdjustment"
+        label="音域"
+        outlined
+        dense
+        hideBottomSpace
+        :min="MIN_KEY_RANGE_ADJUSTMENT"
+        :max="MAX_KEY_RANGE_ADJUSTMENT"
+        step="1"
+        :disable="uiLocked"
+        @change="setKeyRangeAdjustment"
       />
     </div>
   </QMenu>
