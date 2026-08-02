@@ -352,7 +352,8 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-85) var(--neutral-c) var(--neutral-h)
   );
 
-  /* ボリューム編集: 通常時とhover時はsecondary系、操作中はピッチ編集線相当の彩度にする。 */
+  /* ボリューム編集: 編集済み線は常時表示であり、過度に視覚的に強調しすぎない・変更可能であることを示すsecondary系にし、
+     ホバーで編集可能なことを示す明度変更・操作中は操作対象を把握しやすくするためprimary系の彩度の高い色にする */
   --scheme-color-sing-volume-edited-line: oklch(
     var(--lr-60) var(--secondary-c) var(--secondary-h)
   );
@@ -632,7 +633,8 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-4) var(--neutral-c) var(--neutral-h)
   );
 
-  /* ボリューム編集: 通常時とhover時はsecondary系、操作中はピッチ編集線相当の彩度にする。 */
+  /* ボリューム編集: 編集済み線は常時表示であり、過度に視覚的に強調しすぎない・変更可能であることを示すsecondary系にし、
+     ホバーで編集可能なことを示す明度変更・操作中は操作対象を把握しやすくするためprimary系の彩度の高い色にする */
   --scheme-color-sing-volume-edited-line: oklch(
     var(--lr-70) var(--secondary-c) var(--secondary-h)
   );

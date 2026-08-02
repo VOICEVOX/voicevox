@@ -9,11 +9,13 @@ import type {
 } from "@/store/type";
 import type { TrackId } from "@/type/preload";
 
+/** 編集可能なフレーム区間。endFrameは範囲に含まない。歌唱ボリュームのある非pau区間から導出する */
 export type VolumeEditableFrameRange = {
   readonly startFrame: number;
   readonly endFrame: number;
 };
 
+/** 汎用のフレーム区間。endFrameは範囲に含まない。消去プレビューなど、編集可否とは無関係な範囲に使う */
 export type VolumeEditFrameRange = {
   startFrame: number;
   endFrame: number;

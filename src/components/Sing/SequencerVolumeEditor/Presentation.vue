@@ -138,6 +138,7 @@ let renderer: VolumeEditorRenderer | undefined;
 let resizeObserver: ResizeObserver | undefined;
 let rendererAbortController: AbortController | undefined;
 
+// px⇔フレームの変換はポインタ入力側の逆変換と対で保守するため、ビュー側に置く
 const frameToBaseX = (frame: number) => {
   const seconds = frame / props.editorFrameRate;
   const ticks = secondToTick(seconds, toRaw(props.tempos), props.tpqn);

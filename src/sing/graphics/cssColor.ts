@@ -64,6 +64,11 @@ type ResolvedCssVariableColors<CssVariables extends Record<string, string>> = {
   readonly [Name in keyof CssVariables]: Color;
 };
 
+/**
+ * CSS変数で定義されたテーマ色を、Canvas描画で使えるColorへ解決する関数を返す。
+ * 解決結果はthemeKeyが変わるまでキャッシュされ、キャッシュ命中時はelementを参照しない。
+ * そのため、どの要素から解決しても同じ値になるCSS変数にのみ使える。
+ */
 export const createThemeColorResolver = <
   CssVariables extends Record<string, string>,
 >(

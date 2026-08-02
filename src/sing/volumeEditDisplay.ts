@@ -81,6 +81,7 @@ const buildEffectiveFramewise = (
     effectiveFramewise[i] = value;
   }
 
+  // 未編集フレームは相対値編集の基準値0dB(原音のまま)で埋めて、実効線を途切れさせない
   for (const range of editableRanges) {
     for (let i = range.startFrame; i < range.endFrame; i++) {
       if (effectiveFramewise[i] == null) {

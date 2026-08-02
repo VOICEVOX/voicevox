@@ -87,6 +87,9 @@ const {
   getEditableFrameRanges: () => editableFrameRanges.value,
 });
 
+// レンダリングが進むと編集可能区間は増減し、区間オブジェクトを保持すると
+// 消えた区間や境界の古い区間をハイライトし続けてしまう。
+// そのためステートマシンはフレームだけを持ち、ここでその時点の区間に解決する
 const highlightedEditableRange = computed(() => {
   const frame = highlightedFrame.value;
   if (frame == undefined) {
@@ -139,7 +142,8 @@ const processPointerEvent = (event: VolumeEditorPointerEvent) => {
   });
 };
 
-// phrases内部の更新を検知し、表示データを更新するためのシグネチャ
+// phrasesの要素はMapの中で書き換わるため、Mapインスタンスのwatchでは変更を検知できない。
+// 表示に影響するフィールドだけを文字列にして比較する
 const phraseSignature = computed(() =>
   [...store.state.phrases.values()].map(
     (phrase) =>
@@ -190,6 +194,8 @@ watch(
   },
 );
 
+// 操作中のプレビューは毎フレーム更新されるため、フレーズ走査を伴う区間の再導出はせず
+// 表示データだけを更新する。区間が変わる更新は上のwatchが担い、こちらより先に実行される
 watch(
   [
     selectedTrackId,
