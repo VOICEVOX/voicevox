@@ -28,10 +28,9 @@ import { decibelToLinear } from "@/sing/audio";
 
 type WaveformDisplayMode = "SYMMETRIC" | "BOTTOM_ALIGNED";
 
-// これ未満の振幅は無音とみなして高さ0にする
 const BOTTOM_ALIGNED_MIN_DB = -48;
 const BOTTOM_ALIGNED_MIN_AMPLITUDE = decibelToLinear(BOTTOM_ALIGNED_MIN_DB);
-const BOTTOM_ALIGNED_DISPLAY_GAIN = 2;
+const BOTTOM_ALIGNED_DISPLAY_GAIN = 1.5;
 
 const props = withDefaults(
   defineProps<{
@@ -329,7 +328,7 @@ function drawWaveform(
       }
       // ボリューム編集では結果波形の正側ピークだけを片側表示する。
       // そのまま表示だとボリューム編集で重要な変化・差異が読み取りづらいため、
-      // 変化を読み取れるよう、表示上のみ2倍に拡大する。
+      // 上端の飽和を抑えつつ変化を読み取れるよう、表示上のみ1.5倍に拡大する。
       const amplitude =
         maxValues[i] >= BOTTOM_ALIGNED_MIN_AMPLITUDE
           ? clamp(maxValues[i] * BOTTOM_ALIGNED_DISPLAY_GAIN, 0, 1)
