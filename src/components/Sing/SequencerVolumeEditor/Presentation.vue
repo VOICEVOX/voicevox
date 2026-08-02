@@ -5,11 +5,11 @@
     :class="cursorClass"
     @wheel="handleWheel"
   >
-    <div class="volume-waveform-reference" aria-hidden="true">
-      <slot name="waveform" />
-    </div>
     <div class="volume-time-grid" aria-hidden="true">
       <slot name="grid" />
+    </div>
+    <div class="volume-waveform-reference" aria-hidden="true">
+      <slot name="waveform" />
     </div>
     <canvas ref="canvas" class="volume-editor-canvas" />
     <div
@@ -62,7 +62,7 @@ import {
   VolumeEditorRenderer,
   type VolumeEditorBaseXRange,
 } from "./renderer";
-import { VOLUME_EDITOR_ALPHA, VOLUME_EDITOR_LAYOUT } from "./style";
+import { VOLUME_EDITOR_LAYOUT } from "./style";
 import ContextMenu, {
   type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
@@ -405,7 +405,6 @@ onUnmounted(() => {
   inset: auto 0 0 v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
   z-index: 0;
   height: v-bind("`${VOLUME_EDITOR_LAYOUT.waveformReferenceHeightPx}px`");
-  opacity: v-bind("VOLUME_EDITOR_ALPHA.waveformReference");
   pointer-events: none;
 
   > :deep(*) {

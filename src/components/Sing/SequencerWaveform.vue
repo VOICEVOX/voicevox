@@ -24,23 +24,13 @@ import type { SequenceId } from "@/store/type";
 import type { Tempo } from "@/domain/project/type";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { linearToDecibel } from "@/sing/audio";
+import { decibelToLinear } from "@/sing/audio";
 
 type WaveformDisplayMode = "SYMMETRIC" | "BOTTOM_ALIGNED";
 
 const BOTTOM_ALIGNED_MIN_DB = -48;
-
-const normalizeBottomAlignedAmplitude = (amplitude: number) => {
-  if (amplitude <= 0) {
-    return 0;
-  }
-  return clamp(
-    (linearToDecibel(amplitude) - BOTTOM_ALIGNED_MIN_DB) /
-      -BOTTOM_ALIGNED_MIN_DB,
-    0,
-    1,
-  );
-};
+const BOTTOM_ALIGNED_MIN_AMPLITUDE = decibelToLinear(BOTTOM_ALIGNED_MIN_DB);
+const BOTTOM_ALIGNED_DISPLAY_GAIN = 2;
 
 const props = withDefaults(
   defineProps<{
@@ -336,10 +326,13 @@ function drawWaveform(
       if (x < -cullingMargin || x > canvasWidth + cullingMargin) {
         continue;
       }
-      // 片側表示でも負側の振幅を失わないよう、正負のピークの絶対値を使う。
-      const amplitude = normalizeBottomAlignedAmplitude(
-        Math.max(Math.abs(minValues[i]), Math.abs(maxValues[i])),
-      );
+      // ボリューム編集では結果波形の正側ピークだけを片側表示する。
+      // そのまま表示だとボリューム編集で重要な変化・差異が読み取りづらいため、
+      // 変化を読み取れるよう、表示上のみ2倍に拡大する。
+      const amplitude =
+        maxValues[i] >= BOTTOM_ALIGNED_MIN_AMPLITUDE
+          ? clamp(maxValues[i] * BOTTOM_ALIGNED_DISPLAY_GAIN, 0, 1)
+          : 0;
       topPoints.push(x, canvasHeight * (1 - amplitude));
     }
 
