@@ -4,7 +4,6 @@ import type { StateDefinitions } from "@/sing/stateMachine";
 import type { CursorState } from "@/sing/viewHelper";
 import type { VolumeEditableFrameRange } from "@/sing/volumeEditRanges";
 import type { TrackId } from "@/type/preload";
-import type { Tempo } from "@/domain/project/type";
 
 export type PositionOnVolumeEditor = {
   readonly frame: number;
@@ -54,28 +53,11 @@ export type VolumeEditorRefs = {
 
 export type VolumeEditorComputedRefs = {
   readonly selectedTrackId: ComputedRef<TrackId>;
-  readonly playheadTicks: ComputedRef<number>;
-  readonly tempos: ComputedRef<Tempo[]>;
-  readonly tpqn: ComputedRef<number>;
-  readonly zoomX: ComputedRef<number>;
-  readonly zoomY: ComputedRef<number>;
-  readonly nowPlaying: ComputedRef<boolean>;
 };
 
 export type VolumeEditorPartialStore = {
-  readonly state: Pick<
-    Store["state"],
-    | "tpqn"
-    | "tempos"
-    | "sequencerZoomX"
-    | "sequencerZoomY"
-    | "sequencerVolumeTool"
-    | "nowPlaying"
-  >;
-  readonly getters: Pick<
-    Store["getters"],
-    "SELECTED_TRACK_ID" | "PLAYHEAD_POSITION"
-  >;
+  readonly state: Pick<Store["state"], "sequencerVolumeTool">;
+  readonly getters: Pick<Store["getters"], "SELECTED_TRACK_ID">;
   readonly actions: Pick<
     Store["actions"],
     "COMMAND_SET_VOLUME_EDIT_DATA" | "COMMAND_ERASE_VOLUME_EDIT_DATA"

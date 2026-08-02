@@ -184,25 +184,13 @@ function createContext(
     tooltipData: ref(undefined),
     highlightedFrame: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
-    playheadTicks: computed(() => 0),
-    tempos: computed(() => [{ position: 0, bpm: 120 }]),
-    tpqn: computed(() => 480),
-    zoomX: computed(() => 1),
-    zoomY: computed(() => 1),
-    nowPlaying: computed(() => false),
     getEditableFrameRanges: () => editableRanges,
     store: {
       state: {
-        tpqn: 480,
-        tempos: [{ position: 0, bpm: 120 }],
-        sequencerZoomX: 1,
-        sequencerZoomY: 1,
         sequencerVolumeTool: "DRAW",
-        nowPlaying: false,
       },
       getters: {
         SELECTED_TRACK_ID: TrackId("trackId"),
-        PLAYHEAD_POSITION: 0,
       },
       actions: {
         COMMAND_SET_VOLUME_EDIT_DATA: vi.fn(),
