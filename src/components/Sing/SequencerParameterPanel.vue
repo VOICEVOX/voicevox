@@ -34,9 +34,7 @@ import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEd
 import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimingEditor.vue";
 import type { ViewportInfo } from "@/sing/viewHelper";
 
-defineProps<{
-  viewportInfo: ViewportInfo;
-}>();
+defineProps<{ viewportInfo: ViewportInfo }>();
 
 const emit = defineEmits<{
   "update:needsAutoScroll": [value: boolean];

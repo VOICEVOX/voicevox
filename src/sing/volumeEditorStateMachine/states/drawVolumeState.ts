@@ -234,7 +234,6 @@ export class DrawVolumeState implements State<
     const cursorValue = this.currentCursorPos.value;
     const prevCursorFrame = this.innerContext.prevCursorPos.frame;
     const prevCursorValue = this.innerContext.prevCursorPos.value;
-
     const tempPreviewEdit = {
       ...context.previewVolumeEdit.value,
       data: [...context.previewVolumeEdit.value.data],
