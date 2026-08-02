@@ -333,6 +333,7 @@ watch(
     volumeSegments,
     feedbackBaseXRange,
     erasePreviewBaseXRanges,
+    visibleGridLines,
     viewportWidth,
     viewportHeight,
   ],
