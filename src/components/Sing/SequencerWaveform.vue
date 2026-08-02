@@ -28,7 +28,7 @@ import { decibelToLinear } from "@/sing/audio";
 
 type WaveformDisplayMode = "SYMMETRIC" | "BOTTOM_ALIGNED";
 
-// 片側表示の表示レンジ下限。これ未満の振幅は無音とみなして高さ0にする
+// これ未満の振幅は無音とみなして高さ0にする
 const BOTTOM_ALIGNED_MIN_DB = -48;
 const BOTTOM_ALIGNED_MIN_AMPLITUDE = decibelToLinear(BOTTOM_ALIGNED_MIN_DB);
 const BOTTOM_ALIGNED_DISPLAY_GAIN = 2;

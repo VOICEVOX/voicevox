@@ -8,7 +8,7 @@ import {
 } from "@/sing/volumeEditRanges";
 
 export type VolumeEditDisplayData = {
-  /** 編集可能区間における現在の変更意図。未編集フレームは0dB相当の値で表す。 */
+  /** 編集値にプレビューを適用した実効値。未編集フレームは0dBで表す */
   effectiveFramewise: VolumeEditValue[];
   previewEraseRanges: VolumeEditFrameRange[];
 };
@@ -81,7 +81,7 @@ const buildEffectiveFramewise = (
     effectiveFramewise[i] = value;
   }
 
-  // 未編集フレームは相対値編集の基準値0dB(原音のまま)で埋めて、実効線を途切れさせない
+  // 未編集フレームは0dB(原音のまま)で埋めて、実効線を途切れさせない
   for (const range of editableRanges) {
     for (let i = range.startFrame; i < range.endFrame; i++) {
       if (effectiveFramewise[i] == null) {
