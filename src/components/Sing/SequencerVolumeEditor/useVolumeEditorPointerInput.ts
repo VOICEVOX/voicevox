@@ -126,12 +126,7 @@ export const useVolumeEditorPointerInput = (options: {
 
   const onSurfacePointerLeave = (event: PointerEvent) => {
     if (options.previewMode.value === "IDLE") {
-      const pointerInfo = computeViewportPointerInfo(event);
-      options.onPointerEvent({
-        pointerEvent: event,
-        targetArea: "VolumeEditorArea",
-        pointerInfo,
-      });
+      dispatchPointerEvent(event, "VolumeEditorArea");
     }
   };
 
