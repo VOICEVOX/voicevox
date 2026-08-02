@@ -73,7 +73,7 @@ export const buildVolumeSegments = (
   return segments;
 };
 
-const filterVolumeSegmentsByBaseXRange = (
+export const filterVolumeSegmentsByBaseXRange = (
   segments: VolumeSegment[],
   range: VolumeEditorBaseXRange | undefined,
 ) => {

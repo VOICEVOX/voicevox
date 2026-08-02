@@ -55,6 +55,30 @@ export const findFirstVolumePointAfter = (
   return low;
 };
 
+/**
+ * ビューポートに映る点のインデックス範囲を返す。
+ * 画面端をまたぐ線分が途切れないように、範囲の前後1点を含める。
+ */
+export const computeVisibleVolumePointRange = (
+  segment: VolumeSegment,
+  viewInfo: VolumeViewInfo,
+) => {
+  const viewportStartBaseX =
+    (viewInfo.offsetX - viewInfo.leftPadding) / viewInfo.zoomX;
+  const viewportEndBaseX =
+    (viewInfo.offsetX + viewInfo.viewportWidth - viewInfo.leftPadding) /
+    viewInfo.zoomX;
+  const startIndex = Math.max(
+    0,
+    findFirstVolumePointAtOrAfter(segment, viewportStartBaseX) - 1,
+  );
+  const endIndex = Math.min(
+    segment.length,
+    findFirstVolumePointAtOrAfter(segment, viewportEndBaseX) + 1,
+  );
+  return { startIndex, endIndex };
+};
+
 type VolumeLineOptions = {
   color: Color;
   width: number;
@@ -116,18 +140,9 @@ export class VolumeLine {
         continue;
       }
 
-      const viewportStartBaseX =
-        (viewInfo.offsetX - viewInfo.leftPadding) / viewInfo.zoomX;
-      const viewportEndBaseX =
-        (viewInfo.offsetX + viewInfo.viewportWidth - viewInfo.leftPadding) /
-        viewInfo.zoomX;
-      const startIndex = Math.max(
-        0,
-        findFirstVolumePointAtOrAfter(segment, viewportStartBaseX) - 1,
-      );
-      const endIndex = Math.min(
-        segment.length,
-        findFirstVolumePointAtOrAfter(segment, viewportEndBaseX) + 1,
+      const { startIndex, endIndex } = computeVisibleVolumePointRange(
+        segment,
+        viewInfo,
       );
 
       // 画面座標に変換
