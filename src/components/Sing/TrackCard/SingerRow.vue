@@ -43,7 +43,6 @@
           }}</span>
         </div>
       </div>
-      <QIcon name="arrow_drop_down" size="sm" class="dropdown-icon" />
       <SingingSettingsPopover :trackId="props.trackId" />
     </QBtn>
   </div>
@@ -123,12 +122,7 @@ const singingTeacherName = computed(() => {
     return "読み込み中";
   }
 
-  const styleName = teacherCharacterInfo.metas.styles.find(
-    (style) => style.styleId === singingTeacher.styleId,
-  )?.styleName;
-  return styleName == undefined
-    ? teacherCharacterInfo.metas.speakerName
-    : `${teacherCharacterInfo.metas.speakerName}（${styleName}）`;
+  return teacherCharacterInfo.metas.speakerName;
 });
 
 const formatAdjustment = (value: number) => {
@@ -138,8 +132,11 @@ const formatAdjustment = (value: number) => {
 
 <style scoped lang="scss">
 .singer-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 160px auto minmax(0, 1fr);
+  flex: 1 0 280px;
   align-items: stretch;
+  min-width: 280px;
   height: 48px;
   border: 1px solid var(--scheme-color-outline-variant);
   border-radius: 8px;
@@ -152,6 +149,7 @@ const formatAdjustment = (value: number) => {
 }
 
 .zone {
+  width: 100%;
   height: 100%;
   min-width: 0;
   padding: 0;
@@ -165,29 +163,38 @@ const formatAdjustment = (value: number) => {
 
 .singer-zone :deep(.q-btn__content) {
   gap: 8px;
-  padding: 0 10px 0 6px;
+  padding: 0 8px 0 4px;
 }
 
 .settings-zone :deep(.q-btn__content) {
+  min-width: 0;
   gap: 2px;
-  padding: 0 4px 0 10px;
+  padding: 0 8px;
 }
 
 .unknown-singer-mark {
   color: var(--scheme-color-on-primary);
 }
 
-.singer-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
+.singer-info,
+.settings-summary {
+  display: grid;
+  grid-template-rows: 16px 12px;
+  align-items: center;
+  justify-items: start;
   gap: 2px;
+}
+
+.singer-info {
+  width: 100%;
   min-width: 0;
+  text-align: left;
+  overflow: hidden;
 }
 
 .singer-name {
-  max-width: 128px;
+  width: 100%;
+  max-width: 100%;
   color: var(--scheme-color-on-surface);
   font-size: 13px;
   font-weight: bold;
@@ -198,7 +205,8 @@ const formatAdjustment = (value: number) => {
 }
 
 .singer-style {
-  max-width: 128px;
+  width: 100%;
+  max-width: 100%;
   color: var(--scheme-color-on-surface-variant);
   font-size: 10px;
   line-height: 12px;
@@ -208,42 +216,48 @@ const formatAdjustment = (value: number) => {
 }
 
 .settings-summary {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .summary-line {
   display: flex;
+  width: 100%;
+  min-width: 0;
   align-items: baseline;
   gap: 4px;
   color: var(--scheme-color-on-surface-variant);
-  font-size: 9px;
-  line-height: 14px;
+  font-size: 10px;
   white-space: nowrap;
+
+  &:first-child {
+    line-height: 16px;
+  }
+
+  &:last-child {
+    line-height: 12px;
+  }
 }
 
 .summary-value {
   color: var(--scheme-color-on-surface);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: bold;
 }
 
 .teacher-value {
+  flex: 1;
+  min-width: 0;
   max-width: 112px;
+  text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 // 値の増減で「音域」ラベルの位置が動かないように幅を確保する
 .adjustment-value {
-  min-width: 24px;
+  min-width: 16px;
   text-align: left;
-}
-
-.dropdown-icon {
-  color: var(--scheme-color-on-surface-variant);
-  margin-right: 2px;
 }
 </style>

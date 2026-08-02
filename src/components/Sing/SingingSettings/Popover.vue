@@ -6,6 +6,7 @@
   >
     <div class="settings">
       <QSelect
+        class="teacher-select"
         :modelValue="singingTeacherStyleId"
         :options="singingTeacherOptions"
         label="歌い方"
@@ -13,12 +14,35 @@
         outlined
         dense
         hideBottomSpace
+        hideDropdownIcon
         optionsDense
+        popupContentClass="teacher-select-menu"
+        transitionShow="none"
+        transitionHide="none"
         emitValue
         mapOptions
         :disable="uiLocked || singingTeacherOptions.length === 0"
         @update:modelValue="setSingingTeacher"
-      />
+      >
+        <template #selected-item="scope">
+          <div class="teacher-selected-item">
+            <SingerIcon round size="24px" :style="scope.opt.style" />
+            <span class="teacher-selected-label">{{ scope.opt.label }}</span>
+          </div>
+        </template>
+        <template #option="scope">
+          <QItem v-bind="scope.itemProps" class="teacher-option">
+            <QItemSection avatar class="teacher-option-avatar">
+              <SingerIcon round size="24px" :style="scope.opt.style" />
+            </QItemSection>
+            <QItemSection>
+              <QItemLabel class="teacher-option-label">
+                {{ scope.opt.label }}
+              </QItemLabel>
+            </QItemSection>
+          </QItem>
+        </template>
+      </QSelect>
       <QInput
         type="number"
         :modelValue="track.volumeRangeAdjustment"
@@ -51,6 +75,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { getOrThrow } from "@/helpers/mapHelper";
 import {
   isValidKeyRangeAdjustment,
@@ -82,6 +107,7 @@ const track = computed(() => getOrThrow(store.state.tracks, props.trackId));
 type SingingTeacherOption = {
   label: string;
   value: StyleId;
+  style: StyleInfo;
 };
 
 const getSingingTeacherLabel = (speakerName: string, style: StyleInfo) => {
@@ -105,6 +131,7 @@ const singingTeacherOptions = computed<SingingTeacherOption[]>(() => {
     characterInfo.metas.styles.map((style) => ({
       label: getSingingTeacherLabel(characterInfo.metas.speakerName, style),
       value: style.styleId,
+      style,
     })),
   );
 });
@@ -157,5 +184,54 @@ const setVolumeRangeAdjustment = (value: AdjustmentInputValue) => {
   width: 280px;
   gap: 12px;
   padding: 16px;
+}
+
+.teacher-selected-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  margin-top: 4px;
+  gap: 8px;
+
+  :deep(.q-avatar) {
+    border-radius: 50%;
+  }
+}
+
+.teacher-selected-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teacher-option-avatar {
+  min-width: 32px;
+  padding-right: 8px;
+
+  :deep(.q-avatar) {
+    border-radius: 50%;
+  }
+}
+
+.teacher-select {
+  :deep(.q-field__control),
+  :deep(.q-field__marginal) {
+    height: 56px;
+    min-height: 56px;
+  }
+}
+
+.teacher-option {
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.teacher-option-label {
+  line-height: 20px;
+}
+
+:global(.teacher-select-menu) {
+  background: var(--scheme-color-surface-container);
 }
 </style>
