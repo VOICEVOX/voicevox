@@ -9,8 +9,7 @@
         flat
         @click="toggleSidebar"
       />
-      <CharacterMenuButton />
-      <SingingSettingsButton :trackId="selectedTrackId" />
+      <SingerRow :trackId="selectedTrackId" />
       <QInput
         type="number"
         :modelValue="currentBpm"
@@ -160,8 +159,7 @@ import {
   isValidBpm,
 } from "@/sing/music";
 import { getSnapTypes } from "@/sing/domain";
-import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
-import SingingSettingsButton from "@/components/Sing/SingingSettings/Button.vue";
+import SingerRow from "@/components/Sing/TrackCard/SingerRow.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import type { SequencerEditTarget } from "@/store/type";
 import { UnreachableError } from "@/type/utility";
