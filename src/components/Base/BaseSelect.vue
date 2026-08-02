@@ -1,8 +1,16 @@
 <template>
   <SelectRoot v-model="model" v-model:open="open" :defaultValue :disabled>
-    <SelectTrigger class="SelectTrigger">
-      <SelectValue class="SelectValue" :placeholder />
-      <SelectIcon class="SelectIcon">
+    <SelectTrigger class="SelectTrigger" :aria-label>
+      <div class="SelectValueContainer">
+        <SelectValue class="SelectValue" :placeholder>
+          <template #default="scope">
+            <slot name="value" v-bind="scope">
+              {{ scope.selectedLabel.join("") }}
+            </slot>
+          </template>
+        </SelectValue>
+      </div>
+      <SelectIcon v-if="!hideIcon" class="SelectIcon">
         <!-- 暫定でq-iconを使用 -->
         <QIcon name="keyboard_arrow_down" size="sm" />
       </SelectIcon>
@@ -43,6 +51,8 @@ defineProps<{
   placeholder?: string;
   defaultValue?: T;
   disabled?: boolean;
+  ariaLabel?: string;
+  hideIcon?: boolean;
 }>();
 
 const model = defineModel<T>();
@@ -92,6 +102,16 @@ const open = defineModel<boolean>("open");
   color: colors.$display;
 }
 
+.SelectValueContainer {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.SelectValue {
+  max-width: 100%;
+}
+
 :deep(.SelectContent) {
   overflow: hidden;
   border-radius: vars.$radius-2;
@@ -100,9 +120,9 @@ const open = defineModel<boolean>("open");
   background-color: colors.$background;
   border: 1px solid colors.$border;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  min-width: var(--radix-select-trigger-width);
-  max-width: var(--radix-select-content-available-width);
-  max-height: var(--radix-select-content-available-height);
+  min-width: var(--reka-select-trigger-width);
+  max-width: var(--reka-select-content-available-width);
+  max-height: var(--reka-select-content-available-height);
   z-index: vars.$z-index-dropdown;
 }
 

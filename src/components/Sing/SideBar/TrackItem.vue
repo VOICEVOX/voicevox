@@ -49,19 +49,27 @@
         :class="props.draggableClass"
         @click.stop=""
       >
-        <div class="singer-icon-hitbox">
-          <SingerIcon
-            v-if="trackCharacter"
-            round
-            class="singer-icon"
-            size="3rem"
-            :style="trackCharacter.style"
-          />
-          <QAvatar v-else round size="3rem" color="primary"
-            ><span color="text-display-on-primary">?</span></QAvatar
-          >
-          <CharacterSelectMenu :trackId="props.trackId" />
-        </div>
+        <CharacterSelectMenu :trackId="props.trackId">
+          <template #trigger="{ disabled }">
+            <button
+              type="button"
+              class="singer-icon-hitbox"
+              :disabled
+              aria-label="シンガーを選択"
+            >
+              <SingerIcon
+                v-if="trackCharacter"
+                round
+                class="singer-icon"
+                size="3rem"
+                :style="trackCharacter.style"
+              />
+              <QAvatar v-else round size="3rem" color="primary"
+                ><span color="text-display-on-primary">?</span></QAvatar
+              >
+            </button>
+          </template>
+        </CharacterSelectMenu>
       </QItemSection>
       <!-- トラック名、キャラ名表示 -->
       <QItemSection>
@@ -411,7 +419,21 @@ const singerName = computed(() => {
 }
 
 .singer-icon-hitbox {
+  appearance: none;
+  padding: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--scheme-color-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
 }
 
 .track-name :deep(.q-field__control) {
