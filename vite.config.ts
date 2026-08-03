@@ -132,7 +132,7 @@ export default defineConfig((options) => {
               if (!skipLaunchElectron) {
                 // ここのprocess.argvは以下のような形で渡ってくる：
                 // ["node", ".../vite.js", (...vite用の引数...), "--", その他引数...]
-                const args: string[] = [".", "--no-sandbox"];
+                const args: string[] = ["..", "--no-sandbox"];
                 const doubleDashIndex = process.argv.indexOf("--");
                 if (doubleDashIndex !== -1) {
                   args.push("--", ...process.argv.slice(doubleDashIndex + 1));

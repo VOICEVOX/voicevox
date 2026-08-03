@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
+import { mdiWindowRestore } from "@quasar/extras/mdi-v7";
 import { useStore } from "@/store";
 
 const store = useStore();
