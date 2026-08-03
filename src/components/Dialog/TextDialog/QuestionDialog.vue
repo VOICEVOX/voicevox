@@ -54,9 +54,10 @@ const props = withDefaults(
     default: undefined,
   },
 );
-defineEmits({
-  ...useDialogPluginComponent.emitsObject,
-});
+defineEmits<{
+  ok: [payload: { index: number }];
+  hide: [];
+}>();
 
 const iconName = computed(() => getIcon(props.type));
 const color = computed(() => getColor(props.type));

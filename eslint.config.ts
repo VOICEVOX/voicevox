@@ -51,7 +51,6 @@ const vueParserOptions: ParserOptions = {
 };
 
 const typeCheckedParserOptions: ParserOptions = {
-  project: ["./tsconfig.json"],
   tsconfigRootDir: import.meta.dirname,
 };
 
@@ -114,7 +113,7 @@ export default defineConfigWithVueTs(
   ...pluginConfig(vuePlugin.configs["flat/recommended"]),
   ...pluginConfig("eslint:recommended", js.configs.recommended),
   ...pluginConfig("@vue/prettier", vuePrettierConfig),
-  ...pluginConfig(vueTsConfigs.recommended.toConfigArray()),
+  ...pluginConfig(vueTsConfigs.recommended),
   ...pluginConfig(voicevoxPlugin.configs.all),
   ...pluginConfig(storybookPlugin.configs["flat/recommended"]),
   ...pluginConfig(vitestPlugin.configs.recommended),

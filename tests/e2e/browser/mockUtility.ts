@@ -115,12 +115,12 @@ export async function mockReadFile(
   type _Window = Window;
 
   await page.evaluate(
-    ({ mockedFilePath, successResult }) => {
+    ({ mockedFilePath, bufferArray }) => {
       const _window = window as unknown as _Window;
       const originalReadFile = _window.backend.readFile.bind(_window.backend);
       _window.backend.readFile = async ({ filePath: readingFilePath }) => {
         if (readingFilePath === mockedFilePath) {
-          return successResult;
+          return { ok: true, value: new Uint8Array(bufferArray) };
         } else {
           return originalReadFile({ filePath: readingFilePath });
         }
@@ -128,7 +128,7 @@ export async function mockReadFile(
     },
     {
       mockedFilePath: filePath,
-      successResult: success(new Uint8Array(buffer)),
+      bufferArray: Array.from(buffer),
     },
   );
 }

@@ -61,9 +61,10 @@ defineSlots<{
   default(props: Record<string, never>): void;
 }>();
 
-defineEmits({
-  ...useDialogPluginComponent.emitsObject,
-});
+defineEmits<{
+  ok: [payload?: unknown];
+  hide: [];
+}>();
 
 const okText = computed(() =>
   props.mode === "edit" ? "変更する" : "追加する",
