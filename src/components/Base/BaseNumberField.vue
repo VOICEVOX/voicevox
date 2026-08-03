@@ -2,7 +2,6 @@
   <div class="NumberField">
     <label class="NumberFieldLabel" :for="inputId">{{ label }}</label>
     <NumberFieldRoot
-      :id="inputId"
       v-model="draftValue"
       class="NumberFieldControl"
       :min

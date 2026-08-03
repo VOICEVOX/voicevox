@@ -5,7 +5,11 @@
         <SelectValue class="SelectValue" :placeholder>
           <template #default="scope">
             <slot name="value" v-bind="scope">
-              {{ scope.selectedLabel.join("") }}
+              {{
+                scope.selectedLabel.length > 0
+                  ? scope.selectedLabel.join(", ")
+                  : placeholder
+              }}
             </slot>
           </template>
         </SelectValue>

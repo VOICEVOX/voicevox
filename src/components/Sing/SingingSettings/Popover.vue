@@ -29,6 +29,7 @@
                   {{ selectedSingingTeacherOption.label }}
                 </span>
               </div>
+              <span v-else class="teacher-selected-label">未設定</span>
             </template>
             <BaseSelectItem
               v-for="option in singingTeacherOptions"
@@ -86,6 +87,7 @@ import {
 import { useStore } from "@/store";
 import {
   filterCharacterInfosByStyle,
+  formatCharacterStyleName,
   isSingingTeacherStyle,
 } from "@/store/utility";
 import type { StyleId, StyleInfo, TrackId } from "@/type/preload";
@@ -108,12 +110,6 @@ type SingingTeacherOption = {
   style: StyleInfo;
 };
 
-const getSingingTeacherLabel = (speakerName: string, style: StyleInfo) => {
-  return style.styleName == undefined
-    ? speakerName
-    : `${speakerName}（${style.styleName}）`;
-};
-
 const singingTeacherOptions = computed<SingingTeacherOption[]>(() => {
   const singer = track.value.singer;
   if (singer == undefined) {
@@ -127,7 +123,10 @@ const singingTeacherOptions = computed<SingingTeacherOption[]>(() => {
       style.engineId === singer.engineId && isSingingTeacherStyle(style),
   ).flatMap((characterInfo) =>
     characterInfo.metas.styles.map((style) => ({
-      label: getSingingTeacherLabel(characterInfo.metas.speakerName, style),
+      label: formatCharacterStyleName(
+        characterInfo.metas.speakerName,
+        style.styleName,
+      ),
       value: style.styleId,
       style,
     })),

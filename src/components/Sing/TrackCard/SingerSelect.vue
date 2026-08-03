@@ -90,8 +90,8 @@ const styleDescription = computed(() => {
   return style == undefined ? "" : getStyleDescription(style);
 });
 
-const singerSelectAriaLabel = computed(
-  () => `シンガーを選択：${singerName.value} ${styleDescription.value}`,
+const singerSelectAriaLabel = computed(() =>
+  `シンガーを選択：${singerName.value} ${styleDescription.value}`.trimEnd(),
 );
 </script>
 

@@ -750,9 +750,6 @@ const generateSingingVoiceSource = (
   if (track.singer == undefined) {
     throw new Error("track.singer is undefined.");
   }
-  if (track.singingTeacher == undefined) {
-    throw new Error("track.singingTeacher is undefined.");
-  }
   if (phrase.query == undefined) {
     throw new Error("phrase.query is undefined.");
   }
