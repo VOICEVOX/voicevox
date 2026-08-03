@@ -16,7 +16,9 @@ import {
   getMeasureDuration,
   getTimeSignaturePositions,
 } from "@/sing/music";
-import { assertNonNullable } from "@/type/utility";
+import { assertNonNullable, ensureNotNullish } from "@/type/utility";
+import { resolveColorFromCssVariable } from "@/sing/graphics/cssColor";
+import type { Color } from "@/sing/graphics/lineStrip";
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
@@ -35,40 +37,6 @@ if (injectedValue == undefined) {
 }
 const { numMeasures } = injectedValue;
 
-type LineStyle = {
-  color: number;
-  alpha: number;
-};
-
-type GridLineStyle = {
-  measure: LineStyle;
-  beat: LineStyle;
-};
-
-// テーマに応じた線のスタイル
-const gridLineStyles: Record<"light" | "dark", GridLineStyle> = {
-  light: {
-    measure: {
-      color: 0x8a8a8a,
-      alpha: 0.35,
-    },
-    beat: {
-      color: 0xc4c4c4,
-      alpha: 0.25,
-    },
-  },
-  dark: {
-    measure: {
-      color: 0x6b6b6b,
-      alpha: 0.35,
-    },
-    beat: {
-      color: 0x4a4a4a,
-      alpha: 0.25,
-    },
-  },
-};
-
 const { mounted } = useMounted();
 
 const canvasContainer = ref<HTMLElement | null>(null);
@@ -76,6 +44,29 @@ const canvas = ref<HTMLCanvasElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
 let canvasWidth: number | undefined;
 let canvasHeight: number | undefined;
+
+let gridLineColorsCache:
+  | { theme: "light" | "dark"; measure: Color; beat: Color }
+  | undefined;
+
+const getGridLineColors = () => {
+  const theme = currentTheme.value;
+  if (gridLineColorsCache?.theme !== theme) {
+    const containerElement = ensureNotNullish(canvasContainer.value);
+    gridLineColorsCache = {
+      theme,
+      measure: resolveColorFromCssVariable(
+        containerElement,
+        "--scheme-color-sing-parameter-grid-measure-line",
+      ),
+      beat: resolveColorFromCssVariable(
+        containerElement,
+        "--scheme-color-sing-parameter-grid-beat-line",
+      ),
+    };
+  }
+  return gridLineColorsCache;
+};
 
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
@@ -156,7 +147,7 @@ const render = () => {
   }
   graphic.clear();
 
-  const style = gridLineStyles[currentTheme.value];
+  const lineColors = getGridLineColors();
 
   // 小節線をまとめて描画
   for (const x of measureLineXs) {
@@ -166,8 +157,8 @@ const render = () => {
   }
   graphic.stroke({
     width: 1,
-    color: style.measure.color,
-    alpha: style.measure.alpha,
+    color: lineColors.measure.toRgbNumber(),
+    alpha: lineColors.measure.toAlphaFloat(),
   });
 
   // 拍線をまとめて描画
@@ -178,8 +169,8 @@ const render = () => {
   }
   graphic.stroke({
     width: 1,
-    color: style.beat.color,
-    alpha: style.beat.alpha,
+    color: lineColors.beat.toRgbNumber(),
+    alpha: lineColors.beat.toAlphaFloat(),
   });
 
   renderer.render(stage);

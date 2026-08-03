@@ -50,21 +50,28 @@
         </BaseSelect>
       </div>
       <div v-if="latestInfo.type === 'fetchError'" class="engine-fetch-error">
-        <span class="engine-fetch-error-message">
-          最新のエンジン情報を取得できませんでした。
-        </span>
+        最新情報の取得に失敗しました。
+      </div>
+      <div class="engine-action-buttons">
         <BaseButton
+          v-if="latestInfo.type === 'fetchError'"
+          label="エラー詳細"
+          variant="default"
+          @click="showErrorDetailDialog(latestInfo.error)"
+        />
+        <BaseButton
+          v-if="latestInfo.type === 'fetchError'"
           label="再試行"
           variant="default"
           @click="store.fetchEngineLatestInfo(props.engineId)"
         />
+        <BaseButton
+          :label="currentEngineStatus.actionLabel"
+          :disabled="isControlDisabled"
+          :variant="currentEngineStatus.color"
+          @click="store.installEngine(props.engineId)"
+        />
       </div>
-      <BaseButton
-        :label="currentEngineStatus.actionLabel"
-        :disabled="isControlDisabled"
-        :variant="currentEngineStatus.color"
-        @click="store.installEngine(props.engineId)"
-      />
     </div>
   </section>
 </template>
@@ -81,6 +88,7 @@ import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 import type { EngineId } from "@/type/preload";
 import { useStore, type EngineProgressInfo } from "@/welcome/store";
 import type { EnginePackageLatestInfo } from "@/domain/enginePackage";
+import { showErrorDialog } from "@/components/Dialog/Dialog";
 
 const props = defineProps<{
   engineId: EngineId;
@@ -106,6 +114,10 @@ function findSelectedPackageInfo(
   );
   assertNonNullable(targetInfo);
   return targetInfo.packageInfo;
+}
+
+function showErrorDetailDialog(error: unknown) {
+  void showErrorDialog("最新情報の取得に失敗しました", error);
 }
 
 const latestVersionText = computed(() => {
@@ -264,13 +276,13 @@ const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {
   flex-wrap: wrap;
 }
 
-.engine-fetch-error {
+.engine-action-buttons {
   display: flex;
   align-items: center;
   gap: vars.$gap-1;
 }
 
-.engine-fetch-error-message {
+.engine-fetch-error {
   font-size: 0.75rem;
   color: colors.$display-warning;
 }

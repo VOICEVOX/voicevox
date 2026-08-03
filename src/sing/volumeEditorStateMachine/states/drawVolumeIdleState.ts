@@ -15,7 +15,8 @@ export class DrawVolumeIdleState implements State<
   readonly id = "drawVolumeIdle";
 
   onEnter(context: VolumeEditorContext) {
-    context.cursorState.value = "DRAW";
+    context.cursorState.value = "UNSET";
+    context.tooltipData.value = undefined;
   }
 
   process({
@@ -30,18 +31,18 @@ export class DrawVolumeIdleState implements State<
     if (input.type !== "pointerEvent") {
       return;
     }
-    if (input.targetArea !== "Editor") {
+    if (input.targetArea !== "VolumeEditorArea") {
       return;
     }
 
-    const { pointerEvent, position } = input;
+    const { pointerEvent, pointerInfo } = input;
 
-    // エディタ外へ出たらカーソルを既定（描画）へ戻す
     if (pointerEvent.type === "pointerleave") {
-      context.cursorState.value = "DRAW";
+      context.cursorState.value = "UNSET";
       return;
     }
 
+    const { position } = pointerInfo;
     const isEditable = isFrameInVolumeEditableRange(
       position.frame,
       context.getEditableFrameRanges(),
@@ -55,6 +56,11 @@ export class DrawVolumeIdleState implements State<
     ) {
       setNextState("drawVolume", {
         startPosition: position,
+        startTooltipData: {
+          db: pointerInfo.db,
+          pointerX: pointerInfo.x,
+          pointerY: pointerInfo.y,
+        },
         targetTrackId: context.selectedTrackId.value,
         returnStateId: this.id,
       });
@@ -63,5 +69,6 @@ export class DrawVolumeIdleState implements State<
 
   onExit(context: VolumeEditorContext) {
     context.cursorState.value = "UNSET";
+    context.tooltipData.value = undefined;
   }
 }

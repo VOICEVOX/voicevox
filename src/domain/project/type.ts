@@ -7,6 +7,7 @@ import type {
   tempoSchema,
   timeSignatureSchema,
   trackSchema,
+  volumeEditValueSchema,
 } from "@/domain/project/schema";
 import type { NoteId } from "@/type/preload";
 
@@ -19,6 +20,8 @@ export type Note = z.infer<typeof noteSchema>;
 export type Singer = z.infer<typeof singerSchema>;
 
 export type Track = z.infer<typeof trackSchema>;
+
+export type VolumeEditValue = z.infer<typeof volumeEditValueSchema>;
 
 export type PhonemeTimingEdit = z.infer<typeof phonemeTimingEditSchema>;
 

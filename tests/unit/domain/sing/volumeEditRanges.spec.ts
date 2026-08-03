@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import {
   getOverlappingVolumeEditableFrameRanges,
   isFrameInVolumeEditableRange,
@@ -44,14 +43,7 @@ describe("volumeEditRanges", () => {
       ],
     );
 
-    expect(actual).toEqual([
-      VALUE_INDICATING_NO_DATA,
-      0.2,
-      0.3,
-      VALUE_INDICATING_NO_DATA,
-      VALUE_INDICATING_NO_DATA,
-      0.6,
-    ]);
+    expect(actual).toEqual([null, 0.2, 0.3, null, null, 0.6]);
   });
 
   it("フレームが編集可能区間内にあるか判定できる", () => {
@@ -86,15 +78,11 @@ describe("volumeEditRanges", () => {
       [],
     );
 
-    expect(actual).toEqual([
-      VALUE_INDICATING_NO_DATA,
-      VALUE_INDICATING_NO_DATA,
-      VALUE_INDICATING_NO_DATA,
-    ]);
+    expect(actual).toEqual([null, null, null]);
   });
 
   it("startFrame=0でマスクするとpruneとして機能する", () => {
-    const editData = [0.1, 0.2, VALUE_INDICATING_NO_DATA, 0.4, 0.5, 0.6, 0.7];
+    const editData = [0.1, 0.2, 0, 0.4, 0.5, 0.6, 0.7];
     const ranges = [
       { startFrame: 1, endFrame: 2 },
       { startFrame: 5, endFrame: 6 },
@@ -105,14 +93,6 @@ describe("volumeEditRanges", () => {
       ranges,
     );
 
-    expect(actual).toEqual([
-      VALUE_INDICATING_NO_DATA,
-      0.2,
-      VALUE_INDICATING_NO_DATA,
-      VALUE_INDICATING_NO_DATA,
-      VALUE_INDICATING_NO_DATA,
-      0.6,
-      VALUE_INDICATING_NO_DATA,
-    ]);
+    expect(actual).toEqual([null, 0.2, null, null, null, 0.6, null]);
   });
 });

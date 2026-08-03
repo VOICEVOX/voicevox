@@ -15,7 +15,8 @@ export class EraseVolumeIdleState implements State<
   readonly id = "eraseVolumeIdle";
 
   onEnter(context: VolumeEditorContext) {
-    context.cursorState.value = "ERASE";
+    context.cursorState.value = "UNSET";
+    context.tooltipData.value = undefined;
   }
 
   process({
@@ -30,18 +31,18 @@ export class EraseVolumeIdleState implements State<
     if (input.type !== "pointerEvent") {
       return;
     }
-    if (input.targetArea !== "Editor") {
+    if (input.targetArea !== "VolumeEditorArea") {
       return;
     }
 
-    const { pointerEvent, position } = input;
+    const { pointerEvent, pointerInfo } = input;
 
-    // エディタ外へ出たらカーソルを既定（削除）へ戻す
     if (pointerEvent.type === "pointerleave") {
-      context.cursorState.value = "ERASE";
+      context.cursorState.value = "UNSET";
       return;
     }
 
+    const { position } = pointerInfo;
     const isEditable = isFrameInVolumeEditableRange(
       position.frame,
       context.getEditableFrameRanges(),
@@ -63,5 +64,6 @@ export class EraseVolumeIdleState implements State<
 
   onExit(context: VolumeEditorContext) {
     context.cursorState.value = "UNSET";
+    context.tooltipData.value = undefined;
   }
 }

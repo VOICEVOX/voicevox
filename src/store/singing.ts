@@ -756,6 +756,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerNoteTool: "EDIT_FIRST",
   sequencerPitchTool: "DRAW",
   sequencerVolumeTool: "DRAW",
+  sequencerPhonemeTimingTool: "MOVE",
   parameterPanelEditTarget: "VOLUME",
   sequencerVolumeVisible: false,
   _selectedNoteIds: new Set(),
@@ -1071,6 +1072,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notesMap.set(note.id, note);
       }
       const selectedTrack = getOrThrow(state.tracks, trackId);
+
+      const phonemeTimingEditData = selectedTrack.phonemeTimingEditData;
+      for (const existingNote of selectedTrack.notes) {
+        const noteId = existingNote.id;
+        const newNote = notesMap.get(noteId);
+        if (
+          newNote != undefined &&
+          existingNote.lyric !== newNote.lyric &&
+          phonemeTimingEditData.has(noteId)
+        ) {
+          phonemeTimingEditData.delete(noteId);
+        }
+      }
+
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
@@ -1093,6 +1108,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
       });
+
+      const phonemeTimingEditData = selectedTrack.phonemeTimingEditData;
+      for (const noteId of noteIds) {
+        if (phonemeTimingEditData.has(noteId)) {
+          phonemeTimingEditData.delete(noteId);
+        }
+      }
     },
   },
 
@@ -1254,8 +1276,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const tempData = [...volumeEditData];
       const endFrame = startFrame + volumeArray.length;
       if (tempData.length < endFrame) {
-        const valuesToPush = new Array<number>(endFrame - tempData.length).fill(
-          VALUE_INDICATING_NO_DATA,
+        const valuesToPush = new Array<null>(endFrame - tempData.length).fill(
+          null,
         );
         tempData.push(...valuesToPush);
       }
@@ -1269,7 +1291,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!isValidVolumeEditData(volumeArray)) {
         throw new Error("The volume edit data is invalid.");
       }
-      mutations.SET_VOLUME_EDIT_DATA({ volumeArray, startFrame, trackId });
+      mutations.SET_VOLUME_EDIT_DATA({
+        volumeArray,
+        startFrame,
+        trackId,
+      });
     },
   },
 
@@ -1291,7 +1317,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const tempData = [...volumeEditData];
       for (const range of ranges) {
         const endFrame = Math.min(range.endFrame, tempData.length);
-        tempData.fill(VALUE_INDICATING_NO_DATA, range.startFrame, endFrame);
+        tempData.fill(null, range.startFrame, endFrame);
       }
       track.volumeEditData = tempData;
     },
@@ -1932,6 +1958,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     async action({ mutations }, { sequencerVolumeTool }) {
       mutations.SET_SEQUENCER_VOLUME_TOOL({ sequencerVolumeTool });
+    },
+  },
+
+  SET_SEQUENCER_PHONEME_TIMING_TOOL: {
+    mutation(state, { sequencerPhonemeTimingTool }) {
+      state.sequencerPhonemeTimingTool = sequencerPhonemeTimingTool;
+    },
+    async action({ mutations }, { sequencerPhonemeTimingTool }) {
+      mutations.SET_SEQUENCER_PHONEME_TIMING_TOOL({
+        sequencerPhonemeTimingTool,
+      });
     },
   },
 

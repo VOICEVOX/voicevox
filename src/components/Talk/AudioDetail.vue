@@ -1,5 +1,8 @@
 <template>
-  <div class="full-height root relative-absolute-wrapper">
+  <div
+    class="full-height root relative-absolute-wrapper"
+    data-testid="audio-detail"
+  >
     <div>
       <div class="side">
         <div class="detail-selector">

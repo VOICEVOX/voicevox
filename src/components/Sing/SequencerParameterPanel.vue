@@ -12,7 +12,7 @@
       />
       <SequencerVolumeEditor
         v-if="editTarget === 'VOLUME'"
-        :offsetX="viewportInfo.offsetX"
+        :viewportInfo
         @update:needsAutoScroll="
           (value) => emit('update:needsAutoScroll', value)
         "

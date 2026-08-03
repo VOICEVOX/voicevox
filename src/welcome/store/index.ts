@@ -15,7 +15,7 @@ import { showErrorDialog } from "@/components/Dialog/Dialog";
 type LatestInfoState =
   | { type: "loading" }
   | { type: "fetched"; info: EnginePackageLatestInfo }
-  | { type: "fetchError" };
+  | { type: "fetchError"; error: unknown };
 
 type AllEngineState =
   | {
@@ -251,7 +251,10 @@ function createWelcomeStore() {
         `Engine package ${engineId} remote info fetch failed`,
         error,
       );
-      engineState.latestInfo = { type: "fetchError" };
+      engineState.latestInfo = {
+        type: "fetchError",
+        error,
+      };
     }
   };
 

@@ -6,7 +6,12 @@ import { z } from "zod";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
 
 const rootDir = path.join(import.meta.dirname, "..");
-const dotenvPath = path.join(rootDir, ".env.production");
+const dotenvPath = [
+  path.join(rootDir, ".env.production.local"),
+  path.join(rootDir, ".env.production"),
+  path.join(rootDir, ".env.local"),
+  path.join(rootDir, ".env"),
+];
 dotenv.config({ path: dotenvPath, quiet: true });
 
 const VOICEVOX_ENGINE_DIR =

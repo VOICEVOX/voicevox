@@ -51,6 +51,7 @@ export class EraseVolumeState implements State<
     };
     context.cursorState.value = "ERASE";
     context.previewMode.value = "VOLUME_ERASE";
+    context.tooltipData.value = undefined;
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -91,7 +92,8 @@ export class EraseVolumeState implements State<
     }
 
     if (input.type === "pointerEvent") {
-      const { pointerEvent, position, targetArea } = input;
+      const { pointerEvent, pointerInfo, targetArea } = input;
+      const { position } = pointerInfo;
       const mouseButton = getButton(pointerEvent);
 
       if (targetArea === "Window") {
@@ -107,7 +109,7 @@ export class EraseVolumeState implements State<
           setNextState(this.returnStateId, undefined);
         }
       } else if (
-        targetArea === "Editor" &&
+        targetArea === "VolumeEditorArea" &&
         pointerEvent.type === "pointermove"
       ) {
         this.currentCursorPos = position;
@@ -147,6 +149,7 @@ export class EraseVolumeState implements State<
     context.previewVolumeEdit.value = undefined;
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+    context.tooltipData.value = undefined;
   }
 
   private previewEraseVolume(context: VolumeEditorContext) {
