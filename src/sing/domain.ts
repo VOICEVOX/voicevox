@@ -6,335 +6,39 @@ import {
 } from "@/sing/utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
-  Phrase,
-  PhraseSource,
+  type Phrase,
+  type PhraseSource,
   PhraseKey,
-  EditorFrameAudioQuery,
+  type EditorFrameAudioQuery,
 } from "@/store/type";
-import { FramePhoneme } from "@/openapi";
-import { NoteId, TrackId } from "@/type/preload";
+import type { FramePhoneme } from "@/openapi";
+import { NoteId, type TrackId } from "@/type/preload";
 import type {
-  Note,
   PhonemeTimingEditData,
   Tempo,
   TimeSignature,
   Track,
+  VolumeEditValue,
 } from "@/domain/project/type";
+import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
+import { ExhaustiveError } from "@/type/utility";
+import { getRepresentableNoteTypes, isValidNotes } from "@/sing/music";
+import { decibelToLinear } from "@/sing/audio";
 
-// TODO: 後でdomain/type.tsに移す
-export type MeasuresBeats = {
-  measures: number;
-  beats: number;
-};
-
-export const BEAT_TYPES = [2, 4, 8, 16, 32];
-const MIN_BPM = 40;
 const MAX_SNAP_TYPE = 32;
 
 export const isTracksEmpty = (tracks: Track[]) =>
   tracks.length === 0 || (tracks.length === 1 && tracks[0].notes.length === 0);
 
-export const isValidTpqn = (tpqn: number) => {
-  return (
-    Number.isInteger(tpqn) &&
-    BEAT_TYPES.every((value) => (tpqn * 4) % value === 0) &&
-    tpqn % 3 === 0
-  );
-};
-
-export const isValidBpm = (bpm: number) => {
-  return Number.isFinite(bpm) && bpm >= MIN_BPM;
-};
-
-export const isValidTempo = (tempo: Tempo) => {
-  return (
-    Number.isInteger(tempo.position) &&
-    tempo.position >= 0 &&
-    isValidBpm(tempo.bpm)
-  );
-};
-
-export const isValidBeats = (beats: number) => {
-  return Number.isInteger(beats) && beats >= 1;
-};
-
-export const isValidBeatType = (beatType: number) => {
-  return Number.isInteger(beatType) && BEAT_TYPES.includes(beatType);
-};
-
-export const isValidTimeSignature = (timeSignature: TimeSignature) => {
-  return (
-    Number.isInteger(timeSignature.measureNumber) &&
-    timeSignature.measureNumber >= 1 &&
-    isValidBeats(timeSignature.beats) &&
-    isValidBeatType(timeSignature.beatType)
-  );
-};
-
-export const isValidNote = (note: Note) => {
-  return (
-    Number.isInteger(note.position) &&
-    Number.isInteger(note.duration) &&
-    Number.isInteger(note.noteNumber) &&
-    note.position >= 0 &&
-    note.duration >= 1 &&
-    note.noteNumber >= 0 &&
-    note.noteNumber <= 127
-  );
-};
-
-export const isValidTempos = (tempos: Tempo[]) => {
-  return (
-    tempos.length >= 1 &&
-    tempos[0].position === 0 &&
-    tempos.every((value) => isValidTempo(value))
-  );
-};
-
-export const isValidTimeSignatures = (timeSignatures: TimeSignature[]) => {
-  return (
-    timeSignatures.length >= 1 &&
-    timeSignatures[0].measureNumber === 1 &&
-    timeSignatures.every((value) => isValidTimeSignature(value))
-  );
-};
-
-export const isValidNotes = (notes: Note[]) => {
-  return notes.every((value) => isValidNote(value));
-};
-
 export const isValidTrack = (track: Track) => {
   return (
     isValidKeyRangeAdjustment(track.keyRangeAdjustment) &&
     isValidVolumeRangeAdjustment(track.volumeRangeAdjustment) &&
-    isValidNotes(track.notes)
+    isValidNotes(track.notes) &&
+    isValidPitchEditData(track.pitchEditData) &&
+    isValidVolumeEditData(track.volumeEditData)
   );
 };
-
-const tickToSecondForConstantBpm = (
-  ticks: number,
-  bpm: number,
-  tpqn: number,
-) => {
-  const quarterNotesPerMinute = bpm;
-  const quarterNotesPerSecond = quarterNotesPerMinute / 60;
-  return ticks / tpqn / quarterNotesPerSecond;
-};
-
-const secondToTickForConstantBpm = (
-  seconds: number,
-  bpm: number,
-  tpqn: number,
-) => {
-  const quarterNotesPerMinute = bpm;
-  const quarterNotesPerSecond = quarterNotesPerMinute / 60;
-  return seconds * quarterNotesPerSecond * tpqn;
-};
-
-export const tickToSecond = (ticks: number, tempos: Tempo[], tpqn: number) => {
-  let timeOfTempo = 0;
-  let tempo = tempos[tempos.length - 1];
-  for (let i = 0; i < tempos.length; i++) {
-    if (i === tempos.length - 1) {
-      break;
-    }
-    if (tempos[i + 1].position > ticks) {
-      tempo = tempos[i];
-      break;
-    }
-    timeOfTempo += tickToSecondForConstantBpm(
-      tempos[i + 1].position - tempos[i].position,
-      tempos[i].bpm,
-      tpqn,
-    );
-  }
-  return (
-    timeOfTempo +
-    tickToSecondForConstantBpm(ticks - tempo.position, tempo.bpm, tpqn)
-  );
-};
-
-export const secondToTick = (
-  seconds: number,
-  tempos: Tempo[],
-  tpqn: number,
-) => {
-  let timeOfTempo = 0;
-  let tempo = tempos[tempos.length - 1];
-  for (let i = 0; i < tempos.length; i++) {
-    if (i === tempos.length - 1) {
-      break;
-    }
-    const timeOfNextTempo =
-      timeOfTempo +
-      tickToSecondForConstantBpm(
-        tempos[i + 1].position - tempos[i].position,
-        tempos[i].bpm,
-        tpqn,
-      );
-    if (timeOfNextTempo > seconds) {
-      tempo = tempos[i];
-      break;
-    }
-    timeOfTempo = timeOfNextTempo;
-  }
-  return (
-    tempo.position +
-    secondToTickForConstantBpm(seconds - timeOfTempo, tempo.bpm, tpqn)
-  );
-};
-
-// NOTE: 戻り値の単位はtick
-export function getTimeSignaturePositions(
-  timeSignatures: TimeSignature[],
-  tpqn: number,
-) {
-  const tsPositions: number[] = [0];
-  for (let i = 0; i < timeSignatures.length - 1; i++) {
-    const ts = timeSignatures[i];
-    const tsPosition = tsPositions[i];
-    const nextTs = timeSignatures[i + 1];
-    const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
-    const numMeasures = nextTs.measureNumber - ts.measureNumber;
-    const nextTsPosition = tsPosition + measureDuration * numMeasures;
-    tsPositions.push(nextTsPosition);
-  }
-  return tsPositions;
-}
-
-/**
- * tick位置に対応する小節番号（整数）を計算する。
- */
-export function tickToMeasureNumber(
-  ticks: number,
-  timeSignatures: TimeSignature[],
-  tpqn: number,
-) {
-  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
-  const nextTsIndex = tsPositions.findIndex((value) => ticks < value);
-  const lastTsIndex = tsPositions.length - 1;
-  const tsIndex = nextTsIndex !== -1 ? nextTsIndex - 1 : lastTsIndex;
-  const ts = timeSignatures[tsIndex];
-  const tsPosition = tsPositions[tsIndex];
-  const ticksWithinTs = ticks - tsPosition;
-  const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
-  return ts.measureNumber + Math.floor(ticksWithinTs / measureDuration);
-}
-
-/**
- * 小節番号に対応するtick位置（小節の開始位置）を計算する。
- */
-export function measureNumberToTick(
-  measureNumber: number,
-  timeSignatures: TimeSignature[],
-  tpqn: number,
-) {
-  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
-  const tsIndex = timeSignatures.findLastIndex((value) => {
-    return measureNumber >= value.measureNumber;
-  });
-  const ts = timeSignatures[tsIndex];
-  const tsPosition = tsPositions[tsIndex];
-  const measureOffset = measureNumber - ts.measureNumber;
-  const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
-  return tsPosition + measureOffset * measureDuration;
-}
-
-// NOTE: 戻り値の単位はtick
-export function getMeasureDuration(
-  beats: number,
-  beatType: number,
-  tpqn: number,
-) {
-  return ((tpqn * 4) / beatType) * beats;
-}
-
-// NOTE: 戻り値の単位はtick
-export function getBeatDuration(beatType: number, tpqn: number) {
-  return (tpqn * 4) / beatType;
-}
-
-export const ticksToMeasuresBeats = (
-  ticks: number,
-  timeSignatures: (TimeSignature & { position: number })[],
-  tpqn: number,
-): MeasuresBeats => {
-  let tsIndex = 0;
-  if (ticks >= 0) {
-    for (let i = 0; i < timeSignatures.length; i++) {
-      if (
-        i === timeSignatures.length - 1 ||
-        timeSignatures[i + 1].position > ticks
-      ) {
-        tsIndex = i;
-        break;
-      }
-    }
-  }
-  const ts = timeSignatures[tsIndex];
-
-  const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
-  const beatDuration = getBeatDuration(ts.beatType, tpqn);
-
-  const posInTs = ticks - ts.position;
-  const measuresInTs = Math.floor(posInTs / measureDuration);
-  const measures = ts.measureNumber + measuresInTs;
-
-  const posInMeasure = posInTs - measureDuration * measuresInTs;
-  const beats = 1 + posInMeasure / beatDuration;
-
-  return { measures, beats };
-};
-
-// NOTE: 戻り値の単位はtick
-export function getNoteDuration(noteType: number, tpqn: number) {
-  return (tpqn * 4) / noteType;
-}
-
-export function getRepresentableNoteTypes(tpqn: number) {
-  const maxNoteType = 128;
-  const wholeNoteDuration = tpqn * 4;
-  const noteTypes = [1];
-  for (let noteType = 2; noteType <= maxNoteType; noteType *= 2) {
-    if (wholeNoteDuration % noteType !== 0) {
-      break;
-    }
-    noteTypes.push(noteType);
-  }
-  for (let noteType = 3; noteType <= maxNoteType; noteType *= 2) {
-    if (wholeNoteDuration % noteType !== 0) {
-      break;
-    }
-    noteTypes.push(noteType);
-  }
-  return noteTypes;
-}
-
-export function isTriplet(noteType: number) {
-  return noteType % 3 === 0;
-}
-
-export function noteNumberToFrequency(noteNumber: number) {
-  return 440 * Math.pow(2, (noteNumber - 69) / 12);
-}
-
-export function frequencyToNoteNumber(frequency: number) {
-  return 69 + Math.log2(frequency / 440) * 12;
-}
-
-export function linearToDecibel(linearValue: number) {
-  if (linearValue === 0) {
-    return -1000;
-  }
-  return 20 * Math.log10(linearValue);
-}
-
-export function decibelToLinear(decibelValue: number) {
-  if (decibelValue <= -1000) {
-    return 0;
-  }
-  return Math.pow(10, decibelValue / 20);
-}
 
 export const DEFAULT_TRACK_NAME = "無名トラック";
 
@@ -434,12 +138,12 @@ export function isValidPitchEditData(pitchEditData: number[]) {
   );
 }
 
-export function isValidVolumeEditData(volumeEditData: number[]) {
-  // NOTE: APIの返却が0未満になる場合があるため、0以上かどうかのみ検証する
+export function isValidVolumeEditData(volumeEditData: VolumeEditValue[]) {
+  // UIの表示範囲とは分け、音声へ有限な倍率として適用できる値を受け入れる。
   return volumeEditData.every(
     (value) =>
-      Number.isFinite(value) &&
-      (value >= 0 || value === VALUE_INDICATING_NO_DATA),
+      value == null ||
+      (Number.isFinite(value) && Number.isFinite(decibelToLinear(value))),
   );
 }
 
@@ -566,6 +270,31 @@ export function toPhonemes(phonemeTimings: PhonemeTiming[]) {
 }
 
 /**
+ * 各音素のノート内でのインデックスを計算する。
+ * noteIdが変わるとインデックスは0にリセットされる。
+ */
+export function computePhonemeIndicesInNote<
+  T extends { noteId?: string | null },
+>(phonemes: readonly T[]): number[] {
+  const indices: number[] = [];
+  let phonemeIndexInNote = 0;
+
+  for (let i = 0; i < phonemes.length; i++) {
+    const phoneme = phonemes[i];
+    const prevPhoneme = getPrev(phonemes, i);
+
+    if (prevPhoneme == undefined || phoneme.noteId !== prevPhoneme.noteId) {
+      phonemeIndexInNote = 0;
+    } else {
+      phonemeIndexInNote++;
+    }
+    indices.push(phonemeIndexInNote);
+  }
+
+  return indices;
+}
+
+/**
  * 音素タイミング列に音素タイミング編集を適用する。
  */
 export function applyPhonemeTimingEdit(
@@ -573,20 +302,13 @@ export function applyPhonemeTimingEdit(
   phonemeTimingEditData: PhonemeTimingEditData,
   frameRate: number,
 ) {
-  let phonemeIndexInNote = 0;
+  const phonemeIndices = computePhonemeIndicesInNote(phonemeTimings);
+
   for (let i = 0; i < phonemeTimings.length; i++) {
     const phonemeTiming = phonemeTimings[i];
     const prevPhonemeTiming = getPrev(phonemeTimings, i);
     const nextPhonemeTiming = getNext(phonemeTimings, i);
-
-    if (
-      prevPhonemeTiming == undefined ||
-      phonemeTiming.noteId !== prevPhonemeTiming.noteId
-    ) {
-      phonemeIndexInNote = 0;
-    } else {
-      phonemeIndexInNote++;
-    }
+    const phonemeIndexInNote = phonemeIndices[i];
 
     if (phonemeTiming.phoneme === "pau") {
       continue;
@@ -659,10 +381,6 @@ export function adjustPhonemeTimings(
         phonemeTiming.startFrame > maxNonPauseEndFrame
       ) {
         phonemeTiming.startFrame = maxNonPauseEndFrame;
-      }
-      // フレーム長が1以上になるように終了フレームを調整する
-      if (phonemeTiming.endFrame <= phonemeTiming.startFrame) {
-        phonemeTiming.endFrame = phonemeTiming.startFrame + 1;
       }
     }
 
@@ -912,11 +630,25 @@ export function applyPitchEdit(
   }
 }
 
+/**
+ * ユーザーによるボリューム変更量を、クエリのvolumeに適用する。
+ * 変更量が保存されているフレームのみ、元のボリュームへdB変化量を適用する。
+ * 音声が不自然になるのを防ぐため、隣接フレーズ境界のpau区間には適用しない。
+ *
+ * @param phraseQuery - 適用対象のクエリ
+ * @param phraseStartTime - フレーズの開始時刻（秒）
+ * @param volumeEditData - ユーザーが編集したボリューム変更量（dB）の配列
+ * @param editorFrameRate - エディターのフレームレート
+ * @param minNonPauseStartFrame - 適用してよい非pau区間の開始フレーム（フレーズ先頭からのフレーム数）。undefinedなら制限しない
+ * @param maxNonPauseEndFrame - 適用してよい非pau区間の終了フレーム（フレーズ先頭からのフレーム数）。undefinedなら制限しない
+ */
 export function applyVolumeEdit(
   phraseQuery: EditorFrameAudioQuery,
   phraseStartTime: number,
-  volumeEditData: number[],
+  volumeEditData: VolumeEditValue[],
   editorFrameRate: number,
+  minNonPauseStartFrame: number | undefined,
+  maxNonPauseEndFrame: number | undefined,
 ) {
   if (phraseQuery.frameRate !== editorFrameRate) {
     throw new Error(
@@ -931,15 +663,23 @@ export function applyVolumeEdit(
   );
   const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
 
-  const startFrame = Math.max(0, phraseQueryStartFrame);
-  const endFrame = Math.min(volumeEditData.length, phraseQueryEndFrame);
+  // NOTE: ボリューム編集はpauではない区間にのみ適用する
+  // pau区間を編集できても、出力が不自然になったり、また隣接フレーズ境界のpau区間まで持ち上がって音声が不自然になるため
+  const startFrame = Math.max(
+    0,
+    phraseQueryStartFrame + (minNonPauseStartFrame ?? 0),
+  );
+  const endFrame = Math.min(
+    volumeEditData.length,
+    phraseQueryStartFrame + (maxNonPauseEndFrame ?? phraseQueryFrameLength),
+    phraseQueryEndFrame,
+  );
   for (let i = startFrame; i < endFrame; i++) {
-    const editedVolume = volumeEditData[i];
-    if (editedVolume === VALUE_INDICATING_NO_DATA) {
+    const volumeAdjustmentDb = volumeEditData[i];
+    if (volumeAdjustmentDb == null) {
       continue;
     }
-    // NOTE: ボリューム編集結果が負値になるケースに備えて0以上にクランプする
-    volume[i - phraseQueryStartFrame] = Math.max(editedVolume, 0);
+    volume[i - phraseQueryStartFrame] *= decibelToLinear(volumeAdjustmentDb);
   }
 }
 
@@ -1018,4 +758,22 @@ export const isValidLoopRange = (
     Number.isInteger(endTick) &&
     startTick <= endTick // 範囲差0は許容する
   );
+};
+
+/**
+ * デフォルト歌詞を取得する。
+ *
+ * @param noteNumber MIDIノート番号（0-127）
+ * @param mode デフォルト歌詞のモード（"doremi" または "la"）
+ * @returns デフォルト歌詞
+ */
+export const getDefaultLyric = (noteNumber: number, mode: "doremi" | "la") => {
+  switch (mode) {
+    case "doremi":
+      return getDoremiFromNoteNumber(noteNumber);
+    case "la":
+      return "ら";
+    default:
+      throw new ExhaustiveError(mode);
+  }
 };

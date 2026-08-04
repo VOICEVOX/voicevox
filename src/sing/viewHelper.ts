@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StyleInfo } from "@/type/preload";
+import type { StyleInfo } from "@/type/preload";
 import { isMac } from "@/helpers/platform";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
@@ -172,5 +172,18 @@ export const cursorStateSchema = z.enum([
   "EW_RESIZE",
   "CROSSHAIR",
   "ERASE",
+  "NOT_ALLOWED",
 ]);
 export type CursorState = z.infer<typeof cursorStateSchema>;
+
+export type ViewportInfo = {
+  readonly scaleX: number;
+  readonly scaleY: number;
+  readonly offsetX: number;
+  readonly offsetY: number;
+};
+
+export type CanvasSize = {
+  readonly width: number;
+  readonly height: number;
+};

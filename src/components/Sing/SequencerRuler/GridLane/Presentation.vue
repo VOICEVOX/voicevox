@@ -62,7 +62,7 @@
 import { computed, ref } from "vue";
 import type { TimeSignature } from "@/domain/project/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
-import { MeasureInfo } from "@/composables/useSequencerLayout";
+import type { MeasureInfo } from "@/composables/useSequencerLayout";
 
 defineOptions({
   name: "GridLanePresentation",

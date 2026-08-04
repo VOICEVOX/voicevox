@@ -1,5 +1,8 @@
 <template>
-  <div class="full-height root relative-absolute-wrapper">
+  <div
+    class="full-height root relative-absolute-wrapper"
+    data-testid="audio-detail"
+  >
     <div>
       <div class="side">
         <div class="detail-selector">
@@ -66,7 +69,7 @@
           :accentPhrase
           :index="accentPhraseIndex"
           :isLast="
-            accentPhrases !== undefined &&
+            accentPhrases != undefined &&
             accentPhrases.length - 1 === accentPhraseIndex
           "
           :isActive="accentPhraseIndex === activePoint"
@@ -85,9 +88,9 @@ import { computed, nextTick, ref, watch } from "vue";
 import AccentPhrase from "./AccentPhrase.vue";
 import ToolTip from "@/components/ToolTip.vue";
 import { useStore } from "@/store";
-import { AudioKey } from "@/type/preload";
+import type { AudioKey } from "@/type/preload";
 import { isMac } from "@/helpers/platform";
-import { EngineManifest } from "@/openapi/models";
+import type { EngineManifest } from "@/openapi/models";
 import { useShiftKey, useAltKey } from "@/composables/useModifierKey";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";

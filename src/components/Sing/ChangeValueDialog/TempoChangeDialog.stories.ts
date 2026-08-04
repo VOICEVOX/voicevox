@@ -1,5 +1,5 @@
 import { userEvent, within, expect, fn } from "storybook/test";
-import { Meta, StoryObj } from "@storybook/vue3-vite";
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
 import TempoChangeDialog from "./TempoChangeDialog.vue";
 import { DEFAULT_BPM } from "@/sing/domain";
 

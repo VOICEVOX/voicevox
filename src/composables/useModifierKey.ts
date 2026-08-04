@@ -1,9 +1,9 @@
 import {
-  Ref,
+  type Ref,
   ref,
   onUnmounted,
   onMounted,
-  MaybeRefOrGetter,
+  type MaybeRefOrGetter,
   toValue,
 } from "vue";
 import { isMac } from "@/helpers/platform";

@@ -1,20 +1,22 @@
-import { SetNextState, State } from "@/sing/stateMachine";
+import type { SetNextState, State } from "@/sing/stateMachine";
 import {
-  Context,
+  type Context,
   getGuideLineTicks,
-  Input,
+  type Input,
   selectNotesInRange,
   selectOnlyThisNoteAndPlayPreviewSound,
-  SequencerStateDefinitions,
+  type SequencerStateDefinitions,
   toggleNoteSelection,
 } from "@/sing/sequencerStateMachine/common";
 import { getButton, isSelfEventTarget } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import type { Note } from "@/domain/project/type";
 
-export class EditNotesToolIdleState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class EditNotesToolIdleState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "editNotesToolIdle";
 
   onEnter(context: Context) {

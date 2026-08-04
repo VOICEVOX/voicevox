@@ -1,5 +1,5 @@
 import { QPageContainer, QLayout } from "quasar";
-import { Component } from "vue";
+import type { Component } from "vue";
 
 // QPageContainerとQLayoutで囲うためのヘルパー関数。
 // QPageはQLayout > QPageContainer > QPageの構造にしないとエラーになるため必要。

@@ -4,14 +4,14 @@
  */
 
 import { uuid4 } from "@/helpers/random";
-import {
+import type {
   AddUserDictWordRequest,
   DefaultApiInterface,
   DeleteUserDictWordRequest,
   RewriteUserDictWordRequest,
   UserDictWord,
 } from "@/openapi";
-import { Brand } from "@/type/utility";
+import type { Brand } from "@/type/utility";
 
 type UserDictWordId = Brand<string, "UserDictWordId">;
 

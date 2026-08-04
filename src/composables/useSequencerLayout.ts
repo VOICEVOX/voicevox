@@ -2,8 +2,8 @@
  * シーケンサーのレイアウト計算に関するコンポーザブル
  * NOTE: 雑多です
  */
-import { computed, ComputedRef, Ref } from "vue";
-import { getTimeSignaturePositions } from "@/sing/domain";
+import { computed, type ComputedRef, type Ref } from "vue";
+import { getTimeSignaturePositions } from "@/sing/music";
 import { tickToBaseX } from "@/sing/viewHelper";
 import { getTotalTicks, calculateMeasureInfos } from "@/sing/rulerHelper";
 import type { TimeSignature } from "@/domain/project/type";

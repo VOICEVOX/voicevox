@@ -1,17 +1,19 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   Context,
   IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
-import { TrackId } from "@/type/preload";
+import type { TrackId } from "@/type/preload";
 import { getButton } from "@/sing/viewHelper";
 
-export class ErasePitchState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class ErasePitchState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "erasePitch";
 
   private readonly cursorPosAtStart: PositionOnSequencer;

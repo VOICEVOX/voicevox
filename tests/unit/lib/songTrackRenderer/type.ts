@@ -1,12 +1,12 @@
 import type { Note } from "@/domain/project/type";
-import {
+import type {
   EditorFrameAudioQueryKey,
   PhraseKey,
   SingingPitchKey,
   SingingVoiceKey,
   SingingVolumeKey,
 } from "@/store/type";
-import { TrackId } from "@/type/preload";
+import type { TrackId } from "@/type/preload";
 
 /**
  * テスト検証用のフレーズ情報。

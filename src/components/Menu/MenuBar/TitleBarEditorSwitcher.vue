@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useStore } from "@/store";
-import { EditorType } from "@/type/preload";
+import type { EditorType } from "@/type/preload";
 
 const store = useStore();
 
@@ -30,7 +30,7 @@ const openedEditor = computed(() => store.state.openedEditor);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const switchEditor = async (editor: EditorType) => {
-  await store.dispatch("SET_ROOT_MISC_SETTING", {
+  await store.actions.SET_ROOT_MISC_SETTING({
     key: "openedEditor",
     value: editor,
   });

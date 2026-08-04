@@ -1,10 +1,10 @@
 #version 300 es
 precision mediump float;
 
-uniform vec4 color;
+uniform vec4 uLineColor;
 
 out vec4 outColor;
 
 void main() {
-  outColor = color;
+  outColor = uLineColor;
 }

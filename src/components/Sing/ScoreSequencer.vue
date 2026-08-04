@@ -202,13 +202,13 @@
           :sequencerPitchTool
           @update:sequencerNoteTool="
             (value) =>
-              store.dispatch('SET_SEQUENCER_NOTE_TOOL', {
+              store.actions.SET_SEQUENCER_NOTE_TOOL({
                 sequencerNoteTool: value,
               })
           "
           @update:sequencerPitchTool="
             (value) =>
-              store.dispatch('SET_SEQUENCER_PITCH_TOOL', {
+              store.actions.SET_SEQUENCER_PITCH_TOOL({
                 sequencerPitchTool: value,
               })
           "
@@ -216,13 +216,21 @@
       </div>
     </template>
     <template #after>
-      <SequencerParameterPanel v-if="isParameterPanelOpen" />
+      <SequencerParameterPanel
+        v-if="isParameterPanelOpen"
+        :viewportInfo
+        @update:needsAutoScroll="
+          (value) => (parameterPanelNeedsAutoScroll = value)
+        "
+        @panTimeline="panTimelineBy"
+        @zoomTimeline="zoomTimelineAt"
+      />
     </template>
   </QSplitter>
 </template>
 
 <script lang="ts">
-import { ComputedRef } from "vue";
+import type { ComputedRef } from "vue";
 import type { InjectionKey } from "vue";
 
 export const numMeasuresInjectionKey: InjectionKey<{
@@ -244,19 +252,18 @@ import {
 import SequencerParameterPanel from "@/components/Sing/SequencerParameterPanel.vue";
 import SequencerGridSpacer from "@/components/Sing/SequencerGridSpacer.vue";
 import ContextMenu, {
-  ContextMenuItemData,
+  type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import type { Note } from "@/domain/project/type";
 import {
-  getEndTicksOfPhrase,
   getNoteDuration,
-  getStartTicksOfPhrase,
   getTimeSignaturePositions,
   noteNumberToFrequency,
   tickToMeasureNumber,
   tickToSecond,
-} from "@/sing/domain";
+} from "@/sing/music";
+import { getEndTicksOfPhrase, getStartTicksOfPhrase } from "@/sing/domain";
 import {
   tickToBaseX,
   baseXToTick,
@@ -271,7 +278,7 @@ import {
   PREVIEW_SOUND_DURATION,
   SEQUENCER_MIN_NUM_MEASURES,
 } from "@/sing/viewHelper";
-import { getLast } from "@/sing/utility";
+import { clamp, getLast } from "@/sing/utility";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -286,11 +293,12 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine";
-import {
+import type {
   PositionOnSequencer,
   ViewportInfo,
 } from "@/sing/sequencerStateMachine/common";
 import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
+import { assertNonNullable } from "@/type/utility";
 
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
@@ -443,19 +451,46 @@ const phraseInfosInOtherTracks = computed(() => {
   );
 });
 
-const parameterPanelHeight = ref(300);
+const DEFAULT_PARAMETER_PANEL_HEIGHT = 200;
+const MIN_PARAMETER_PANEL_HEIGHT = 100;
+const MAX_PARAMETER_PANEL_HEIGHT = 500;
+
+const splitterPosition = computed(() => store.state.splitterPosition);
+const parameterPanelHeight = ref(DEFAULT_PARAMETER_PANEL_HEIGHT);
 const isParameterPanelOpen = computed(
   () => store.state.experimentalSetting.showParameterPanel,
 );
 
-const setParameterPanelHeight = (height: number) => {
-  if (isParameterPanelOpen.value) {
-    parameterPanelHeight.value = height;
-  }
+watch(
+  isParameterPanelOpen,
+  (isOpen) => {
+    if (isOpen) {
+      const saved = splitterPosition.value.parameterPanelHeight;
+      parameterPanelHeight.value = clamp(
+        saved ?? DEFAULT_PARAMETER_PANEL_HEIGHT,
+        MIN_PARAMETER_PANEL_HEIGHT,
+        MAX_PARAMETER_PANEL_HEIGHT,
+      );
+    }
+  },
+  { immediate: true },
+);
+
+const setParameterPanelHeight = async (height: number) => {
+  if (!isParameterPanelOpen.value) return;
+  parameterPanelHeight.value = height;
+  await store.actions.SET_ROOT_MISC_SETTING({
+    key: "splitterPosition",
+    value: {
+      ...splitterPosition.value,
+      parameterPanelHeight: height,
+    },
+  });
 };
 
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
+const parameterPanelNeedsAutoScroll = ref(false);
 
 // ステートマシン
 const {
@@ -477,7 +512,15 @@ const previewNoteIds = computed(() => {
 });
 
 // マウスカーソルがシーケンサーの端に行ったときの自動スクロール
-useAutoScrollOnEdge(sequencerBody, enableAutoScrollOnEdge);
+const combinedEnableAutoScrollOnEdge = computed(
+  () => enableAutoScrollOnEdge.value || parameterPanelNeedsAutoScroll.value,
+);
+const autoScrollDirection = computed<"x" | "xy">(() =>
+  parameterPanelNeedsAutoScroll.value ? "x" : "xy",
+);
+useAutoScrollOnEdge(sequencerBody, combinedEnableAutoScrollOnEdge, {
+  scrollDirection: autoScrollDirection,
+});
 
 // 歌詞を編集中のノート
 const editingLyricNote = computed(() => {
@@ -854,30 +897,36 @@ const setZoomY = (value: number | null) => {
   });
 };
 
+const panTimelineBy = (deltaX: number) => {
+  const el = sequencerBody.value;
+  assertNonNullable(el);
+  el.scrollBy(deltaX, 0);
+};
+
+const zoomTimelineAt = (anchorX: number, deltaY: number) => {
+  const el = sequencerBody.value;
+  assertNonNullable(el);
+  const oldZoomX = zoomX.value;
+  let newZoomX = oldZoomX - deltaY * (ZOOM_X_STEP * 0.01);
+  newZoomX = Math.min(ZOOM_X_MAX, newZoomX);
+  newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
+  const scrollLeft = el.scrollLeft;
+  const scrollTop = el.scrollTop;
+
+  void store.actions.SET_ZOOM_X({ zoomX: newZoomX }).then(() => {
+    const cursorBaseX = (scrollLeft + anchorX) / oldZoomX;
+    const newScrollLeft = cursorBaseX * newZoomX - anchorX;
+    el.scrollTo(newScrollLeft, scrollTop);
+  });
+};
+
 const onWheel = (event: WheelEvent) => {
-  const sequencerBodyElement = sequencerBody.value;
-  if (!sequencerBodyElement) {
-    throw new Error("sequencerBodyElement is null.");
-  }
   if (isOnCommandOrCtrlKeyDown(event)) {
-    // scrollイベントの発火を阻止する
     event.preventDefault();
-
+    const sequencerBodyElement = sequencerBody.value;
+    assertNonNullable(sequencerBodyElement);
     const cursorX = getXInBorderBox(event.clientX, sequencerBodyElement);
-    // マウスカーソル位置を基準に水平方向のズームを行う
-    const oldZoomX = zoomX.value;
-    let newZoomX = zoomX.value;
-    newZoomX -= event.deltaY * (ZOOM_X_STEP * 0.01);
-    newZoomX = Math.min(ZOOM_X_MAX, newZoomX);
-    newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
-    const scrollLeft = sequencerBodyElement.scrollLeft;
-    const scrollTop = sequencerBodyElement.scrollTop;
-
-    void store.actions.SET_ZOOM_X({ zoomX: newZoomX }).then(() => {
-      const cursorBaseX = (scrollLeft + cursorX) / oldZoomX;
-      const newScrollLeft = cursorBaseX * newZoomX - cursorX;
-      sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
-    });
+    zoomTimelineAt(cursorX, event.deltaY);
   }
 };
 

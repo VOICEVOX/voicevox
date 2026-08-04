@@ -1,4 +1,4 @@
-import { setup, Preview } from "@storybook/vue3-vite";
+import { setup, type Preview } from "@storybook/vue3-vite";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";

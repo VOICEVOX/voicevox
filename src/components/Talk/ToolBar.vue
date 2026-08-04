@@ -2,7 +2,7 @@
   <QHeader class="q-py-sm">
     <QToolbar>
       <template v-for="button in buttons" :key="button.text">
-        <QSpace v-if="button.text === null" />
+        <QSpace v-if="button.text == null" />
         <QBtn
           v-else
           unelevated
@@ -19,9 +19,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ComputedRef } from "vue";
+import { computed, type ComputedRef } from "vue";
 import { useStore } from "@/store";
-import { ToolbarButtonTagType } from "@/type/preload";
+import type { ToolbarButtonTagType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";

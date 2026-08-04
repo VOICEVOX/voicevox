@@ -108,7 +108,7 @@
 import { computed, ref } from "vue";
 import { debounce } from "quasar";
 import { useStore } from "@/store";
-import { SpeakerId, StyleId, TrackId } from "@/type/preload";
+import type { SpeakerId, StyleId, TrackId } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useEngineIcons } from "@/composables/useEngineIcons";
@@ -152,7 +152,7 @@ const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
       `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`,
     );
 
-  void store.dispatch("COMMAND_SET_SINGER", {
+  void store.actions.COMMAND_SET_SINGER({
     trackId: props.trackId,
     singer: { engineId, styleId },
     withRelated: true,

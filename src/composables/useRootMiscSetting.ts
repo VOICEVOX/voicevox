@@ -1,6 +1,6 @@
 import { computed } from "vue";
-import { Store } from "@/store";
-import { RootMiscSettingType } from "@/type/preload";
+import type { Store } from "@/store";
+import type { RootMiscSettingType } from "@/type/preload";
 
 /** ルート直下にある雑多な設定値を簡単に扱える便利コンポーザブル */
 export const useRootMiscSetting = <T extends keyof RootMiscSettingType>(

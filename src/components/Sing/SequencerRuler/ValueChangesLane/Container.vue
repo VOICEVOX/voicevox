@@ -21,9 +21,9 @@ import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
 import { snapTickToBeat } from "@/sing/rulerHelper";
 import { baseXToTick } from "@/sing/viewHelper";
-import { tickToMeasureNumber } from "@/sing/domain";
+import { tickToMeasureNumber } from "@/sing/music";
 import type { Tempo, TimeSignature } from "@/domain/project/type";
-import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
+import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 import TempoChangeDialog from "@/components/Sing/ChangeValueDialog/TempoChangeDialog.vue";
 import TimeSignatureChangeDialog from "@/components/Sing/ChangeValueDialog/TimeSignatureChangeDialog.vue";
 
@@ -71,23 +71,23 @@ const { rulerWidth, tsPositions, totalTicks } = useSequencerLayout({
 
 // ストアアクション
 const setTempo = (tempo: Tempo) => {
-  void store.dispatch("COMMAND_SET_TEMPO", { tempo });
+  void store.actions.COMMAND_SET_TEMPO({ tempo });
 };
 
 const removeTempo = (position: number) => {
-  void store.dispatch("COMMAND_REMOVE_TEMPO", { position });
+  void store.actions.COMMAND_REMOVE_TEMPO({ position });
 };
 
 const setTimeSignature = (timeSignature: TimeSignature) => {
-  void store.dispatch("COMMAND_SET_TIME_SIGNATURE", { timeSignature });
+  void store.actions.COMMAND_SET_TIME_SIGNATURE({ timeSignature });
 };
 
 const removeTimeSignature = (measureNumber: number) => {
-  void store.dispatch("COMMAND_REMOVE_TIME_SIGNATURE", { measureNumber });
+  void store.actions.COMMAND_REMOVE_TIME_SIGNATURE({ measureNumber });
 };
 
 const setPlayheadPosition = (ticks: number) => {
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+  void store.actions.SET_PLAYHEAD_POSITION({ position: ticks });
 };
 
 const valueChange = ref<ValueChange | null>(null);
