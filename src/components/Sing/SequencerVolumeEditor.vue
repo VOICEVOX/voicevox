@@ -67,9 +67,7 @@ import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateM
 import { useMounted } from "@/composables/useMounted";
 import { Mutex } from "@/helpers/mutex";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import { secondToTick, tickToSecond } from "@/sing/music";
-import { getTotalTicks } from "@/sing/rulerHelper";
 import { clamp } from "@/sing/utility";
 import { baseXToTick, tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
 import {
@@ -77,7 +75,6 @@ import {
   ensureNotNullish,
   UnreachableError,
 } from "@/type/utility";
-import type { TrackId } from "@/type/preload";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
 import { VolumeLine } from "@/sing/graphics/volumeLine";
 import type { VolumeSegment } from "@/sing/graphics/volumeLine";
@@ -92,10 +89,9 @@ import {
 } from "@/components/Sing/volumeEditorStyle";
 import { resolveColorFromCssVariable } from "@/sing/graphics/cssColor";
 import type { Color } from "@/sing/graphics/lineStrip";
-import { absoluteVolumeEditMode } from "@/sing/volumeEditMode";
+import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 import {
   getOverlappingVolumeEditableFrameRanges,
-  isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
   mergeVolumeEditableFrameRanges,
   type VolumeEditableFrameRange,
@@ -112,7 +108,7 @@ const emit = defineEmits<{
   zoomTimeline: [anchorX: number, deltaY: number];
 }>();
 
-const volumeEditMode = absoluteVolumeEditMode;
+const volumeEditMode = relativeVolumeEditMode;
 const volumeValueScale = volumeEditMode.valueScale;
 
 const store = useStore();
@@ -168,7 +164,7 @@ const phraseSignature = computed(() =>
 
 // CSS変数の解決はcanvasへの描画と読み取りを伴うため、テーマごとに結果をキャッシュする。
 let volumeLineColorsCache:
-  | { isDark: boolean; original: Color; edited: Color; editing: Color }
+  | { isDark: boolean; edited: Color; editing: Color }
   | undefined;
 
 const getVolumeLineColors = () => {
@@ -176,10 +172,6 @@ const getVolumeLineColors = () => {
     const containerElement = ensureNotNullish(canvasContainer.value);
     volumeLineColorsCache = {
       isDark: isDark.value,
-      original: resolveColorFromCssVariable(
-        containerElement,
-        "--scheme-color-sing-volume-original-line",
-      ),
       edited: resolveColorFromCssVariable(
         containerElement,
         "--scheme-color-sing-volume-edited-line",
@@ -247,7 +239,6 @@ let stage: PIXI.Container | undefined;
 let gridGraphics: PIXI.Graphics | undefined;
 let erasePreviewOverlay: PIXI.Graphics | undefined;
 let editableRangeBand: PIXI.Graphics | undefined;
-let originalVolumeLine: VolumeLine | undefined;
 let editedVolumeLine: VolumeLine | undefined;
 let requestId: number | undefined;
 let resizeObserver: ResizeObserver | undefined;
@@ -256,16 +247,9 @@ let isUnmounted = false;
 let viewportRectCache:
   | { left: number; top: number; width: number; height: number }
   | undefined;
-// NOTE: オリジナルと編集後のセグメントデータ。
+// NOTE: ボリューム変更量（dB）のセグメントデータ。
 // リアクティビティは不要なため（renderInNextFrame経由で描画される）、refではなくplain変数で管理する。
-let volumeOriginalSegmentsData: VolumeSegment[] = [];
-let volumeEffectiveSegmentsData: VolumeSegment[] = [];
-// NOTE: refreshEffectiveVolumeSegmentsがオリジナルのフレームデータを参照するためのキャッシュ。
-// 編集データのみ変更されたとき、オリジナルの再計算をスキップするために使用する。
-let originalFramewiseCache: number[] = [];
-let hasOriginalFramewiseCache = false;
-let originalFrameRateCache = 0;
-let originalTrackIdCache: TrackId | undefined;
+let volumeEditSegmentsData: VolumeSegment[] = [];
 const editableFrameRanges = ref<VolumeEditableFrameRange[]>([]);
 const previewEraseRanges = ref<{ startBaseX: number; endBaseX: number }[]>([]);
 
@@ -275,17 +259,12 @@ type VolumeTooltipState = {
   pointerY: number;
 };
 
-type VolumePointerInfo = VolumeEditorPointerInfo & {
-  originalValue: number | undefined;
-  isEditable: boolean;
-};
-
-// ツールチップには、ポインタ位置で設定されるボリューム(dB)を表示する。
-// 絶対値編集においては以下は検討したが行わない:
-// - 原音との差分: 原音はフレームごとに異なるため、ポインタを1フレーム横に動かした
-//   だけで値が揺れて読み取りづらい(例: +1.0 → +3.0 → -1.5...)
-// - 差分と絶対値の併記: 一目で何の値か分からなくなる
-// ※ 相対値編集においては上記知見からベースとなる0dBラインとの差分のみの表示にする
+// ツールチップには、ポインタ位置で設定されるボリューム変更量(dB)を表示する。
+// 相対値編集においては以下は検討したが行わない:
+// - 変更後の絶対値: 原音はフレームごとに異なるため、ポインタを1フレーム横に動かした
+//   だけで値が揺れて読み取りづらい(例: -18.0 → -16.0 → -20.5...)
+// - 変更量と絶対値の併記: 一目で何の値か分からなくなる
+// ※ 上記知見からベースとなる0dBラインとの差分のみの表示にする
 const tooltipState = computed<VolumeTooltipState | undefined>(() => {
   const data = tooltipData.value;
   if (data == undefined) {
@@ -303,41 +282,6 @@ const frameToBaseX = (frame: number, frameRate: number) => {
   const rawTempos = toRaw(tempos.value);
   const ticks = secondToTick(seconds, rawTempos, tpqn.value);
   return tickToBaseX(ticks, tpqn.value);
-};
-
-const timelineFrameLength = computed(() => {
-  const frameRate = editorFrameRate.value;
-  const totalTicks = getTotalTicks(
-    timeSignatures.value,
-    numMeasures.value,
-    tpqn.value,
-  );
-  const totalSeconds = tickToSecond(totalTicks, tempos.value, tpqn.value);
-  return Math.max(Math.round(totalSeconds * frameRate), 1);
-});
-
-const getOriginalValueFromFramewise = (
-  framewiseData: readonly number[],
-  frame: number,
-) => {
-  const value = framewiseData.at(frame);
-  if (value == undefined || value === VALUE_INDICATING_NO_DATA) {
-    return undefined;
-  }
-  if (!Number.isFinite(value)) {
-    throw new Error("original volume value must be finite.");
-  }
-  if (value <= 0) {
-    return undefined;
-  }
-  return value;
-};
-
-const getOriginalValueAtFrame = (frame: number) => {
-  if (!hasOriginalFramewiseCache) {
-    return undefined;
-  }
-  return getOriginalValueFromFramewise(originalFramewiseCache, frame);
 };
 
 const getVisibleHorizontalGridLines = (
@@ -427,12 +371,12 @@ const tooltipGuideLineStyle = computed(() => {
   };
 });
 
-const buildSegments = (framewiseData: number[], frameRate: number) => {
+const buildSegments = (framewiseData: (number | null)[], frameRate: number) => {
   const segments: VolumeSegment[] = [];
   let current: VolumeSegment | undefined;
 
   for (const [frame, value] of framewiseData.entries()) {
-    if (value === VALUE_INDICATING_NO_DATA) {
+    if (value == null) {
       if (current != undefined && current.length >= 2) {
         segments.push(current);
       }
@@ -444,8 +388,7 @@ const buildSegments = (framewiseData: number[], frameRate: number) => {
     if (!Number.isFinite(baseX)) {
       throw new Error("baseX must be finite.");
     }
-    const db = volumeValueScale.valueToDb(value);
-    const normalizedY = volumeValueScale.dbToNormalizedY(db);
+    const normalizedY = volumeValueScale.dbToNormalizedY(value);
 
     if (current == undefined) {
       current = [];
@@ -479,9 +422,7 @@ const updateHorizontalGrid = () => {
     if (line.labelOnly === true) {
       continue;
     }
-    const y =
-      Math.round((1 - volumeValueScale.dbToNormalizedY(line.db)) * height) +
-      0.5;
+    const y = (1 - volumeValueScale.dbToNormalizedY(line.db)) * height;
     gridGraphics
       .moveTo(VOLUME_EDITOR_LAYOUT.keyColumnWidthPx, y)
       .lineTo(width, y)
@@ -499,7 +440,6 @@ const updateHorizontalGrid = () => {
 const render = () => {
   assertNonNullable(renderer);
   assertNonNullable(stage);
-  assertNonNullable(originalVolumeLine);
   assertNonNullable(editedVolumeLine);
   assertNonNullable(viewportWidth.value);
   assertNonNullable(viewportHeight.value);
@@ -582,80 +522,18 @@ const render = () => {
     }
   }
 
-  originalVolumeLine.color = lineColors.original;
   // ノートの選択状態と同じく、描いている間だけprimaryで強調する
   editedVolumeLine.color =
     previewMode.value === "VOLUME_DRAW"
       ? lineColors.editing
       : lineColors.edited;
 
-  originalVolumeLine.update(volumeOriginalSegmentsData, viewInfo);
-  editedVolumeLine.update(volumeEffectiveSegmentsData, viewInfo);
+  editedVolumeLine.update(volumeEditSegmentsData, viewInfo);
 
   renderer.render(stage);
 };
 
 const refreshVolumeSegmentsLock = new Mutex();
-
-const refreshOriginalVolumeSegments = () => {
-  const frameRate = editorFrameRate.value;
-  const trackId = selectedTrackId.value;
-
-  const baseFrameLength = timelineFrameLength.value;
-
-  const originalFramewise = new Array<number>(baseFrameLength).fill(
-    VALUE_INDICATING_NO_DATA,
-  );
-
-  for (const phrase of store.state.phrases.values()) {
-    if (phrase.trackId !== trackId) {
-      continue;
-    }
-    if (phrase.singingVolumeKey == undefined) {
-      continue;
-    }
-    if (phrase.queryKey == undefined) {
-      throw new Error("phrase.queryKey is undefined.");
-    }
-    const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
-    if (phraseQuery.frameRate !== frameRate) {
-      throw new Error(
-        "The frame rate between the singing guide and the edit does not match.",
-      );
-    }
-    const phraseSingingVolume = getOrThrow(
-      store.state.phraseSingingVolumes,
-      phrase.singingVolumeKey,
-    );
-
-    const startFrame = Math.round(phrase.startTime * frameRate);
-    const endFrame = startFrame + phraseSingingVolume.length;
-    if (originalFramewise.length < endFrame) {
-      originalFramewise.push(
-        ...new Array(endFrame - originalFramewise.length).fill(
-          VALUE_INDICATING_NO_DATA,
-        ),
-      );
-    }
-    for (const [i, value] of phraseSingingVolume.entries()) {
-      const v = Math.max(0, value);
-      originalFramewise[startFrame + i] = Math.min(v, 1);
-    }
-  }
-
-  originalFramewiseCache = originalFramewise;
-  hasOriginalFramewiseCache = true;
-  originalFrameRateCache = frameRate;
-  originalTrackIdCache = trackId;
-
-  // 編集可能区間のみ描画する（ポーズ区間のボリュームを非表示にする）
-  const maskedOriginal = maskVolumeEditDataByEditableRanges(
-    { values: originalFramewise, startFrame: 0 },
-    editableFrameRanges.value,
-  );
-  volumeOriginalSegmentsData = buildSegments(maskedOriginal, frameRate);
-  renderInNextFrame = true;
-};
 
 const refreshEditableFrameRanges = () => {
   const frameRate = editorFrameRate.value;
@@ -695,32 +573,11 @@ const refreshEditableFrameRanges = () => {
   editableFrameRanges.value = mergeVolumeEditableFrameRanges(ranges);
 };
 
-const refreshEffectiveVolumeSegments = () => {
+const refreshVolumeEditSegments = () => {
   const frameRate = editorFrameRate.value;
-
-  if (!hasOriginalFramewiseCache) {
-    throw new Error("Original framewise cache is not available.");
-  }
-  if (originalTrackIdCache !== selectedTrackId.value) {
-    return;
-  }
-  if (originalFrameRateCache !== frameRate) {
-    throw new Error(
-      `Frame rate mismatch in cache: expected ${frameRate}, got ${originalFrameRateCache}.`,
-    );
-  }
-
-  const originalFramewise = originalFramewiseCache;
   const editableRanges = editableFrameRanges.value;
-  let maxFrame = Math.max(originalFramewise.length, 1);
 
-  const baseEditData = selectedTrack.value.volumeEditData;
-  const editFramewise = new Array<number>(
-    Math.max(maxFrame, baseEditData.length),
-  ).fill(VALUE_INDICATING_NO_DATA);
-  for (const [i, value] of baseEditData.entries()) {
-    editFramewise[i] = value;
-  }
+  const editFramewise = [...selectedTrack.value.volumeEditData];
 
   const preview = volumePreviewEdit.value;
   if (preview != undefined) {
@@ -729,9 +586,7 @@ const refreshEffectiveVolumeSegments = () => {
       const endFrame = startFrame + preview.data.length;
       if (editFramewise.length < endFrame) {
         editFramewise.push(
-          ...new Array(endFrame - editFramewise.length).fill(
-            VALUE_INDICATING_NO_DATA,
-          ),
+          ...new Array<null>(endFrame - editFramewise.length).fill(null),
         );
       }
       // プレビューデータを editableRanges でマスクして適用
@@ -740,19 +595,16 @@ const refreshEffectiveVolumeSegments = () => {
         editableRanges,
       );
       for (const [i, rawValue] of maskedPreview.entries()) {
-        if (rawValue === VALUE_INDICATING_NO_DATA) continue;
-        editFramewise[startFrame + i] = Math.min(Math.max(rawValue, 0), 1);
+        if (rawValue == null) continue;
+        editFramewise[startFrame + i] = rawValue;
       }
-      maxFrame = Math.max(maxFrame, endFrame);
       previewEraseRanges.value = [];
     } else if (preview.type === "erase") {
       const start = Math.max(0, preview.startFrame);
       const end = start + preview.frameLength;
       if (editFramewise.length < end) {
         editFramewise.push(
-          ...new Array(end - editFramewise.length).fill(
-            VALUE_INDICATING_NO_DATA,
-          ),
+          ...new Array<null>(end - editFramewise.length).fill(null),
         );
       }
       const overlaps = getOverlappingVolumeEditableFrameRanges(
@@ -761,13 +613,8 @@ const refreshEffectiveVolumeSegments = () => {
         editableRanges,
       );
       for (const overlap of overlaps) {
-        editFramewise.fill(
-          VALUE_INDICATING_NO_DATA,
-          overlap.startFrame,
-          overlap.endFrame,
-        );
+        editFramewise.fill(null, overlap.startFrame, overlap.endFrame);
       }
-      maxFrame = Math.max(maxFrame, end);
       previewEraseRanges.value = overlaps.map((overlap) => ({
         startBaseX: frameToBaseX(overlap.startFrame, frameRate),
         endBaseX: frameToBaseX(overlap.endFrame, frameRate),
@@ -778,39 +625,13 @@ const refreshEffectiveVolumeSegments = () => {
     previewEraseRanges.value = [];
   }
 
-  const totalFrames = Math.max(
-    maxFrame,
-    originalFramewise.length,
-    editFramewise.length,
-  );
-  if (editFramewise.length < totalFrames) {
-    editFramewise.push(
-      ...new Array(totalFrames - editFramewise.length).fill(
-        VALUE_INDICATING_NO_DATA,
-      ),
-    );
-  }
-  const effectiveFramewise = new Array<number>(totalFrames).fill(
-    VALUE_INDICATING_NO_DATA,
-  );
-  for (const [i] of effectiveFramewise.entries()) {
-    const edited = editFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
-    if (edited !== VALUE_INDICATING_NO_DATA) {
-      // NOTE: 再生結果と一致させるため、applyVolumeEditと同じ規則で0以上にクランプする
-      effectiveFramewise[i] = Math.max(edited, 0);
-    } else {
-      effectiveFramewise[i] =
-        originalFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
-    }
-  }
-
-  // 編集不可区間のボリュームを非表示にする
-  const maskedEffective = maskVolumeEditDataByEditableRanges(
-    { values: effectiveFramewise, startFrame: 0 },
+  // 編集不可区間の編集データを非表示にする
+  const maskedEdit = maskVolumeEditDataByEditableRanges(
+    { values: editFramewise, startFrame: 0 },
     editableRanges,
   );
 
-  volumeEffectiveSegmentsData = buildSegments(maskedEffective, frameRate);
+  volumeEditSegmentsData = buildSegments(maskedEdit, frameRate);
   renderInNextFrame = true;
 };
 
@@ -857,7 +678,7 @@ const updateViewportRectCache = () => {
 
 const computeViewportPointerInfo = (
   pointerEvent: PointerEvent,
-): VolumePointerInfo => {
+): VolumeEditorPointerInfo => {
   const rect = getViewportRect();
   const localX = pointerEvent.clientX - rect.left;
   const localY = pointerEvent.clientY - rect.top;
@@ -878,7 +699,6 @@ const computeViewportPointerInfo = (
 
   const normalizedY = 1 - clampedY / height;
   const db = volumeValueScale.normalizedYToDb(normalizedY);
-  const originalValue = getOriginalValueAtFrame(frame);
   const value = volumeEditMode.toStoredValue(db);
 
   return {
@@ -887,8 +707,6 @@ const computeViewportPointerInfo = (
       value,
     },
     db,
-    originalValue,
-    isEditable: isFrameInVolumeEditableRange(frame, editableFrameRanges.value),
     x: clampedX,
     y: clampedY,
   };
@@ -957,8 +775,7 @@ watch(
 const { mounted } = useMounted();
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
-// NOTE: オリジナルのボリュームデータが変わったとき、実効データも再計算が必要
-// （実効データはオリジナルと編集データのマージであるため）
+// NOTE: フレーズが変わると有効編集範囲が変わるため、編集データのセグメントも再計算する
 watch(
   [
     mounted,
@@ -974,8 +791,7 @@ watch(
     await using _lock = await refreshVolumeSegmentsLock.acquire();
     if (isMounted) {
       refreshEditableFrameRanges();
-      refreshOriginalVolumeSegments();
-      refreshEffectiveVolumeSegments();
+      refreshVolumeEditSegments();
     }
   },
 );
@@ -988,7 +804,7 @@ watch(
   ],
   async () => {
     await using _lock = await refreshVolumeSegmentsLock.acquire();
-    refreshEffectiveVolumeSegments();
+    refreshVolumeEditSegments();
   },
 );
 
@@ -1026,24 +842,15 @@ onMounted(async () => {
   gridGraphics = new PIXI.Graphics();
   editableRangeBand = new PIXI.Graphics();
   const initialLineColors = getVolumeLineColors();
-  originalVolumeLine = new VolumeLine({
-    color: initialLineColors.original,
-    width: VOLUME_EDITOR_LINE_WIDTH.originalVolume,
-    dashed: true,
-    isVisible: true,
-  });
   editedVolumeLine = new VolumeLine({
     color: initialLineColors.edited,
     width: VOLUME_EDITOR_LINE_WIDTH.editedVolume,
-    showArea: true,
-    areaAlpha: VOLUME_EDITOR_ALPHA.editedVolumeArea,
     isVisible: true,
   });
 
   stage.addChild(erasePreviewOverlay);
   stage.addChild(gridGraphics);
   stage.addChild(editableRangeBand);
-  stage.addChild(originalVolumeLine.container);
   stage.addChild(editedVolumeLine.container);
 
   const callback = () => {
@@ -1086,7 +893,6 @@ onUnmounted(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
-  originalVolumeLine?.destroy();
   editedVolumeLine?.destroy();
   gridGraphics?.destroy();
   editableRangeBand?.destroy();

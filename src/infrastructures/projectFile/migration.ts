@@ -292,7 +292,8 @@ export const migrateProjectFileObject = async (
     }
   }
 
-  if (semver.satisfies(projectAppVersion, "<0.25.0", semverSatisfiesOptions)) {
+  // TODO: 仮で0.26.0としているが、ボリューム編集を導入するバージョンが確定したら条件を更新する。
+  if (semver.satisfies(projectAppVersion, "<0.26.0", semverSatisfiesOptions)) {
     // ボリューム編集値の追加
     for (const trackId in projectData.song.tracks) {
       if (projectData.song.tracks[trackId].volumeEditData == undefined) {

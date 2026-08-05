@@ -9,7 +9,6 @@ import type {
 } from "../common";
 import type { SetNextState, State } from "@/sing/stateMachine";
 import type { TrackId } from "@/type/preload";
-import { decibelToLinear, linearToDecibel } from "@/sing/audio";
 import { createArray, linearInterpolation } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
 import {
@@ -240,37 +239,18 @@ export class DrawVolumeState implements State<
     }
 
     // NOTE: カーソル入力はrequestAnimationFrame単位で処理されるため、
-    // 前回位置との間をdBスケールで補間してフレーム抜けによるギザつきを防ぐ。
+    // 前回位置との間のdB変更量を補間してフレーム抜けによるギザつきを防ぐ。
     if (cursorFrame === prevCursorFrame) {
       const i = cursorFrame - tempPreviewEdit.startFrame;
       tempPreviewEdit.data[i] = cursorValue;
-    } else if (cursorFrame < prevCursorFrame) {
-      const cursorDb = linearToDecibel(cursorValue);
-      const prevCursorDb = linearToDecibel(prevCursorValue);
-      for (let i = cursorFrame; i <= prevCursorFrame; i++) {
-        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] = decibelToLinear(
-          linearInterpolation(
-            cursorFrame,
-            cursorDb,
-            prevCursorFrame,
-            prevCursorDb,
-            i,
-          ),
-        );
-      }
     } else {
-      const prevCursorDb = linearToDecibel(prevCursorValue);
-      const cursorDb = linearToDecibel(cursorValue);
-      for (let i = prevCursorFrame; i <= cursorFrame; i++) {
-        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] = decibelToLinear(
-          linearInterpolation(
-            prevCursorFrame,
-            prevCursorDb,
-            cursorFrame,
-            cursorDb,
-            i,
-          ),
-        );
+      const [startFrame, startValue, endFrame, endValue] =
+        prevCursorFrame < cursorFrame
+          ? [prevCursorFrame, prevCursorValue, cursorFrame, cursorValue]
+          : [cursorFrame, cursorValue, prevCursorFrame, prevCursorValue];
+      for (let i = startFrame; i <= endFrame; i++) {
+        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] =
+          linearInterpolation(startFrame, startValue, endFrame, endValue, i);
       }
     }
     context.previewVolumeEdit.value = tempPreviewEdit;

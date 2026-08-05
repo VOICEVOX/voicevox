@@ -1,15 +1,11 @@
-import { decibelToLinear } from "@/sing/audio";
 import {
-  absoluteVolumeValueScale,
+  relativeVolumeValueScale,
   type VolumeValueScale,
 } from "@/sing/volumeValueScale";
 
 /**
  * ボリューム編集の入力と表示の定義。
- * UI上でポインタが示すdBはここで編集値へ変換されてvolumeEditDataに保存される。
- *
- * TODO: 後続PRで編集値の意味を「元のボリューム（エンジン出力）に掛ける倍率」へ
- * 変更し、toStoredValueの変換とapplyVolumeEditの適用を差し替える。
+ * UI上でポインタが示すdBは、原音からの変更量としてvolumeEditDataに保存する。
  */
 export type VolumeEditMode = {
   /**
@@ -17,20 +13,18 @@ export type VolumeEditMode = {
    * モードごとに有効なスケールは1つなので、不正な組み合わせを防ぐためモード側が持つ。
    */
   valueScale: VolumeValueScale;
-  /** エディタ上のポインタ位置が示すdBを、volumeEditDataに保存する編集値へ変換する。 */
+  /**
+   * エディタ上のポインタ位置が示すdBを、volumeEditDataに保存する編集値へ変換する。
+   * 相対値編集ではdBをそのまま保存する。
+   */
   toStoredValue: (db: number) => number;
 };
 
 /**
- * 絶対値編集：描いた形状がそのまま最終的なボリュームになる方式。
- * ポインタが示すdBを振幅へ変換して編集値とする。
+ * 相対値編集
+ * 編集値は元のボリュームからのdB変化量（0で原音のまま）として保存される。
  */
-export const absoluteVolumeEditMode: VolumeEditMode = {
-  valueScale: absoluteVolumeValueScale,
-  toStoredValue: (db) => {
-    if (!Number.isFinite(db)) {
-      throw new Error("db must be finite.");
-    }
-    return decibelToLinear(db);
-  },
+export const relativeVolumeEditMode: VolumeEditMode = {
+  valueScale: relativeVolumeValueScale,
+  toStoredValue: (db) => db,
 };

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { EditorFrameAudioQuery } from "@/store/type";
-import { applyVolumeEdit, VALUE_INDICATING_NO_DATA } from "@/sing/domain";
+import { decibelToLinear } from "@/sing/audio";
+import { applyVolumeEdit } from "@/sing/domain";
 
 const frameRate = 100;
 
@@ -14,29 +15,42 @@ const createQuery = (volume: number[]): EditorFrameAudioQuery => ({
   frameRate,
 });
 
-// TODO: 後続PRのdBオフセット適用への変更にあわせて、
-// フレーズ開始位置・非pau区間などのテストを追加する。
 describe("applyVolumeEdit", () => {
-  it("絶対値の編集データをクエリのボリュームへ適用する", () => {
+  it("dB変更量をクエリのボリュームへ適用する", () => {
+    const query = createQuery([0.1, 0.2, 0.3]);
+
+    applyVolumeEdit(query, 0, [-6, null, 6], frameRate, undefined, undefined);
+
+    expect(query.volume[0]).toBeCloseTo(0.1 * decibelToLinear(-6));
+    expect(query.volume[1]).toBe(0.2);
+    expect(query.volume[2]).toBeCloseTo(0.3 * decibelToLinear(6));
+  });
+
+  it("フレーズ開始位置に対応するフレームから適用する", () => {
     const query = createQuery([0.1, 0.2, 0.3]);
 
     applyVolumeEdit(
       query,
-      0,
-      [0.5, VALUE_INDICATING_NO_DATA, 0.7],
+      0.02,
+      [12, 12, -6, 6, null],
       frameRate,
       undefined,
       undefined,
     );
 
-    expect(query.volume).toEqual([0.5, 0.2, 0.7]);
+    expect(query.volume[0]).toBeCloseTo(0.1 * decibelToLinear(-6));
+    expect(query.volume[1]).toBeCloseTo(0.2 * decibelToLinear(6));
+    expect(query.volume[2]).toBe(0.3);
   });
 
-  it("負の編集値は0にクランプする", () => {
-    const query = createQuery([0.1]);
+  it("非pau区間にだけ適用する", () => {
+    const query = createQuery([0.1, 0.2, 0.3, 0.4]);
 
-    applyVolumeEdit(query, 0, [-0.1], frameRate, undefined, undefined);
+    applyVolumeEdit(query, 0, [6, 6, 6, 6], frameRate, 1, 3);
 
-    expect(query.volume).toEqual([0]);
+    expect(query.volume[0]).toBe(0.1);
+    expect(query.volume[1]).toBeCloseTo(0.2 * decibelToLinear(6));
+    expect(query.volume[2]).toBeCloseTo(0.3 * decibelToLinear(6));
+    expect(query.volume[3]).toBe(0.4);
   });
 });

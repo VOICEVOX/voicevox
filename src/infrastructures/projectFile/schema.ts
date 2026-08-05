@@ -9,6 +9,7 @@ import {
   singingTeacherSchema,
   tempoSchema,
   timeSignatureSchema,
+  volumeEditValueSchema,
 } from "@/domain/project/schema";
 
 // プロジェクトファイルのトラックのスキーマ
@@ -20,7 +21,7 @@ export const projectFileTrackSchema = z.object({
   volumeRangeAdjustment: z.number(),
   notes: z.array(noteSchema),
   pitchEditData: z.array(z.number()),
-  volumeEditData: z.array(z.number()),
+  volumeEditData: z.array(volumeEditValueSchema),
   phonemeTimingEditData: z.record(
     noteIdSchema,
     z.array(phonemeTimingEditSchema),

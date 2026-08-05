@@ -83,3 +83,10 @@ export async function fillAudioCell(page: Page, index: number, text: string) {
 export async function validateInput(locator: Locator, expectedText: string) {
   expect(await locator.inputValue()).toBe(expectedText);
 }
+
+/** QSplitterのlocatorから、中央のドラッグできる範囲のLocatorを取得する */
+export function locateQSplitterHandle(splitterLocator: Locator): Locator {
+  return splitterLocator.locator(
+    ":scope > .q-splitter__separator > .q-splitter__separator-area",
+  );
+}
