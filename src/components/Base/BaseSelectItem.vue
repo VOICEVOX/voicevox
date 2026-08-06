@@ -1,7 +1,6 @@
 <template>
   <SelectItem class="SelectItem" :value :disabled>
-    <SelectItemText v-if="$slots.default"><slot /></SelectItemText>
-    <SelectItemText v-else>{{ label }}</SelectItemText>
+    <SelectItemText>{{ label }}</SelectItemText>
     <SelectItemIndicator class="SelectItemIndicator" />
   </SelectItem>
 </template>
@@ -30,15 +29,12 @@ defineProps<{
   color: colors.$display;
   cursor: pointer;
   position: relative;
-  min-height: var(--base-select-item-min-height, #{vars.$size-control});
+  min-height: vars.$size-control;
   display: flex;
   align-items: center;
   background-color: colors.$clear;
   border: none;
-  padding: var(
-    --base-select-item-padding,
-    #{vars.$padding-1} #{vars.$padding-2}
-  );
+  padding: vars.$padding-1 vars.$padding-2;
   border-radius: vars.$radius-1;
 
   &:not([data-state="checked"]):hover {

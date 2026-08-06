@@ -1,79 +1,80 @@
 <template>
-  <BasePopover>
-    <template #trigger="{ open }">
-      <slot name="trigger" :open />
-    </template>
+  <QMenu
+    class="singing-settings-popover"
+    transitionShow="none"
+    transitionHide="none"
+  >
     <div class="settings">
-      <div class="teacher-field">
-        <div class="teacher-label">歌い方</div>
-        <div class="teacher-select">
-          <BaseSelect
-            :modelValue="singingTeacherStyleId"
-            ariaLabel="歌い方"
-            placeholder="未設定"
-            hideIcon
-            :disabled="uiLocked || singingTeacherOptions.length === 0"
-            @update:modelValue="setSingingTeacher"
-          >
-            <template #value>
-              <div
-                v-if="selectedSingingTeacherOption"
-                class="teacher-selected-item"
-              >
-                <SingerIcon
-                  round
-                  size="24px"
-                  :style="selectedSingingTeacherOption.style"
-                />
-                <span class="teacher-selected-label">
-                  {{ selectedSingingTeacherOption.label }}
-                </span>
-              </div>
-              <span v-else class="teacher-selected-label">未設定</span>
-            </template>
-            <BaseSelectItem
-              v-for="option in singingTeacherOptions"
-              :key="option.value"
-              class="teacher-option"
-              :value="option.value"
-              :label="option.label"
-            >
-              <div class="teacher-option-content">
-                <SingerIcon round size="24px" :style="option.style" />
-                <span class="teacher-option-label">{{ option.label }}</span>
-              </div>
-            </BaseSelectItem>
-          </BaseSelect>
-        </div>
-      </div>
-      <BaseNumberField
+      <QSelect
+        class="teacher-select"
+        :modelValue="singingTeacherStyleId"
+        :options="singingTeacherOptions"
+        label="歌い方"
+        placeholder="未設定"
+        outlined
+        dense
+        hideBottomSpace
+        hideDropdownIcon
+        optionsDense
+        popupContentClass="teacher-select-menu"
+        transitionShow="none"
+        transitionHide="none"
+        emitValue
+        mapOptions
+        :disable="uiLocked || singingTeacherOptions.length === 0"
+        @update:modelValue="setSingingTeacher"
+      >
+        <template #selected-item="scope">
+          <div class="teacher-selected-item">
+            <SingerIcon round size="24px" :style="scope.opt.style" />
+            <span class="teacher-selected-label">{{ scope.opt.label }}</span>
+          </div>
+        </template>
+        <template #option="scope">
+          <QItem v-bind="scope.itemProps" class="teacher-option">
+            <QItemSection avatar class="teacher-option-avatar">
+              <SingerIcon round size="24px" :style="scope.opt.style" />
+            </QItemSection>
+            <QItemSection>
+              <QItemLabel class="teacher-option-label">
+                {{ scope.opt.label }}
+              </QItemLabel>
+            </QItemSection>
+          </QItem>
+        </template>
+      </QSelect>
+      <QInput
+        type="number"
         :modelValue="track.volumeRangeAdjustment"
         label="声量"
+        outlined
+        dense
+        hideBottomSpace
         :min="MIN_VOLUME_RANGE_ADJUSTMENT"
         :max="MAX_VOLUME_RANGE_ADJUSTMENT"
-        :step="1"
-        :disabled="uiLocked"
-        @update:modelValue="setVolumeRangeAdjustment"
+        step="1"
+        :disable="uiLocked"
+        @change="setVolumeRangeAdjustment"
       />
-      <BaseNumberField
+      <QInput
+        type="number"
         :modelValue="track.keyRangeAdjustment"
         label="音域"
+        outlined
+        dense
+        hideBottomSpace
         :min="MIN_KEY_RANGE_ADJUSTMENT"
         :max="MAX_KEY_RANGE_ADJUSTMENT"
-        :step="1"
-        :disabled="uiLocked"
-        @update:modelValue="setKeyRangeAdjustment"
+        step="1"
+        :disable="uiLocked"
+        @change="setKeyRangeAdjustment"
       />
     </div>
-  </BasePopover>
+  </QMenu>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import BaseNumberField from "@/components/Base/BaseNumberField.vue";
-import BasePopover from "@/components/Base/BasePopover.vue";
-import BaseSelect from "@/components/Base/BaseSelect.vue";
-import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { getOrThrow } from "@/helpers/mapHelper";
 import {
@@ -137,23 +138,20 @@ const singingTeacherStyleId = computed(() => {
   return track.value.singingTeacher?.styleId;
 });
 
-const selectedSingingTeacherOption = computed(() =>
-  singingTeacherOptions.value.find(
-    (option) => option.value === singingTeacherStyleId.value,
-  ),
-);
-
-const setSingingTeacher = (styleId: StyleId | undefined) => {
-  if (styleId == undefined) {
-    return;
-  }
+const setSingingTeacher = (styleId: StyleId) => {
   void store.actions.COMMAND_SET_SINGING_TEACHER({
     trackId: props.trackId,
     singingTeacher: { styleId },
   });
 };
 
-const setKeyRangeAdjustment = (keyRangeAdjustment: number) => {
+type AdjustmentInputValue = string | number | null;
+
+const setKeyRangeAdjustment = (value: AdjustmentInputValue) => {
+  if (value == undefined || value === "") {
+    return;
+  }
+  const keyRangeAdjustment = Number(value);
   if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
     return;
   }
@@ -163,7 +161,11 @@ const setKeyRangeAdjustment = (keyRangeAdjustment: number) => {
   });
 };
 
-const setVolumeRangeAdjustment = (volumeRangeAdjustment: number) => {
+const setVolumeRangeAdjustment = (value: AdjustmentInputValue) => {
+  if (value == undefined || value === "") {
+    return;
+  }
+  const volumeRangeAdjustment = Number(value);
   if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
     return;
   }
@@ -175,14 +177,11 @@ const setVolumeRangeAdjustment = (volumeRangeAdjustment: number) => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/v2/variables" as vars;
-@use "@/styles/v2/colors" as colors;
-
 .settings {
   display: grid;
   width: 280px;
   gap: 12px;
-  padding: vars.$padding-2;
+  padding: 16px;
 }
 
 .teacher-selected-item {
@@ -190,7 +189,8 @@ const setVolumeRangeAdjustment = (volumeRangeAdjustment: number) => {
   align-items: center;
   width: 100%;
   min-width: 0;
-  gap: vars.$gap-1;
+  margin-top: 4px;
+  gap: 8px;
 
   :deep(.q-avatar) {
     border-radius: 50%;
@@ -203,46 +203,33 @@ const setVolumeRangeAdjustment = (volumeRangeAdjustment: number) => {
   white-space: nowrap;
 }
 
-.teacher-field {
-  display: grid;
-  gap: 4px;
-}
-
-.teacher-label {
-  color: colors.$display-sub;
-  font-size: 12px;
-  line-height: 12px;
-}
-
-.teacher-select {
-  :deep(.SelectTrigger) {
-    width: 100%;
-    height: vars.$size-control;
-    min-height: vars.$size-control;
-    padding: 0 12px;
-  }
-}
-
-.teacher-option {
-  --base-select-item-min-height: #{vars.$size-listitem};
-  --base-select-item-padding: 0 #{vars.$padding-2};
-}
-
-.teacher-option-content {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  gap: vars.$gap-1;
+.teacher-option-avatar {
+  min-width: 32px;
+  padding-right: 8px;
 
   :deep(.q-avatar) {
     border-radius: 50%;
   }
 }
 
+.teacher-select {
+  :deep(.q-field__control),
+  :deep(.q-field__marginal) {
+    height: 56px;
+    min-height: 56px;
+  }
+}
+
+.teacher-option {
+  min-height: 40px;
+  padding: 0 12px;
+}
+
 .teacher-option-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   line-height: 20px;
+}
+
+:global(.teacher-select-menu) {
+  background: var(--scheme-color-surface-container);
 }
 </style>
