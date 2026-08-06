@@ -28,6 +28,7 @@ import {
   currentDateString,
   DEFAULT_PROJECT_NAME,
   DEFAULT_STYLE_NAME,
+  findInitialSingingTeacher,
   generateLabelFileData,
   type PhonemeTimingLabel,
   sanitizeFileName,
@@ -818,9 +819,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_SINGER: {
     // 歌手をセットする。
     // withRelatedがtrueの場合、関連する情報もセットする。
+    // 歌い方が未設定の場合は初期値を補完する。設定済みの歌い方は上書きしない。
     mutation(state, { singer, withRelated, trackId }) {
       const track = getOrThrow(state.tracks, trackId);
       track.singer = singer;
+
+      if (singer != undefined && track.singingTeacher == undefined) {
+        track.singingTeacher = findInitialSingingTeacher(
+          singer.styleId,
+          state.characterInfos[singer.engineId] ?? [],
+        );
+      }
 
       if (withRelated == true && singer != undefined) {
         // 音域調整量マジックナンバーを設定するワークアラウンド
@@ -854,6 +863,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         withRelated,
         trackId,
       });
+    },
+  },
+
+  SET_SINGING_TEACHER: {
+    mutation(state, { singingTeacher, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.singingTeacher = singingTeacher;
+    },
+    action({ mutations }, { singingTeacher, trackId }) {
+      mutations.SET_SINGING_TEACHER({ singingTeacher, trackId });
     },
   },
 
@@ -1395,7 +1414,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // イベントで渡された各フレーズを処理
         for (const [phraseKey, eventPhrase] of event.phrases) {
-          const singerIsNotSet = eventPhrase.singer == undefined;
+          const isNotRenderable = !eventPhrase.isRenderable;
           const renderingIsNeeded =
             eventPhrase.query == undefined ||
             eventPhrase.singingPitch == undefined ||
@@ -1409,8 +1428,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             startTime: eventPhrase.startTime,
             minNonPauseStartFrame: eventPhrase.minNonPauseStartFrame,
             maxNonPauseEndFrame: eventPhrase.maxNonPauseEndFrame,
-            state: singerIsNotSet
-              ? "SINGER_IS_NOT_SET" // シンガー未設定
+            state: isNotRenderable
+              ? "SINGER_IS_NOT_SET" // シンガーまたは歌い方が未設定
               : renderingIsNeeded
                 ? "WAITING_TO_BE_RENDERED" // レンダリング待ち
                 : "RENDERED", // レンダリング完了 (キャッシュヒット)
@@ -1632,7 +1651,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       // SongTrackRenderer を作成
       songTrackRenderer = new SongTrackRenderer({
         config: {
-          singingTeacherStyleId: StyleId(6000), // TODO: UIで設定できるようにする
           lastRestDurationSeconds: 0.5,
           fadeOutDurationSeconds: 0.15,
           firstRestMinDurationSeconds: 0.12,
@@ -3488,6 +3506,7 @@ export const singingStorePlugins: StorePlugins = [
         state.tempos,
         [...state.tracks.values()].map((track) => [
           track.singer,
+          track.singingTeacher,
           track.keyRangeAdjustment,
           track.volumeRangeAdjustment,
           track.notes,
@@ -3540,6 +3559,20 @@ export const singingCommandStore = transformCommandStore(
       async action({ actions, mutations }, { singer, withRelated, trackId }) {
         void actions.SETUP_SINGER({ singer });
         mutations.COMMAND_SET_SINGER({ singer, withRelated, trackId });
+      },
+    },
+    COMMAND_SET_SINGING_TEACHER: {
+      mutation(draft, { singingTeacher, trackId }) {
+        singingStore.mutations.SET_SINGING_TEACHER(draft, {
+          singingTeacher,
+          trackId,
+        });
+      },
+      action({ mutations }, { singingTeacher, trackId }) {
+        mutations.COMMAND_SET_SINGING_TEACHER({
+          singingTeacher,
+          trackId,
+        });
       },
     },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
@@ -3887,6 +3920,7 @@ export const singingCommandStore = transformCommandStore(
         const { trackId, track } = await actions.CREATE_TRACK();
         const sourceTrack = getOrThrow(state.tracks, prevTrackId);
         track.singer = sourceTrack.singer;
+        track.singingTeacher = sourceTrack.singingTeacher;
         track.keyRangeAdjustment = sourceTrack.keyRangeAdjustment;
         track.volumeRangeAdjustment = sourceTrack.volumeRangeAdjustment;
         mutations.COMMAND_INSERT_EMPTY_TRACK({

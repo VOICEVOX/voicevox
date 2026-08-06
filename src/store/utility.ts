@@ -2,10 +2,12 @@ import * as diff from "fast-array-diff";
 import type {
   CharacterInfo,
   PresetSliderKey,
+  StyleId,
   StyleInfo,
   StyleType,
   ToolbarButtonTagType,
 } from "@/type/preload";
+import type { SingingTeacher } from "@/domain/project/type";
 import type { AccentPhrase, Mora } from "@/openapi";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { DEFAULT_TRACK_NAME, isVowel } from "@/sing/domain";
@@ -472,14 +474,61 @@ export const isOnCommandOrCtrlKeyDown = (event: {
 }) => (isMac && event.metaKey) || (!isMac && event.ctrlKey);
 
 /**
- * スタイルがシングエディタで利用可能なスタイルかどうかを判定します。
+ * スタイルが歌い方の生成に利用可能かどうかを判定します。
  */
-export const isSingingStyle = (styleInfo: StyleInfo) => {
+export const isSingingTeacherStyle = (styleInfo: StyleInfo) => {
   return (
-    styleInfo.styleType === "frame_decode" ||
-    styleInfo.styleType === "sing" ||
-    styleInfo.styleType === "singing_teacher"
+    styleInfo.styleType === "singing_teacher" || styleInfo.styleType === "sing"
   );
+};
+
+/**
+ * 歌手に対して初期値として設定する歌い方を返します。無ければundefinedを返します。
+ */
+export const findInitialSingingTeacher = (
+  singerStyleId: StyleId,
+  engineCharacterInfos: CharacterInfo[],
+): SingingTeacher | undefined => {
+  const singerCharacterStyles =
+    engineCharacterInfos.find((characterInfo) =>
+      characterInfo.metas.styles.some(
+        (styleInfo) => styleInfo.styleId === singerStyleId,
+      ),
+    )?.metas.styles ?? [];
+  const engineStyles = engineCharacterInfos.flatMap(
+    (characterInfo) => characterInfo.metas.styles,
+  );
+
+  // 優先順: 歌手自身のスタイル → 同じキャラクターのスタイル → 同じエンジンの他キャラクターのスタイル
+  const teacherStyle = [
+    ...singerCharacterStyles.filter(
+      (styleInfo) => styleInfo.styleId === singerStyleId,
+    ),
+    ...singerCharacterStyles,
+    ...engineStyles,
+  ].find(isSingingTeacherStyle);
+
+  return teacherStyle == undefined
+    ? undefined
+    : { styleId: teacherStyle.styleId };
+};
+
+/**
+ * CharacterInfo内のスタイルを条件で絞り込み、該当スタイルがないキャラクターを除外します。
+ */
+export const filterCharacterInfosByStyle = (
+  characterInfos: CharacterInfo[],
+  predicate: (styleInfo: StyleInfo) => boolean,
+): CharacterInfo[] => {
+  return characterInfos
+    .map((characterInfo) => ({
+      ...characterInfo,
+      metas: {
+        ...characterInfo.metas,
+        styles: characterInfo.metas.styles.filter(predicate),
+      },
+    }))
+    .filter((characterInfo) => characterInfo.metas.styles.length > 0);
 };
 
 /**
@@ -492,27 +541,22 @@ export const filterCharacterInfosByStyleType = (
   characterInfos: CharacterInfo[],
   styleType: StyleType | "singerLike",
 ): CharacterInfo[] => {
-  const withStylesFiltered: CharacterInfo[] = characterInfos.map(
-    (characterInfo) => {
-      const styles = characterInfo.metas.styles.filter((styleInfo) => {
-        if (styleType === "singerLike") {
-          return isSingingStyle(styleInfo);
-        }
-        // 過去のエンジンにはstyleTypeが存在しないので、「singerLike以外」をtalkとして扱っている。
-        if (styleType === "talk") {
-          return !isSingingStyle(styleInfo);
-        }
-        return styleInfo.styleType === styleType;
-      });
-      return { ...characterInfo, metas: { ...characterInfo.metas, styles } };
-    },
-  );
-
-  const withoutEmptyStyles = withStylesFiltered.filter(
-    (characterInfo) => characterInfo.metas.styles.length > 0,
-  );
-
-  return withoutEmptyStyles;
+  return filterCharacterInfosByStyle(characterInfos, (styleInfo) => {
+    if (styleType === "singerLike") {
+      return (
+        styleInfo.styleType === "frame_decode" || styleInfo.styleType === "sing"
+      );
+    }
+    // 過去のエンジンにはstyleTypeが存在しないので、「singerLike以外」をtalkとして扱っている。
+    if (styleType === "talk") {
+      return (
+        styleInfo.styleType !== "frame_decode" &&
+        styleInfo.styleType !== "singing_teacher" &&
+        styleInfo.styleType !== "sing"
+      );
+    }
+    return styleInfo.styleType === styleType;
+  });
 };
 
 export type PhonemeTimingLabel = {

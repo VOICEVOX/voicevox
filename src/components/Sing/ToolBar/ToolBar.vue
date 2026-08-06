@@ -9,29 +9,7 @@
         flat
         @click="toggleSidebar"
       />
-      <CharacterMenuButton />
-      <div class="sing-adjustment">
-        <QInput
-          type="number"
-          dense
-          :modelValue="keyRangeAdjustment"
-          label="音域"
-          hideBottomSpace
-          unelevated
-          class="key-range-adjustment"
-          @change="setKeyRangeAdjustment"
-        />
-        <QInput
-          type="number"
-          dense
-          :modelValue="volumeRangeAdjustment"
-          label="声量"
-          hideBottomSpace
-          unelevated
-          class="volume-range-adjustment"
-          @change="setVolumeRangeAdjustment"
-        />
-      </div>
+      <SingerRow :trackId="selectedTrackId" />
       <QInput
         type="number"
         :modelValue="currentBpm"
@@ -180,12 +158,8 @@ import {
   isValidBeatType,
   isValidBpm,
 } from "@/sing/music";
-import {
-  getSnapTypes,
-  isValidKeyRangeAdjustment,
-  isValidVolumeRangeAdjustment,
-} from "@/sing/domain";
-import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
+import { getSnapTypes } from "@/sing/domain";
+import SingerRow from "@/components/Sing/TrackCard/SingerRow.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import type { SequencerEditTarget } from "@/store/type";
 import { UnreachableError } from "@/type/utility";
@@ -251,12 +225,6 @@ const toggleSidebar = () => {
 
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
-const keyRangeAdjustment = computed(
-  () => store.getters.SELECTED_TRACK.keyRangeAdjustment,
-);
-const volumeRangeAdjustment = computed(
-  () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
-);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const tpqn = computed(() => store.state.tpqn);
 const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
@@ -334,32 +302,6 @@ const setBpm = (bpm: string | number | null) => {
       position,
       bpm: bpmValue,
     },
-  });
-};
-
-const setKeyRangeAdjustment = (
-  KeyRangeAdjustmentStr: string | number | null,
-) => {
-  const KeyRangeAdjustmentValue = Number(KeyRangeAdjustmentStr);
-  if (!isValidKeyRangeAdjustment(KeyRangeAdjustmentValue)) {
-    return;
-  }
-  void store.actions.COMMAND_SET_KEY_RANGE_ADJUSTMENT({
-    keyRangeAdjustment: KeyRangeAdjustmentValue,
-    trackId: selectedTrackId.value,
-  });
-};
-
-const setVolumeRangeAdjustment = (
-  volumeRangeAdjustmentStr: string | number | null,
-) => {
-  const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
-  if (!isValidVolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
-    return;
-  }
-  void store.actions.COMMAND_SET_VOLUME_RANGE_ADJUSTMENT({
-    volumeRangeAdjustment: volumeRangeAdjustmentValue,
-    trackId: selectedTrackId.value,
   });
 };
 
@@ -577,52 +519,6 @@ const snapTypeSelectModel = computed({
   justify-content: center;
   display: flex;
   flex: 1;
-}
-
-.sing-adjustment {
-  height: 40px;
-  border: 1px solid var(--scheme-color-outline-variant);
-  border-left: 0;
-  border-radius: 0 4px 4px 0;
-  padding: 0 0 0 8px;
-  display: flex;
-  align-items: center;
-}
-
-.key-range-adjustment {
-  margin-right: 0px;
-  width: 40px;
-
-  :deep(.q-field__control) {
-    height: 40px;
-
-    &:before {
-      border: 1px solid transparent;
-    }
-
-    &:hover:before {
-      border-color: transparent;
-      border-bottom: 1px solid var(--scheme-color-outline);
-    }
-  }
-}
-
-.volume-range-adjustment {
-  width: 40px;
-
-  :deep(.q-field__control) {
-    padding: 0 2px;
-    height: 40px;
-
-    &:before {
-      border: 1px solid transparent;
-    }
-
-    &:hover:before {
-      border-color: transparent;
-      border-bottom: 1px solid var(--scheme-color-outline);
-    }
-  }
 }
 
 .sing-tempo {

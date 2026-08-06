@@ -6,6 +6,7 @@ import {
   noteSchema,
   phonemeTimingEditSchema,
   singerSchema,
+  singingTeacherSchema,
   tempoSchema,
   timeSignatureSchema,
   volumeEditValueSchema,
@@ -15,6 +16,7 @@ import {
 export const projectFileTrackSchema = z.object({
   name: z.string(),
   singer: singerSchema.optional(),
+  singingTeacher: singingTeacherSchema.optional(),
   keyRangeAdjustment: z.number(),
   volumeRangeAdjustment: z.number(),
   notes: z.array(noteSchema),

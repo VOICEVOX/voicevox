@@ -78,8 +78,15 @@ export const noteSchema = z.object({
   lyric: z.string().nullable(), // 歌詞未入力のときはnull
 });
 
-export const singerSchema = z.object({
+const engineStyleSchema = z.object({
   engineId: engineIdSchema,
+  styleId: styleIdSchema,
+});
+
+export const singerSchema = engineStyleSchema;
+
+export const singingTeacherSchema = z.object({
+  // NOTE: 歌い方教師のエンジンはシンガーのエンジンに従う形とし、engineIdはもたない
   styleId: styleIdSchema,
 });
 
@@ -94,6 +101,7 @@ export const volumeEditValueSchema = z.number().nullable();
 export const trackSchema = z.object({
   name: z.string(),
   singer: singerSchema.optional(),
+  singingTeacher: singingTeacherSchema.optional(),
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),

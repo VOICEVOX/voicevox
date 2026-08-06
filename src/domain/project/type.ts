@@ -4,6 +4,7 @@ import type {
   noteSchema,
   phonemeTimingEditSchema,
   singerSchema,
+  singingTeacherSchema,
   tempoSchema,
   timeSignatureSchema,
   trackSchema,
@@ -18,6 +19,8 @@ export type TimeSignature = z.infer<typeof timeSignatureSchema>;
 export type Note = z.infer<typeof noteSchema>;
 
 export type Singer = z.infer<typeof singerSchema>;
+
+export type SingingTeacher = z.infer<typeof singingTeacherSchema>;
 
 export type Track = z.infer<typeof trackSchema>;
 

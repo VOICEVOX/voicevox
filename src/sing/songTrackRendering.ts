@@ -32,7 +32,13 @@ import {
 import type { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import type { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
-import type { Note, Singer, Tempo, Track } from "@/domain/project/type";
+import type {
+  Note,
+  Singer,
+  SingingTeacher,
+  Tempo,
+  Track,
+} from "@/domain/project/type";
 import { UnreachableError } from "@/type/utility";
 
 /**
@@ -52,7 +58,7 @@ export type SnapshotForRender = Readonly<{
  * レンダリング用のフレーズ
  */
 export type PhraseForRender = {
-  readonly singer: Singer | undefined;
+  readonly isRenderable: boolean;
   readonly firstRestDuration: number;
   readonly notes: Note[];
   readonly startTicks: number;
@@ -76,6 +82,7 @@ export type PhraseForRender = {
  */
 type QuerySource = Readonly<{
   engineId: EngineId;
+  singingTeacher: SingingTeacher;
   engineFrameRate: number;
   tpqn: number;
   tempos: Tempo[];
@@ -92,6 +99,7 @@ type QuerySource = Readonly<{
  */
 type SingingPitchSource = Readonly<{
   engineId: EngineId;
+  singingTeacher: SingingTeacher;
   engineFrameRate: number;
   tpqn: number;
   tempos: Tempo[];
@@ -107,6 +115,7 @@ type SingingPitchSource = Readonly<{
  */
 type SingingVolumeSource = Readonly<{
   engineId: EngineId;
+  singingTeacher: SingingTeacher;
   engineFrameRate: number;
   tpqn: number;
   tempos: Tempo[];
@@ -162,7 +171,6 @@ type EngineSongApi = Readonly<{
  * ソングトラックのレンダリングの設定。
  */
 type SongTrackRenderingConfig = Readonly<{
-  singingTeacherStyleId: StyleId;
   firstRestMinDurationSeconds: number;
   lastRestDurationSeconds: number;
   fadeOutDurationSeconds: number;
@@ -452,12 +460,13 @@ const createPhrasesFromNotes = async (
 ) => {
   const track = getOrThrow(snapshot.tracks, trackId);
 
+  // シンガーと歌い方が揃っていないとエンジンにリクエストできない
+  const singer = track.singer;
+  const isRenderable = singer != undefined && track.singingTeacher != undefined;
+
   let engineFrameRate: number | undefined = undefined;
-  if (track.singer != undefined) {
-    engineFrameRate = getOrThrow(
-      snapshot.engineFrameRates,
-      track.singer.engineId,
-    );
+  if (isRenderable) {
+    engineFrameRate = getOrThrow(snapshot.engineFrameRates, singer.engineId);
   }
 
   const phrases = new Map<PhraseKey, PhraseForRender>();
@@ -540,7 +549,7 @@ const createPhrasesFromNotes = async (
     }
 
     const phrase: PhraseForRender = {
-      singer: track.singer,
+      isRenderable,
       firstRestDuration: phraseFirstRestDuration,
       notes: phraseNotes,
       startTicks: phraseFirstNote.position,
@@ -606,12 +615,16 @@ const generateQuerySource = (
   if (track.singer == undefined) {
     throw new Error("track.singer is undefined.");
   }
+  if (track.singingTeacher == undefined) {
+    throw new Error("track.singingTeacher is undefined.");
+  }
   const engineFrameRate = getOrThrow(
     snapshot.engineFrameRates,
     track.singer.engineId,
   );
   return {
     engineId: track.singer.engineId,
+    singingTeacher: track.singingTeacher,
     engineFrameRate,
     tpqn: snapshot.tpqn,
     tempos: snapshot.tempos,
@@ -631,6 +644,9 @@ const generateSingingPitchSource = (
   const track = getOrThrow(snapshot.tracks, phrase.trackId);
   if (track.singer == undefined) {
     throw new Error("track.singer is undefined.");
+  }
+  if (track.singingTeacher == undefined) {
+    throw new Error("track.singingTeacher is undefined.");
   }
   if (phrase.query == undefined) {
     throw new Error("phrase.query is undefined.");
@@ -654,6 +670,7 @@ const generateSingingPitchSource = (
 
   return {
     engineId: track.singer.engineId,
+    singingTeacher: track.singingTeacher,
     engineFrameRate: phrase.query.frameRate,
     tpqn: snapshot.tpqn,
     tempos: snapshot.tempos,
@@ -672,6 +689,9 @@ const generateSingingVolumeSource = (
   const track = getOrThrow(snapshot.tracks, phrase.trackId);
   if (track.singer == undefined) {
     throw new Error("track.singer is undefined.");
+  }
+  if (track.singingTeacher == undefined) {
+    throw new Error("track.singingTeacher is undefined.");
   }
   if (phrase.query == undefined) {
     throw new Error("phrase.query is undefined.");
@@ -709,6 +729,7 @@ const generateSingingVolumeSource = (
 
   return {
     engineId: track.singer.engineId,
+    singingTeacher: track.singingTeacher,
     engineFrameRate: phrase.query.frameRate,
     tpqn: snapshot.tpqn,
     tempos: snapshot.tempos,
@@ -804,7 +825,7 @@ const generateQuery = async (
 
   const query = await engineSongApi.fetchFrameAudioQuery({
     engineId: querySource.engineId,
-    styleId: config.singingTeacherStyleId,
+    styleId: querySource.singingTeacher.styleId,
     engineFrameRate: querySource.engineFrameRate,
     notes: notesForRequestToEngine,
   });
@@ -847,7 +868,7 @@ const generateSingingPitch = async (
     notes: notesForRequestToEngine,
     query: queryForPitchGeneration,
     engineId: singingPitchSource.engineId,
-    styleId: config.singingTeacherStyleId,
+    styleId: singingPitchSource.singingTeacher.styleId,
   });
 
   shiftPitch(singingPitch, singingPitchSource.keyRangeAdjustment);
@@ -884,7 +905,7 @@ const generateSingingVolume = async (
     notes: notesForRequestToEngine,
     query: queryForVolumeGeneration,
     engineId: singingVolumeSource.engineId,
-    styleId: config.singingTeacherStyleId,
+    styleId: singingVolumeSource.singingTeacher.styleId,
   });
 
   muteLastPauSection(
@@ -1097,7 +1118,7 @@ export class SongTrackRenderer {
       });
 
       // レンダリング可能なフレーズを抽出
-      const renderablePhrases = this.filterRenderablePhrases(phrases, snapshot);
+      const renderablePhrases = this.filterRenderablePhrases(phrases);
 
       // 既存のキャッシュデータをフレーズに適用
       await this.applyCachedDataToPhrases(renderablePhrases, snapshot);
@@ -1197,15 +1218,10 @@ export class SongTrackRenderer {
    * @param phrases 全てのフレーズを含むマップ。
    * @returns レンダリング可能なフレーズのみを含む新しいマップ。
    */
-  private filterRenderablePhrases(
-    phrases: Map<PhraseKey, PhraseForRender>,
-    snapshot: SnapshotForRender,
-  ) {
+  private filterRenderablePhrases(phrases: Map<PhraseKey, PhraseForRender>) {
     const renderablePhrases = new Map<PhraseKey, PhraseForRender>();
     for (const [phraseKey, phrase] of phrases) {
-      // フレーズが属するトラックにシンガーが割り当てられていれば、レンダリング可能とする
-      const track = getOrThrow(snapshot.tracks, phrase.trackId);
-      if (track.singer != undefined) {
+      if (phrase.isRenderable) {
         renderablePhrases.set(phraseKey, phrase);
       }
     }

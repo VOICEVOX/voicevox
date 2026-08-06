@@ -27,6 +27,11 @@ import { decibelToLinear } from "@/sing/audio";
 
 const MAX_SNAP_TYPE = 32;
 
+export const MIN_KEY_RANGE_ADJUSTMENT = -28;
+export const MAX_KEY_RANGE_ADJUSTMENT = 28;
+export const MIN_VOLUME_RANGE_ADJUSTMENT = -20;
+export const MAX_VOLUME_RANGE_ADJUSTMENT = 20;
+
 export const isTracksEmpty = (tracks: Track[]) =>
   tracks.length === 0 || (tracks.length === 1 && tracks[0].notes.length === 0);
 
@@ -90,6 +95,7 @@ export function createDefaultTrack(): Track {
   return {
     name: DEFAULT_TRACK_NAME,
     singer: undefined,
+    singingTeacher: undefined,
     keyRangeAdjustment: 0,
     volumeRangeAdjustment: 0,
     notes: [],
@@ -117,16 +123,16 @@ export function isValidSnapType(snapType: number, tpqn: number) {
 export function isValidKeyRangeAdjustment(keyRangeAdjustment: number) {
   return (
     Number.isInteger(keyRangeAdjustment) &&
-    keyRangeAdjustment <= 28 &&
-    keyRangeAdjustment >= -28
+    keyRangeAdjustment <= MAX_KEY_RANGE_ADJUSTMENT &&
+    keyRangeAdjustment >= MIN_KEY_RANGE_ADJUSTMENT
   );
 }
 
 export function isValidVolumeRangeAdjustment(volumeRangeAdjustment: number) {
   return (
     Number.isInteger(volumeRangeAdjustment) &&
-    volumeRangeAdjustment <= 20 &&
-    volumeRangeAdjustment >= -20
+    volumeRangeAdjustment <= MAX_VOLUME_RANGE_ADJUSTMENT &&
+    volumeRangeAdjustment >= MIN_VOLUME_RANGE_ADJUSTMENT
   );
 }
 
