@@ -33,24 +33,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, shallowRef, watch } from "vue";
+import { computed, onBeforeUnmount, toRaw, watch } from "vue";
 import Presentation from "./Presentation.vue";
 import type { VolumeEditorPointerEvent } from "./useVolumeEditorPointerInput";
 import SequencerParameterGrid from "@/components/Sing/SequencerParameterGrid.vue";
 import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
-import type { VolumeEditValue } from "@/domain/project/type";
-import { useMounted } from "@/composables/useMounted";
 import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
-import { ensureNotNullish } from "@/type/utility";
-import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
 import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
 import { buildVolumeEditDisplayData } from "@/sing/volumeEditDisplay";
 import {
   deriveVolumeEditableFrameRanges,
   findVolumeEditableFrameRange,
-  type VolumeEditFrameRange,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
 import type { ViewportInfo } from "@/sing/viewHelper";
@@ -72,9 +67,24 @@ const emit = defineEmits<{
 const store = useStore();
 const volumeEditMode = relativeVolumeEditMode;
 
-const editableFrameRanges = shallowRef<VolumeEditableFrameRange[]>([]);
-const effectiveFramewise = shallowRef<VolumeEditValue[]>([]);
-const previewEraseRanges = shallowRef<VolumeEditFrameRange[]>([]);
+const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
+const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
+const tempos = computed(() => store.state.tempos);
+const tpqn = computed(() => store.state.tpqn);
+const editorFrameRate = computed(() => store.state.editorFrameRate);
+const isDark = computed(() => store.state.currentTheme === "Dark");
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const editableFrameRanges = computed<readonly VolumeEditableFrameRange[]>(() =>
+  deriveVolumeEditableFrameRanges({
+    phrases: store.state.phrases.values(),
+    phraseQueries: store.state.phraseQueries,
+    phraseSingingVolumes: store.state.phraseSingingVolumes,
+    trackId: selectedTrackId.value,
+    frameRate: editorFrameRate.value,
+  }),
+);
 
 const {
   volumePreviewEdit,
@@ -98,21 +108,21 @@ const highlightedEditableRange = computed(() => {
   return findVolumeEditableFrameRange(frame, editableFrameRanges.value);
 });
 
-const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
-const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
-const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
-const tempos = computed(() => store.state.tempos);
-const tpqn = computed(() => store.state.tpqn);
-const editorFrameRate = computed(() => store.state.editorFrameRate);
-const timeSignatures = computed(() => store.state.timeSignatures);
-const isDark = computed(() => store.state.currentTheme === "Dark");
-const uiLocked = computed(() => store.getters.UI_LOCKED);
-
-const numMeasuresContext = ensureNotNullish(
-  inject(numMeasuresInjectionKey),
-  "numMeasuresContext is undefined.",
+const volumeEditDisplayData = computed(() =>
+  buildVolumeEditDisplayData({
+    // Store側では、volumeEditDataは要素を書き換えず配列ごと差し替えるようになっているので、要素単位の変更を追う必要がない。
+    // 要素まで追うと依存がフレーム数に比例して増えるため、toRawで要素を追跡の対象から外す。
+    volumeEditData: toRaw(selectedTrack.value.volumeEditData),
+    previewEdit: volumePreviewEdit.value,
+    editableRanges: editableFrameRanges.value,
+  }),
 );
-const { numMeasures } = numMeasuresContext;
+const effectiveFramewise = computed(
+  () => volumeEditDisplayData.value.effectiveFramewise,
+);
+const previewEraseRanges = computed(
+  () => volumeEditDisplayData.value.previewEraseRanges,
+);
 
 watch(previewMode, (mode) => {
   emit("update:needsAutoScroll", mode !== "IDLE");
@@ -141,69 +151,4 @@ const processPointerEvent = (event: VolumeEditorPointerEvent) => {
     pointerInfo: event.pointerInfo,
   });
 };
-
-// phrasesの要素はMapの中で書き換わるため、Mapインスタンスのwatchでは変更を検知できない。
-// 表示に影響するフィールドだけを文字列にして比較する
-const phraseSignature = computed(() =>
-  [...store.state.phrases.values()].map(
-    (phrase) =>
-      `${phrase.trackId}:${phrase.startTime}:${phrase.notes.length}:${phrase.minNonPauseStartFrame}:${phrase.maxNonPauseEndFrame}:${phrase.singingVolumeKey}`,
-  ),
-);
-
-const refreshEditableFrameRanges = () => {
-  editableFrameRanges.value = deriveVolumeEditableFrameRanges({
-    phrases: store.state.phrases.values(),
-    phraseQueries: store.state.phraseQueries,
-    phraseSingingVolumes: store.state.phraseSingingVolumes,
-    trackId: selectedTrackId.value,
-    frameRate: editorFrameRate.value,
-  });
-};
-
-const refreshVolumeEditDisplay = () => {
-  const displayData = buildVolumeEditDisplayData({
-    volumeEditData: selectedTrack.value.volumeEditData,
-    previewEdit: volumePreviewEdit.value,
-    editableRanges: editableFrameRanges.value,
-  });
-  effectiveFramewise.value = displayData.effectiveFramewise;
-  previewEraseRanges.value = displayData.previewEraseRanges;
-};
-
-const { mounted } = useMounted();
-
-// NOTE: mountedをwatchしているので、onMountedの直後に必ず1回実行される
-// NOTE: フレーズが変わると有効編集範囲が変わるため、表示データも再計算する
-watch(
-  [
-    mounted,
-    phraseSignature,
-    selectedTrackId,
-    tempos,
-    timeSignatures,
-    tpqn,
-    numMeasures,
-    editorFrameRate,
-  ],
-  ([isMounted]) => {
-    if (isMounted) {
-      refreshEditableFrameRanges();
-      refreshVolumeEditDisplay();
-    }
-  },
-);
-
-// 操作中のプレビューは毎フレーム更新されるため、フレーズ走査を伴う区間の再導出はせず
-// 表示データだけを更新する。区間が変わる更新は上のwatchが担い、こちらより先に実行される
-watch(
-  [
-    selectedTrackId,
-    () => selectedTrack.value.volumeEditData,
-    volumePreviewEdit,
-  ],
-  () => {
-    refreshVolumeEditDisplay();
-  },
-);
 </script>
