@@ -127,7 +127,6 @@ export class DrawVolumeState implements State<
         // pointermoveのプレビュー処理が次のanimation frameを待っている場合でも、
         // 確定位置を取りこぼさないように同期的に反映する
         this.currentCursorPos = position;
-        this.updateHighlightedFrame(context, position.frame);
         this.previewDrawVolume(context);
         this.innerContext.executePreviewProcess = false;
 
