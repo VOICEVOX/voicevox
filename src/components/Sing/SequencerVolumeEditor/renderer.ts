@@ -95,6 +95,7 @@ export const filterVolumeSegmentsByBaseXRange = (
     }
 
     const startIndex = findFirstVolumePointAtOrAfter(segment, range.startBaseX);
+    // 終了境界上の点まで含めて切り出すため、終了側は「より大きい」で探す
     const endIndex = findFirstVolumePointAfter(segment, range.endBaseX);
     const clippedSegment = segment.slice(startIndex, endIndex);
     if (clippedSegment.length >= 2) {

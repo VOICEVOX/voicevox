@@ -16,11 +16,16 @@ export type VolumeViewInfo = {
   readonly leftPadding: number;
 };
 
+/** normalizedY(下端0・上端1)を、上端を0とする画面Y座標へ変換する。 */
 export const volumeNormalizedYToScreenY = (
   normalizedY: number,
   viewportHeight: number,
 ) => (1 - normalizedY) * viewportHeight;
 
+/**
+ * baseXの昇順に並んだsegmentから、baseXがtargetBaseX以上となる
+ * 最初の点のインデックスを返す。該当する点がなければsegment.lengthを返す。
+ */
 export const findFirstVolumePointAtOrAfter = (
   segment: VolumeSegment,
   targetBaseX: number,
@@ -38,6 +43,10 @@ export const findFirstVolumePointAtOrAfter = (
   return low;
 };
 
+/**
+ * baseXの昇順に並んだsegmentから、baseXがtargetBaseXより大きくなる
+ * 最初の点のインデックスを返す。該当する点がなければsegment.lengthを返す。
+ */
 export const findFirstVolumePointAfter = (
   segment: VolumeSegment,
   targetBaseX: number,
