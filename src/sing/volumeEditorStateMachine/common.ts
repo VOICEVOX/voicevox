@@ -48,6 +48,12 @@ export type VolumeEditorRefs = {
   readonly previewMode: Ref<VolumeEditorPreviewMode>;
   readonly cursorState: Ref<CursorState>;
   readonly tooltipData: Ref<VolumeEditorTooltipData | undefined>;
+  /**
+   * ハイライトする編集可能区間を指し示すフレーム。
+   * このフレームが属する編集可能区間の全体がハイライトされる。
+   * 区間そのものを持たないのは、歌唱ボリュームのレンダリングが進むと編集可能区間が
+   * 増減し、区間の値を保持すると既に消えた区間や動く前の境界を指し続けるため。
+   */
   readonly highlightedFrame: Ref<number | undefined>;
 };
 
