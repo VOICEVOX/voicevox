@@ -18,9 +18,6 @@ export default createRule({
   },
   defaultOptions: [],
   create(context) {
-    const services = ESLintUtils.getParserServices(context);
-    const checker = services.program.getTypeChecker();
-
     function includesNullish(type: ts.Type): boolean {
       const parts = type.isUnion() ? type.types : [type];
       return parts.some(
@@ -43,6 +40,8 @@ export default createRule({
         const arg = node.arguments[0];
         if (!arg) return;
 
+        const services = ESLintUtils.getParserServices(context);
+        const checker = services.program.getTypeChecker();
         const tsNode = services.esTreeNodeToTSNodeMap.get(arg);
         const type = checker.getTypeAtLocation(tsNode);
 

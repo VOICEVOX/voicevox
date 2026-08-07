@@ -36,7 +36,6 @@
 </template>
 
 <script setup lang="ts">
-import { useDialogPluginComponent } from "quasar";
 import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
 import type { TimeSignature } from "@/domain/project/type";
@@ -48,9 +47,10 @@ const props = defineProps<{
   timeSignatureChange: Omit<TimeSignature, "measureNumber">;
   mode: "add" | "edit";
 }>();
-defineEmits({
-  ...useDialogPluginComponent.emitsObject,
-});
+defineEmits<{
+  ok: [payload: { timeSignatureChange: Omit<TimeSignature, "measureNumber"> }];
+  hide: [];
+}>();
 
 const timeSignatureChange = ref(
   cloneWithUnwrapProxy(props.timeSignatureChange),

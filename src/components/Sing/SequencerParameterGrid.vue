@@ -46,8 +46,7 @@ let canvasWidth: number | undefined;
 let canvasHeight: number | undefined;
 
 let gridLineColorsCache:
-  | { theme: "light" | "dark"; measure: Color; beat: Color }
-  | undefined;
+  { theme: "light" | "dark"; measure: Color; beat: Color } | undefined;
 
 const getGridLineColors = () => {
   const theme = currentTheme.value;

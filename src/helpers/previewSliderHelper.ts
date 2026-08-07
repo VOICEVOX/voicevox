@@ -43,7 +43,7 @@ export type PreviewSliderHelper = {
     step: Ref<number>;
     disable: Ref<boolean>;
     modelValue: Ref<number | null>;
-    "onUpdate:modelValue": (value: number) => void;
+    "onUpdate:modelValue": (value: number | null) => void;
     onChange: (value: number) => void;
     onWheel: (event: Events["onWheel"]) => void;
     onPan: QSliderProps["onPan"];
@@ -104,7 +104,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     }
   });
 
-  const updatePreviewValue = (value: number) => {
+  const updatePreviewValue = (value: number | null) => {
     previewValue.value = value;
   };
   const changePreviewValue = async () => {

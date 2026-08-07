@@ -74,7 +74,8 @@ export const OpenOfficialSite: Story = {
   name: "公式サイトを開くボタンを押す",
   args: { ...Opened.args },
   play: async ({ args }) => {
-    window.open = fn();
+    const openMock = fn();
+    window.open = openMock;
 
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
@@ -84,7 +85,7 @@ export const OpenOfficialSite: Story = {
     await userEvent.click(button);
 
     // 公式サイトが開かれる
-    await expect(window.open).toBeCalledWith(
+    await expect(openMock).toBeCalledWith(
       "https://voicevox.hiroshiba.jp/",
       "_blank",
     );

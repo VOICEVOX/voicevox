@@ -260,13 +260,11 @@ export function toPhonemeTimings(phonemes: FramePhoneme[]) {
  * 音素タイミング列を音素列に変換する。
  */
 export function toPhonemes(phonemeTimings: PhonemeTiming[]) {
-  return phonemeTimings.map(
-    (value): FramePhoneme => ({
-      phoneme: value.phoneme,
-      frameLength: value.endFrame - value.startFrame,
-      noteId: value.noteId,
-    }),
-  );
+  return phonemeTimings.map((value): FramePhoneme => ({
+    phoneme: value.phoneme,
+    frameLength: value.endFrame - value.startFrame,
+    noteId: value.noteId,
+  }));
 }
 
 /**

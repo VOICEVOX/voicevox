@@ -1,9 +1,11 @@
+allowBuilds:
+  "@openapitools/openapi-generator-cli": false
+  "@parcel/watcher": false
+  electron-winstaller: false
+  esbuild: false
+  tldjs: false
+  vue-demi: false
+
 managePackageManagerVersions: true
 
 minimumReleaseAge: 10080
-
-onlyBuiltDependencies:
-  - '@nestjs/core'
-  - '@openapitools/openapi-generator-cli'
-  - esbuild
-  - vue-demi

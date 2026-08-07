@@ -164,8 +164,7 @@ const phraseSignature = computed(() =>
 
 // CSS変数の解決はcanvasへの描画と読み取りを伴うため、テーマごとに結果をキャッシュする。
 let volumeLineColorsCache:
-  | { isDark: boolean; edited: Color; editing: Color }
-  | undefined;
+  { isDark: boolean; edited: Color; editing: Color } | undefined;
 
 const getVolumeLineColors = () => {
   if (volumeLineColorsCache?.isDark !== isDark.value) {
@@ -245,8 +244,7 @@ let resizeObserver: ResizeObserver | undefined;
 let renderInNextFrame = false;
 let isUnmounted = false;
 let viewportRectCache:
-  | { left: number; top: number; width: number; height: number }
-  | undefined;
+  { left: number; top: number; width: number; height: number } | undefined;
 // NOTE: ボリューム変更量（dB）のセグメントデータ。
 // リアクティビティは不要なため（renderInNextFrame経由で描画される）、refではなくplain変数で管理する。
 let volumeEditSegmentsData: VolumeSegment[] = [];

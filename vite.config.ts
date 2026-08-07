@@ -132,7 +132,7 @@ export default defineConfig((options) => {
               if (!skipLaunchElectron) {
                 // ここのprocess.argvは以下のような形で渡ってくる：
                 // ["node", ".../vite.js", (...vite用の引数...), "--", その他引数...]
-                const args: string[] = [".", "--no-sandbox"];
+                const args: string[] = ["..", "--no-sandbox"];
                 const doubleDashIndex = process.argv.indexOf("--");
                 if (doubleDashIndex !== -1) {
                   args.push("--", ...process.argv.slice(doubleDashIndex + 1));
@@ -283,38 +283,36 @@ const electronPreloadOptions = (
   },
   entries: Record<string, string>,
 ): ElectronOptions[] =>
-  Object.entries(entries).map(
-    ([name, entry]): ElectronOptions => ({
-      onstart({ reload }) {
-        if (!options.skipLaunchElectron) {
-          reload();
-        }
+  Object.entries(entries).map(([name, entry]): ElectronOptions => ({
+    onstart({ reload }) {
+      if (!options.skipLaunchElectron) {
+        reload();
+      }
+    },
+    vite: {
+      plugins: [isProduction && checkSuspiciousImportsPlugin({})],
+      resolve: {
+        tsconfigPaths: true,
       },
-      vite: {
-        plugins: [isProduction && checkSuspiciousImportsPlugin({})],
-        resolve: {
-          tsconfigPaths: true,
-        },
-        build: {
-          outDir: path.resolve(import.meta.dirname, "dist"),
-          sourcemap: options.sourcemap,
-          target: options.electronTargetVersion?.node,
-          rollupOptions: {
-            input: {
-              [name]: path.resolve(import.meta.dirname, entry),
-            },
-            output: {
-              format: "cjs",
-              codeSplitting: false,
-              entryFileNames: `[name].cjs`,
-              chunkFileNames: `[name].cjs`,
-              assetFileNames: `[name].[ext]`,
-            },
+      build: {
+        outDir: path.resolve(import.meta.dirname, "dist"),
+        sourcemap: options.sourcemap,
+        target: options.electronTargetVersion?.node,
+        rollupOptions: {
+          input: {
+            [name]: path.resolve(import.meta.dirname, entry),
+          },
+          output: {
+            format: "cjs",
+            codeSplitting: false,
+            entryFileNames: `[name].cjs`,
+            chunkFileNames: `[name].cjs`,
+            assetFileNames: `[name].[ext]`,
           },
         },
       },
-    }),
-  );
+    },
+  }));
 
 /** バックエンドAPIをフロントエンドから実行するコードを注入する */
 const injectLoaderScriptPlugin = (scriptPath: string): Plugin => {

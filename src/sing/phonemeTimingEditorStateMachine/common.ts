@@ -71,9 +71,7 @@ export type PhonemeTimingEditorInput =
     };
 
 export type PhonemeTimingEditorPreviewMode =
-  | "IDLE"
-  | "MOVE_PHONEME_TIMING"
-  | "ERASE_PHONEME_TIMING";
+  "IDLE" | "MOVE_PHONEME_TIMING" | "ERASE_PHONEME_TIMING";
 
 export type PhonemeTimingEditorRefs = {
   readonly previewPhonemeTiming: Ref<PhonemeTimingPreview | undefined>;
@@ -118,8 +116,7 @@ export type PhonemeTimingEditorContext = PhonemeTimingEditorRefs &
   };
 
 export type PhonemeTimingEditorIdleStateId =
-  | "movePhonemeTimingToolIdle"
-  | "erasePhonemeTimingToolIdle";
+  "movePhonemeTimingToolIdle" | "erasePhonemeTimingToolIdle";
 
 export type PhonemeTimingEditorStateDefinitions = StateDefinitions<
   [
