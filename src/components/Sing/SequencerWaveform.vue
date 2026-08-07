@@ -24,13 +24,8 @@ import type { SequenceId } from "@/store/type";
 import type { Tempo } from "@/domain/project/type";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { decibelToLinear } from "@/sing/audio";
 
 type WaveformDisplayMode = "SYMMETRIC" | "BOTTOM_ALIGNED";
-
-const BOTTOM_ALIGNED_MIN_DB = -48;
-const BOTTOM_ALIGNED_MIN_AMPLITUDE = decibelToLinear(BOTTOM_ALIGNED_MIN_DB);
-const BOTTOM_ALIGNED_DISPLAY_GAIN = 1.5;
 
 const props = withDefaults(
   defineProps<{
@@ -326,13 +321,7 @@ function drawWaveform(
       if (x < -cullingMargin || x > canvasWidth + cullingMargin) {
         continue;
       }
-      // ボリューム編集では結果波形の正側ピークだけを片側表示する。
-      // そのまま表示だとボリューム編集で重要な変化・差異が読み取りづらいため、
-      // 上端の飽和を抑えつつ変化を読み取れるよう、表示上のみ1.5倍に拡大する。
-      const amplitude =
-        maxValues[i] >= BOTTOM_ALIGNED_MIN_AMPLITUDE
-          ? clamp(maxValues[i] * BOTTOM_ALIGNED_DISPLAY_GAIN, 0, 1)
-          : 0;
+      const amplitude = clamp(maxValues[i], 0, 1);
       topPoints.push(x, canvasHeight * (1 - amplitude));
     }
 

@@ -403,7 +403,7 @@ onUnmounted(() => {
   position: absolute;
   inset: auto 0 0 v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
   z-index: 0;
-  height: v-bind("`${VOLUME_EDITOR_LAYOUT.waveformReferenceHeightPx}px`");
+  height: v-bind("`${VOLUME_EDITOR_LAYOUT.waveformReferenceHeightPercent}%`");
   pointer-events: none;
 
   > :deep(*) {

@@ -8,7 +8,7 @@ export const VOLUME_EDITOR_LAYOUT = {
   denseGridLabelMinHeightPx: 120,
   sparseGridLabelMinHeightPx: 80,
   gridLabelEdgeMarginPx: 8,
-  waveformReferenceHeightPx: 56,
+  waveformReferenceHeightPercent: 20,
 } as const;
 
 export const VOLUME_EDITOR_LINE_WIDTH = {
