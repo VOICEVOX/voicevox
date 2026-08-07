@@ -6,6 +6,7 @@ import {
   type VolumeEditFrameRange,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
+import { ExhaustiveError } from "@/type/utility";
 
 export type VolumeEditDisplayData = {
   /** 編集値にプレビューを適用した実効値。未編集フレームは0dBで表す */
@@ -31,7 +32,8 @@ const applyPreviewEdit = (
   }
 
   const editFramewise = [...volumeEditData];
-  if (previewEdit.type === "draw") {
+  const previewEditType = previewEdit.type;
+  if (previewEditType === "draw") {
     const startFrame = Math.max(0, previewEdit.startFrame);
     const endFrame = startFrame + previewEdit.data.length;
     if (editFramewise.length < endFrame) {
@@ -47,7 +49,7 @@ const applyPreviewEdit = (
       if (rawValue == null) continue;
       editFramewise[startFrame + i] = rawValue;
     }
-  } else {
+  } else if (previewEditType === "erase") {
     const startFrame = Math.max(0, previewEdit.startFrame);
     const endFrame = startFrame + previewEdit.frameLength;
     if (editFramewise.length < endFrame) {
@@ -64,6 +66,8 @@ const applyPreviewEdit = (
       editFramewise.fill(null, overlap.startFrame, overlap.endFrame);
       previewEraseRanges.push({ ...overlap });
     }
+  } else {
+    throw new ExhaustiveError(previewEditType);
   }
 
   return { editFramewise, previewEraseRanges };
