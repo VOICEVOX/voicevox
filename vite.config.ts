@@ -283,38 +283,36 @@ const electronPreloadOptions = (
   },
   entries: Record<string, string>,
 ): ElectronOptions[] =>
-  Object.entries(entries).map(
-    ([name, entry]): ElectronOptions => ({
-      onstart({ reload }) {
-        if (!options.skipLaunchElectron) {
-          reload();
-        }
+  Object.entries(entries).map(([name, entry]): ElectronOptions => ({
+    onstart({ reload }) {
+      if (!options.skipLaunchElectron) {
+        reload();
+      }
+    },
+    vite: {
+      plugins: [isProduction && checkSuspiciousImportsPlugin({})],
+      resolve: {
+        tsconfigPaths: true,
       },
-      vite: {
-        plugins: [isProduction && checkSuspiciousImportsPlugin({})],
-        resolve: {
-          tsconfigPaths: true,
-        },
-        build: {
-          outDir: path.resolve(import.meta.dirname, "dist"),
-          sourcemap: options.sourcemap,
-          target: options.electronTargetVersion?.node,
-          rollupOptions: {
-            input: {
-              [name]: path.resolve(import.meta.dirname, entry),
-            },
-            output: {
-              format: "cjs",
-              codeSplitting: false,
-              entryFileNames: `[name].cjs`,
-              chunkFileNames: `[name].cjs`,
-              assetFileNames: `[name].[ext]`,
-            },
+      build: {
+        outDir: path.resolve(import.meta.dirname, "dist"),
+        sourcemap: options.sourcemap,
+        target: options.electronTargetVersion?.node,
+        rollupOptions: {
+          input: {
+            [name]: path.resolve(import.meta.dirname, entry),
+          },
+          output: {
+            format: "cjs",
+            codeSplitting: false,
+            entryFileNames: `[name].cjs`,
+            chunkFileNames: `[name].cjs`,
+            assetFileNames: `[name].[ext]`,
           },
         },
       },
-    }),
-  );
+    },
+  }));
 
 /** バックエンドAPIをフロントエンドから実行するコードを注入する */
 const injectLoaderScriptPlugin = (scriptPath: string): Plugin => {

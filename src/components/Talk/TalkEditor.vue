@@ -397,8 +397,7 @@ type DraggableEvent = CustomEvent & {
 };
 
 type ReorderingState =
-  | { isReordering: false }
-  | { isReordering: true; holdingAudioKey: AudioKey };
+  { isReordering: false } | { isReordering: true; holdingAudioKey: AudioKey };
 
 const reorderingState = ref<ReorderingState>({ isReordering: false });
 

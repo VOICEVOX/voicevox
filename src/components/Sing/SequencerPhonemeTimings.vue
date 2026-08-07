@@ -67,8 +67,7 @@ const phonemeTextStyleSpecs: {
   dark: { fill: "#ccc8c9" },
 };
 let phonemeTextStyles:
-  | { light: PIXI.TextStyle; dark: PIXI.TextStyle }
-  | undefined;
+  { light: PIXI.TextStyle; dark: PIXI.TextStyle } | undefined;
 
 const { mounted } = useMounted();
 
