@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import SequencerVolumeEditor from "@/components/Sing/SequencerVolumeEditor.vue";
+import SequencerVolumeEditor from "@/components/Sing/SequencerVolumeEditor/Container.vue";
 import { useStore } from "@/store";
 import type { ParameterPanelEditTarget } from "@/store/type";
 import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEditTargetSwitcher.vue";

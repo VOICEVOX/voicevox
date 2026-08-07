@@ -1,10 +1,40 @@
 import { describe, expect, it } from "vitest";
 import {
+  deriveVolumeEditableFrameRanges,
+  findVolumeEditableFrameRange,
   getOverlappingVolumeEditableFrameRanges,
   isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
   mergeVolumeEditableFrameRanges,
 } from "@/sing/volumeEditRanges";
+import {
+  EditorFrameAudioQueryKey,
+  SingingVolumeKey,
+  type Phrase,
+} from "@/store/type";
+import { TrackId } from "@/type/preload";
+
+const phrase = (
+  options: Partial<
+    Pick<
+      Phrase,
+      | "trackId"
+      | "queryKey"
+      | "singingVolumeKey"
+      | "startTime"
+      | "minNonPauseStartFrame"
+      | "maxNonPauseEndFrame"
+    >
+  >,
+) => ({
+  trackId: TrackId("track-1"),
+  queryKey: EditorFrameAudioQueryKey("query-1"),
+  singingVolumeKey: SingingVolumeKey("volume-1"),
+  startTime: 0,
+  minNonPauseStartFrame: undefined,
+  maxNonPauseEndFrame: undefined,
+  ...options,
+});
 
 describe("volumeEditRanges", () => {
   it("重なり・隣接する編集可能区間をマージする", () => {
@@ -58,6 +88,24 @@ describe("volumeEditRanges", () => {
     expect(isFrameInVolumeEditableRange(24, ranges)).toBe(true);
   });
 
+  it("フレームを含む編集可能区間を返す", () => {
+    const ranges = [
+      { startFrame: 5, endFrame: 10 },
+      { startFrame: 20, endFrame: 25 },
+    ];
+
+    expect(findVolumeEditableFrameRange(4, ranges)).toBeUndefined();
+    expect(findVolumeEditableFrameRange(5, ranges)).toEqual({
+      startFrame: 5,
+      endFrame: 10,
+    });
+    expect(findVolumeEditableFrameRange(10, ranges)).toBeUndefined();
+    expect(findVolumeEditableFrameRange(24, ranges)).toEqual({
+      startFrame: 20,
+      endFrame: 25,
+    });
+  });
+
   it("空の区間リストをマージすると空が返る", () => {
     const actual = mergeVolumeEditableFrameRanges([]);
 
@@ -94,5 +142,106 @@ describe("volumeEditRanges", () => {
     );
 
     expect(actual).toEqual([null, 0.2, null, null, null, 0.6, null]);
+  });
+
+  it("フレーズの非pau区間から編集可能範囲を導出する", () => {
+    const actual = deriveVolumeEditableFrameRanges({
+      phrases: [
+        phrase({
+          startTime: 1,
+          minNonPauseStartFrame: 2,
+          maxNonPauseEndFrame: 6,
+        }),
+        phrase({
+          trackId: TrackId("track-2"),
+          startTime: 3,
+        }),
+      ],
+      phraseQueries: new Map([
+        [EditorFrameAudioQueryKey("query-1"), { frameRate: 10 }],
+      ]),
+      phraseSingingVolumes: new Map([
+        [SingingVolumeKey("volume-1"), new Array<number>(8)],
+      ]),
+      trackId: TrackId("track-1"),
+      frameRate: 10,
+    });
+
+    expect(actual).toEqual([{ startFrame: 12, endFrame: 16 }]);
+  });
+
+  it("歌唱ボリュームが未生成のフレーズは編集可能範囲に含めない", () => {
+    const actual = deriveVolumeEditableFrameRanges({
+      phrases: [
+        phrase({
+          singingVolumeKey: undefined,
+          queryKey: undefined,
+        }),
+      ],
+      phraseQueries: new Map(),
+      phraseSingingVolumes: new Map(),
+      trackId: TrackId("track-1"),
+      frameRate: 10,
+    });
+
+    expect(actual).toEqual([]);
+  });
+
+  it("導出した編集可能範囲はマージされる", () => {
+    const actual = deriveVolumeEditableFrameRanges({
+      phrases: [
+        phrase({
+          startTime: 0,
+          singingVolumeKey: SingingVolumeKey("volume-1"),
+        }),
+        phrase({
+          startTime: 1,
+          singingVolumeKey: SingingVolumeKey("volume-2"),
+        }),
+      ],
+      phraseQueries: new Map([
+        [EditorFrameAudioQueryKey("query-1"), { frameRate: 10 }],
+      ]),
+      phraseSingingVolumes: new Map([
+        [SingingVolumeKey("volume-1"), new Array<number>(10)],
+        [SingingVolumeKey("volume-2"), new Array<number>(10)],
+      ]),
+      trackId: TrackId("track-1"),
+      frameRate: 10,
+    });
+
+    expect(actual).toEqual([{ startFrame: 0, endFrame: 20 }]);
+  });
+
+  it("歌唱ボリュームがあるフレーズにqueryKeyが無い場合はエラーにする", () => {
+    expect(() =>
+      deriveVolumeEditableFrameRanges({
+        phrases: [phrase({ queryKey: undefined })],
+        phraseQueries: new Map(),
+        phraseSingingVolumes: new Map([
+          [SingingVolumeKey("volume-1"), new Array<number>(8)],
+        ]),
+        trackId: TrackId("track-1"),
+        frameRate: 10,
+      }),
+    ).toThrow("phrase.queryKey is undefined.");
+  });
+
+  it("歌唱ガイドと編集のフレームレートが一致しない場合はエラーにする", () => {
+    expect(() =>
+      deriveVolumeEditableFrameRanges({
+        phrases: [phrase({})],
+        phraseQueries: new Map([
+          [EditorFrameAudioQueryKey("query-1"), { frameRate: 20 }],
+        ]),
+        phraseSingingVolumes: new Map([
+          [SingingVolumeKey("volume-1"), new Array<number>(8)],
+        ]),
+        trackId: TrackId("track-1"),
+        frameRate: 10,
+      }),
+    ).toThrow(
+      "The frame rate between the singing guide and the edit does not match.",
+    );
   });
 });
