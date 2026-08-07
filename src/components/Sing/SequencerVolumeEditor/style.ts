@@ -8,7 +8,9 @@ export const VOLUME_EDITOR_LAYOUT = {
   denseGridLabelMinHeightPx: 120,
   sparseGridLabelMinHeightPx: 80,
   gridLabelEdgeMarginPx: 8,
-  waveformReferenceHeightPercent: 20,
+  // 結果波形の帯の高さ。表示としては下20〜25%程度に収めたいが、
+  // 実際の歌声のピークは通常そこまで届かず上部がほぼ空くため、50%を確保しておおむねその見た目にしている
+  waveformReferenceHeightPercent: 50,
 } as const;
 
 export const VOLUME_EDITOR_LINE_WIDTH = {

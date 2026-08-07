@@ -328,6 +328,8 @@ function drawWaveform(
       continue;
     }
     // 片側表示は正側ピークのみを扱うため0〜1に丸める
+    // 数dB程度の編集差分でもよく見えるように、片側表示は振幅を線形のまま高さにする。
+    // dBで対数にすると圧縮されて細かい差分が潰れるため、dBにはしない。
     const value = bottomAligned ? clamp(maxValues[i], 0, 1) : maxValues[i];
     points.push(x, baselineY - value * amplitudeScale);
   }
