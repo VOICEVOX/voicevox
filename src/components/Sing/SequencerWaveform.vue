@@ -314,29 +314,11 @@ function drawWaveform(
 
   graphic.clear();
 
-  if (displayMode === "BOTTOM_ALIGNED") {
-    const topPoints: number[] = [];
-    for (let i = 0; i < waveformData.width; i++) {
-      const x = startScreenX + i;
-      if (x < -cullingMargin || x > canvasWidth + cullingMargin) {
-        continue;
-      }
-      const amplitude = clamp(maxValues[i], 0, 1);
-      topPoints.push(x, canvasHeight * (1 - amplitude));
-    }
+  // 両側表示は中央基準、片側表示は下端基準で振幅を写像する
+  const bottomAligned = displayMode === "BOTTOM_ALIGNED";
+  const baselineY = bottomAligned ? canvasHeight : canvasHeight / 2;
+  const amplitudeScale = bottomAligned ? canvasHeight : canvasHeight / 2;
 
-    if (topPoints.length / 2 >= 2) {
-      const firstX = topPoints[0];
-      const lastX = topPoints[topPoints.length - 2];
-      graphic
-        .poly([firstX, canvasHeight, ...topPoints, lastX, canvasHeight])
-        .fill({ color, alpha });
-    }
-    return;
-  }
-
-  const centerY = canvasHeight / 2;
-  const amplitudeScale = canvasHeight / 2;
   const points: number[] = [];
 
   // 最大値をたどって上半分の頂点を作成
@@ -345,16 +327,27 @@ function drawWaveform(
     if (x < -cullingMargin || x > canvasWidth + cullingMargin) {
       continue;
     }
-    points.push(x, centerY - maxValues[i] * amplitudeScale);
+    // 片側表示は正側ピークのみを扱うため0〜1に丸める
+    const value = bottomAligned ? clamp(maxValues[i], 0, 1) : maxValues[i];
+    points.push(x, baselineY - value * amplitudeScale);
   }
 
-  // 最小値を逆順にたどって下半分の頂点を作成
-  for (let i = waveformData.width - 1; i >= 0; i--) {
-    const x = startScreenX + i;
-    if (x < -cullingMargin || x > canvasWidth + cullingMargin) {
-      continue;
+  if (bottomAligned) {
+    // 下半分の代わりに底辺で閉じる
+    if (points.length / 2 >= 2) {
+      const firstX = points[0];
+      const lastX = points[points.length - 2];
+      points.push(lastX, baselineY, firstX, baselineY);
     }
-    points.push(x, centerY - minValues[i] * amplitudeScale);
+  } else {
+    // 最小値を逆順にたどって下半分の頂点を作成
+    for (let i = waveformData.width - 1; i >= 0; i--) {
+      const x = startScreenX + i;
+      if (x < -cullingMargin || x > canvasWidth + cullingMargin) {
+        continue;
+      }
+      points.push(x, baselineY - minValues[i] * amplitudeScale);
+    }
   }
 
   // 頂点の数が4個以上なら描画
