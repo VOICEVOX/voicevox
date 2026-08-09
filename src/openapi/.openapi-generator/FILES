@@ -21,6 +21,7 @@ models/Note.ts
 models/ParseKanaBadRequest.ts
 models/Preset.ts
 models/Score.ts
+models/Seeding.ts
 models/Speaker.ts
 models/SpeakerInfo.ts
 models/SpeakerStyle.ts
