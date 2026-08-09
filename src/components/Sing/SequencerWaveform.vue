@@ -327,29 +327,22 @@ function drawWaveform(
     if (x < -cullingMargin || x > canvasWidth + cullingMargin) {
       continue;
     }
-    // 片側表示は正側ピークのみを扱うため0〜1に丸める
+    // 片側表示は正側ピークのみを扱うため、負の値を0に丸める。
+    // 1.0（0dBFS）を超える値は、表示領域の上端に収めるため1に丸める。
     // 数dB程度の編集差分でもよく見えるように、片側表示は振幅を線形のまま高さにする。
     // dBで対数にすると圧縮されて細かい差分が潰れるため、dBにはしない。
     const value = bottomAligned ? clamp(maxValues[i], 0, 1) : maxValues[i];
     points.push(x, baselineY - value * amplitudeScale);
   }
 
-  if (bottomAligned) {
-    // 下半分の代わりに底辺で閉じる
-    if (points.length / 2 >= 2) {
-      const firstX = points[0];
-      const lastX = points[points.length - 2];
-      points.push(lastX, baselineY, firstX, baselineY);
+  // 逆順に下側の頂点を作成する。片側表示では底辺、両側表示では負側ピークを使う。
+  for (let i = waveformData.width - 1; i >= 0; i--) {
+    const x = startScreenX + i;
+    if (x < -cullingMargin || x > canvasWidth + cullingMargin) {
+      continue;
     }
-  } else {
-    // 最小値を逆順にたどって下半分の頂点を作成
-    for (let i = waveformData.width - 1; i >= 0; i--) {
-      const x = startScreenX + i;
-      if (x < -cullingMargin || x > canvasWidth + cullingMargin) {
-        continue;
-      }
-      points.push(x, baselineY - minValues[i] * amplitudeScale);
-    }
+    const value = bottomAligned ? 0 : minValues[i];
+    points.push(x, baselineY - value * amplitudeScale);
   }
 
   // 頂点の数が4個以上なら描画
