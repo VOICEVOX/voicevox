@@ -78,12 +78,10 @@ export const noteSchema = z.object({
   lyric: z.string().nullable(), // 歌詞未入力のときはnull
 });
 
-const engineStyleSchema = z.object({
+export const singerSchema = z.object({
   engineId: engineIdSchema,
   styleId: styleIdSchema,
 });
-
-export const singerSchema = engineStyleSchema;
 
 export const singingTeacherSchema = z.object({
   // NOTE: 歌い方教師のエンジンはシンガーのエンジンに従う形とし、engineIdはもたない
