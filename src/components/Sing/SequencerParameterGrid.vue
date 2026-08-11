@@ -16,9 +16,8 @@ import {
   getMeasureDuration,
   getTimeSignaturePositions,
 } from "@/sing/music";
-import { assertNonNullable, ensureNotNullish } from "@/type/utility";
-import { resolveColorFromCssVariable } from "@/sing/graphics/cssColor";
-import type { Color } from "@/sing/graphics/lineStrip";
+import { assertNonNullable } from "@/type/utility";
+import { createThemeColorResolver } from "@/sing/graphics/cssColor";
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
@@ -45,27 +44,15 @@ let resizeObserver: ResizeObserver | undefined;
 let canvasWidth: number | undefined;
 let canvasHeight: number | undefined;
 
-let gridLineColorsCache:
-  | { theme: "light" | "dark"; measure: Color; beat: Color }
-  | undefined;
+const resolveGridLineColors = createThemeColorResolver({
+  measure: "--scheme-color-sing-parameter-grid-measure-line",
+  beat: "--scheme-color-sing-parameter-grid-beat-line",
+});
 
 const getGridLineColors = () => {
-  const theme = currentTheme.value;
-  if (gridLineColorsCache?.theme !== theme) {
-    const containerElement = ensureNotNullish(canvasContainer.value);
-    gridLineColorsCache = {
-      theme,
-      measure: resolveColorFromCssVariable(
-        containerElement,
-        "--scheme-color-sing-parameter-grid-measure-line",
-      ),
-      beat: resolveColorFromCssVariable(
-        containerElement,
-        "--scheme-color-sing-parameter-grid-beat-line",
-      ),
-    };
-  }
-  return gridLineColorsCache;
+  const containerElement = canvasContainer.value;
+  assertNonNullable(containerElement);
+  return resolveGridLineColors(containerElement, currentTheme.value);
 };
 
 let renderer: PIXI.Renderer | undefined;

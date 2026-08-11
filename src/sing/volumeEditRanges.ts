@@ -1,13 +1,50 @@
 import type { VolumeEditValue } from "@/domain/project/type";
+import { getOrThrow } from "@/helpers/mapHelper";
+import type {
+  EditorFrameAudioQuery,
+  EditorFrameAudioQueryKey,
+  Phrase,
+  SingingVolume,
+  SingingVolumeKey,
+} from "@/store/type";
+import type { TrackId } from "@/type/preload";
 
+/** 編集可能なフレーム区間。endFrameは範囲に含まない。歌唱ボリュームのある非pau区間から導出する */
 export type VolumeEditableFrameRange = {
   readonly startFrame: number;
   readonly endFrame: number;
 };
 
+/** 汎用のフレーム区間。endFrameは範囲に含まない。消去プレビューなど、編集可否とは無関係な範囲に使う */
+export type VolumeEditFrameRange = {
+  startFrame: number;
+  endFrame: number;
+};
+
 export type FramewiseVolumeEditData = {
   readonly values: readonly VolumeEditValue[];
   readonly startFrame: number;
+};
+
+type VolumeEditablePhrase = Pick<
+  Phrase,
+  | "trackId"
+  | "queryKey"
+  | "singingVolumeKey"
+  | "startTime"
+  | "minNonPauseStartFrame"
+  | "maxNonPauseEndFrame"
+>;
+
+type DeriveVolumeEditableFrameRangesOptions = {
+  readonly phrases: Iterable<VolumeEditablePhrase>;
+  readonly phraseQueries: ReadonlyMap<
+    EditorFrameAudioQueryKey,
+    Pick<EditorFrameAudioQuery, "frameRate">
+  >;
+  readonly phraseSingingVolumes: ReadonlyMap<SingingVolumeKey, SingingVolume>;
+  readonly trackId: TrackId;
+  readonly frameRate: number;
 };
 
 /**
@@ -32,6 +69,64 @@ export const mergeVolumeEditableFrameRanges = (
 };
 
 /**
+ * フレーズの歌唱ボリュームが存在し、かつ非pau区間に対応するフレーム範囲を編集可能区間として返す。
+ */
+export const deriveVolumeEditableFrameRanges = ({
+  phrases,
+  phraseQueries,
+  phraseSingingVolumes,
+  trackId,
+  frameRate,
+}: DeriveVolumeEditableFrameRangesOptions) => {
+  const ranges: VolumeEditableFrameRange[] = [];
+  for (const phrase of phrases) {
+    if (phrase.trackId !== trackId) {
+      continue;
+    }
+    if (phrase.singingVolumeKey == undefined) {
+      continue;
+    }
+    if (phrase.queryKey == undefined) {
+      throw new Error("phrase.queryKey is undefined.");
+    }
+    const phraseQuery = getOrThrow(phraseQueries, phrase.queryKey);
+    if (phraseQuery.frameRate !== frameRate) {
+      throw new Error(
+        "The frame rate between the singing guide and the edit does not match.",
+      );
+    }
+    const phraseSingingVolume = getOrThrow(
+      phraseSingingVolumes,
+      phrase.singingVolumeKey,
+    );
+    const phraseStartFrame = Math.round(phrase.startTime * frameRate);
+    const phraseEndFrame = phraseStartFrame + phraseSingingVolume.length;
+    const startOffset = phrase.minNonPauseStartFrame ?? 0;
+    const endOffset = phrase.maxNonPauseEndFrame ?? phraseSingingVolume.length;
+    const startFrame = Math.max(0, phraseStartFrame + startOffset);
+    const endFrame = Math.min(phraseEndFrame, phraseStartFrame + endOffset);
+    if (startFrame < endFrame) {
+      ranges.push({ startFrame, endFrame });
+    }
+  }
+
+  return mergeVolumeEditableFrameRanges(ranges);
+};
+
+/**
+ * 指定フレームを含む編集可能区間を返す。
+ * 区間は半開区間として扱う。
+ */
+export const findVolumeEditableFrameRange = (
+  frame: number,
+  ranges: readonly VolumeEditableFrameRange[],
+) => {
+  return ranges.find(
+    (range) => range.startFrame <= frame && frame < range.endFrame,
+  );
+};
+
+/**
  * 指定フレームが編集可能区間内にあるかを判定する。
  * 区間は半開区間として扱う。
  */
@@ -39,9 +134,7 @@ export const isFrameInVolumeEditableRange = (
   frame: number,
   ranges: readonly VolumeEditableFrameRange[],
 ) => {
-  return ranges.some(
-    (range) => range.startFrame <= frame && frame < range.endFrame,
-  );
+  return findVolumeEditableFrameRange(frame, ranges) != undefined;
 };
 
 /**

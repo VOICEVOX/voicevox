@@ -13,6 +13,7 @@ import { createArray, linearInterpolation } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
 import {
   countVolumeEditDataPoints,
+  findVolumeEditableFrameRange,
   isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
 } from "@/sing/volumeEditRanges";
@@ -63,6 +64,7 @@ export class DrawVolumeState implements State<
     context.cursorState.value = "DRAW";
     context.previewMode.value = "VOLUME_DRAW";
     context.tooltipData.value = this.tooltipDataAtStart;
+    this.updateHighlightedFrame(context, this.cursorPosAtStart.frame);
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -116,11 +118,18 @@ export class DrawVolumeState implements State<
       if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
+        this.updateHighlightedFrame(context, position.frame);
         this.updateTooltipData(context, pointerInfo);
       } else if (
         (pointerEvent.type === "pointerup" && mouseButton === "LEFT_BUTTON") ||
         pointerEvent.type === "pointercancel"
       ) {
+        // pointermoveのプレビュー処理が次のanimation frameを待っている場合でも、
+        // 確定位置を取りこぼさないように同期的に反映する
+        this.currentCursorPos = position;
+        this.previewDrawVolume(context);
+        this.innerContext.executePreviewProcess = false;
+
         // NOTE: ピッチと同様
         // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
         // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
@@ -135,6 +144,7 @@ export class DrawVolumeState implements State<
       if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
+        this.updateHighlightedFrame(context, position.frame);
         this.updateTooltipData(context, pointerInfo);
       }
     }
@@ -176,6 +186,16 @@ export class DrawVolumeState implements State<
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
     context.tooltipData.value = undefined;
+    context.highlightedFrame.value = undefined;
+  }
+
+  private updateHighlightedFrame(context: VolumeEditorContext, frame: number) {
+    const editableRange = findVolumeEditableFrameRange(
+      frame,
+      context.getEditableFrameRanges(),
+    );
+    context.highlightedFrame.value =
+      editableRange == undefined ? undefined : frame;
   }
 
   private updateTooltipData(

@@ -5,7 +5,7 @@ import type {
 } from "../common";
 import type { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
-import { isFrameInVolumeEditableRange } from "@/sing/volumeEditRanges";
+import { findVolumeEditableFrameRange } from "@/sing/volumeEditRanges";
 
 export class EraseVolumeIdleState implements State<
   VolumeEditorStateDefinitions,
@@ -17,6 +17,7 @@ export class EraseVolumeIdleState implements State<
   onEnter(context: VolumeEditorContext) {
     context.cursorState.value = "UNSET";
     context.tooltipData.value = undefined;
+    context.highlightedFrame.value = undefined;
   }
 
   process({
@@ -39,15 +40,18 @@ export class EraseVolumeIdleState implements State<
 
     if (pointerEvent.type === "pointerleave") {
       context.cursorState.value = "UNSET";
+      context.highlightedFrame.value = undefined;
       return;
     }
 
     const { position } = pointerInfo;
-    const isEditable = isFrameInVolumeEditableRange(
+    const editableRange = findVolumeEditableFrameRange(
       position.frame,
       context.getEditableFrameRanges(),
     );
+    const isEditable = editableRange != undefined;
     context.cursorState.value = isEditable ? "ERASE" : "NOT_ALLOWED";
+    context.highlightedFrame.value = isEditable ? position.frame : undefined;
 
     if (
       pointerEvent.type === "pointerdown" &&
@@ -65,5 +69,6 @@ export class EraseVolumeIdleState implements State<
   onExit(context: VolumeEditorContext) {
     context.cursorState.value = "UNSET";
     context.tooltipData.value = undefined;
+    context.highlightedFrame.value = undefined;
   }
 }

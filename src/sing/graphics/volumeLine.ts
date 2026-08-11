@@ -16,6 +16,78 @@ export type VolumeViewInfo = {
   readonly leftPadding: number;
 };
 
+/** normalizedY(下端0・上端1)を、上端を0とする画面Y座標へ変換する。 */
+export const volumeNormalizedYToScreenY = (
+  normalizedY: number,
+  viewportHeight: number,
+) => (1 - normalizedY) * viewportHeight;
+
+/**
+ * baseXの昇順に並んだsegmentから、baseXがtargetBaseX以上となる
+ * 最初の点のインデックスを返す。該当する点がなければsegment.lengthを返す。
+ */
+export const findFirstVolumePointAtOrAfter = (
+  segment: VolumeSegment,
+  targetBaseX: number,
+) => {
+  let low = 0;
+  let high = segment.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (segment[middle].baseX < targetBaseX) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  return low;
+};
+
+/**
+ * baseXの昇順に並んだsegmentから、baseXがtargetBaseXより大きくなる
+ * 最初の点のインデックスを返す。該当する点がなければsegment.lengthを返す。
+ */
+export const findFirstVolumePointAfter = (
+  segment: VolumeSegment,
+  targetBaseX: number,
+) => {
+  let low = 0;
+  let high = segment.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (segment[middle].baseX <= targetBaseX) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  return low;
+};
+
+/**
+ * ビューポートに映る点のインデックス範囲を返す。
+ * 画面端をまたぐ線分が途切れないように、範囲の前後1点を含める。
+ */
+export const computeVisibleVolumePointRange = (
+  segment: VolumeSegment,
+  viewInfo: VolumeViewInfo,
+) => {
+  const viewportStartBaseX =
+    (viewInfo.offsetX - viewInfo.leftPadding) / viewInfo.zoomX;
+  const viewportEndBaseX =
+    (viewInfo.offsetX + viewInfo.viewportWidth - viewInfo.leftPadding) /
+    viewInfo.zoomX;
+  const startIndex = Math.max(
+    0,
+    findFirstVolumePointAtOrAfter(segment, viewportStartBaseX) - 1,
+  );
+  const endIndex = Math.min(
+    segment.length,
+    findFirstVolumePointAtOrAfter(segment, viewportEndBaseX) + 1,
+  );
+  return { startIndex, endIndex };
+};
+
 type VolumeLineOptions = {
   color: Color;
   width: number;
@@ -77,13 +149,21 @@ export class VolumeLine {
         continue;
       }
 
+      const { startIndex, endIndex } = computeVisibleVolumePointRange(
+        segment,
+        viewInfo,
+      );
+
       // 画面座標に変換
-      const screenPoints = segment.map((point) => ({
+      const screenPoints = segment.slice(startIndex, endIndex).map((point) => ({
         x:
           point.baseX * viewInfo.zoomX -
           viewInfo.offsetX +
           viewInfo.leftPadding,
-        y: (1 - point.normalizedY) * viewInfo.viewportHeight,
+        y: volumeNormalizedYToScreenY(
+          point.normalizedY,
+          viewInfo.viewportHeight,
+        ),
       }));
 
       this.line.moveTo(screenPoints[0].x, screenPoints[0].y);

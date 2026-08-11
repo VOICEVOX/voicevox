@@ -59,3 +59,40 @@ export const resolveColorFromCssVariable = (
   const data = context.getImageData(0, 0, 1, 1).data;
   return new Color(data[0], data[1], data[2], data[3]);
 };
+
+type ResolvedCssVariableColors<CssVariables extends Record<string, string>> = {
+  readonly [Name in keyof CssVariables]: Color;
+};
+
+/**
+ * CSS変数で定義されたテーマ色を、Canvas描画で使えるColorへ解決する関数を返す。
+ * 解決結果はthemeKeyが変わるまでキャッシュされ、キャッシュ命中時はelementを参照しない。
+ * そのため、どの要素から解決しても同じ値になるCSS変数にのみ使える。
+ */
+export const createThemeColorResolver = <
+  CssVariables extends Record<string, string>,
+>(
+  cssVariables: CssVariables,
+) => {
+  let cache:
+    | {
+        themeKey: unknown;
+        colors: ResolvedCssVariableColors<CssVariables>;
+      }
+    | undefined;
+
+  return (element: HTMLElement, themeKey: unknown) => {
+    if (cache != undefined && cache.themeKey === themeKey) {
+      return cache.colors;
+    }
+
+    const colors = {} as {
+      [Name in keyof CssVariables]: Color;
+    };
+    for (const name of Object.keys(cssVariables) as (keyof CssVariables)[]) {
+      colors[name] = resolveColorFromCssVariable(element, cssVariables[name]);
+    }
+    cache = { themeKey, colors };
+    return colors;
+  };
+};
