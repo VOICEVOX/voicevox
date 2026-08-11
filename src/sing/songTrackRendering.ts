@@ -58,7 +58,6 @@ export type SnapshotForRender = Readonly<{
  * レンダリング用のフレーズ
  */
 export type PhraseForRender = {
-  readonly isRenderable: boolean;
   readonly firstRestDuration: number;
   readonly notes: Note[];
   readonly startTicks: number;
@@ -462,10 +461,9 @@ const createPhrasesFromNotes = async (
 
   // シンガーと歌い方が揃っていないとエンジンにリクエストできない
   const singer = track.singer;
-  const isRenderable = singer != undefined && track.singingTeacher != undefined;
 
   let engineFrameRate: number | undefined = undefined;
-  if (isRenderable) {
+  if (singer != undefined && track.singingTeacher != undefined) {
     engineFrameRate = getOrThrow(snapshot.engineFrameRates, singer.engineId);
   }
 
@@ -549,7 +547,6 @@ const createPhrasesFromNotes = async (
     }
 
     const phrase: PhraseForRender = {
-      isRenderable,
       firstRestDuration: phraseFirstRestDuration,
       notes: phraseNotes,
       startTicks: phraseFirstNote.position,
@@ -1118,7 +1115,7 @@ export class SongTrackRenderer {
       });
 
       // レンダリング可能なフレーズを抽出
-      const renderablePhrases = this.filterRenderablePhrases(phrases);
+      const renderablePhrases = this.filterRenderablePhrases(phrases, snapshot);
 
       // 既存のキャッシュデータをフレーズに適用
       await this.applyCachedDataToPhrases(renderablePhrases, snapshot);
@@ -1218,10 +1215,15 @@ export class SongTrackRenderer {
    * @param phrases 全てのフレーズを含むマップ。
    * @returns レンダリング可能なフレーズのみを含む新しいマップ。
    */
-  private filterRenderablePhrases(phrases: Map<PhraseKey, PhraseForRender>) {
+  private filterRenderablePhrases(
+    phrases: Map<PhraseKey, PhraseForRender>,
+    snapshot: SnapshotForRender,
+  ) {
     const renderablePhrases = new Map<PhraseKey, PhraseForRender>();
     for (const [phraseKey, phrase] of phrases) {
-      if (phrase.isRenderable) {
+      // フレーズが属するトラックにシンガーと歌い方が割り当てられていれば、レンダリング可能とする
+      const track = getOrThrow(snapshot.tracks, phrase.trackId);
+      if (track.singer != undefined && track.singingTeacher != undefined) {
         renderablePhrases.set(phraseKey, phrase);
       }
     }

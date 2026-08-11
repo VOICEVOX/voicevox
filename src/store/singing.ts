@@ -1414,7 +1414,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // イベントで渡された各フレーズを処理
         for (const [phraseKey, eventPhrase] of event.phrases) {
-          const isNotRenderable = !eventPhrase.isRenderable;
+          // シンガーと歌い方が揃っていないとエンジンにリクエストできない
+          const track = getOrThrow(event.snapshot.tracks, eventPhrase.trackId);
+          const isNotRenderable =
+            track.singer == undefined || track.singingTeacher == undefined;
           const renderingIsNeeded =
             eventPhrase.query == undefined ||
             eventPhrase.singingPitch == undefined ||
