@@ -139,7 +139,7 @@ const formatAdjustment = (value: number) => {
   min-width: 280px;
   height: 48px;
   border: 1px solid var(--scheme-color-outline-variant);
-  border-radius: 8px;
+  border-radius: 4px;
   background: var(--scheme-color-surface-container-highest);
   overflow: hidden;
 
