@@ -84,7 +84,9 @@ export const singerSchema = z.object({
 });
 
 export const singingTeacherSchema = z.object({
-  // NOTE: 歌い方教師のエンジンはシンガーのエンジンに従う形とし、engineIdはもたない
+  // TODO: 歌い方設定UIをまずは実装するため、現状はシンガーと歌い方教師が
+  // 同一エンジンを使用する前提で、歌い方教師にはstyleIdのみを保持している。
+  // 実際のマルチエンジン環境でどう扱うかは未調査で、また型として妥当かも仮でしかないため、仕様を整理してから修正する
   styleId: styleIdSchema,
 });
 
