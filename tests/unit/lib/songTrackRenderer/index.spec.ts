@@ -46,6 +46,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
           },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: trackNotes,
         },
       ],
@@ -181,6 +184,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
           },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: trackNotes,
         },
       ],
@@ -218,6 +224,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
           },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: utility.toTrackNotes(phraseNotesArray),
         },
       ],
@@ -235,6 +244,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           singer: {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
+          },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
           },
           notes: utility.toTrackNotes(phraseNotesArray),
         },
@@ -298,6 +310,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
           },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: utility.toTrackNotes(phraseNotesArray),
         },
       ],
@@ -320,6 +335,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           singer: {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
+          },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
           },
           notes: utility.toTrackNotes(phraseNotesArray),
         },
@@ -376,6 +394,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
           },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: trackNotes,
         },
       ],
@@ -423,6 +444,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           singer: {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
+          },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
           },
           notes: trackNotes,
         },
@@ -503,6 +527,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
         trackId1,
         {
           singer: singer1,
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: trackNotes1,
         },
       ],
@@ -597,6 +624,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           singer: {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
+          },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
           },
           notes: trackNotes,
         },

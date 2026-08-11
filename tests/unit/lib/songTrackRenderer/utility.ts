@@ -48,22 +48,17 @@ export class SongTrackRendererTestUtility {
   private readonly tpqn: number;
   private readonly tempos: Tempo[];
   private readonly engineId: EngineId;
-  private readonly singingTeacher: SingingTeacher;
   private readonly frameRate: number;
 
   constructor(constants: {
     tpqn: number;
     tempos: Tempo[];
     engineId: EngineId;
-    singingTeacherStyleId: StyleId;
     frameRate: number;
   }) {
     this.tpqn = constants.tpqn;
     this.tempos = constants.tempos;
     this.engineId = constants.engineId;
-    this.singingTeacher = {
-      styleId: constants.singingTeacherStyleId,
-    };
     this.frameRate = constants.frameRate;
   }
 
@@ -159,7 +154,6 @@ export class SongTrackRendererTestUtility {
     for (const trackEntry of trackEntries) {
       tracks.set(trackEntry[0], {
         ...createDefaultTrack(),
-        singingTeacher: this.singingTeacher,
         ...trackEntry[1],
       });
     }
