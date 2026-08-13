@@ -64,7 +64,10 @@ test("SET_SINGERで未設定の歌い方を同じキャラクターから補完�
     styleId: StyleId(6000),
   });
 
-  // シンガーを設定したままだとwatcher経由のRENDERが未登録エンジンを参照して落ちるため、リセットしてwatcherを流す
+  // TODO: このテストではSET_SINGERだけを検証したいが、storeのwatcherがRENDERを実行し、
+  // テスト用エンジンのengineIdのframeRate取得で失敗するため、
+  // 現状は同じtick内でシンガーを未設定へ戻し、watcherが設定済み状態を処理しないようにしている。
+  // おそらくはテスト時は自動的なRENDERを無効化する対応が必要
   store.mutations.SET_SINGER({ trackId, singer: undefined });
   await nextTick();
 });
@@ -86,7 +89,10 @@ test("SET_SINGERで設定済みの歌い方を上書きしない", async () => {
     singingTeacher,
   );
 
-  // シンガーを設定したままだとwatcher経由のRENDERが未登録エンジンを参照して落ちるため、リセットしてwatcherを流す
+  // TODO: このテストではSET_SINGERだけを検証したいが、storeのwatcherがRENDERを実行し、
+  // テスト用エンジンのengineIdのframeRate取得で失敗するため、
+  // 現状は同じtick内でシンガーを未設定へ戻し、watcherが設定済み状態を処理しないようにしている。
+  // おそらくはテスト時は自動的なRENDERを無効化する対応が必要
   store.mutations.SET_SINGER({ trackId, singer: undefined });
   await nextTick();
 });
