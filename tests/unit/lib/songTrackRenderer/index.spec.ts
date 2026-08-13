@@ -485,6 +485,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
   test("トラックにシンガーまたは歌い方が割り当てられていない場合、そのトラックのフレーズはレンダリングされない", async () => {
     const trackId1 = TrackId(uuid4());
     const singer1 = undefined;
+    const singingTeacher1 = {
+      styleId: constants.singingTeacherStyleId,
+    };
     const trackNotes1 = utility.toTrackNotes([
       utility.createTestNotes(0),
       utility.createTestNotes(1),
@@ -496,6 +499,7 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
       engineId: constants.engineId,
       styleId: constants.singerStyleId,
     };
+    const singingTeacher2 = undefined;
     const trackNotes2 = utility.toTrackNotes([
       utility.createTestNotes(0),
       utility.createTestNotes(3),
@@ -506,6 +510,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
     const singer3 = {
       engineId: constants.engineId,
       styleId: constants.singerStyleId,
+    };
+    const singingTeacher3 = {
+      styleId: constants.singingTeacherStyleId,
     };
     const trackNotes3 = utility.toTrackNotes([
       utility.createTestNotes(0),
@@ -527,9 +534,7 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
         trackId1,
         {
           singer: singer1,
-          singingTeacher: {
-            styleId: constants.singingTeacherStyleId,
-          },
+          singingTeacher: singingTeacher1,
           notes: trackNotes1,
         },
       ],
@@ -537,7 +542,7 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
         trackId2,
         {
           singer: singer2,
-          singingTeacher: undefined,
+          singingTeacher: singingTeacher2,
           notes: trackNotes2,
         },
       ],
@@ -545,7 +550,7 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
         trackId3,
         {
           singer: singer3,
-          singingTeacher: { styleId: constants.singingTeacherStyleId },
+          singingTeacher: singingTeacher3,
           notes: trackNotes3,
         },
       ],
