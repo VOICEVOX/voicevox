@@ -134,9 +134,8 @@ const formatAdjustment = (value: number) => {
 .singer-row {
   display: grid;
   grid-template-columns: 160px auto minmax(0, 1fr);
-  flex: 1 0 280px;
+  flex: 0 0 280px;
   align-items: stretch;
-  min-width: 280px;
   height: 48px;
   border: 1px solid var(--scheme-color-outline-variant);
   border-radius: 4px;
