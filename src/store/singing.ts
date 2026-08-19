@@ -1415,7 +1415,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // イベントで渡された各フレーズを処理
         for (const [phraseKey, eventPhrase] of event.phrases) {
           const track = getOrThrow(event.snapshot.tracks, eventPhrase.trackId);
-          const isNotRenderable =
+          const singerIsNotSet =
             track.singer == undefined || track.singingTeacher == undefined;
           const renderingIsNeeded =
             eventPhrase.query == undefined ||
@@ -1430,7 +1430,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             startTime: eventPhrase.startTime,
             minNonPauseStartFrame: eventPhrase.minNonPauseStartFrame,
             maxNonPauseEndFrame: eventPhrase.maxNonPauseEndFrame,
-            state: isNotRenderable
+            state: singerIsNotSet
               ? "SINGER_IS_NOT_SET" // シンガーまたは歌い方が未設定
               : renderingIsNeeded
                 ? "WAITING_TO_BE_RENDERED" // レンダリング待ち
