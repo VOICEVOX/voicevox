@@ -13,6 +13,7 @@ import { resetMockMode, uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { createDefaultTrack } from "@/sing/domain";
 import { getOrThrow } from "@/helpers/mapHelper";
+import { getEngineManifestMock } from "@/mock/engineMock/manifestMock";
 
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {
@@ -57,6 +58,9 @@ test("SET_SINGERで未設定の歌い方を同じキャラクターから補完�
     engineId,
     characterInfos: [characterInfo],
   });
+  store.mutations.SET_ENGINE_MANIFESTS({
+    engineManifests: { [engineId]: getEngineManifestMock() },
+  });
 
   store.mutations.SET_SINGER({ trackId, singer });
 
@@ -64,11 +68,6 @@ test("SET_SINGERで未設定の歌い方を同じキャラクターから補完�
     styleId: StyleId(6000),
   });
 
-  // TODO: このテストではSET_SINGERだけを検証したいが、storeのwatcherがRENDERを実行し、
-  // テスト用エンジンのengineIdのframeRate取得で失敗するため、
-  // 現状は同じtick内でシンガーを未設定へ戻し、watcherが設定済み状態を処理しないようにしている。
-  // おそらくはテスト時は自動的なRENDERを無効化する対応が必要
-  store.mutations.SET_SINGER({ trackId, singer: undefined });
   await nextTick();
 });
 
@@ -78,6 +77,9 @@ test("SET_SINGERで設定済みの歌い方を上書きしない", async () => {
   const singingTeacher = {
     styleId: StyleId(2),
   };
+  store.mutations.SET_ENGINE_MANIFESTS({
+    engineManifests: { [engineId]: getEngineManifestMock() },
+  });
   store.mutations.SET_SINGING_TEACHER({ trackId, singingTeacher });
 
   store.mutations.SET_SINGER({
@@ -89,11 +91,6 @@ test("SET_SINGERで設定済みの歌い方を上書きしない", async () => {
     singingTeacher,
   );
 
-  // TODO: このテストではSET_SINGERだけを検証したいが、storeのwatcherがRENDERを実行し、
-  // テスト用エンジンのengineIdのframeRate取得で失敗するため、
-  // 現状は同じtick内でシンガーを未設定へ戻し、watcherが設定済み状態を処理しないようにしている。
-  // おそらくはテスト時は自動的なRENDERを無効化する対応が必要
-  store.mutations.SET_SINGER({ trackId, singer: undefined });
   await nextTick();
 });
 
