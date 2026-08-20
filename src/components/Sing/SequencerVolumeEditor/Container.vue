@@ -22,19 +22,6 @@
     <template #grid>
       <SequencerParameterGrid :viewportInfo="props.viewportInfo" />
     </template>
-    <template #waveform>
-      <!--
-        編集結果のフィードバックのための波形は片側表示にして編集エリアの下部に置く。
-        中央(両側)表示だと編集線を描くときの意図しないガイドのように見えてしまうのと、
-        片側なら同じ面積で振幅差が倍の高さで見えて確認しやすいため。
-        波形と編集エリアを分割するのが良い可能性もあるが、面積効率が悪いので行わない。
-      -->
-      <SequencerWaveform
-        :viewportInfo="props.viewportInfo"
-        displayMode="BOTTOM_ALIGNED"
-        aria-hidden="true"
-      />
-    </template>
   </Presentation>
 </template>
 
@@ -43,7 +30,6 @@ import { computed, onBeforeUnmount, toRaw, watch } from "vue";
 import Presentation from "./Presentation.vue";
 import type { VolumeEditorPointerEvent } from "./useVolumeEditorPointerInput";
 import SequencerParameterGrid from "@/components/Sing/SequencerParameterGrid.vue";
-import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";

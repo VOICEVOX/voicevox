@@ -8,9 +8,6 @@
     <div class="volume-time-grid" aria-hidden="true">
       <slot name="grid" />
     </div>
-    <div class="volume-waveform-reference" aria-hidden="true">
-      <slot name="waveform" />
-    </div>
     <canvas ref="canvas" class="volume-editor-canvas" />
     <div
       class="volume-editor-area"
@@ -397,19 +394,6 @@ onUnmounted(() => {
   user-select: none;
   overflow: hidden;
   background: var(--scheme-color-sing-grid-cell-white);
-}
-
-.volume-waveform-reference {
-  position: absolute;
-  inset: auto 0 0 v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
-  z-index: 0;
-  height: v-bind("`${VOLUME_EDITOR_LAYOUT.waveformReferenceHeightPercent}%`");
-  pointer-events: none;
-
-  > :deep(*) {
-    width: 100%;
-    height: 100%;
-  }
 }
 
 .volume-time-grid {
