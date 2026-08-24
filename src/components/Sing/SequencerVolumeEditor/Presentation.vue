@@ -64,11 +64,12 @@ import ContextMenu, {
   type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
-import { useTimelineWheel } from "@/composables/useTimelineWheel";
 import type { Tempo, VolumeEditValue } from "@/domain/project/type";
 import { secondToTick } from "@/sing/music";
+import { resolveTimelineWheelAction } from "@/sing/timelineWheel";
 import { clamp } from "@/sing/utility";
 import {
+  getXInBorderBox,
   tickToBaseX,
   type CursorState,
   type ViewportInfo,
@@ -84,7 +85,11 @@ import type {
   VolumeEditorTooltipData,
 } from "@/sing/volumeEditorStateMachine/common";
 import type { VolumeEditTool } from "@/store/type";
-import { assertNonNullable, UnreachableError } from "@/type/utility";
+import {
+  assertNonNullable,
+  ExhaustiveError,
+  UnreachableError,
+} from "@/type/utility";
 
 defineOptions({
   name: "SequencerVolumeEditorPresentation",
@@ -282,12 +287,38 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
   },
 ]);
 
-const { handleWheel } = useTimelineWheel({
-  leftPaddingPx: VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
-  isWheelDisabled: () => props.previewMode !== "IDLE",
-  onPanX: (deltaX) => emit("panTimeline", deltaX),
-  onZoomX: (anchorX, deltaY) => emit("zoomTimeline", anchorX, deltaY),
-});
+const handleWheel = (event: WheelEvent) => {
+  // ドラッグ編集中はビューを動かさない
+  if (props.previewMode !== "IDLE") {
+    event.preventDefault();
+    return;
+  }
+
+  const action = resolveTimelineWheelAction(event);
+  switch (action.type) {
+    case "none":
+      return;
+    case "panX":
+      event.preventDefault();
+      emit("panTimeline", action.deltaX);
+      return;
+    case "zoomX": {
+      event.preventDefault();
+      const containerElement = canvasContainer.value;
+      assertNonNullable(containerElement);
+      // 時間軸の原点はdB目盛り列の右端にあるので、その幅の分を引く
+      const anchorX = Math.max(
+        0,
+        getXInBorderBox(event.clientX, containerElement) -
+          VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
+      );
+      emit("zoomTimeline", anchorX, action.deltaY);
+      return;
+    }
+    default:
+      throw new ExhaustiveError(action);
+  }
+};
 
 const updateRenderer = (renderImmediately = false) => {
   const width = viewportWidth.value;
