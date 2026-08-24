@@ -3,7 +3,7 @@
     ref="canvasContainer"
     class="volume-editor"
     :class="cursorClass"
-    @wheel="handleWheel"
+    @wheel="onWheel"
   >
     <div class="volume-time-grid" aria-hidden="true">
       <slot name="grid" />
@@ -287,7 +287,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
   },
 ]);
 
-const handleWheel = (event: WheelEvent) => {
+const onWheel = (event: WheelEvent) => {
   const containerElement = canvasContainer.value;
   assertNonNullable(containerElement);
   const localX = getXInBorderBox(event.clientX, containerElement);

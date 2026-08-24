@@ -4,12 +4,14 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 export type TimelineWheelAction =
   | { readonly type: "none" }
   | { readonly type: "panX"; readonly deltaX: number }
+  // ズーム量はホイールを縦に回した量から決まるため、deltaYを持つ
   | { readonly type: "zoomX"; readonly deltaY: number };
 
 /**
  * ホイールイベントを、時間軸に対する操作へ読み替える。
- * ズームの基準位置の算出と、イベントの既定動作の抑止は、
- * レイアウトと編集状態を知っている呼び出し側が行う。
+ * 読み替えるだけなので、イベントの既定動作は止めない。
+ * ズームの基準位置も算出しない。求め方がビューのレイアウトによって変わるため、
+ * レイアウトを知っている呼び出し側に任せる。
  */
 export const resolveTimelineWheelAction = (
   event: WheelEvent,
@@ -31,7 +33,7 @@ export const resolveTimelineWheelAction = (
     return { type: "panX", deltaX: event.deltaY };
   }
 
-  // Shiftを押していない縦ホイールは音程方向のスクロールに使われるものなので、
-  // 時間軸方向の操作には使わない
+  // Shiftを押していない縦ホイールは、ピアノロールでは音程方向のスクロールに使われる。
+  // シーケンサー全体で意味を揃えるため、時間軸方向の操作には割り当てない
   return { type: "none" };
 };
