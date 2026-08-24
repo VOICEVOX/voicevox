@@ -24,10 +24,14 @@ export const resolveTimelineWheelAction = (
     return { type: "panX", deltaX: event.deltaX };
   }
 
-  // 縦ホイールも時間軸方向のパンに使う
-  if (event.deltaY !== 0) {
+  // Shift + 縦ホイールも時間軸方向のパン。
+  // ブラウザは縦方向の値のまま配送し、スクロールする側がShiftを見て横に流すので、
+  // 自前でスクロールさせるここでも同じようにShiftを見る
+  if (event.shiftKey && event.deltaY !== 0) {
     return { type: "panX", deltaX: event.deltaY };
   }
 
+  // Shiftを押していない縦ホイールは音程方向のスクロールに使われるものなので、
+  // 時間軸方向の操作には使わない
   return { type: "none" };
 };
