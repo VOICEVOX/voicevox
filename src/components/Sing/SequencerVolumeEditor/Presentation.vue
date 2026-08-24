@@ -288,6 +288,15 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 ]);
 
 const handleWheel = (event: WheelEvent) => {
+  const containerElement = canvasContainer.value;
+  assertNonNullable(containerElement);
+  const localX = getXInBorderBox(event.clientX, containerElement);
+
+  // dB目盛り列は時間軸を持たないので、その上での操作は受け付けない
+  if (localX < VOLUME_EDITOR_LAYOUT.keyColumnWidthPx) {
+    return;
+  }
+
   // ドラッグ編集中はビューを動かさない
   if (props.previewMode !== "IDLE") {
     event.preventDefault();
@@ -302,19 +311,15 @@ const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
       emit("panTimeline", action.deltaX);
       return;
-    case "zoomX": {
+    case "zoomX":
       event.preventDefault();
-      const containerElement = canvasContainer.value;
-      assertNonNullable(containerElement);
       // 時間軸の原点はdB目盛り列の右端にあるので、その幅の分を引く
-      const anchorX = Math.max(
-        0,
-        getXInBorderBox(event.clientX, containerElement) -
-          VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
+      emit(
+        "zoomTimeline",
+        localX - VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
+        action.deltaY,
       );
-      emit("zoomTimeline", anchorX, action.deltaY);
       return;
-    }
     default:
       throw new ExhaustiveError(action);
   }
