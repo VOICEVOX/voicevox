@@ -6,6 +6,7 @@
       class="parameter-area"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
+      @wheel="onWheel"
     >
       <SequencerParameterGrid class="parameter-grid" :viewportInfo />
       <SequencerWaveform class="waveform" :viewportInfo />
@@ -27,7 +28,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { ViewportInfo } from "@/sing/viewHelper";
+import { getXInBorderBox, type ViewportInfo } from "@/sing/viewHelper";
+import { resolveTimelineWheelAction } from "@/sing/timelineWheel";
 import { useStore } from "@/store";
 import { usePhonemeTimingEditorStateMachine } from "@/composables/usePhonemeTimingEditorStateMachine";
 import {
@@ -39,7 +41,7 @@ import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
 import SequencerPhonemeTimings from "@/components/Sing/SequencerPhonemeTimings.vue";
 import SequencerNoteTimings from "@/components/Sing/SequencerNoteTimings.vue";
 import SequencerPhonemeTimingToolPalette from "@/components/Sing/SequencerPhonemeTimingToolPalette.vue";
-import { assertNonNullable } from "@/type/utility";
+import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 import {
   computePhonemeTimingInfos,
   getPhraseInfosForTrack,
@@ -61,6 +63,11 @@ const props = defineProps<{
   viewportInfo: ViewportInfo;
 }>();
 
+const emit = defineEmits<{
+  panTimeline: [deltaX: number];
+  zoomTimeline: [anchorX: number, deltaY: number];
+}>();
+
 const viewportInfo = computed(() => props.viewportInfo);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const phonemeTimingEditData = computed(
@@ -80,7 +87,7 @@ const phonemeTimingInfos = computed(() => {
   );
 });
 
-const { stateMachineProcess, cursorState, previewPhonemeTiming } =
+const { stateMachineProcess, cursorState, previewMode, previewPhonemeTiming } =
   usePhonemeTimingEditorStateMachine(
     store,
     viewportInfo,
@@ -102,10 +109,6 @@ const cursorStyle = computed(() => {
       return "default";
   }
 });
-
-const getXInBorderBox = (clientX: number, element: HTMLElement) => {
-  return clientX - element.getBoundingClientRect().left;
-};
 
 const getLocalPositionX = (event: PointerEvent): number => {
   const parameterAreaElement = parameterArea.value;
@@ -129,6 +132,35 @@ const onPointerMove = (event: PointerEvent) => {
     pointerEvent: event,
     positionX: getLocalPositionX(event),
   });
+};
+
+const onWheel = (event: WheelEvent) => {
+  // ドラッグ編集中はビューを動かさない
+  if (previewMode.value !== "IDLE") {
+    event.preventDefault();
+    return;
+  }
+
+  const action = resolveTimelineWheelAction(event);
+  switch (action.type) {
+    case "none":
+      return;
+    case "panX":
+      event.preventDefault();
+      emit("panTimeline", action.deltaX);
+      return;
+    case "zoomX": {
+      event.preventDefault();
+      const parameterAreaElement = parameterArea.value;
+      assertNonNullable(parameterAreaElement);
+      // parameter-areaの左端が時間軸の原点なので、そのまま基準位置にできる
+      const anchorX = getXInBorderBox(event.clientX, parameterAreaElement);
+      emit("zoomTimeline", anchorX, action.deltaY);
+      return;
+    }
+    default:
+      throw new ExhaustiveError(action);
+  }
 };
 
 const onWindowPointerMove = (event: PointerEvent) => {
