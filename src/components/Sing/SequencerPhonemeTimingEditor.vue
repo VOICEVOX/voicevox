@@ -29,7 +29,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { getXInBorderBox, type ViewportInfo } from "@/sing/viewHelper";
-import { resolveTimelineWheelAction } from "@/sing/timelineWheel";
 import { useStore } from "@/store";
 import { usePhonemeTimingEditorStateMachine } from "@/composables/usePhonemeTimingEditorStateMachine";
 import {
@@ -41,12 +40,13 @@ import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
 import SequencerPhonemeTimings from "@/components/Sing/SequencerPhonemeTimings.vue";
 import SequencerNoteTimings from "@/components/Sing/SequencerNoteTimings.vue";
 import SequencerPhonemeTimingToolPalette from "@/components/Sing/SequencerPhonemeTimingToolPalette.vue";
-import { assertNonNullable, ExhaustiveError } from "@/type/utility";
+import { assertNonNullable } from "@/type/utility";
 import {
   computePhonemeTimingInfos,
   getPhraseInfosForTrack,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
 import type { PhonemeTimingEditTool } from "@/store/type";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 const store = useStore();
 const sequencerPhonemeTimingTool = computed(
@@ -141,25 +141,28 @@ const onWheel = (event: WheelEvent) => {
     return;
   }
 
-  const action = resolveTimelineWheelAction(event);
-  switch (action.type) {
-    case "none":
-      return;
-    case "panX":
-      event.preventDefault();
-      emit("panTimeline", action.deltaX);
-      return;
-    case "zoomX": {
-      event.preventDefault();
-      const parameterAreaElement = parameterArea.value;
-      assertNonNullable(parameterAreaElement);
-      // parameter-areaの左端が時間軸の原点なので、そのまま基準位置にできる
-      const anchorX = getXInBorderBox(event.clientX, parameterAreaElement);
-      emit("zoomTimeline", anchorX, action.deltaY);
-      return;
-    }
-    default:
-      throw new ExhaustiveError(action);
+  // Ctrl/Cmd + ホイールは時間軸方向のズーム
+  if (isOnCommandOrCtrlKeyDown(event)) {
+    event.preventDefault();
+    const parameterAreaElement = parameterArea.value;
+    assertNonNullable(parameterAreaElement);
+    const anchorX = getXInBorderBox(event.clientX, parameterAreaElement);
+    emit("zoomTimeline", anchorX, event.deltaY);
+    return;
+  }
+
+  // 横ホイールは時間軸方向のパン
+  if (event.deltaX !== 0) {
+    event.preventDefault();
+    emit("panTimeline", event.deltaX);
+    return;
+  }
+
+  // Shift + 縦ホイールも時間軸方向のパン
+  if (event.shiftKey && event.deltaY !== 0) {
+    event.preventDefault();
+    emit("panTimeline", event.deltaY);
+    return;
   }
 };
 

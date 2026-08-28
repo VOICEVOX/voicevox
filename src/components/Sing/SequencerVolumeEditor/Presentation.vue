@@ -66,7 +66,6 @@ import ContextMenu, {
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
 import type { Tempo, VolumeEditValue } from "@/domain/project/type";
 import { secondToTick } from "@/sing/music";
-import { resolveTimelineWheelAction } from "@/sing/timelineWheel";
 import { clamp } from "@/sing/utility";
 import {
   getXInBorderBox,
@@ -85,11 +84,8 @@ import type {
   VolumeEditorTooltipData,
 } from "@/sing/volumeEditorStateMachine/common";
 import type { VolumeEditTool } from "@/store/type";
-import {
-  assertNonNullable,
-  ExhaustiveError,
-  UnreachableError,
-} from "@/type/utility";
+import { assertNonNullable, UnreachableError } from "@/type/utility";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 defineOptions({
   name: "SequencerVolumeEditorPresentation",
@@ -303,25 +299,30 @@ const onWheel = (event: WheelEvent) => {
     return;
   }
 
-  const action = resolveTimelineWheelAction(event);
-  switch (action.type) {
-    case "none":
-      return;
-    case "panX":
-      event.preventDefault();
-      emit("panTimeline", action.deltaX);
-      return;
-    case "zoomX":
-      event.preventDefault();
-      // 時間軸の原点はdB目盛り列の右端にあるので、その幅の分を引く
-      emit(
-        "zoomTimeline",
-        localX - VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
-        action.deltaY,
-      );
-      return;
-    default:
-      throw new ExhaustiveError(action);
+  // Ctrl/Cmd + ホイールは時間軸方向のズーム
+  if (isOnCommandOrCtrlKeyDown(event)) {
+    event.preventDefault();
+    // 時間軸の原点はdB目盛り列の右端にあるので、その幅の分を引く
+    emit(
+      "zoomTimeline",
+      localX - VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
+      event.deltaY,
+    );
+    return;
+  }
+
+  // 横ホイールは時間軸方向のパン
+  if (event.deltaX !== 0) {
+    event.preventDefault();
+    emit("panTimeline", event.deltaX);
+    return;
+  }
+
+  // Shift + 縦ホイールも時間軸方向のパン
+  if (event.shiftKey && event.deltaY !== 0) {
+    event.preventDefault();
+    emit("panTimeline", event.deltaY);
+    return;
   }
 };
 
