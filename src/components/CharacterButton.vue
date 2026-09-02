@@ -173,11 +173,9 @@
                           />
                         </QAvatar>
                       </QAvatar>
-                      <QItemSection v-if="style.styleName"
-                        >{{ characterInfo.metas.speakerName }}（{{
-                          style.styleName
-                        }}）</QItemSection
-                      >
+                      <QItemSection v-if="style.styleName">{{
+                        style.styleName
+                      }}</QItemSection>
                       <QItemSection v-else>{{
                         characterInfo.metas.speakerName
                       }}</QItemSection>
