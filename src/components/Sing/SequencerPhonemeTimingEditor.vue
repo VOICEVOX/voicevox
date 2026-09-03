@@ -6,6 +6,7 @@
       class="parameter-area"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
+      @wheel="onWheel"
     >
       <SequencerParameterGrid class="parameter-grid" :viewportInfo />
       <SequencerWaveform class="waveform" :viewportInfo />
@@ -27,7 +28,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { ViewportInfo } from "@/sing/viewHelper";
+import { getXInBorderBox, type ViewportInfo } from "@/sing/viewHelper";
 import { useStore } from "@/store";
 import { usePhonemeTimingEditorStateMachine } from "@/composables/usePhonemeTimingEditorStateMachine";
 import {
@@ -45,6 +46,7 @@ import {
   getPhraseInfosForTrack,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
 import type { PhonemeTimingEditTool } from "@/store/type";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 const store = useStore();
 const sequencerPhonemeTimingTool = computed(
@@ -59,6 +61,11 @@ const setSequencerPhonemeTimingTool = (tool: PhonemeTimingEditTool) => {
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
+}>();
+
+const emit = defineEmits<{
+  panTimeline: [deltaX: number];
+  zoomTimeline: [anchorX: number, deltaY: number];
 }>();
 
 const viewportInfo = computed(() => props.viewportInfo);
@@ -80,7 +87,7 @@ const phonemeTimingInfos = computed(() => {
   );
 });
 
-const { stateMachineProcess, cursorState, previewPhonemeTiming } =
+const { stateMachineProcess, cursorState, previewMode, previewPhonemeTiming } =
   usePhonemeTimingEditorStateMachine(
     store,
     viewportInfo,
@@ -102,10 +109,6 @@ const cursorStyle = computed(() => {
       return "default";
   }
 });
-
-const getXInBorderBox = (clientX: number, element: HTMLElement) => {
-  return clientX - element.getBoundingClientRect().left;
-};
 
 const getLocalPositionX = (event: PointerEvent): number => {
   const parameterAreaElement = parameterArea.value;
@@ -129,6 +132,38 @@ const onPointerMove = (event: PointerEvent) => {
     pointerEvent: event,
     positionX: getLocalPositionX(event),
   });
+};
+
+const onWheel = (event: WheelEvent) => {
+  // ドラッグ編集中はビューを動かさない
+  if (previewMode.value !== "IDLE") {
+    event.preventDefault();
+    return;
+  }
+
+  // Ctrl/Cmd + ホイールは時間軸方向のズーム
+  if (isOnCommandOrCtrlKeyDown(event)) {
+    event.preventDefault();
+    const parameterAreaElement = parameterArea.value;
+    assertNonNullable(parameterAreaElement);
+    const anchorX = getXInBorderBox(event.clientX, parameterAreaElement);
+    emit("zoomTimeline", anchorX, event.deltaY);
+    return;
+  }
+
+  // 横ホイールは時間軸方向のパン
+  if (event.deltaX !== 0) {
+    event.preventDefault();
+    emit("panTimeline", event.deltaX);
+    return;
+  }
+
+  // Shift + 縦ホイールも時間軸方向のパン
+  if (event.shiftKey && event.deltaY !== 0) {
+    event.preventDefault();
+    emit("panTimeline", event.deltaY);
+    return;
+  }
 };
 
 const onWindowPointerMove = (event: PointerEvent) => {

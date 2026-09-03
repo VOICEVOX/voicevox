@@ -474,12 +474,11 @@
                   "
                 />
                 <ToggleCell
-                  v-if="!isProduction"
-                  title="[開発時のみ機能] ソング：パラメーターパネルの表示"
+                  title="ソング：パラメーターパネルの表示"
                   description="ONの場合、ソングエディタでパラメーターパネルが表示されます。"
-                  :modelValue="experimentalSetting.showParameterPanel"
+                  :modelValue="experimentalSetting.showSongParameterPanel"
                   @update:modelValue="
-                    changeExperimentalSetting('showParameterPanel', $event)
+                    changeExperimentalSetting('showSongParameterPanel', $event)
                   "
                 />
               </div>

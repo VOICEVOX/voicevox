@@ -13,5 +13,5 @@ export function getUserTestDir(): string {
   if (!appData) {
     throw new Error("Unsupported platform");
   }
-  return path.resolve(appData, `${process.env.VITE_APP_NAME}-test`);
+  return path.join(appData, `${process.env.VITE_APP_NAME}-test`);
 }

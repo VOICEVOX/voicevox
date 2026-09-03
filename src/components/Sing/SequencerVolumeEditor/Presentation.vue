@@ -3,13 +3,10 @@
     ref="canvasContainer"
     class="volume-editor"
     :class="cursorClass"
-    @wheel="handleWheel"
+    @wheel="onWheel"
   >
     <div class="volume-time-grid" aria-hidden="true">
       <slot name="grid" />
-    </div>
-    <div class="volume-waveform-reference" aria-hidden="true">
-      <slot name="waveform" />
     </div>
     <canvas ref="canvas" class="volume-editor-canvas" />
     <div
@@ -67,11 +64,11 @@ import ContextMenu, {
   type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
-import { useTimelineWheel } from "@/composables/useTimelineWheel";
 import type { Tempo, VolumeEditValue } from "@/domain/project/type";
 import { secondToTick } from "@/sing/music";
 import { clamp } from "@/sing/utility";
 import {
+  getXInBorderBox,
   tickToBaseX,
   type CursorState,
   type ViewportInfo,
@@ -88,6 +85,7 @@ import type {
 } from "@/sing/volumeEditorStateMachine/common";
 import type { VolumeEditTool } from "@/store/type";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 defineOptions({
   name: "SequencerVolumeEditorPresentation",
@@ -285,12 +283,48 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
   },
 ]);
 
-const { handleWheel } = useTimelineWheel({
-  leftPaddingPx: VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
-  isWheelDisabled: () => props.previewMode !== "IDLE",
-  onPanX: (deltaX) => emit("panTimeline", deltaX),
-  onZoomX: (anchorX, deltaY) => emit("zoomTimeline", anchorX, deltaY),
-});
+const onWheel = (event: WheelEvent) => {
+  const containerElement = canvasContainer.value;
+  assertNonNullable(containerElement);
+  const localX = getXInBorderBox(event.clientX, containerElement);
+
+  // dB目盛り列は時間軸を持たないので、その上での操作は受け付けない
+  if (localX < VOLUME_EDITOR_LAYOUT.keyColumnWidthPx) {
+    return;
+  }
+
+  // ドラッグ編集中はビューを動かさない
+  if (props.previewMode !== "IDLE") {
+    event.preventDefault();
+    return;
+  }
+
+  // Ctrl/Cmd + ホイールは時間軸方向のズーム
+  if (isOnCommandOrCtrlKeyDown(event)) {
+    event.preventDefault();
+    // 時間軸の原点はdB目盛り列の右端にあるので、その幅の分を引く
+    emit(
+      "zoomTimeline",
+      localX - VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
+      event.deltaY,
+    );
+    return;
+  }
+
+  // 横ホイールは時間軸方向のパン
+  if (event.deltaX !== 0) {
+    event.preventDefault();
+    emit("panTimeline", event.deltaX);
+    return;
+  }
+
+  // Shift + 縦ホイールも時間軸方向のパン
+  if (event.shiftKey && event.deltaY !== 0) {
+    event.preventDefault();
+    emit("panTimeline", event.deltaY);
+    return;
+  }
+};
 
 const updateRenderer = (renderImmediately = false) => {
   const width = viewportWidth.value;
@@ -397,19 +431,6 @@ onUnmounted(() => {
   user-select: none;
   overflow: hidden;
   background: var(--scheme-color-sing-grid-cell-white);
-}
-
-.volume-waveform-reference {
-  position: absolute;
-  inset: auto 0 0 v-bind("`${VOLUME_EDITOR_LAYOUT.keyColumnWidthPx}px`");
-  z-index: 0;
-  height: v-bind("`${VOLUME_EDITOR_LAYOUT.waveformReferenceHeightPercent}%`");
-  pointer-events: none;
-
-  > :deep(*) {
-    width: 100%;
-    height: 100%;
-  }
 }
 
 .volume-time-grid {
