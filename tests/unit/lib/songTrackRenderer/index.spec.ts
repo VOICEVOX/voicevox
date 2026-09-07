@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { SongTrackRendererTestUtility } from "./utility";
+import {
+  type EngineSongApiCall,
+  SongTrackRendererTestUtility,
+} from "./utility";
 import type { RenderingEventInfo } from "./type";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { EngineId, StyleId, TrackId } from "@/type/preload";
@@ -43,6 +46,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
           },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: trackNotes,
         },
       ],
@@ -52,6 +58,105 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
     const renderingResultInfo = await utility.toRenderingResultInfo(result);
 
     expect({ renderingResultInfo }).toMatchSnapshot();
+  });
+
+  test("歌い方の生成と歌声の合成でそれぞれのstyleが使われる", async () => {
+    const trackId = TrackId(uuid4());
+    const singer = {
+      engineId: constants.engineId,
+      styleId: StyleId(100),
+    };
+    const singingTeacher = {
+      styleId: StyleId(200),
+    };
+    const engineSongApiCalls: EngineSongApiCall[] = [];
+    const songTrackRenderer = utility.createSongTrackRendererUsingMock({
+      playheadPositionGetter: () => 0,
+      onEngineSongApiCall: (call) => engineSongApiCalls.push(call),
+    });
+    const snapshot = utility.createSnapshotObject([
+      [
+        trackId,
+        {
+          singer,
+          singingTeacher,
+          notes: utility.createTestNotes(0),
+        },
+      ],
+    ]);
+
+    await songTrackRenderer.render(snapshot);
+
+    expect(engineSongApiCalls).toEqual([
+      {
+        operation: "fetchFrameAudioQuery",
+        styleId: singingTeacher.styleId,
+      },
+      {
+        operation: "fetchSingFrameF0",
+        styleId: singingTeacher.styleId,
+      },
+      {
+        operation: "fetchSingFrameVolume",
+        styleId: singingTeacher.styleId,
+      },
+      {
+        operation: "frameSynthesis",
+        styleId: singer.styleId,
+      },
+    ]);
+  });
+
+  test("歌い方を変更するとキャッシュを使わず再レンダリングされる", async () => {
+    const trackId = TrackId(uuid4());
+    const singer = {
+      engineId: constants.engineId,
+      styleId: constants.singerStyleId,
+    };
+    const notes = utility.createTestNotes(0);
+    const engineSongApiCalls: EngineSongApiCall[] = [];
+    const songTrackRenderer = utility.createSongTrackRendererUsingMock({
+      playheadPositionGetter: () => 0,
+      onEngineSongApiCall: (call) => engineSongApiCalls.push(call),
+    });
+
+    await songTrackRenderer.render(
+      utility.createSnapshotObject([
+        [
+          trackId,
+          {
+            singer,
+            singingTeacher: {
+              styleId: StyleId(1),
+            },
+            notes,
+          },
+        ],
+      ]),
+    );
+    engineSongApiCalls.length = 0;
+
+    await songTrackRenderer.render(
+      utility.createSnapshotObject([
+        [
+          trackId,
+          {
+            singer,
+            singingTeacher: {
+              styleId: StyleId(2),
+            },
+            notes,
+          },
+        ],
+      ]),
+    );
+
+    expect(engineSongApiCalls.map((call) => call.operation)).toEqual([
+      "fetchFrameAudioQuery",
+      "fetchSingFrameF0",
+      "fetchSingFrameVolume",
+      "frameSynthesis",
+    ]);
   });
 
   test("レンダリングイベントが正しく発行される", async () => {
@@ -78,6 +183,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           singer: {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
+          },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
           },
           notes: trackNotes,
         },
@@ -116,6 +224,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
           },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: utility.toTrackNotes(phraseNotesArray),
         },
       ],
@@ -133,6 +244,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           singer: {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
+          },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
           },
           notes: utility.toTrackNotes(phraseNotesArray),
         },
@@ -196,6 +310,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
           },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: utility.toTrackNotes(phraseNotesArray),
         },
       ],
@@ -218,6 +335,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           singer: {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
+          },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
           },
           notes: utility.toTrackNotes(phraseNotesArray),
         },
@@ -274,6 +394,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
           },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: trackNotes,
         },
       ],
@@ -322,6 +445,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
           },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
+          },
           notes: trackNotes,
         },
       ],
@@ -356,9 +482,12 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
     ]);
   });
 
-  test("トラックにシンガーが割り当てられていない場合、そのトラックのフレーズはレンダリングされない", async () => {
+  test("トラックにシンガーまたは歌い方が割り当てられていない場合、そのトラックのフレーズはレンダリングされない", async () => {
     const trackId1 = TrackId(uuid4());
     const singer1 = undefined;
+    const singingTeacher1 = {
+      styleId: constants.singingTeacherStyleId,
+    };
     const trackNotes1 = utility.toTrackNotes([
       utility.createTestNotes(0),
       utility.createTestNotes(1),
@@ -370,10 +499,25 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
       engineId: constants.engineId,
       styleId: constants.singerStyleId,
     };
+    const singingTeacher2 = undefined;
     const trackNotes2 = utility.toTrackNotes([
       utility.createTestNotes(0),
       utility.createTestNotes(3),
       utility.createTestNotes(4),
+    ]);
+
+    const trackId3 = TrackId(uuid4());
+    const singer3 = {
+      engineId: constants.engineId,
+      styleId: constants.singerStyleId,
+    };
+    const singingTeacher3 = {
+      styleId: constants.singingTeacherStyleId,
+    };
+    const trackNotes3 = utility.toTrackNotes([
+      utility.createTestNotes(0),
+      utility.createTestNotes(5),
+      utility.createTestNotes(6),
     ]);
 
     const songTrackRenderer = utility.createSongTrackRendererUsingMock({
@@ -390,6 +534,7 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
         trackId1,
         {
           singer: singer1,
+          singingTeacher: singingTeacher1,
           notes: trackNotes1,
         },
       ],
@@ -397,7 +542,16 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
         trackId2,
         {
           singer: singer2,
+          singingTeacher: singingTeacher2,
           notes: trackNotes2,
+        },
+      ],
+      [
+        trackId3,
+        {
+          singer: singer3,
+          singingTeacher: singingTeacher3,
+          notes: trackNotes3,
         },
       ],
     ]);
@@ -419,9 +573,10 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           value.type === "phraseRenderingStarted" &&
           getOrThrow(phraseInfos, value.phraseKey).trackId === trackId,
       );
-      // シンガーが未設定のトラックはレンダリングされない（0回）
-      // シンガーが設定されているトラックはレンダリングされる（3回）
-      const expectedCount = track.singer == undefined ? 0 : 3;
+      // シンガーまたは歌い方が未設定のトラックはレンダリングされない（0回）
+      // 両方が設定されているトラックはレンダリングされる（3回）
+      const expectedCount =
+        track.singer == undefined || track.singingTeacher == undefined ? 0 : 3;
       expect(phraseRenderingStartedEventInfos.length).toEqual(expectedCount);
     }
   });
@@ -474,6 +629,9 @@ describe("SongTrackRenderer", { timeout: 10000 }, () => {
           singer: {
             engineId: constants.engineId,
             styleId: constants.singerStyleId,
+          },
+          singingTeacher: {
+            styleId: constants.singingTeacherStyleId,
           },
           notes: trackNotes,
         },

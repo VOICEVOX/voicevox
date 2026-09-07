@@ -20,7 +20,7 @@ type SetupStoryState = {
 };
 
 const meta: Meta<StoryProps> = {
-  title: "Components/Sing/SequencerRuler",
+  title: "Components/Song/SequencerRuler",
   component: Container,
   decorators: [
     (story, context) => ({

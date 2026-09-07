@@ -26,7 +26,20 @@ import {
 import { ExhaustiveError } from "@/type/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { createDefaultTrack } from "@/song/domain";
-import type { Note, Singer, Tempo, Track } from "@/domain/project/type";
+import type {
+  Note,
+  Singer,
+  SingingTeacher,
+  Tempo,
+  Track,
+} from "@/domain/project/type";
+
+export type EngineSongApiCall = {
+  operation: keyof ConstructorParameters<
+    typeof SongTrackRenderer
+  >[0]["engineSongApi"];
+  styleId: StyleId;
+};
 
 /**
  * SongTrackRenderer のテスト用のユーティリティー。
@@ -35,20 +48,17 @@ export class SongTrackRendererTestUtility {
   private readonly tpqn: number;
   private readonly tempos: Tempo[];
   private readonly engineId: EngineId;
-  private readonly singingTeacherStyleId: StyleId;
   private readonly frameRate: number;
 
   constructor(constants: {
     tpqn: number;
     tempos: Tempo[];
     engineId: EngineId;
-    singingTeacherStyleId: StyleId;
     frameRate: number;
   }) {
     this.tpqn = constants.tpqn;
     this.tempos = constants.tempos;
     this.engineId = constants.engineId;
-    this.singingTeacherStyleId = constants.singingTeacherStyleId;
     this.frameRate = constants.frameRate;
   }
 
@@ -60,20 +70,25 @@ export class SongTrackRendererTestUtility {
    */
   createSongTrackRendererUsingMock({
     playheadPositionGetter,
+    onEngineSongApiCall,
   }: {
     playheadPositionGetter: () => number;
+    onEngineSongApiCall?: (call: EngineSongApiCall) => void;
   }) {
     const mock = createOpenAPIEngineMock();
 
     const songTrackRenderer = new SongTrackRenderer({
       config: {
-        singingTeacherStyleId: this.singingTeacherStyleId,
         lastRestDurationSeconds: 0.5,
         fadeOutDurationSeconds: 0.15,
         firstRestMinDurationSeconds: 0.12,
       },
       engineSongApi: {
         fetchFrameAudioQuery: async (args) => {
+          onEngineSongApiCall?.({
+            operation: "fetchFrameAudioQuery",
+            styleId: args.styleId,
+          });
           const query = await mock.singFrameAudioQuery({
             speaker: 0,
             score: { notes: args.notes },
@@ -81,6 +96,10 @@ export class SongTrackRendererTestUtility {
           return { ...query, frameRate: this.frameRate };
         },
         fetchSingFrameF0: async (args) => {
+          onEngineSongApiCall?.({
+            operation: "fetchSingFrameF0",
+            styleId: args.styleId,
+          });
           return await mock.singFrameF0({
             speaker: 0,
             bodySingFrameF0SingFrameF0Post: {
@@ -90,6 +109,10 @@ export class SongTrackRendererTestUtility {
           });
         },
         fetchSingFrameVolume: async (args) => {
+          onEngineSongApiCall?.({
+            operation: "fetchSingFrameVolume",
+            styleId: args.styleId,
+          });
           return await mock.singFrameVolume({
             speaker: 0,
             bodySingFrameVolumeSingFrameVolumePost: {
@@ -99,6 +122,10 @@ export class SongTrackRendererTestUtility {
           });
         },
         frameSynthesis: async (args) => {
+          onEngineSongApiCall?.({
+            operation: "frameSynthesis",
+            styleId: args.styleId,
+          });
           return await mock.frameSynthesis({
             speaker: 0,
             frameAudioQuery: args.query,
@@ -118,7 +145,10 @@ export class SongTrackRendererTestUtility {
    * @returns スナップショットオブジェクト。
    */
   createSnapshotObject(
-    trackEntries: [TrackId, { singer?: Singer; notes: Note[] }][],
+    trackEntries: [
+      TrackId,
+      { singer?: Singer; singingTeacher?: SingingTeacher; notes: Note[] },
+    ][],
   ): SnapshotForRender {
     const tracks = new Map<TrackId, Track>();
     for (const trackEntry of trackEntries) {

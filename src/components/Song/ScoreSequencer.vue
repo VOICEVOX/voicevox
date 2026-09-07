@@ -458,7 +458,7 @@ const MAX_PARAMETER_PANEL_HEIGHT = 500;
 const splitterPosition = computed(() => store.state.splitterPosition);
 const parameterPanelHeight = ref(DEFAULT_PARAMETER_PANEL_HEIGHT);
 const isParameterPanelOpen = computed(
-  () => store.state.experimentalSetting.showParameterPanel,
+  () => store.state.experimentalSetting.showSongParameterPanel,
 );
 
 watch(

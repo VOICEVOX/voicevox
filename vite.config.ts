@@ -89,31 +89,31 @@ export default defineConfig((options) => {
     mode === "test" || process.env.SKIP_LAUNCH_ELECTRON === "1";
 
   return {
-    root: path.resolve(import.meta.dirname, "src"),
+    root: path.join(import.meta.dirname, "src"),
     envDir: import.meta.dirname,
     build: {
       target: electronTargetVersion?.chrome,
-      outDir: path.resolve(import.meta.dirname, "dist"),
+      outDir: path.join(import.meta.dirname, "dist"),
       chunkSizeWarningLimit: 10000,
       sourcemap,
       rollupOptions: {
         input: {
-          main: path.resolve(import.meta.dirname, "src/index.html"),
-          welcome: path.resolve(import.meta.dirname, "src/welcome/index.html"),
+          main: path.join(import.meta.dirname, "src/index.html"),
+          welcome: path.join(import.meta.dirname, "src/welcome/index.html"),
         },
       },
     },
-    publicDir: path.resolve(import.meta.dirname, "public"),
+    publicDir: path.join(import.meta.dirname, "public"),
     css: {
       preprocessorOptions: {
         scss: {
-          loadPaths: [path.resolve(import.meta.dirname, "node_modules")],
+          loadPaths: [path.join(import.meta.dirname, "node_modules")],
         },
       },
     },
     resolve: {
       alias: {
-        "@": path.resolve(import.meta.dirname, "src/"),
+        "@": path.join(import.meta.dirname, "src/"),
       },
     },
     plugins: [
@@ -150,7 +150,7 @@ export default defineConfig((options) => {
                 rolldownOptions: {
                   platform: "node",
                 },
-                outDir: path.resolve(import.meta.dirname, "dist"),
+                outDir: path.join(import.meta.dirname, "dist"),
                 sourcemap,
               },
             },
@@ -239,7 +239,7 @@ export default defineConfig((options) => {
             },
           },
           optimizeDeps: {
-            entries: [path.resolve(import.meta.dirname, "src/index.html")],
+            entries: [path.join(import.meta.dirname, "src/index.html")],
           },
           test: {
             globals: true,
@@ -254,7 +254,7 @@ export default defineConfig((options) => {
             },
             isolate: false,
             setupFiles: ["./.storybook/vitest.setup.ts"],
-            dir: path.resolve(import.meta.dirname, "src"),
+            dir: path.join(import.meta.dirname, "src"),
           },
         },
       ],
@@ -267,7 +267,7 @@ const cleanDistPlugin = (): Plugin => {
     apply: "build",
     enforce: "pre",
     async buildStart() {
-      await rm(path.resolve(import.meta.dirname, "dist"), {
+      await rm(path.join(import.meta.dirname, "dist"), {
         recursive: true,
         force: true,
       });
@@ -296,12 +296,12 @@ const electronPreloadOptions = (
           tsconfigPaths: true,
         },
         build: {
-          outDir: path.resolve(import.meta.dirname, "dist"),
+          outDir: path.join(import.meta.dirname, "dist"),
           sourcemap: options.sourcemap,
           target: options.electronTargetVersion?.node,
           rollupOptions: {
             input: {
-              [name]: path.resolve(import.meta.dirname, entry),
+              [name]: path.join(import.meta.dirname, entry),
             },
             output: {
               format: "cjs",

@@ -63,6 +63,7 @@
                         class="audio-cells"
                         :modelValue="audioKeys"
                         :itemKey
+                        :disabled="uiLocked"
                         ghostClass="ghost"
                         filter="input"
                         :preventOnFilter="false"

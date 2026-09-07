@@ -49,7 +49,7 @@ export const settingStoreState: SettingStoreState = {
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
     shouldKeepTuningOnTextChange: false,
-    showParameterPanel: false,
+    showSongParameterPanel: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {

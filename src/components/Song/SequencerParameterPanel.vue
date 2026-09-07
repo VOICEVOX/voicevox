@@ -9,6 +9,10 @@
       <SequencerPhonemeTimingEditor
         v-if="editTarget === 'PHONEME_TIMING'"
         :viewportInfo
+        @panTimeline="(deltaX) => emit('panTimeline', deltaX)"
+        @zoomTimeline="
+          (anchorX, deltaY) => emit('zoomTimeline', anchorX, deltaY)
+        "
       />
       <SequencerVolumeEditor
         v-if="editTarget === 'VOLUME'"

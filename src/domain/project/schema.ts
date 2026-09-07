@@ -83,6 +83,13 @@ export const singerSchema = z.object({
   styleId: styleIdSchema,
 });
 
+export const singingTeacherSchema = z.object({
+  // TODO: 歌い方設定UIをまずは実装するため、現状はシンガーと歌い方教師が
+  // 同一エンジンを使用する前提で、歌い方教師にはstyleIdのみを保持している。
+  // 実際のマルチエンジン環境でどう扱うかは未調査で、また型として妥当かも仮でしかないため、仕様を整理してから修正する
+  styleId: styleIdSchema,
+});
+
 export const phonemeTimingEditSchema = z.object({
   phonemeIndexInNote: z.number(), // ノート内での音素の順番
   offsetSeconds: z.number(), // 単位は秒
@@ -94,6 +101,7 @@ export const volumeEditValueSchema = z.number().nullable();
 export const trackSchema = z.object({
   name: z.string(),
   singer: singerSchema.optional(),
+  singingTeacher: singingTeacherSchema.optional(),
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
