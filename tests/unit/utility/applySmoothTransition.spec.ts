@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applySmoothTransitions } from "@/sing/utility";
+import { applySmoothTransitions } from "@/song/utility";
 
 const smoothStep = (x: number) => {
   const clampedX = Math.min(1.0, Math.max(0.0, x));

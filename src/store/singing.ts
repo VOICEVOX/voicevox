@@ -54,7 +54,7 @@ import {
   PolySynth,
   type Sequence,
   Transport,
-} from "@/sing/audioRendering";
+} from "@/song/audioRendering";
 import {
   getNoteDuration,
   isValidNote,
@@ -66,7 +66,7 @@ import {
   isValidTpqn,
   secondToTick,
   tickToSecond,
-} from "@/sing/music";
+} from "@/song/music";
 import {
   isValidSnapType,
   isValidKeyRangeAdjustment,
@@ -87,34 +87,34 @@ import {
   applyPhonemeTimingEdit,
   adjustPhonemeTimings,
   isValidLoopRange,
-} from "@/sing/domain";
-import { getOverlappingNoteIds } from "@/sing/storeHelper";
+} from "@/song/domain";
+import { getOverlappingNoteIds } from "@/song/storeHelper";
 import {
   AnimationTimer,
   createArray,
   createPromiseThatResolvesWhen,
   getNext,
   round,
-} from "@/sing/utility";
-import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
+} from "@/song/utility";
+import { getWorkaroundKeyRangeAdjustment } from "@/song/workaroundKeyRangeAdjustment";
 import { createLogger } from "@/helpers/log";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
+import { ufProjectToVoicevox } from "@/song/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
-import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox";
-import { generateUniqueFilePath } from "@/sing/fileUtils";
+import { ufProjectFromVoicevox } from "@/song/utaformatixProject/fromVoicevox";
+import { generateUniqueFilePath } from "@/song/fileUtils";
 import {
   isMultiFileProjectFormat,
   isSingleFileProjectFormat,
   projectFileExtensions,
   ufProjectToMultiFile,
   ufProjectToSingleFile,
-} from "@/sing/utaformatixProject/utils";
+} from "@/song/utaformatixProject/utils";
 import { ExhaustiveError, UnreachableError } from "@/type/utility";
 import {
   type CacheLoadedEvent,
@@ -126,7 +126,7 @@ import {
   SongTrackRenderer,
   type VoiceSynthesisCompleteEvent,
   type VolumeGenerationCompleteEvent,
-} from "@/sing/songTrackRendering";
+} from "@/song/songTrackRendering";
 import type {
   Note,
   PhonemeTimingEdit,

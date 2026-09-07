@@ -1,6 +1,6 @@
 import type { ProjectFileTrack } from "./type";
 import type { Track } from "@/domain/project/type";
-import { mapToRecord, recordToMap } from "@/sing/utility";
+import { mapToRecord, recordToMap } from "@/song/utility";
 
 export function toProjectFileTrack(track: Track): ProjectFileTrack {
   return {

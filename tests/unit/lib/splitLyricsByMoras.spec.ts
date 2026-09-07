@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { splitLyricsByMoras } from "@/sing/domain";
+import { splitLyricsByMoras } from "@/song/domain";
 
 it("モーラを分割する", () => {
   expect(splitLyricsByMoras("アイウエオ")).toEqual([

@@ -1,5 +1,5 @@
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { getXInBorderBox } from "@/sing/viewHelper";
+import { getXInBorderBox } from "@/song/viewHelper";
 
 /**
  * 下パネルエディタ共通の wheel ハンドラ。

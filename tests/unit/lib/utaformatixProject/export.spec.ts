@@ -1,10 +1,10 @@
 import { it, expect } from "vitest";
-import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox";
+import { ufProjectFromVoicevox } from "@/song/utaformatixProject/fromVoicevox";
 import {
   createDefaultTempo,
   createDefaultTimeSignature,
   createDefaultTrack,
-} from "@/sing/domain";
+} from "@/song/domain";
 import { NoteId } from "@/type/preload";
 import { uuid4 } from "@/helpers/random";
 

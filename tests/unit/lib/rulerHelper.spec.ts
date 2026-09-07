@@ -3,7 +3,7 @@ import {
   snapTickToBeat,
   getTotalTicks,
   calculateMeasureInfos,
-} from "@/sing/rulerHelper";
+} from "@/song/rulerHelper";
 import type { TimeSignature } from "@/domain/project/type";
 
 describe("rulerHelper", () => {

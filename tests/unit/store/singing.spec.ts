@@ -3,7 +3,7 @@ import { store } from "@/store";
 import { NoteId, TrackId } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { createDefaultTrack } from "@/sing/domain";
+import { createDefaultTrack } from "@/song/domain";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 const initialState = cloneWithUnwrapProxy(store.state);

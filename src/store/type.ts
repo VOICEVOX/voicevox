@@ -68,7 +68,7 @@ import type { OssLicenseInfo } from "@/domain/staticAssets";
 import type {
   MultiFileProjectFormat,
   SingleFileProjectFormat,
-} from "@/sing/utaformatixProject/utils";
+} from "@/song/utaformatixProject/utils";
 import type {
   Note,
   PhonemeTimingEdit,

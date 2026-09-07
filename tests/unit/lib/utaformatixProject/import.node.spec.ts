@@ -4,8 +4,8 @@ import {
   type UfData,
   Project as UfProject,
 } from "@sevenc-nanashi/utaformatix-ts";
-import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
-import { DEFAULT_BPM, DEFAULT_BEATS, DEFAULT_BEAT_TYPE } from "@/sing/domain";
+import { ufProjectToVoicevox } from "@/song/utaformatixProject/toVoicevox";
+import { DEFAULT_BPM, DEFAULT_BEATS, DEFAULT_BEAT_TYPE } from "@/song/domain";
 
 // MIDIファイルの作成情報：
 // - synthv.mid：SynthVで作成（Synthesizer V Studio Pro 1.11.0、プロジェクトファイルは https://github.com/VOICEVOX/voicevox/pull/1982 を参照）
