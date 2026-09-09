@@ -2,10 +2,10 @@ import { ref } from "vue";
 import { createPartialStore, type StorePlugins } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
-  type SingingStoreState,
-  type SingingStoreTypes,
-  type SingingCommandStoreState,
-  type SingingCommandStoreTypes,
+  type SongStoreState,
+  type SongStoreTypes,
+  type SongCommandStoreState,
+  type SongCommandStoreTypes,
   type SaveResultObject,
   type Phrase,
   transformCommandStore,
@@ -139,7 +139,7 @@ import type {
 import { noteSchema } from "@/domain/project/schema";
 import { toEditorTrack } from "@/infrastructures/projectFile/conversion";
 
-const logger = createLogger("store/singing");
+const logger = createLogger("store/song");
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -730,7 +730,7 @@ const getSelectedTrackWithFallback = (partialState: {
   return getOrThrow(partialState.tracks, partialState._selectedTrackId);
 };
 
-export const singingStoreState: SingingStoreState = {
+export const songStoreState: SongStoreState = {
   tpqn: DEFAULT_TPQN,
   tempos: [createDefaultTempo(0)],
   timeSignatures: [createDefaultTimeSignature(1)],
@@ -774,7 +774,7 @@ export const singingStoreState: SingingStoreState = {
   loopEndTick: 0,
 };
 
-export const singingStore = createPartialStore<SingingStoreTypes>({
+export const songStore = createPartialStore<SongStoreTypes>({
   SELECTED_TRACK_ID: {
     getter(state) {
       // Undo/Redoで消えている場合は最初のトラックを選択していることにする
@@ -3500,7 +3500,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 });
 
-export const singingStorePlugins: StorePlugins = [
+export const songStorePlugins: StorePlugins = [
   (store) => {
     store.watch(
       (state) => [
@@ -3546,13 +3546,13 @@ export const singingStorePlugins: StorePlugins = [
   },
 ];
 
-export const singingCommandStoreState: SingingCommandStoreState = {};
+export const songCommandStoreState: SongCommandStoreState = {};
 
-export const singingCommandStore = transformCommandStore(
-  createPartialStore<SingingCommandStoreTypes>({
+export const songCommandStore = transformCommandStore(
+  createPartialStore<SongCommandStoreTypes>({
     COMMAND_SET_SINGER: {
       mutation(draft, { singer, withRelated, trackId }) {
-        singingStore.mutations.SET_SINGER(draft, {
+        songStore.mutations.SET_SINGER(draft, {
           singer,
           withRelated,
           trackId,
@@ -3565,7 +3565,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_SET_SINGING_TEACHER: {
       mutation(draft, { singingTeacher, trackId }) {
-        singingStore.mutations.SET_SINGING_TEACHER(draft, {
+        songStore.mutations.SET_SINGING_TEACHER(draft, {
           singingTeacher,
           trackId,
         });
@@ -3579,7 +3579,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
       mutation(draft, { keyRangeAdjustment, trackId }) {
-        singingStore.mutations.SET_KEY_RANGE_ADJUSTMENT(draft, {
+        songStore.mutations.SET_KEY_RANGE_ADJUSTMENT(draft, {
           keyRangeAdjustment,
           trackId,
         });
@@ -3596,7 +3596,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
       mutation(draft, { volumeRangeAdjustment, trackId }) {
-        singingStore.mutations.SET_VOLUME_RANGE_ADJUSTMENT(draft, {
+        songStore.mutations.SET_VOLUME_RANGE_ADJUSTMENT(draft, {
           volumeRangeAdjustment,
           trackId,
         });
@@ -3613,7 +3613,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_SET_TEMPO: {
       mutation(draft, { tempo }) {
-        singingStore.mutations.SET_TEMPO(draft, { tempo });
+        songStore.mutations.SET_TEMPO(draft, { tempo });
       },
       // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
       action({ state, getters, mutations }, { tempo }: { tempo: Tempo }) {
@@ -3632,7 +3632,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_REMOVE_TEMPO: {
       mutation(draft, { position }) {
-        singingStore.mutations.REMOVE_TEMPO(draft, { position });
+        songStore.mutations.REMOVE_TEMPO(draft, { position });
       },
       // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
       action(
@@ -3656,7 +3656,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_SET_TIME_SIGNATURE: {
       mutation(draft, { timeSignature }) {
-        singingStore.mutations.SET_TIME_SIGNATURE(draft, { timeSignature });
+        songStore.mutations.SET_TIME_SIGNATURE(draft, { timeSignature });
       },
       // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
       action(
@@ -3671,7 +3671,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_REMOVE_TIME_SIGNATURE: {
       mutation(draft, { measureNumber }) {
-        singingStore.mutations.REMOVE_TIME_SIGNATURE(draft, { measureNumber });
+        songStore.mutations.REMOVE_TIME_SIGNATURE(draft, { measureNumber });
       },
       // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
       action(
@@ -3689,7 +3689,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_ADD_NOTES: {
       mutation(draft, { notes, trackId }) {
-        singingStore.mutations.ADD_NOTES(draft, { notes, trackId });
+        songStore.mutations.ADD_NOTES(draft, { notes, trackId });
       },
       action({ getters, mutations }, { notes, trackId }) {
         const existingNoteIds = getters.ALL_NOTE_IDS;
@@ -3704,7 +3704,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_UPDATE_NOTES: {
       mutation(draft, { notes, trackId }) {
-        singingStore.mutations.UPDATE_NOTES(draft, { notes, trackId });
+        songStore.mutations.UPDATE_NOTES(draft, { notes, trackId });
       },
       action({ getters, mutations }, { notes, trackId }) {
         const existingNoteIds = getters.ALL_NOTE_IDS;
@@ -3719,7 +3719,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_REMOVE_NOTES: {
       mutation(draft, { noteIds, trackId }) {
-        singingStore.mutations.REMOVE_NOTES(draft, { noteIds, trackId });
+        songStore.mutations.REMOVE_NOTES(draft, { noteIds, trackId });
       },
       action({ getters, mutations }, { noteIds, trackId }) {
         const existingNoteIds = getters.ALL_NOTE_IDS;
@@ -3744,7 +3744,7 @@ export const singingCommandStore = transformCommandStore(
     // 既存のデータがあれば更新し、なければ追加する。
     COMMAND_UPSERT_PHONEME_TIMING_EDIT: {
       mutation(draft, { noteId, phonemeTimingEdit, trackId }) {
-        singingStore.mutations.UPSERT_PHONEME_TIMING_EDIT(draft, {
+        songStore.mutations.UPSERT_PHONEME_TIMING_EDIT(draft, {
           noteId,
           phonemeTimingEdit,
           trackId,
@@ -3765,7 +3765,7 @@ export const singingCommandStore = transformCommandStore(
     // 指定された音素タイミング編集データを削除する。
     COMMAND_ERASE_PHONEME_TIMING_EDITS: {
       mutation(draft, { targets, trackId }) {
-        singingStore.mutations.ERASE_PHONEME_TIMING_EDITS(draft, {
+        songStore.mutations.ERASE_PHONEME_TIMING_EDITS(draft, {
           targets,
           trackId,
         });
@@ -3816,7 +3816,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_SET_PITCH_EDIT_DATA: {
       mutation(draft, { pitchArray, startFrame, trackId }) {
-        singingStore.mutations.SET_PITCH_EDIT_DATA(draft, {
+        songStore.mutations.SET_PITCH_EDIT_DATA(draft, {
           pitchArray,
           startFrame,
           trackId,
@@ -3838,7 +3838,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_SET_VOLUME_EDIT_DATA: {
       mutation(draft, { volumeArray, startFrame, trackId }) {
-        singingStore.mutations.SET_VOLUME_EDIT_DATA(draft, {
+        songStore.mutations.SET_VOLUME_EDIT_DATA(draft, {
           volumeArray,
           startFrame,
           trackId,
@@ -3860,7 +3860,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_ERASE_PITCH_EDIT_DATA: {
       mutation(draft, { startFrame, frameLength, trackId }) {
-        singingStore.mutations.ERASE_PITCH_EDIT_DATA(draft, {
+        songStore.mutations.ERASE_PITCH_EDIT_DATA(draft, {
           startFrame,
           frameLength,
           trackId,
@@ -3882,7 +3882,7 @@ export const singingCommandStore = transformCommandStore(
     },
     COMMAND_ERASE_VOLUME_EDIT_DATA: {
       mutation(draft, { ranges, trackId }) {
-        singingStore.mutations.ERASE_VOLUME_EDIT_DATA(draft, {
+        songStore.mutations.ERASE_VOLUME_EDIT_DATA(draft, {
           ranges,
           trackId,
         });
@@ -3908,7 +3908,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_INSERT_EMPTY_TRACK: {
       mutation(draft, { trackId, track, prevTrackId }) {
-        singingStore.mutations.INSERT_TRACK(draft, {
+        songStore.mutations.INSERT_TRACK(draft, {
           trackId,
           track,
           prevTrackId,
@@ -3935,7 +3935,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_DELETE_TRACK: {
       mutation(draft, { trackId }) {
-        singingStore.mutations.DELETE_TRACK(draft, { trackId });
+        songStore.mutations.DELETE_TRACK(draft, { trackId });
       },
       action({ mutations }, { trackId }) {
         mutations.COMMAND_DELETE_TRACK({ trackId });
@@ -3986,7 +3986,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_SET_TRACK_NAME: {
       mutation(draft, { trackId, name }) {
-        singingStore.mutations.SET_TRACK_NAME(draft, { trackId, name });
+        songStore.mutations.SET_TRACK_NAME(draft, { trackId, name });
       },
       action({ mutations }, { trackId, name }) {
         mutations.COMMAND_SET_TRACK_NAME({ trackId, name });
@@ -3995,7 +3995,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_SET_TRACK_MUTE: {
       mutation(draft, { trackId, mute }) {
-        singingStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
+        songStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
       },
       action({ mutations }, { trackId, mute }) {
         mutations.COMMAND_SET_TRACK_MUTE({ trackId, mute });
@@ -4004,7 +4004,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_SET_TRACK_SOLO: {
       mutation(draft, { trackId, solo }) {
-        singingStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
+        songStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
       },
       action({ mutations }, { trackId, solo }) {
         mutations.COMMAND_SET_TRACK_SOLO({ trackId, solo });
@@ -4013,7 +4013,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_SET_TRACK_GAIN: {
       mutation(draft, { trackId, gain }) {
-        singingStore.mutations.SET_TRACK_GAIN(draft, { trackId, gain });
+        songStore.mutations.SET_TRACK_GAIN(draft, { trackId, gain });
       },
       action({ mutations }, { trackId, gain }) {
         mutations.COMMAND_SET_TRACK_GAIN({ trackId, gain });
@@ -4022,7 +4022,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_SET_TRACK_PAN: {
       mutation(draft, { trackId, pan }) {
-        singingStore.mutations.SET_TRACK_PAN(draft, { trackId, pan });
+        songStore.mutations.SET_TRACK_PAN(draft, { trackId, pan });
       },
       action({ mutations }, { trackId, pan }) {
         mutations.COMMAND_SET_TRACK_PAN({ trackId, pan });
@@ -4031,7 +4031,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_REORDER_TRACKS: {
       mutation(draft, { trackOrder }) {
-        singingStore.mutations.REORDER_TRACKS(draft, { trackOrder });
+        songStore.mutations.REORDER_TRACKS(draft, { trackOrder });
       },
       action({ mutations }, { trackOrder }) {
         mutations.COMMAND_REORDER_TRACKS({ trackOrder });
@@ -4040,7 +4040,7 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_UNSOLO_ALL_TRACKS: {
       mutation(draft) {
-        singingStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
+        songStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
       },
       action({ mutations }) {
         mutations.COMMAND_UNSOLO_ALL_TRACKS();
@@ -4049,14 +4049,14 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_IMPORT_TRACKS: {
       mutation(draft, { tpqn, tempos, timeSignatures, tracks }) {
-        singingStore.mutations.SET_TPQN(draft, { tpqn });
-        singingStore.mutations.SET_TEMPOS(draft, { tempos });
-        singingStore.mutations.SET_TIME_SIGNATURES(draft, { timeSignatures });
+        songStore.mutations.SET_TPQN(draft, { tpqn });
+        songStore.mutations.SET_TEMPOS(draft, { tempos });
+        songStore.mutations.SET_TIME_SIGNATURES(draft, { timeSignatures });
         for (const { track, trackId, overwrite, prevTrackId } of tracks) {
           if (overwrite) {
-            singingStore.mutations.SET_TRACK(draft, { track, trackId });
+            songStore.mutations.SET_TRACK(draft, { track, trackId });
           } else {
-            singingStore.mutations.INSERT_TRACK(draft, {
+            songStore.mutations.INSERT_TRACK(draft, {
               track,
               trackId,
               prevTrackId,

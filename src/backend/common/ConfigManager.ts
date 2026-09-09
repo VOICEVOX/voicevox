@@ -310,9 +310,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     (config) => {
       // showSingCharacterPortrait -> showSongCharacterPortrait
       if ("showSingCharacterPortrait" in config) {
-        if (!("showSongCharacterPortrait" in config)) {
-          config.showSongCharacterPortrait = config.showSingCharacterPortrait;
-        }
+        config.showSongCharacterPortrait = config.showSingCharacterPortrait;
         delete config.showSingCharacterPortrait;
       }
     },

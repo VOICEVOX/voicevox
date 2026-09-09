@@ -9,7 +9,7 @@ import { createLogger } from "@/helpers/log";
 import type { Singer } from "@/domain/project/type";
 import type { CharacterInfo, EngineId } from "@/type/preload";
 
-const logger = createLogger("sing/workaroundKeyRangeAdjustment");
+const logger = createLogger("song/workaroundKeyRangeAdjustment");
 
 const workaroundKeyRangeAdjustmentValues: Record<
   string,

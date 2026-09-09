@@ -882,7 +882,7 @@ export type SongExportState =
   | "EXPORTING_LABEL"
   | "NOT_EXPORTING";
 
-export type SingingStoreState = {
+export type SongStoreState = {
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
@@ -922,7 +922,7 @@ export type SingingStoreState = {
   loopEndTick: number;
 };
 
-export type SingingStoreTypes = {
+export type SongStoreTypes = {
   SELECTED_TRACK_ID: {
     getter: TrackId;
   };
@@ -1547,11 +1547,11 @@ export type SingingStoreTypes = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export type SingingCommandStoreState = {
+export type SongCommandStoreState = {
   //
 };
 
-export type SingingCommandStoreTypes = {
+export type SongCommandStoreTypes = {
   COMMAND_SET_SINGER: {
     mutation: { singer: Singer; withRelated?: boolean; trackId: TrackId };
     action(payload: {
@@ -2585,8 +2585,8 @@ export type State = AudioStoreState &
   PresetStoreState &
   DictionaryStoreState &
   ProxyStoreState &
-  SingingStoreState &
-  SingingCommandStoreState;
+  SongStoreState &
+  SongCommandStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
   AudioPlayerStoreTypes &
@@ -2600,8 +2600,8 @@ type AllStoreTypes = AudioStoreTypes &
   PresetStoreTypes &
   DictionaryStoreTypes &
   ProxyStoreTypes &
-  SingingStoreTypes &
-  SingingCommandStoreTypes;
+  SongStoreTypes &
+  SongCommandStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;

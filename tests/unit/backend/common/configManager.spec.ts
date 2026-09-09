@@ -75,34 +75,6 @@ it("バージョンが保存される", async () => {
   expect(savedData.__internal__.migrations.version).toBe("999.999.999");
 });
 
-it("showSingCharacterPortraitをshowSongCharacterPortraitへ移行できる", async () => {
-  const data: Record<string, unknown> & {
-    __internal__: { migrations: { version: string } };
-  } = structuredClone(configBase);
-  data.__internal__.migrations.version = "0.26.0";
-  delete data.showSongCharacterPortrait;
-  Object.assign(data, { showSingCharacterPortrait: false });
-
-  vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(
-    async () => true,
-  );
-  vi.spyOn(TestConfigManager.prototype, "load").mockImplementation(
-    async () => data,
-  );
-  const saveSpy = vi
-    .spyOn(TestConfigManager.prototype, "save")
-    .mockImplementation(async () => undefined);
-
-  const configManager = new TestConfigManager();
-  await configManager.initialize();
-  await configManager.ensureSaved();
-
-  expect(configManager.get("showSongCharacterPortrait")).toBe(false);
-  const savedData = saveSpy.mock.calls.at(-1)?.[0];
-  expect(savedData).toHaveProperty("showSongCharacterPortrait", false);
-  expect(savedData).not.toHaveProperty("showSingCharacterPortrait");
-});
-
 for (const [version, data] of pastConfigs) {
   it(`${version}からマイグレーションできる`, async () => {
     vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(

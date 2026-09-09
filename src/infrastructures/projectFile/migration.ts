@@ -219,7 +219,7 @@ export const migrateProjectFileObject = async (
     };
 
     // ソングの情報を初期化
-    // generateSingingStoreInitialScoreが今後変わることがあるかもしれないので、
+    // generateSongStoreInitialScoreが今後変わることがあるかもしれないので、
     // 0.17時点のスコア情報を直接書く
     projectData.song = {
       tpqn: DEFAULT_TPQN,
