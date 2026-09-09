@@ -1798,7 +1798,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           engineManifest.defaultSamplingRate,
         );
 
-        mutations.SET_AUDIO_NOW_PLAYING({ audioKey, nowPlaying: true });
+        mutations.SET_CURRENT_PLAY_STATE({
+          currentPlayState: {
+            type: "streaming",
+            audioKey,
+            currentTime: 0,
+          },
+        });
         return await playAudioWithAbort(async (abortSignal) => {
           const response = await actions
             .INSTANTIATE_ENGINE_CONNECTOR({
@@ -1821,9 +1827,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           const wavStream = new StreamingWavParser(
             ensureNotNullish(response.raw.body),
           );
-          await playAudioStream(wavStream, abortSignal);
+          await playAudioStream(wavStream, abortSignal, {
+            onChunkStart(time) {
+              mutations.SET_CURRENT_PLAY_STATE({
+                currentPlayState: {
+                  type: "streaming",
+                  audioKey,
+                  currentTime: time,
+                },
+              });
+            },
+          });
 
-          mutations.SET_AUDIO_NOW_PLAYING({ audioKey, nowPlaying: false });
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: {
+              type: "stopped",
+            },
+          });
           return !abortSignal.aborted;
         });
       },

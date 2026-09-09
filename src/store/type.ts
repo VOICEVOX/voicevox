@@ -724,8 +724,22 @@ export type AudioCommandStoreTypes = {
  * Audio Player Store Types
  */
 
+export type CurrentPlayState =
+  | {
+      type: "stopped";
+    }
+  | {
+      type: "playing";
+      audioKey: AudioKey;
+    }
+  | {
+      type: "streaming";
+      audioKey: AudioKey;
+      currentTime: number;
+    };
+
 export type AudioPlayerStoreState = {
-  nowPlayingAudioKey?: AudioKey;
+  currentPlayState: CurrentPlayState;
 };
 
 export type AudioPlayerStoreTypes = {
@@ -737,8 +751,8 @@ export type AudioPlayerStoreTypes = {
     getter: boolean;
   };
 
-  SET_AUDIO_NOW_PLAYING: {
-    mutation: { audioKey: AudioKey; nowPlaying: boolean };
+  SET_CURRENT_PLAY_STATE: {
+    mutation: { currentPlayState: CurrentPlayState };
   };
 
   SET_AUDIO_SOURCE: {

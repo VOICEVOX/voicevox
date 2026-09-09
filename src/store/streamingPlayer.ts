@@ -12,6 +12,10 @@ const cancelled = Symbol("cancelled");
 export async function playAudioStream(
   audioStream: StreamingWavParser,
   cancel: AbortSignal,
+  callbacks: {
+    onChunkStart?: (time: number) => void;
+    onDelay?: () => void;
+  } = {},
 ) {
   if (!audioContext) {
     throw new Error("AudioContext is not supported in this browser.");
@@ -24,11 +28,13 @@ export async function playAudioStream(
     resolveCancel(cancelled);
   });
   let lastBufferEndTime = audioContext.currentTime;
+  let lastDelayNotifier: ReturnType<typeof setTimeout> | null = null;
   try {
     const header = await audioStream.readHeader();
     const sampleRate = header.sampleRate;
 
     const samplesIterator = audioStream.readSamples(samplesPerChunk);
+    let numTotalSamples = 0;
     while (true) {
       const audioBuffer = audioContext.createBuffer(
         2,
@@ -39,10 +45,23 @@ export async function playAudioStream(
       const rightChannel = audioBuffer.getChannelData(1);
       let offset = 0;
 
+      // 最初のチャンクは遅延通知をしない
+      if (numTotalSamples > 0) {
+        lastDelayNotifier = setTimeout(
+          () => {
+            callbacks.onDelay?.();
+          },
+          (samplesPerChunk / sampleRate) * 1000,
+        );
+      }
       const chunkOrDone = await Promise.race([
         samplesIterator.next(),
         cancelledPromise,
       ]);
+      if (lastDelayNotifier != null) {
+        clearTimeout(lastDelayNotifier);
+        lastDelayNotifier = null;
+      }
       if (chunkOrDone === cancelled) {
         break;
       }
@@ -60,6 +79,12 @@ export async function playAudioStream(
       source.connect(audioContext.destination);
       const baseTime = Math.max(lastBufferEndTime, audioContext.currentTime);
       source.start(baseTime);
+      const currentSampleTime = numTotalSamples / sampleRate;
+      setTimeout(
+        () => callbacks.onChunkStart?.(currentSampleTime),
+        (baseTime - audioContext.currentTime) * 1000,
+      );
+      numTotalSamples += offset;
       lastBufferEndTime = baseTime + audioBuffer.duration;
       bufferSources.push(source);
     }
