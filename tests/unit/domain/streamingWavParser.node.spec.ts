@@ -43,7 +43,7 @@ describe.each([4, 4093, wav.length])("受信単位が %i バイト", (chunkSize)
       const parser = createParser(wav, chunkSize);
       await parser.readHeader();
       const samples: number[] = [];
-      for await (const chunk of parser.readDataChunks(samplesPerChunk)) {
+      for await (const chunk of parser.readSamples(samplesPerChunk)) {
         expect(chunk).toHaveLength(
           Math.min(
             samplesPerChunk,
@@ -64,7 +64,7 @@ test("音声全体より大きいフレーム数を指定すると全サンプ�
   const parser = createParser(wav, wav.length);
   await parser.readHeader();
   const chunks: [number, number][][] = [];
-  for await (const chunk of parser.readDataChunks(
+  for await (const chunk of parser.readSamples(
     expectedSamples.length / 2 + 1,
   )) {
     chunks.push(chunk);

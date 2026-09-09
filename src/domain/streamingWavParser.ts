@@ -73,7 +73,7 @@ export class StreamingWavParser {
    * WAVの波形データを読み取る。
    * 受けとるデータはfloat32のステレオに変換される。
    */
-  async *readDataChunks(
+  async *readSamples(
     samplesPerChunk: number,
   ): AsyncGenerator<[number, number][]> {
     if (!this.header) {
