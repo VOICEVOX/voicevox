@@ -75,7 +75,7 @@ export class StreamingWavParser {
    */
   async *readSamples(
     samplesPerChunk: number,
-  ): AsyncGenerator<[number, number][]> {
+  ): AsyncGenerator<[number, number][], undefined> {
     if (!this.header) {
       throw new Error("WAV header not read yet");
     }

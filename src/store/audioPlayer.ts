@@ -17,6 +17,18 @@ const getAudioElement = (() => {
   };
 })();
 
+let lastPlayController: AbortController | undefined = undefined;
+export function playAudioWithAbort<T>(
+  callback: (signal: AbortSignal) => Promise<T>,
+): Promise<T> {
+  if (lastPlayController) {
+    lastPlayController.abort();
+  }
+  const controller = new AbortController();
+  lastPlayController = controller;
+  return callback(controller.signal);
+}
+
 export const audioPlayerStoreState: AudioPlayerStoreState = {
   nowPlayingAudioKey: undefined,
 };
@@ -116,6 +128,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   STOP_AUDIO: {
     // 停止中でも呼び出して問題ない
     action() {
+      void playAudioWithAbort(async () => {});
       // PLAY_ でonpause時の処理が設定されているため、pauseするだけで良い
       getAudioElement().pause();
     },

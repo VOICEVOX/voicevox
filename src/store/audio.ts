@@ -35,7 +35,10 @@ import {
   isMorphable,
 } from "./audioGenerate";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
-import { convertAudioQueryFromEngineToEditor } from "./proxy";
+import {
+  convertAudioQueryFromEditorToEngine,
+  convertAudioQueryFromEngineToEditor,
+} from "./proxy";
 import {
   convertHiraToKana,
   convertLongVowel,
@@ -62,10 +65,13 @@ import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { UnreachableError } from "@/type/utility";
+import { ensureNotNullish, UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
+import { playAudioWithAbort } from "./audioPlayer";
+import { StreamingWavParser } from "@/domain/streamingWavParser";
+import { playAudioStream } from "./streamingPlayer";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -1730,8 +1736,21 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   PLAY_AUDIO: {
     action: createUILockAction(
-      async ({ mutations, actions }, { audioKey }: { audioKey: AudioKey }) => {
+      async (
+        { state, mutations, actions },
+        { audioKey }: { audioKey: AudioKey },
+      ) => {
         await actions.STOP_AUDIO();
+
+        // TODO: そのうち移動する
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const engineManifest = state.engineManifests[engineId];
+        if (
+          engineManifest.supportedFeatures?.streamingSynthesis &&
+          !state.audioItems[audioKey].morphingInfo
+        ) {
+          return actions.PLAY_AUDIO_STREAMING({ audioKey });
+        }
 
         // 音声用意
         let fetchAudioResult: FetchAudioResult;
@@ -1755,6 +1774,57 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         return actions.PLAY_AUDIO_BLOB({
           audioBlob: blob,
           audioKey,
+        });
+      },
+    ),
+  },
+
+  PLAY_AUDIO_STREAMING: {
+    action: createUILockAction(
+      async (
+        { state, mutations, actions },
+        { audioKey }: { audioKey: AudioKey },
+      ) => {
+        await actions.STOP_AUDIO();
+
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const engineManifest = state.engineManifests[engineId];
+        if (!engineManifest.supportedFeatures?.streamingSynthesis) {
+          throw new Error("Streaming synthesis is not supported.");
+        }
+        const audioItem = state.audioItems[audioKey];
+        const audioQuery = convertAudioQueryFromEditorToEngine(
+          ensureNotNullish(audioItem.query),
+          engineManifest.defaultSamplingRate,
+        );
+
+        mutations.SET_AUDIO_NOW_PLAYING({ audioKey, nowPlaying: true });
+        return await playAudioWithAbort(async (abortSignal) => {
+          const response = await actions
+            .INSTANTIATE_ENGINE_CONNECTOR({
+              engineId,
+            })
+            .then((instance) =>
+              instance.invoke("streamingSynthesisRaw")(
+                {
+                  audioQuery,
+                  speaker: audioItem.voice.styleId,
+                  enableInterrogativeUpspeak:
+                    state.experimentalSetting.enableInterrogativeUpspeak,
+                },
+                {
+                  signal: abortSignal,
+                },
+              ),
+            );
+
+          const wavStream = new StreamingWavParser(
+            ensureNotNullish(response.raw.body),
+          );
+          await playAudioStream(wavStream, abortSignal);
+
+          mutations.SET_AUDIO_NOW_PLAYING({ audioKey, nowPlaying: false });
+          return !abortSignal.aborted;
         });
       },
     ),

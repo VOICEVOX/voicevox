@@ -46,11 +46,10 @@ export async function playAudioStream(
       if (chunkOrDone === cancelled) {
         break;
       }
-      const chunk = chunkOrDone.value as [number, number][];
-      if (chunk.length === 0 || chunkOrDone.done) {
+      if (chunkOrDone.done) {
         break;
       }
-      for (const [left, right] of chunk) {
+      for (const [left, right] of chunkOrDone.value) {
         leftChannel[offset] = left;
         rightChannel[offset] = right;
         offset++;
