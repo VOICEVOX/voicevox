@@ -752,7 +752,7 @@ export type AudioPlayerStoreTypes = {
 };
 
 /*
- * Singing Store Types
+ * Song Store Types
  */
 
 export type PhraseState =
