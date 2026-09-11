@@ -28,5 +28,14 @@
     "**/*.cjs",
     "**/*.vue"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist_electron",
+    "dist_preview",
+    "storybook-static",
+    "playwright-report",
+    "test-results",
+    "vendored"
+  ]
 }

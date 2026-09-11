@@ -29,6 +29,7 @@ export async function playAudioStream(
   });
   let lastBufferEndTime = audioContext.currentTime;
   let lastDelayNotifier: ReturnType<typeof setTimeout> | null = null;
+  const chunkStartNotifiers: ReturnType<typeof setTimeout>[] = [];
   try {
     const header = await audioStream.readHeader();
     const sampleRate = header.sampleRate;
@@ -55,8 +56,8 @@ export async function playAudioStream(
         );
       }
       const chunkOrDone = await Promise.race([
-        samplesIterator.next(),
         cancelledPromise,
+        samplesIterator.next(),
       ]);
       if (lastDelayNotifier != null) {
         clearTimeout(lastDelayNotifier);
@@ -80,9 +81,11 @@ export async function playAudioStream(
       const baseTime = Math.max(lastBufferEndTime, audioContext.currentTime);
       source.start(baseTime);
       const currentSampleTime = numTotalSamples / sampleRate;
-      setTimeout(
-        () => callbacks.onChunkStart?.(currentSampleTime),
-        (baseTime - audioContext.currentTime) * 1000,
+      chunkStartNotifiers.push(
+        setTimeout(
+          () => callbacks.onChunkStart?.(currentSampleTime),
+          (baseTime - audioContext.currentTime) * 1000,
+        ),
       );
       numTotalSamples += offset;
       lastBufferEndTime = baseTime + audioBuffer.duration;
@@ -98,6 +101,10 @@ export async function playAudioStream(
       }),
       cancelledPromise,
     ]);
+
+    for (const notifier of chunkStartNotifiers) {
+      clearTimeout(notifier);
+    }
 
     for (const source of bufferSources) {
       source.stop();
