@@ -170,10 +170,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       > = true;
 
       for (const key of rootMiscSettingKeys) {
+        // @ts-expect-error Vuexの型処理でUnionが解かれてしまうのを迂回している
+        // FIXME: このワークアラウンドをなくす
         mutations.SET_ROOT_MISC_SETTING({
-          // Vuexの型処理でUnionが解かれてしまうのを迂回している
-          // FIXME: このワークアラウンドをなくす
-          key: key as never,
+          key,
           value: await window.backend.getSetting(key),
         });
       }

@@ -3,7 +3,8 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { rm } from "node:fs/promises";
 import electronPlugin, { type ElectronOptions } from "vite-plugin-electron";
-import vue from "@vitejs/plugin-vue";
+// import vue from "@vitejs/plugin-vue";
+import vize from "@vizejs/vite-plugin";
 import electronDefaultImport from "electron";
 import { type BuildOptions, defineConfig, loadEnv, type Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
@@ -117,7 +118,10 @@ export default defineConfig((options) => {
       },
     },
     plugins: [
-      vue(),
+      // vue(),
+      vize({
+        templateSyntax: "quirks",
+      }),
       quasar({ autoImportComponentCase: "pascal" }),
       isElectron && [
         cleanDistPlugin(),
