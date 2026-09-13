@@ -318,7 +318,8 @@
               <div class="setting-card">
                 <h5 class="headline">外観</h5>
                 <ButtonToggleCell
-                  v-model="currentThemeNameComputed"
+                  :modelValue="currentThemeSetting"
+                  @update:modelValue="changeCurrentTheme"
                   title="テーマ"
                   description="エディタの色を選べます。"
                   :options="availableThemeNameComputed"
@@ -520,25 +521,29 @@ import {
   buildAudioFileNameFromRawData,
   buildSongTrackAudioFileNameFromRawData,
 } from "@/store/utility";
-import type {
-  SavingSetting,
-  EngineSettingType,
-  ExperimentalSettingType,
-  ActivePointScrollMode,
-  RootMiscSettingType,
-  EngineId,
-  EditorFontType,
+import {
+  themeSettingSchema,
+  type SavingSetting,
+  type EngineSettingType,
+  type ExperimentalSettingType,
+  type ActivePointScrollMode,
+  type RootMiscSettingType,
+  type EngineId,
+  type EditorFontType,
 } from "@/type/preload";
 import { createLogger } from "@/helpers/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { isProduction } from "@/helpers/platform";
 import { ExhaustiveError } from "@/type/utility";
+import { useTheme, useThemeSetting } from "@/plugins/themePlugin";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
 const dialogOpened = defineModel<boolean>("dialogOpened");
 
 const store = useStore();
+const { currentThemeSetting, availableThemes } = useTheme();
+const { setCurrentTheme } = useThemeSetting();
 const { warn } = createLogger("SettingDialog");
 
 const engineIds = computed(() => store.state.engineIds);
@@ -642,16 +647,9 @@ const undoableTrackOperations = computed({
 });
 
 // 外観
-const currentThemeNameComputed = computed({
-  get: () => store.state.currentTheme,
-  set: (currentTheme: string) => {
-    void store.actions.SET_CURRENT_THEME_SETTING({ currentTheme });
-  },
-});
-
 const availableThemeNameComputed = computed(() => {
   return [
-    ...[...store.state.availableThemes]
+    ...[...availableThemes]
       .sort((a, b) => a.order - b.order)
       .map((theme) => {
         return { label: theme.displayName, value: theme.name };
@@ -659,6 +657,10 @@ const availableThemeNameComputed = computed(() => {
     { label: "システムに合わせる", value: "system" },
   ];
 });
+
+const changeCurrentTheme = async (themeSetting: string | string[]) => {
+  await setCurrentTheme(themeSettingSchema.parse(themeSetting));
+};
 
 const [editorFont, changeEditorFont] = useRootMiscSetting(store, "editorFont");
 

@@ -3,7 +3,7 @@ import type {
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
-import type { EngineId } from "@/type/preload";
+import type { EngineId, ThemeSetting } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 
 export interface WelcomeSandbox {
@@ -22,7 +22,7 @@ export interface WelcomeSandbox {
     engineId: EngineId,
   ): Promise<EnginePackageLatestInfo>;
   launchMainWindow(): Promise<void>;
-  getCurrentTheme(): Promise<string>;
+  getCurrentTheme(): Promise<ThemeSetting>;
   registerIpcHandler(listeners: {
     updateEngineDownloadProgress?: (obj: {
       engineId: EngineId;

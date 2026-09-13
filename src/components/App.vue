@@ -24,7 +24,6 @@
 import { watch, onMounted, ref, computed, toRaw, watchEffect } from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
 import { TooltipProvider } from "reka-ui";
-import { Dark } from "quasar";
 import { useCommonMenuBarData } from "./Menu/MenuBar/useCommonMenuBarData";
 import TalkEditor from "@/components/Talk/TalkEditor.vue";
 import SingEditor from "@/components/Sing/SingEditor.vue";
@@ -36,7 +35,8 @@ import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
 import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
-import { setFontToCss, setThemeToCss } from "@/domain/dom";
+import { setFontToCss } from "@/domain/dom";
+import { useTheme } from "@/plugins/themePlugin";
 import { concatMenuBarData } from "@/components/Menu/MenuBar/menuBarData";
 import { isElectron } from "@/helpers/platform";
 import { useElectronMenuBarData } from "@/backend/electron/renderer/menuBarData";
@@ -88,24 +88,6 @@ watchEffect(
   { flush: "post" },
 );
 
-// テーマの変更を監視してCSS変数を変更する
-watchEffect(() => {
-  const theme = store.state.availableThemes.find((value) => {
-    return store.state.currentTheme === "system"
-      ? value.isDark === Dark.isActive
-      : value.name == store.state.currentTheme;
-  });
-  if (theme == undefined) {
-    // NOTE: Vuexが初期化されていない場合はまだテーマが読み込まれていないので無視
-    if (store.state.isVuexReady) {
-      throw Error(`Theme not found: ${store.state.currentTheme}`);
-    } else {
-      return;
-    }
-  }
-  setThemeToCss(theme);
-});
-
 // ソングの再生デバイスを同期
 watchEffect(() => {
   void store.actions.APPLY_DEVICE_ID_TO_AUDIO_CONTEXT({
@@ -115,13 +97,14 @@ watchEffect(() => {
 
 // ソフトウェアを初期化
 const { hotkeyManager } = useHotkeyManager();
+const { initialize: initializeTheme } = useTheme();
 const isEnginesReady = ref(false);
 const isProjectFileLoaded = ref<boolean | "waiting">("waiting");
 onMounted(async () => {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
 
-  await store.actions.INIT_VUEX();
+  await Promise.all([store.actions.INIT_VUEX(), initializeTheme()]);
 
   // ショートカットキーの設定を登録
   const hotkeySettings = store.state.hotkeySettings;

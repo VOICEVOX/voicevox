@@ -171,7 +171,7 @@ export const api: Sandbox = {
   },
   setNativeTheme(/* source: NativeThemeType */) {
     // TODO: Impl
-    return;
+    return Promise.resolve();
   },
   vuexReady() {
     // NOTE: 何もしなくて良さそう

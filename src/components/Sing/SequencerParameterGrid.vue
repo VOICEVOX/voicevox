@@ -7,8 +7,8 @@
 <script setup lang="ts">
 import { ref, watch, computed, onUnmounted, onMounted, inject } from "vue";
 import * as PIXI from "pixi.js";
-import { Dark } from "quasar";
 import { useStore } from "@/store";
+import { useTheme } from "@/plugins/themePlugin";
 import { useMounted } from "@/composables/useMounted";
 import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
@@ -27,7 +27,8 @@ const props = defineProps<{
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
-const currentTheme = computed(() => (Dark.isActive ? "dark" : "light"));
+const { isDark } = useTheme();
+const currentTheme = computed(() => (isDark.value ? "dark" : "light"));
 
 const injectedValue = inject(numMeasuresInjectionKey);
 if (injectedValue == undefined) {

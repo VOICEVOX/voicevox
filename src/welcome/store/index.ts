@@ -1,14 +1,11 @@
-import { computed, inject, provide, ref, watch } from "vue";
+import { computed, inject, provide, ref } from "vue";
 import type { InjectionKey } from "vue";
-import { Dark } from "quasar";
 import type {
   EnginePackageEmbeddedInfo,
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
-import { setThemeToCss } from "@/domain/dom";
-import { themes } from "@/domain/theme";
 import type { EngineId } from "@/type/preload";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
@@ -84,15 +81,6 @@ export type LaunchEditorState =
   | { enabled: false; reason: string };
 
 function createWelcomeStore() {
-  watch(
-    () => Dark.isActive,
-    (isDark) => {
-      const theme = themes.find((value) => value.isDark === isDark);
-      assertNonNullable(theme, `Theme not found for dark mode: ${isDark}`);
-      setThemeToCss(theme);
-    },
-  );
-
   const allEngineState = ref<AllEngineState>({
     type: "uninitialized",
   });
@@ -268,23 +256,6 @@ function createWelcomeStore() {
     }
   };
 
-  const applyThemeFromConfig = async () => {
-    const currentTheme = await window.welcomeBackend.getCurrentTheme();
-    if (currentTheme === "system") {
-      Dark.set("auto");
-    }
-    const theme = themes.find((value) => {
-      return currentTheme === "system"
-        ? value.isDark === Dark.isActive
-        : value.name === currentTheme;
-    });
-    assertNonNullable(theme, `Theme not found: ${currentTheme}`);
-    if (currentTheme !== "system") {
-      Dark.set(theme.isDark);
-    }
-    setThemeToCss(theme);
-  };
-
   const installEngine = async (engineId: EngineId) => {
     const target = getSelectedRuntimeTarget(engineId);
     setEngineProgress(engineId, { type: "download", progress: 0 });
@@ -322,7 +293,6 @@ function createWelcomeStore() {
       },
     });
     void loadEngineEmbeddedInfos();
-    void applyThemeFromConfig();
   };
 
   return {

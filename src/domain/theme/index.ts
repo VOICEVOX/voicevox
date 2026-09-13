@@ -1,4 +1,5 @@
-import type { ThemeConf } from "@/type/preload";
+import { assertNonNullable } from "@/type/utility";
+import type { ThemeConf, ThemeSetting } from "@/type/preload";
 
 const light = {
   name: "Default",
@@ -38,4 +39,18 @@ const dark = {
   },
 } as const satisfies ThemeConf;
 
-export const themes = [light, dark];
+export const themes = [light, dark] as const;
+
+/** 設定値と現在の明暗状態から適用するテーマを解決する */
+export const resolveTheme = (
+  themeSetting: ThemeSetting,
+  isDark: boolean,
+): ThemeConf => {
+  const theme = themes.find((value) => {
+    return themeSetting === "system"
+      ? value.isDark === isDark
+      : value.name === themeSetting;
+  });
+  assertNonNullable(theme, `テーマが見つかりません: ${themeSetting}`);
+  return theme;
+};

@@ -1,17 +1,18 @@
 import { setup, type Preview } from "@storybook/vue3-vite";
-import { Quasar, Dark, Dialog, Loading, Notify } from "quasar";
+import { onMounted, onUnmounted } from "vue";
+import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
 import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { store, storeKey } from "@/store";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { createThemePlugin, useThemeSetting } from "@/plugins/themePlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "@/styles/_index.scss";
-import { UnreachableError } from "@/type/utility";
-import { setThemeToCss, setFontToCss } from "@/domain/dom";
-import { themes } from "@/domain/theme";
+import { setFontToCss } from "@/domain/dom";
+import { themeSettingSchema } from "@/type/preload";
 
 setup((app) => {
   app.use(Quasar, {
@@ -31,6 +32,12 @@ setup((app) => {
   });
   app.use(markdownItPlugin);
   app.use(store, storeKey);
+  app.use(
+    createThemePlugin({
+      type: "controlled",
+      initialTheme: "Default",
+    }),
+  );
 });
 
 const preview: Preview = {
@@ -65,44 +72,40 @@ const preview: Preview = {
   decorators: [
     withThemeByDataAttribute({
       themes: {
-        light: "false",
-        dark: "true",
+        light: "Default",
+        dark: "Dark",
       },
       defaultTheme: "light",
-      attributeName: "is-dark-theme",
+      attributeName: "data-storybook-theme",
     }),
 
     // テーマの設定をCSSへ反映する
     () => {
-      let observer: MutationObserver | undefined = undefined;
       return {
-        async mounted() {
-          setFontToCss("default");
-
+        setup() {
+          const { setCurrentTheme } = useThemeSetting();
+          const applyTheme = async () => {
+            const themeSetting = themeSettingSchema.parse(
+              document.documentElement.getAttribute("data-storybook-theme"),
+            );
+            await setCurrentTheme(themeSetting);
+          };
           const root = document.documentElement;
-          let lastIsDark: boolean | undefined = undefined;
-          observer = new MutationObserver(() => {
-            const isDark = root.getAttribute("is-dark-theme") === "true";
-            if (lastIsDark === isDark) return;
-            lastIsDark = isDark;
-
-            const theme = themes.find((theme) => theme.isDark === isDark);
-            if (!theme)
-              throw new UnreachableError("assert: theme !== undefined");
-
-            Dark.set(isDark);
-            setThemeToCss(theme);
+          const observer = new MutationObserver(() => {
+            void applyTheme();
           });
+          onMounted(async () => {
+            setFontToCss("default");
 
-          observer.observe(root, {
-            attributes: true,
-            attributeFilter: ["is-dark-theme"],
+            observer.observe(root, {
+              attributes: true,
+              attributeFilter: ["data-storybook-theme"],
+            });
+            await applyTheme();
           });
-        },
-        unmounted() {
-          if (observer) {
+          onUnmounted(() => {
             observer.disconnect();
-          }
+          });
         },
 
         template: `<story />`,

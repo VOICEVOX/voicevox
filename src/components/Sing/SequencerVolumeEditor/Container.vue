@@ -27,11 +27,11 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, toRaw, watch } from "vue";
-import { Dark } from "quasar";
 import Presentation from "./Presentation.vue";
 import type { VolumeEditorPointerEvent } from "./useVolumeEditorPointerInput";
 import SequencerParameterGrid from "@/components/Sing/SequencerParameterGrid.vue";
 import { useStore } from "@/store";
+import { useTheme } from "@/plugins/themePlugin";
 import type { VolumeEditTool } from "@/store/type";
 import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
 import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
@@ -66,7 +66,7 @@ const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 const tempos = computed(() => store.state.tempos);
 const tpqn = computed(() => store.state.tpqn);
 const editorFrameRate = computed(() => store.state.editorFrameRate);
-const isDark = computed(() => Dark.isActive);
+const { isDark } = useTheme();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const editableFrameRanges = computed<readonly VolumeEditableFrameRange[]>(() =>

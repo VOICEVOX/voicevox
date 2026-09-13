@@ -3,7 +3,7 @@ import type {
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
-import type { EngineId } from "@/type/preload";
+import type { EngineId, ThemeSetting } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 
 /**
@@ -38,7 +38,7 @@ export type WelcomeIpcIHData = {
 
   GET_CURRENT_THEME: {
     args: [];
-    return: string;
+    return: ThemeSetting;
   };
 
   SWITCH_TO_MAIN_WINDOW: {

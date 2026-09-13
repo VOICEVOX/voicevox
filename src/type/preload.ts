@@ -116,7 +116,7 @@ export interface Sandbox {
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   getDefaultToolbarSetting(): Promise<ToolbarSettingType>;
-  setNativeTheme(source: NativeThemeType): void;
+  setNativeTheme(source: NativeThemeType): Promise<void>;
   vuexReady(): void;
   getSetting<Key extends keyof ConfigType>(key: Key): Promise<ConfigType[Key]>;
   setSetting<Key extends keyof ConfigType>(
@@ -332,6 +332,9 @@ export type ToolbarSettingType = z.infer<typeof toolbarSettingSchema>[];
 // base: typeof electron.nativeTheme["themeSource"];
 export type NativeThemeType = "system" | "light" | "dark";
 
+export const themeSettingSchema = z.enum(["Default", "Dark", "system"]);
+export type ThemeSetting = z.infer<typeof themeSettingSchema>;
+
 export type MoraDataType =
   | "consonant"
   | "vowel"
@@ -352,7 +355,7 @@ export type ThemeColorType =
   | "active-point-hover";
 
 export type ThemeConf = {
-  name: string;
+  name: Exclude<ThemeSetting, "system">;
   displayName: string;
   order: number;
   isDark: boolean;
@@ -471,7 +474,7 @@ export function getConfigSchema({ isMac }: { isMac: boolean }) {
       })
       .prefault({}),
     defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
-    currentTheme: z.string().default("Default"),
+    currentTheme: themeSettingSchema.default("Default"),
     experimentalSetting: experimentalSettingSchema.prefault({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])

@@ -16,7 +16,7 @@ import { createIpcSendProxy, type IpcSendProxy } from "../../ipc";
 import type { IpcSOData } from "../../ipcType";
 import { getAppStateController } from "../../appStateController";
 import { getIpcMainHandleManager } from "../ipcMainHandleManager";
-import { themes } from "@/domain/theme";
+import { resolveTheme } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("MainWindowManager");
@@ -82,11 +82,10 @@ class MainWindowManager {
 
     const configManager = getConfigManager();
     const currentTheme = configManager.get("currentTheme");
-    const backgroundColor = themes.find((value) => {
-      return currentTheme === "system"
-        ? value.isDark === nativeTheme.shouldUseDarkColors
-        : value.name == currentTheme;
-    })?.colors.background;
+    const backgroundColor = resolveTheme(
+      currentTheme,
+      nativeTheme.shouldUseDarkColors,
+    ).colors.background;
 
     const win = new BrowserWindow({
       x: mainWindowState.x,
