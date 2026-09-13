@@ -289,7 +289,7 @@ function createWelcomeStore() {
       return "failed";
     } finally {
       setEngineProgress(engineId, { type: "idle" });
-      await fetchCurrentEngineInfo(engineId);
+      void fetchCurrentEngineInfo(engineId);
     }
 
     return "succeeded";
@@ -302,24 +302,12 @@ function createWelcomeStore() {
     void window.welcomeBackend.launchMainWindow();
   };
 
-  const initialize = async () => {
-    window.welcomeBackend.registerIpcHandler({
-      updateEngineDownloadProgress: ({ engineId, progress, type }) => {
-        if (getEngineProgress(engineId).type === "idle") {
-          return;
-        }
-        setEngineProgress(engineId, { progress, type });
-      },
-    });
-    await Promise.all([initializeEngines(), applyThemeFromConfig()]);
-  };
-
-  const startup = async () => {
-    await initialize();
+  const maybeAutoInstallEngineAndLaunchMainWindow = async () => {
     if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
     const allEngineStateLoaded = allEngineState.value;
+    // 手動で開いたWelcome画面では、既存のエンジン構成を自動で変更しない。
     if (
       allEngineStateLoaded.engineIds.some(
         (engineId) =>
@@ -330,7 +318,7 @@ function createWelcomeStore() {
       return;
     }
     if (allEngineStateLoaded.engineIds.length === 0) {
-      return;
+      throw new UnreachableError();
     }
     if (allEngineStateLoaded.engineIds.length > 1) {
       window.welcomeBackend.logWarn(
@@ -341,6 +329,7 @@ function createWelcomeStore() {
 
     const [engineId] = allEngineStateLoaded.engineIds;
     const engineState = allEngineStateLoaded.engineStates[engineId];
+    // 最新情報を取得できない場合は、自動導入を中止して利用者の再試行に委ねる。
     if (engineState.latestInfo.type !== "fetched") {
       return;
     }
@@ -348,6 +337,20 @@ function createWelcomeStore() {
     if (result === "succeeded") {
       await window.welcomeBackend.launchMainWindow();
     }
+  };
+
+  const startup = async () => {
+    window.welcomeBackend.registerIpcHandler({
+      updateEngineDownloadProgress: ({ engineId, progress, type }) => {
+        if (getEngineProgress(engineId).type === "idle") {
+          return;
+        }
+        setEngineProgress(engineId, { progress, type });
+      },
+    });
+    void applyThemeFromConfig();
+    await initializeEngines();
+    await maybeAutoInstallEngineAndLaunchMainWindow();
   };
 
   return {
