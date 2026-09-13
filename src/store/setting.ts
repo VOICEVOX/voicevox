@@ -1,6 +1,7 @@
 import type { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
+import { resolveNativeTheme } from "@/domain/theme";
 import {
   hideAllLoadingScreen,
   showAlertDialog,
@@ -17,7 +18,6 @@ import {
   themeSettingSchema,
   type ThemeSetting,
 } from "@/type/preload";
-import { resolveNativeTheme } from "@/domain/theme";
 import type { IsEqual } from "@/type/utility";
 import type { HotkeySettingType } from "@/domain/hotkeyAction";
 

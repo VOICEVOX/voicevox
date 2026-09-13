@@ -29,6 +29,7 @@ import type {
   AcceptTermsStatus,
   MoraDataType,
   SavingSetting,
+  ThemeSetting,
   ExperimentalSettingType,
   ToolbarSettingType,
   UpdateInfo,
@@ -53,7 +54,6 @@ import type {
   NoteId,
   CommandId,
   TrackId,
-  ThemeSetting,
 } from "@/type/preload";
 import type { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import type {

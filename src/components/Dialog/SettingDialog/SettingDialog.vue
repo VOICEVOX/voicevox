@@ -318,11 +318,10 @@
               <div class="setting-card">
                 <h5 class="headline">外観</h5>
                 <ButtonToggleCell
-                  :modelValue="currentThemeSetting"
+                  v-model="currentThemeNameComputed"
                   title="テーマ"
                   description="エディタの色を選べます。"
                   :options="availableThemeNameComputed"
-                  @update:modelValue="changeCurrentTheme"
                 />
                 <ButtonToggleCell
                   title="フォント"
@@ -548,7 +547,6 @@ const { warn } = createLogger("SettingDialog");
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
-const currentThemeSetting = computed(() => store.state.currentTheme);
 const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 const activePointScrollMode = computed({
   get: () => store.state.activePointScrollMode,
@@ -647,6 +645,14 @@ const undoableTrackOperations = computed({
 });
 
 // 外観
+const currentThemeNameComputed = computed({
+  get: () => store.state.currentTheme,
+  set: (themeSetting: string | string[]) => {
+    const currentTheme = themeSettingSchema.parse(themeSetting);
+    void store.actions.SET_CURRENT_THEME_SETTING({ currentTheme });
+  },
+});
+
 const availableThemeNameComputed = computed(() => {
   return [
     ...[...availableThemes]
@@ -657,11 +663,6 @@ const availableThemeNameComputed = computed(() => {
     { label: "システムに合わせる", value: "system" },
   ];
 });
-
-const changeCurrentTheme = (themeSetting: string | string[]) => {
-  const currentTheme = themeSettingSchema.parse(themeSetting);
-  void store.actions.SET_CURRENT_THEME_SETTING({ currentTheme });
-};
 
 const [editorFont, changeEditorFont] = useRootMiscSetting(store, "editorFont");
 
