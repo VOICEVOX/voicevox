@@ -14,9 +14,15 @@ import {
   EngineId,
   type ConfirmedTips,
   type RootMiscSettingType,
+  themeSettingSchema,
+  type ThemeSetting,
 } from "@/type/preload";
+import { resolveNativeTheme } from "@/domain/theme";
+import { Mutex } from "@/helpers/mutex";
 import type { IsEqual } from "@/type/utility";
 import type { HotkeySettingType } from "@/domain/hotkeyAction";
+
+const themeSettingMutex = new Mutex();
 
 export const settingStoreState: SettingStoreState = {
   openedEditor: undefined,
@@ -33,6 +39,7 @@ export const settingStoreState: SettingStoreState = {
     songTrackFileNamePattern: "",
   },
   hotkeySettings: [],
+  currentTheme: "Default",
   toolbarSetting: [],
   engineIds: [],
   engineInfos: {},
@@ -86,6 +93,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
             data: hotkey,
           });
         });
+      });
+
+      mutations.SET_CURRENT_THEME_SETTING({
+        currentTheme: themeSettingSchema.parse(
+          await window.backend.getSetting("currentTheme"),
+        ),
       });
 
       void actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
@@ -198,6 +211,21 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       mutations.SET_HOTKEY_SETTINGS({
         newHotkey: data,
       });
+    },
+  },
+
+  SET_CURRENT_THEME_SETTING: {
+    mutation(state, { currentTheme }) {
+      state.currentTheme = currentTheme;
+    },
+    async action(
+      { mutations },
+      { currentTheme }: { currentTheme: ThemeSetting },
+    ) {
+      await using _lock = await themeSettingMutex.acquire();
+      await window.backend.setSetting("currentTheme", currentTheme);
+      mutations.SET_CURRENT_THEME_SETTING({ currentTheme });
+      await window.backend.setNativeTheme(resolveNativeTheme(currentTheme));
     },
   },
 

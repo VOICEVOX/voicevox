@@ -1,5 +1,5 @@
-import { assertNonNullable } from "@/type/utility";
-import type { ThemeConf, ThemeSetting } from "@/type/preload";
+import { assertNonNullable, ExhaustiveError } from "@/type/utility";
+import type { NativeThemeType, ThemeConf, ThemeSetting } from "@/type/preload";
 
 const light = {
   name: "Default",
@@ -53,4 +53,20 @@ export const resolveTheme = (
   });
   assertNonNullable(theme, `テーマが見つかりません: ${themeSetting}`);
   return theme;
+};
+
+/** テーマ設定からNativeのテーマを解決する */
+export const resolveNativeTheme = (
+  themeSetting: ThemeSetting,
+): NativeThemeType => {
+  switch (themeSetting) {
+    case "Default":
+      return "light";
+    case "Dark":
+      return "dark";
+    case "system":
+      return "system";
+    default:
+      throw new ExhaustiveError(themeSetting);
+  }
 };

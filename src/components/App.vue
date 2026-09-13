@@ -63,6 +63,12 @@ const subMenuData = computed(() =>
 
 const openedEditor = computed(() => store.state.openedEditor);
 
+const { setCurrentTheme } = useTheme();
+watch(() => store.state.currentTheme, setCurrentTheme, {
+  immediate: true,
+  flush: "sync",
+});
+
 // Google Tag Manager
 const gtm = useGtm();
 watch(
@@ -97,14 +103,13 @@ watchEffect(() => {
 
 // ソフトウェアを初期化
 const { hotkeyManager } = useHotkeyManager();
-const { initialize: initializeTheme } = useTheme();
 const isEnginesReady = ref(false);
 const isProjectFileLoaded = ref<boolean | "waiting">("waiting");
 onMounted(async () => {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
 
-  await Promise.all([store.actions.INIT_VUEX(), initializeTheme()]);
+  await store.actions.INIT_VUEX();
 
   // ショートカットキーの設定を登録
   const hotkeySettings = store.state.hotkeySettings;

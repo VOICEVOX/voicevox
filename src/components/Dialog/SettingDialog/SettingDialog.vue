@@ -319,10 +319,10 @@
                 <h5 class="headline">外観</h5>
                 <ButtonToggleCell
                   :modelValue="currentThemeSetting"
-                  @update:modelValue="changeCurrentTheme"
                   title="テーマ"
                   description="エディタの色を選べます。"
                   :options="availableThemeNameComputed"
+                  @update:modelValue="changeCurrentTheme"
                 />
                 <ButtonToggleCell
                   title="フォント"
@@ -535,20 +535,20 @@ import { createLogger } from "@/helpers/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { isProduction } from "@/helpers/platform";
 import { ExhaustiveError } from "@/type/utility";
-import { useTheme, useThemeSetting } from "@/plugins/themePlugin";
+import { useTheme } from "@/plugins/themePlugin";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
 const dialogOpened = defineModel<boolean>("dialogOpened");
 
 const store = useStore();
-const { currentThemeSetting, availableThemes } = useTheme();
-const { setCurrentTheme } = useThemeSetting();
+const { availableThemes } = useTheme();
 const { warn } = createLogger("SettingDialog");
 
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
+const currentThemeSetting = computed(() => store.state.currentTheme);
 const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 const activePointScrollMode = computed({
   get: () => store.state.activePointScrollMode,
@@ -659,7 +659,8 @@ const availableThemeNameComputed = computed(() => {
 });
 
 const changeCurrentTheme = async (themeSetting: string | string[]) => {
-  await setCurrentTheme(themeSettingSchema.parse(themeSetting));
+  const currentTheme = themeSettingSchema.parse(themeSetting);
+  await store.actions.SET_CURRENT_THEME_SETTING({ currentTheme });
 };
 
 const [editorFont, changeEditorFont] = useRootMiscSetting(store, "editorFont");

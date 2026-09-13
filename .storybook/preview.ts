@@ -10,7 +10,7 @@ import { z } from "zod";
 import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { store, storeKey } from "@/store";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
-import { createThemePlugin, useThemeSetting } from "@/plugins/themePlugin";
+import { themePlugin, useTheme } from "@/plugins/themePlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
@@ -36,12 +36,7 @@ setup((app) => {
   });
   app.use(markdownItPlugin);
   app.use(store, storeKey);
-  app.use(
-    createThemePlugin({
-      type: "controlled",
-      initialTheme: "Default",
-    }),
-  );
+  app.use(themePlugin);
 });
 
 const storybookThemes = {
@@ -116,18 +111,18 @@ const preview: Preview = {
       const initialThemeSetting = resolveInitialThemeSetting(context);
       return {
         setup() {
-          const { setCurrentTheme } = useThemeSetting();
+          const { setCurrentTheme } = useTheme();
           const root = document.documentElement;
-          const applyTheme = async () => {
+          const applyTheme = () => {
             const themeSetting = themeSettingSchema.parse(
               root.getAttribute(storybookThemeAttributeName),
             );
-            await setCurrentTheme(themeSetting);
+            setCurrentTheme(themeSetting);
           };
           const observer = new MutationObserver(() => {
-            void applyTheme();
+            applyTheme();
           });
-          onMounted(async () => {
+          onMounted(() => {
             setFontToCss("default");
             root.setAttribute(storybookThemeAttributeName, initialThemeSetting);
 
@@ -135,7 +130,7 @@ const preview: Preview = {
               attributes: true,
               attributeFilter: [storybookThemeAttributeName],
             });
-            await setCurrentTheme(initialThemeSetting);
+            setCurrentTheme(initialThemeSetting);
           });
           onUnmounted(() => {
             observer.disconnect();

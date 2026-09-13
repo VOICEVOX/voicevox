@@ -53,6 +53,7 @@ import type {
   NoteId,
   CommandId,
   TrackId,
+  ThemeSetting,
 } from "@/type/preload";
 import type { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import type {
@@ -2117,6 +2118,7 @@ export type ProjectStoreTypes = {
 export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySettingType[];
+  currentTheme: ThemeSetting;
   toolbarSetting: ToolbarSettingType;
   engineIds: EngineId[];
   engineInfos: Record<EngineId, EngineInfo>;
@@ -2151,6 +2153,11 @@ export type SettingStoreTypes = {
   SET_HOTKEY_SETTINGS: {
     mutation: { newHotkey: HotkeySettingType };
     action(payload: { data: HotkeySettingType }): void;
+  };
+
+  SET_CURRENT_THEME_SETTING: {
+    mutation: { currentTheme: ThemeSetting };
+    action(payload: { currentTheme: ThemeSetting }): Promise<void>;
   };
 
   SET_TOOLBAR_SETTING: {

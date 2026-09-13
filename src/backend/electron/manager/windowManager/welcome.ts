@@ -13,7 +13,7 @@ import { getConfigManager } from "../../electronConfig";
 import { getAppStateController } from "../../appStateController";
 import { createIpcSendProxy, type IpcSendProxy } from "../../ipc";
 import { getWelcomeIpcMainHandleManager } from "../welcomeIpcMainHandleManager";
-import { resolveTheme } from "@/domain/theme";
+import { resolveNativeTheme, resolveTheme } from "@/domain/theme";
 import type { WelcomeIpcSOData } from "@/welcome/backend/ipcType";
 
 type WindowManagerOption = {
@@ -72,6 +72,7 @@ class WelcomeWindowManager {
     }
     const configManager = getConfigManager();
     const currentTheme = configManager.get("currentTheme");
+    nativeTheme.themeSource = resolveNativeTheme(currentTheme);
     const backgroundColor = resolveTheme(
       currentTheme,
       nativeTheme.shouldUseDarkColors,

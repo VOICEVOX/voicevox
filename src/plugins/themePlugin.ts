@@ -8,77 +8,20 @@ import {
   type ComputedRef,
   type InjectionKey,
   type Plugin,
-  type Ref,
 } from "vue";
 import { colors, Dark, setCssVar } from "quasar";
 import { resolveTheme, themes } from "@/domain/theme";
-import {
-  themeSettingSchema,
-  type NativeThemeType,
-  type ThemeConf,
-  type ThemeSetting,
-} from "@/type/preload";
-import { Mutex } from "@/helpers/mutex";
+import type { ThemeConf, ThemeSetting } from "@/type/preload";
 import { assertNonNullable } from "@/type/utility";
 
-type PersistentThemePluginOptions = {
-  type: "persistent";
-  load: () => Promise<unknown>;
-  save: (themeSetting: ThemeSetting) => Promise<void>;
-  setNativeTheme: (source: NativeThemeType) => Promise<void>;
-};
-
-type ReadonlyThemePluginOptions = {
-  type: "readonly";
-  load: () => Promise<unknown>;
-};
-
-type ControlledThemePluginOptions = {
-  type: "controlled";
-  initialTheme: ThemeSetting;
-};
-
-type ThemePluginOptions =
-  | PersistentThemePluginOptions
-  | ReadonlyThemePluginOptions
-  | ControlledThemePluginOptions;
-
 type ThemeService = {
-  readonly currentThemeSetting: Readonly<Ref<ThemeSetting>>;
   readonly currentTheme: Readonly<ComputedRef<ThemeConf>>;
   readonly isDark: Readonly<ComputedRef<boolean>>;
   readonly availableThemes: readonly ThemeConf[];
-  initialize: () => Promise<void>;
+  setCurrentTheme: (themeSetting: ThemeSetting) => void;
 };
-
-type ThemeSettingService = {
-  setCurrentTheme: (themeSetting: ThemeSetting) => Promise<void>;
-};
-
-type ThemeServiceResult =
-  | {
-      type: "readonly";
-      service: ThemeService;
-      dispose: () => void;
-    }
-  | {
-      type: "writable";
-      service: ThemeService;
-      settingService: ThemeSettingService;
-      dispose: () => void;
-    };
 
 const themeKey: InjectionKey<ThemeService> = Symbol("theme");
-const themeSettingKey: InjectionKey<ThemeSettingService> =
-  Symbol("themeSetting");
-
-const toNativeTheme = (
-  themeSetting: ThemeSetting,
-  theme: ThemeConf,
-): NativeThemeType => {
-  if (themeSetting === "system") return "system";
-  return theme.isDark ? "dark" : "light";
-};
 
 const setThemeToCss = (theme: ThemeConf) => {
   for (const [key, color] of Object.entries(theme.colors)) {
@@ -114,145 +57,72 @@ const setThemeToCss = (theme: ThemeConf) => {
   );
 };
 
-const createThemeService = (
-  options: ThemePluginOptions,
-): ThemeServiceResult => {
-  Dark.set(false);
-  const themeState = shallowRef<{
-    currentThemeSetting: ThemeSetting;
-    currentTheme: ThemeConf;
-  }>({
-    currentThemeSetting: "Default",
-    currentTheme: resolveTheme("Default", Dark.isActive),
-  });
-
-  const currentThemeSetting = computed(
-    () => themeState.value.currentThemeSetting,
-  );
-  const currentTheme = computed(() => themeState.value.currentTheme);
-  const isDark = computed(() => themeState.value.currentTheme.isDark);
-
-  const applyThemeToRenderer = (themeSetting: ThemeSetting) => {
-    const configuredTheme = resolveTheme(themeSetting, Dark.isActive);
-    if (themeSetting === "system") {
-      Dark.set("auto");
-    } else {
-      Dark.set(configuredTheme.isDark);
-    }
-    const resolvedTheme = resolveTheme(themeSetting, Dark.isActive);
-    setThemeToCss(resolvedTheme);
-    themeState.value = {
-      currentThemeSetting: themeSetting,
-      currentTheme: resolvedTheme,
-    };
-    return resolvedTheme;
-  };
-
-  setThemeToCss(themeState.value.currentTheme);
-
-  const mutex = new Mutex();
-
-  watch(
-    () => Dark.isActive,
-    (isDark) => {
-      if (themeState.value.currentThemeSetting !== "system") return;
-      const resolvedTheme = resolveTheme("system", isDark);
-      setThemeToCss(resolvedTheme);
-      themeState.value = {
-        currentThemeSetting: "system",
-        currentTheme: resolvedTheme,
-      };
-    },
-  );
-
-  const initialize = async () => {
-    await using _lock = await mutex.acquire();
-    if (options.type === "controlled") {
-      applyThemeToRenderer(options.initialTheme);
-      return;
-    }
-
-    const loadedThemeSetting = themeSettingSchema.parse(await options.load());
-    resolveTheme(loadedThemeSetting, Dark.isActive);
-    const resolvedTheme = applyThemeToRenderer(loadedThemeSetting);
-
-    if (options.type === "persistent") {
-      await options.setNativeTheme(
-        toNativeTheme(loadedThemeSetting, resolvedTheme),
-      );
-    }
-  };
-
-  const dispose = () => {
-    if (themeState.value.currentThemeSetting === "system") {
-      Dark.set(Dark.isActive);
-    }
-  };
-
-  const service: ThemeService = {
-    currentThemeSetting,
-    currentTheme,
-    isDark,
-    availableThemes: themes,
-    initialize,
-  };
-
-  if (options.type === "readonly") {
-    return { type: "readonly", service, dispose };
-  }
-
-  const setCurrentTheme = async (themeSetting: ThemeSetting) => {
-    await using _lock = await mutex.acquire();
-    const validatedThemeSetting = themeSettingSchema.parse(themeSetting);
-
-    if (options.type === "persistent") {
-      await options.save(validatedThemeSetting);
-    }
-
-    const resolvedTheme = applyThemeToRenderer(validatedThemeSetting);
-
-    if (options.type === "persistent") {
-      await options.setNativeTheme(
-        toNativeTheme(validatedThemeSetting, resolvedTheme),
-      );
-    }
-  };
-
-  return {
-    type: "writable",
-    service,
-    settingService: { setCurrentTheme },
-    dispose,
-  };
-};
-
-/** テーマプラグインを作成する */
-export const createThemePlugin = (options: ThemePluginOptions): Plugin => ({
+export const themePlugin: Plugin = {
   install(app: App) {
     const scope = effectScope();
-    const result = scope.run(() => createThemeService(options));
-    assertNonNullable(result, "テーマサービスを作成できませんでした");
-    app.provide(themeKey, result.service);
-    if (result.type === "writable") {
-      app.provide(themeSettingKey, result.settingService);
-    }
-    app.onUnmount(() => {
-      scope.stop();
-      result.dispose();
+    scope.run(() => {
+      Dark.set(false);
+      const themeState = shallowRef<{
+        currentThemeSetting: ThemeSetting;
+        currentTheme: ThemeConf;
+      }>({
+        currentThemeSetting: "Default",
+        currentTheme: resolveTheme("Default", Dark.isActive),
+      });
+
+      const currentTheme = computed(() => themeState.value.currentTheme);
+      const isDark = computed(() => themeState.value.currentTheme.isDark);
+
+      const applyThemeToRenderer = (themeSetting: ThemeSetting) => {
+        const configuredTheme = resolveTheme(themeSetting, Dark.isActive);
+        if (themeSetting === "system") {
+          Dark.set("auto");
+        } else {
+          Dark.set(configuredTheme.isDark);
+        }
+        const resolvedTheme = resolveTheme(themeSetting, Dark.isActive);
+        setThemeToCss(resolvedTheme);
+        themeState.value = {
+          currentThemeSetting: themeSetting,
+          currentTheme: resolvedTheme,
+        };
+      };
+
+      setThemeToCss(themeState.value.currentTheme);
+
+      watch(
+        () => Dark.isActive,
+        (isDark) => {
+          if (themeState.value.currentThemeSetting !== "system") return;
+          const resolvedTheme = resolveTheme("system", isDark);
+          setThemeToCss(resolvedTheme);
+          themeState.value = {
+            currentThemeSetting: "system",
+            currentTheme: resolvedTheme,
+          };
+        },
+      );
+
+      const service: ThemeService = {
+        currentTheme,
+        isDark,
+        availableThemes: themes,
+        setCurrentTheme: applyThemeToRenderer,
+      };
+      app.provide(themeKey, service);
+      app.onUnmount(() => {
+        scope.stop();
+        if (themeState.value.currentThemeSetting === "system") {
+          Dark.set(Dark.isActive);
+        }
+      });
     });
   },
-});
+};
 
 /** テーマサービスを取得する */
 export const useTheme = (): ThemeService => {
   const theme = inject(themeKey);
   assertNonNullable(theme, "テーマサービスが提供されていません");
   return theme;
-};
-
-/** テーマ設定サービスを取得する */
-export const useThemeSetting = (): ThemeSettingService => {
-  const themeSetting = inject(themeSettingKey);
-  assertNonNullable(themeSetting, "テーマ設定サービスが提供されていません");
-  return themeSetting;
 };

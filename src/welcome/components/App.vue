@@ -35,13 +35,16 @@ import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { provideWelcomeStore } from "@/welcome/store";
 import { useTheme } from "@/plugins/themePlugin";
+import { themeSettingSchema } from "@/type/preload";
 
 const store = provideWelcomeStore();
-const { initialize: initializeTheme } = useTheme();
+const { setCurrentTheme } = useTheme();
 
 onMounted(async () => {
   store.initialize();
-  await initializeTheme();
+  setCurrentTheme(
+    themeSettingSchema.parse(await window.welcomeBackend.getCurrentTheme()),
+  );
 });
 </script>
 

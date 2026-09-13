@@ -16,7 +16,7 @@ import { createIpcSendProxy, type IpcSendProxy } from "../../ipc";
 import type { IpcSOData } from "../../ipcType";
 import { getAppStateController } from "../../appStateController";
 import { getIpcMainHandleManager } from "../ipcMainHandleManager";
-import { resolveTheme } from "@/domain/theme";
+import { resolveNativeTheme, resolveTheme } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("MainWindowManager");
@@ -82,6 +82,7 @@ class MainWindowManager {
 
     const configManager = getConfigManager();
     const currentTheme = configManager.get("currentTheme");
+    nativeTheme.themeSource = resolveNativeTheme(currentTheme);
     const backgroundColor = resolveTheme(
       currentTheme,
       nativeTheme.shouldUseDarkColors,
