@@ -112,6 +112,7 @@ const preview: Preview = {
       return {
         setup() {
           const { setCurrentTheme } = useTheme();
+          setCurrentTheme(initialThemeSetting);
           const root = document.documentElement;
           const applyTheme = () => {
             const themeSetting = themeSettingSchema.parse(
@@ -130,7 +131,6 @@ const preview: Preview = {
               attributes: true,
               attributeFilter: [storybookThemeAttributeName],
             });
-            setCurrentTheme(initialThemeSetting);
           });
           onUnmounted(() => {
             observer.disconnect();
