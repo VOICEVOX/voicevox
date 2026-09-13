@@ -1,5 +1,5 @@
 import type { BuildResult } from "electron-builder";
-import splitNsisArchive from "./splitNsisArchive";
+import { afterNsisWebArtifactBuild } from "./afterNsisWebArtifactBuild";
 
 export default async function afterAllArtifactBuild(buildResult: BuildResult) {
   for (const [platform, targets] of buildResult.platformToTargets.entries()) {
@@ -8,7 +8,7 @@ export default async function afterAllArtifactBuild(buildResult: BuildResult) {
     if (platformName === "windows") {
       for (const [targetKey, target] of targets.entries()) {
         if (targetKey === "nsis-web") {
-          await splitNsisArchive(target);
+          await afterNsisWebArtifactBuild(target);
         }
         // else: nop
       }
