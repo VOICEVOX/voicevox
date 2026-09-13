@@ -63,12 +63,6 @@ const subMenuData = computed(() =>
 
 const openedEditor = computed(() => store.state.openedEditor);
 
-const { setCurrentTheme } = useTheme();
-watch(() => store.state.currentTheme, setCurrentTheme, {
-  immediate: true,
-  flush: "sync",
-});
-
 // Google Tag Manager
 const gtm = useGtm();
 watch(
@@ -93,6 +87,12 @@ watchEffect(
   },
   { flush: "post" },
 );
+
+const { setCurrentTheme } = useTheme();
+watch(() => store.state.currentTheme, setCurrentTheme, {
+  immediate: true,
+  flush: "sync",
+});
 
 // ソングの再生デバイスを同期
 watchEffect(() => {
