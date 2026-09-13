@@ -40,7 +40,8 @@ const store = provideWelcomeStore();
 const { initialize: initializeTheme } = useTheme();
 
 onMounted(async () => {
-  await Promise.all([store.initialize(), initializeTheme()]);
+  store.initialize();
+  await initializeTheme();
 });
 </script>
 
