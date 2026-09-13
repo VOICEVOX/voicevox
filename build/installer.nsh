@@ -800,6 +800,7 @@ FunctionEnd
       SetShellVarContext all
     ${endif}
 
+    ; https://github.com/electron-userland/electron-builder/blob/a6117b3011a105204af8cc2eca02a56976d1ef29/packages/app-builder-lib/templates/nsis/assistedInstaller.nsh#L50
     !ifdef VOICEVOX_AUTO_START_APP
       ${ifNot} ${Silent}
         HideWindow
