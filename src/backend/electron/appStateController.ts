@@ -3,7 +3,7 @@ import { getMainWindowManager } from "./manager/windowManager/main";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getConfigManager } from "./electronConfig";
 import { getWelcomeWindowManager } from "./manager/windowManager/welcome";
-import { ExhaustiveError } from "@/type/utility";
+import { ExhaustiveError, UnreachableError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 import { Mutex } from "@/helpers/mutex";
 import type { EngineId } from "@/type/preload";
@@ -45,7 +45,7 @@ export class AppStateController {
       const engineIds =
         engineAndVvppController.getDownloadableDefaultEnginePackageIds();
       if (engineIds.length === 0) {
-        throw new Error("ダウンロード可能なデフォルトエンジンIDがありません。");
+        throw new UnreachableError();
       }
       if (engineIds.length > 1) {
         await this.launchWelcomeWindow();
