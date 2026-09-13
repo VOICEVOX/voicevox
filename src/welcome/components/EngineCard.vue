@@ -69,7 +69,7 @@
           :label="currentEngineStatus.actionLabel"
           :disabled="isControlDisabled"
           :variant="currentEngineStatus.color"
-          @click="store.installEngine(props.engineId)"
+          @click="handleInstall"
         />
       </div>
     </div>
@@ -122,7 +122,14 @@ function showErrorDetailDialog(error: unknown) {
 
 async function handleRetry() {
   await store.fetchEngineLatestInfo(props.engineId);
-  await store.maybeStartAutomaticInstall(props.engineId);
+  await store.handleEngineInstall({ type: "automatic" });
+}
+
+async function handleInstall() {
+  await store.handleEngineInstall({
+    type: "manual",
+    engineId: props.engineId,
+  });
 }
 
 const latestVersionText = computed(() => {

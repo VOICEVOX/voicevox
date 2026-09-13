@@ -82,6 +82,10 @@ export type LaunchEditorState =
   | { enabled: true }
   | { enabled: false; reason: string };
 
+type EngineInstallRequest =
+  | { type: "automatic" }
+  | { type: "manual"; engineId: EngineId };
+
 function createWelcomeStore() {
   const allEngineState = ref<AllEngineState>({
     type: "uninitialized",
@@ -225,7 +229,6 @@ function createWelcomeStore() {
       engineIds.map(async (engineId) => {
         await fetchCurrentEngineInfo(engineId);
         await fetchEngineLatestInfo(engineId);
-        await maybeStartAutomaticInstall(engineId);
       }),
     );
   };
@@ -274,11 +277,10 @@ function createWelcomeStore() {
     setThemeToCss(theme);
   };
 
-  const installEngine = async (engineId: EngineId) => {
+  const installEngine = async (
+    engineId: EngineId,
+  ): Promise<"succeeded" | "failed"> => {
     const target = getSelectedRuntimeTarget(engineId);
-    if (autoInstallEngineId === engineId) {
-      isAutomaticInstallPending.value = false;
-    }
     setEngineProgress(engineId, { type: "download", progress: 0 });
     try {
       window.welcomeBackend.logInfo(
@@ -294,35 +296,48 @@ function createWelcomeStore() {
         error,
       );
       await showErrorDialog("エンジンのインストールに失敗しました", error);
-      return;
+      return "failed";
     } finally {
       setEngineProgress(engineId, { type: "idle" });
       await fetchCurrentEngineInfo(engineId);
     }
 
+    return "succeeded";
+  };
+
+  const handleEngineInstall = async (request: EngineInstallRequest) => {
+    let engineId: EngineId;
+    if (request.type === "automatic") {
+      if (!isAutomaticInstallPending.value || autoInstallEngineId == null) {
+        return;
+      }
+      if (allEngineState.value.type !== "loaded") {
+        throw new UnreachableError();
+      }
+
+      engineId = autoInstallEngineId;
+      const engineState = allEngineState.value.engineStates[engineId];
+      if (engineState.currentInfo.status === "installed") {
+        isAutomaticInstallPending.value = false;
+        return;
+      }
+      if (engineState.latestInfo.type !== "fetched") {
+        return;
+      }
+    } else {
+      engineId = request.engineId;
+    }
+
+    if (autoInstallEngineId === engineId) {
+      isAutomaticInstallPending.value = false;
+    }
+    const result = await installEngine(engineId);
+    if (result === "failed") {
+      return;
+    }
     if (autoInstallEngineId === engineId) {
       await window.welcomeBackend.launchMainWindow();
     }
-  };
-
-  const maybeStartAutomaticInstall = async (engineId: EngineId) => {
-    if (!isAutomaticInstallPending.value || autoInstallEngineId !== engineId) {
-      return;
-    }
-    if (allEngineState.value.type !== "loaded") {
-      throw new UnreachableError();
-    }
-
-    const engineState = allEngineState.value.engineStates[engineId];
-    if (engineState.currentInfo.status === "installed") {
-      isAutomaticInstallPending.value = false;
-      return;
-    }
-    if (engineState.latestInfo.type !== "fetched") {
-      return;
-    }
-
-    await installEngine(engineId);
   };
 
   const switchToMainWindow = () => {
@@ -352,8 +367,7 @@ function createWelcomeStore() {
     getEngineState,
     getEngineProgress,
     fetchEngineLatestInfo,
-    maybeStartAutomaticInstall,
-    installEngine,
+    handleEngineInstall,
     switchToMainWindow,
     initialize,
   };

@@ -48,6 +48,9 @@ export class AppStateController {
         throw new UnreachableError();
       }
       if (engineIds.length > 1) {
+        log.warn(
+          "Multiple default engines found. Skipping automatic installation.",
+        );
         await this.launchWelcomeWindow();
         return;
       }
