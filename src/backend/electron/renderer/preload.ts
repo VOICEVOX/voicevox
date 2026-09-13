@@ -201,7 +201,7 @@ const api: Sandbox = {
   },
 
   setNativeTheme: (source) => {
-    return ipcRendererInvokeProxy.SET_NATIVE_THEME(source);
+    void ipcRendererInvokeProxy.SET_NATIVE_THEME(source);
   },
 
   vuexReady: () => {

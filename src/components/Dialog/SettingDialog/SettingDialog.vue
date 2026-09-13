@@ -658,9 +658,9 @@ const availableThemeNameComputed = computed(() => {
   ];
 });
 
-const changeCurrentTheme = async (themeSetting: string | string[]) => {
+const changeCurrentTheme = (themeSetting: string | string[]) => {
   const currentTheme = themeSettingSchema.parse(themeSetting);
-  await store.actions.SET_CURRENT_THEME_SETTING({ currentTheme });
+  void store.actions.SET_CURRENT_THEME_SETTING({ currentTheme });
 };
 
 const [editorFont, changeEditorFont] = useRootMiscSetting(store, "editorFont");

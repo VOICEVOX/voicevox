@@ -116,7 +116,7 @@ export interface Sandbox {
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   getDefaultToolbarSetting(): Promise<ToolbarSettingType>;
-  setNativeTheme(source: NativeThemeType): Promise<void>;
+  setNativeTheme(source: NativeThemeType): void;
   vuexReady(): void;
   getSetting<Key extends keyof ConfigType>(key: Key): Promise<ConfigType[Key]>;
   setSetting<Key extends keyof ConfigType>(

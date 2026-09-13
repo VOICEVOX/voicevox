@@ -40,11 +40,13 @@ import { themeSettingSchema } from "@/type/preload";
 const store = provideWelcomeStore();
 const { setCurrentTheme } = useTheme();
 
-onMounted(async () => {
+onMounted(() => {
   store.initialize();
-  setCurrentTheme(
-    themeSettingSchema.parse(await window.welcomeBackend.getCurrentTheme()),
-  );
+  void window.welcomeBackend
+    .getCurrentTheme()
+    .then((themeSetting) =>
+      setCurrentTheme(themeSettingSchema.parse(themeSetting)),
+    );
 });
 </script>
 

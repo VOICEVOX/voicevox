@@ -18,11 +18,8 @@ import {
   type ThemeSetting,
 } from "@/type/preload";
 import { resolveNativeTheme } from "@/domain/theme";
-import { Mutex } from "@/helpers/mutex";
 import type { IsEqual } from "@/type/utility";
 import type { HotkeySettingType } from "@/domain/hotkeyAction";
-
-const themeSettingMutex = new Mutex();
 
 export const settingStoreState: SettingStoreState = {
   openedEditor: undefined,
@@ -39,11 +36,11 @@ export const settingStoreState: SettingStoreState = {
     songTrackFileNamePattern: "",
   },
   hotkeySettings: [],
-  currentTheme: "Default",
   toolbarSetting: [],
   engineIds: [],
   engineInfos: {},
   engineManifests: {},
+  currentTheme: "Default",
   editorFont: "default",
   showTextLineNumber: false,
   showAddAudioItemButton: true,
@@ -214,21 +211,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
-  SET_CURRENT_THEME_SETTING: {
-    mutation(state, { currentTheme }) {
-      state.currentTheme = currentTheme;
-    },
-    async action(
-      { mutations },
-      { currentTheme }: { currentTheme: ThemeSetting },
-    ) {
-      await using _lock = await themeSettingMutex.acquire();
-      await window.backend.setSetting("currentTheme", currentTheme);
-      mutations.SET_CURRENT_THEME_SETTING({ currentTheme });
-      await window.backend.setNativeTheme(resolveNativeTheme(currentTheme));
-    },
-  },
-
   SET_TOOLBAR_SETTING: {
     mutation(
       state,
@@ -255,6 +237,17 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       // @ts-expect-error Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
       mutations.SET_ROOT_MISC_SETTING({ key, value });
+    },
+  },
+
+  SET_CURRENT_THEME_SETTING: {
+    mutation(state, { currentTheme }) {
+      state.currentTheme = currentTheme;
+    },
+    action({ mutations }, { currentTheme }: { currentTheme: ThemeSetting }) {
+      void window.backend.setSetting("currentTheme", currentTheme);
+      window.backend.setNativeTheme(resolveNativeTheme(currentTheme));
+      mutations.SET_CURRENT_THEME_SETTING({ currentTheme });
     },
   },
 

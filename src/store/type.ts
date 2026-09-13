@@ -2118,11 +2118,11 @@ export type ProjectStoreTypes = {
 export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySettingType[];
-  currentTheme: ThemeSetting;
   toolbarSetting: ToolbarSettingType;
   engineIds: EngineId[];
   engineInfos: Record<EngineId, EngineInfo>;
   engineManifests: Record<EngineId, EngineManifest>;
+  currentTheme: ThemeSetting;
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSettingType;
@@ -2155,11 +2155,6 @@ export type SettingStoreTypes = {
     action(payload: { data: HotkeySettingType }): void;
   };
 
-  SET_CURRENT_THEME_SETTING: {
-    mutation: { currentTheme: ThemeSetting };
-    action(payload: { currentTheme: ThemeSetting }): Promise<void>;
-  };
-
   SET_TOOLBAR_SETTING: {
     mutation: { toolbarSetting: ToolbarSettingType };
     action(payload: { data: ToolbarSettingType }): void;
@@ -2168,6 +2163,11 @@ export type SettingStoreTypes = {
   SET_ROOT_MISC_SETTING: {
     mutation: KeyValuePayload<RootMiscSettingType>;
     action(payload: KeyValuePayload<RootMiscSettingType>): void;
+  };
+
+  SET_CURRENT_THEME_SETTING: {
+    mutation: { currentTheme: ThemeSetting };
+    action(payload: { currentTheme: ThemeSetting }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
