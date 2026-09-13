@@ -75,10 +75,6 @@ class WelcomeIpcMainHandleManager {
           obj.engineId,
         );
       },
-      GET_WELCOME_WINDOW_LAUNCH_CONTEXT: () => {
-        const welcomeWindowManager = getWelcomeWindowManager();
-        return welcomeWindowManager.getLaunchContext();
-      },
       GET_CURRENT_THEME: async () => {
         return configManager.get("currentTheme");
       },

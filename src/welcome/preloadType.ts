@@ -5,7 +5,6 @@ import type {
 } from "@/domain/enginePackage";
 import type { EngineId } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
-import type { WelcomeWindowLaunchContext } from "@/domain/welcome";
 
 export interface WelcomeSandbox {
   installEngine(obj: {
@@ -22,7 +21,6 @@ export interface WelcomeSandbox {
   getEnginePackageLatestInfo(
     engineId: EngineId,
   ): Promise<EnginePackageLatestInfo>;
-  getWelcomeWindowLaunchContext(): Promise<WelcomeWindowLaunchContext>;
   launchMainWindow(): Promise<void>;
   getCurrentTheme(): Promise<string>;
   registerIpcHandler(listeners: {

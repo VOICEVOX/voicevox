@@ -6,7 +6,7 @@ import { getWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 import { Mutex } from "@/helpers/mutex";
-import type { WelcomeWindowLaunchContext } from "@/domain/welcome";
+import type { EngineId } from "@/type/preload";
 
 const log = createLogger("AppStateController");
 
@@ -48,11 +48,11 @@ export class AppStateController {
         throw new Error("ダウンロード可能なデフォルトエンジンIDがありません。");
       }
       if (engineIds.length > 1) {
-        await this.launchWelcomeWindow({ type: "manual" });
+        await this.launchWelcomeWindow();
         return;
       }
       const [engineId] = engineIds;
-      await this.launchWelcomeWindow({ type: "initialSetup", engineId });
+      await this.launchWelcomeWindow(engineId);
     }
   }
 
@@ -84,15 +84,15 @@ export class AppStateController {
       await engineAndVvppController.cleanupEngines();
     }
 
-    await this.launchWelcomeWindow({ type: "manual" });
+    await this.launchWelcomeWindow();
     this.quitState = "unconfirmed";
   }
 
-  private async launchWelcomeWindow(context: WelcomeWindowLaunchContext) {
+  private async launchWelcomeWindow(autoInstallEngineId?: EngineId) {
     this.activeWindow = "welcome";
 
     const welcomeWindowManager = getWelcomeWindowManager();
-    await welcomeWindowManager.createWindow(context);
+    await welcomeWindowManager.createWindow(autoInstallEngineId);
   }
 
   private async launchEngineAndMainWindow() {

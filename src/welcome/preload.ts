@@ -50,9 +50,6 @@ const api: WelcomeSandbox = {
   getEnginePackageLatestInfo: (engineId) => {
     return ipcRendererInvokeProxy.GET_ENGINE_PACKAGE_LATEST_INFO({ engineId });
   },
-  getWelcomeWindowLaunchContext: () => {
-    return ipcRendererInvokeProxy.GET_WELCOME_WINDOW_LAUNCH_CONTEXT();
-  },
   launchMainWindow: () => {
     return ipcRendererInvokeProxy.SWITCH_TO_MAIN_WINDOW();
   },

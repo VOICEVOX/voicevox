@@ -14,7 +14,7 @@ import { createIpcSendProxy, type IpcSendProxy } from "../../ipc";
 import { getWelcomeIpcMainHandleManager } from "../welcomeIpcMainHandleManager";
 import { themes } from "@/domain/theme";
 import type { WelcomeIpcSOData } from "@/welcome/backend/ipcType";
-import type { WelcomeWindowLaunchContext } from "@/domain/welcome";
+import type { EngineId } from "@/type/preload";
 
 type WindowManagerOption = {
   staticDir: string;
@@ -22,17 +22,13 @@ type WindowManagerOption = {
   isTest: boolean;
 };
 
-type LaunchContextState =
-  | { type: "uninitialized" }
-  | { type: "initialized"; context: WelcomeWindowLaunchContext };
-
 class WelcomeWindowManager {
   private _win: BrowserWindow | undefined;
   private _ipc: IpcSendProxy<WelcomeIpcSOData> | undefined;
   private staticDir: string;
   private isDevelopment: boolean;
   private isTest: boolean;
-  private launchContextState: LaunchContextState = { type: "uninitialized" };
+  private autoInstallEngineId: EngineId | undefined;
 
   constructor(payload: WindowManagerOption) {
     this.staticDir = payload.staticDir;
@@ -71,7 +67,7 @@ class WelcomeWindowManager {
     return this._ipc;
   }
 
-  public async createWindow(context: WelcomeWindowLaunchContext) {
+  public async createWindow(autoInstallEngineId?: EngineId) {
     if (this.win != undefined) {
       throw new Error("Window has already been created");
     }
@@ -117,10 +113,10 @@ class WelcomeWindowManager {
     win.on("closed", () => {
       this._win = undefined;
       this._ipc = undefined;
-      this.launchContextState = { type: "uninitialized" };
+      this.autoInstallEngineId = undefined;
     });
     this._win = win;
-    this.launchContextState = { type: "initialized", context };
+    this.autoInstallEngineId = autoInstallEngineId;
 
     await this.load();
 
@@ -135,6 +131,12 @@ class WelcomeWindowManager {
       firstUrl.pathname = "/welcome/index.html";
     } else {
       firstUrl = new URL(`app://./welcome/index.html`);
+    }
+    if (this.autoInstallEngineId != undefined) {
+      firstUrl.searchParams.append(
+        "autoInstallEngineId",
+        this.autoInstallEngineId,
+      );
     }
     await win.loadURL(firstUrl.toString());
   }
@@ -219,16 +221,6 @@ class WelcomeWindowManager {
 
   public isMaximized() {
     return this.getWindow().isMaximized();
-  }
-
-  /** Welcomeウィンドウの起動コンテキストを取得する。 */
-  public getLaunchContext() {
-    if (this.launchContextState.type === "uninitialized") {
-      throw new Error(
-        "Welcomeウィンドウの起動コンテキストが初期化されていません。",
-      );
-    }
-    return this.launchContextState.context;
   }
 
   public showOpenDialogSync(options: OpenDialogSyncOptions) {

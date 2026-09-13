@@ -6,13 +6,9 @@ import type {
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
-import {
-  welcomeWindowLaunchContextSchema,
-  type WelcomeWindowLaunchContext,
-} from "@/domain/welcome";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
-import type { EngineId } from "@/type/preload";
+import { engineIdSchema, type EngineId } from "@/type/preload";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 
@@ -90,8 +86,12 @@ function createWelcomeStore() {
   const allEngineState = ref<AllEngineState>({
     type: "uninitialized",
   });
-  const welcomeWindowLaunchContext = ref<WelcomeWindowLaunchContext>();
-  const isAutomaticInstallPending = ref(false);
+  const autoInstallEngineId = engineIdSchema
+    .nullable()
+    .parse(
+      new URLSearchParams(window.location.search).get("autoInstallEngineId"),
+    );
+  const isAutomaticInstallPending = ref(autoInstallEngineId != null);
 
   const launchEditorState = computed<LaunchEditorState>(() => {
     if (
@@ -128,16 +128,14 @@ function createWelcomeStore() {
   });
 
   const initialSetupState = computed<"manual" | "preparing" | "failed">(() => {
-    const launchContext = welcomeWindowLaunchContext.value;
-    if (launchContext?.type !== "initialSetup") {
+    if (autoInstallEngineId == null) {
       return "manual";
     }
     if (allEngineState.value.type !== "loaded") {
       return "preparing";
     }
 
-    const engineState =
-      allEngineState.value.engineStates[launchContext.engineId];
+    const engineState = allEngineState.value.engineStates[autoInstallEngineId];
     if (engineState.latestInfo.type === "fetchError") {
       return "failed";
     }
@@ -305,11 +303,7 @@ function createWelcomeStore() {
 
   const installEngine = async (engineId: EngineId) => {
     const target = getSelectedRuntimeTarget(engineId);
-    const launchContext = welcomeWindowLaunchContext.value;
-    if (
-      launchContext?.type === "initialSetup" &&
-      launchContext.engineId === engineId
-    ) {
+    if (autoInstallEngineId === engineId) {
       isAutomaticInstallPending.value = false;
     }
     setEngineProgress(engineId, { type: "download", progress: 0 });
@@ -333,21 +327,13 @@ function createWelcomeStore() {
       await fetchCurrentEngineInfo(engineId);
     }
 
-    if (
-      launchContext?.type === "initialSetup" &&
-      launchContext.engineId === engineId
-    ) {
+    if (autoInstallEngineId === engineId) {
       await window.welcomeBackend.launchMainWindow();
     }
   };
 
   const maybeStartAutomaticInstall = async (engineId: EngineId) => {
-    const launchContext = welcomeWindowLaunchContext.value;
-    if (
-      !isAutomaticInstallPending.value ||
-      launchContext?.type !== "initialSetup" ||
-      launchContext.engineId !== engineId
-    ) {
+    if (!isAutomaticInstallPending.value || autoInstallEngineId !== engineId) {
       return;
     }
     if (allEngineState.value.type !== "loaded") {
@@ -374,11 +360,6 @@ function createWelcomeStore() {
   };
 
   const initialize = async () => {
-    const launchContext = welcomeWindowLaunchContextSchema.parse(
-      await window.welcomeBackend.getWelcomeWindowLaunchContext(),
-    );
-    welcomeWindowLaunchContext.value = launchContext;
-    isAutomaticInstallPending.value = launchContext.type === "initialSetup";
     window.welcomeBackend.registerIpcHandler({
       updateEngineDownloadProgress: ({ engineId, progress, type }) => {
         if (getEngineProgress(engineId).type === "idle") {
