@@ -6,7 +6,6 @@ import { z } from "zod";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
 import afterPack from "./afterPack";
 import type { VoicevoxEnginePlacement } from "./afterPack";
-import { parseInstallerMode } from "./installerMode";
 
 const rootDir = path.join(import.meta.dirname, "..");
 const dotenvPath = [
@@ -17,7 +16,10 @@ const dotenvPath = [
 ];
 dotenv.config({ path: dotenvPath, quiet: true });
 
-const installerMode = parseInstallerMode(process.env.VOICEVOX_ENGINE_MODE);
+const installerMode = z
+  .enum(["download", "embed"])
+  .default("download")
+  .parse(process.env.VOICEVOX_ENGINE_MODE);
 const voicevoxEnginePlacement = parseVoicevoxEnginePlacementFromEnv(
   process.env.VOICEVOX_ENGINE_PLACEMENT_MODE,
   process.env.VOICEVOX_ENGINE_DIR,
@@ -116,7 +118,8 @@ const builderOptions: ElectronBuilderConfiguration = {
   productName: "VOICEVOX",
   appId: "jp.hiroshiba.voicevox",
   copyright: "Hiroshiba Kazuyuki",
-  afterAllArtifactBuild,
+  afterAllArtifactBuild:
+    installerMode === "embed" ? afterAllArtifactBuild : undefined,
   afterPack: (context) => afterPack(context, voicevoxEnginePlacement),
   electronFuses: {
     runAsNode: false,
