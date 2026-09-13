@@ -342,9 +342,6 @@ function createWelcomeStore() {
   const startup = async () => {
     window.welcomeBackend.registerIpcHandler({
       updateEngineDownloadProgress: ({ engineId, progress, type }) => {
-        if (getEngineProgress(engineId).type === "idle") {
-          return;
-        }
         setEngineProgress(engineId, { progress, type });
       },
     });
