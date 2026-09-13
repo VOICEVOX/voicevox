@@ -63,13 +63,13 @@
           v-if="latestInfo.type === 'fetchError'"
           label="再試行"
           variant="default"
-          @click="handleRetry"
+          @click="store.fetchEngineLatestInfo(props.engineId)"
         />
         <BaseButton
           :label="currentEngineStatus.actionLabel"
           :disabled="isControlDisabled"
           :variant="currentEngineStatus.color"
-          @click="handleInstall"
+          @click="store.installEngine(props.engineId)"
         />
       </div>
     </div>
@@ -118,18 +118,6 @@ function findSelectedPackageInfo(
 
 function showErrorDetailDialog(error: unknown) {
   void showErrorDialog("最新情報の取得に失敗しました", error);
-}
-
-async function handleRetry() {
-  await store.fetchEngineLatestInfo(props.engineId);
-  await store.handleEngineInstall({ type: "automatic" });
-}
-
-async function handleInstall() {
-  await store.handleEngineInstall({
-    type: "manual",
-    engineId: props.engineId,
-  });
 }
 
 const latestVersionText = computed(() => {

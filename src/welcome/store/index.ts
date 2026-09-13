@@ -82,10 +82,6 @@ export type LaunchEditorState =
   | { enabled: true }
   | { enabled: false; reason: string };
 
-type EngineInstallRequest =
-  | { type: "automatic" }
-  | { type: "manual"; engineId: EngineId };
-
 function createWelcomeStore() {
   const allEngineState = ref<AllEngineState>({
     type: "uninitialized",
@@ -95,7 +91,6 @@ function createWelcomeStore() {
     .parse(
       new URLSearchParams(window.location.search).get("autoInstallEngineId"),
     );
-  const isAutomaticInstallPending = ref(autoInstallEngineId != null);
 
   const launchEditorState = computed<LaunchEditorState>(() => {
     if (
@@ -305,41 +300,6 @@ function createWelcomeStore() {
     return "succeeded";
   };
 
-  const handleEngineInstall = async (request: EngineInstallRequest) => {
-    let engineId: EngineId;
-    if (request.type === "automatic") {
-      if (!isAutomaticInstallPending.value || autoInstallEngineId == null) {
-        return;
-      }
-      if (allEngineState.value.type !== "loaded") {
-        throw new UnreachableError();
-      }
-
-      engineId = autoInstallEngineId;
-      const engineState = allEngineState.value.engineStates[engineId];
-      if (engineState.currentInfo.status === "installed") {
-        isAutomaticInstallPending.value = false;
-        return;
-      }
-      if (engineState.latestInfo.type !== "fetched") {
-        return;
-      }
-    } else {
-      engineId = request.engineId;
-    }
-
-    if (autoInstallEngineId === engineId) {
-      isAutomaticInstallPending.value = false;
-    }
-    const result = await installEngine(engineId);
-    if (result === "failed") {
-      return;
-    }
-    if (autoInstallEngineId === engineId) {
-      await window.welcomeBackend.launchMainWindow();
-    }
-  };
-
   const switchToMainWindow = () => {
     if (!launchEditorState.value.enabled) {
       throw new UnreachableError();
@@ -359,6 +319,27 @@ function createWelcomeStore() {
     await Promise.all([initializeEngines(), applyThemeFromConfig()]);
   };
 
+  const startup = async () => {
+    await initialize();
+    if (autoInstallEngineId == null) {
+      return;
+    }
+    if (allEngineState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+    const engineState = allEngineState.value.engineStates[autoInstallEngineId];
+    if (engineState.currentInfo.status === "installed") {
+      return;
+    }
+    if (engineState.latestInfo.type !== "fetched") {
+      return;
+    }
+    const result = await installEngine(autoInstallEngineId);
+    if (result === "succeeded") {
+      await window.welcomeBackend.launchMainWindow();
+    }
+  };
+
   return {
     allEngineState,
     launchEditorState,
@@ -367,9 +348,9 @@ function createWelcomeStore() {
     getEngineState,
     getEngineProgress,
     fetchEngineLatestInfo,
-    handleEngineInstall,
+    installEngine,
     switchToMainWindow,
-    initialize,
+    startup,
   };
 }
 

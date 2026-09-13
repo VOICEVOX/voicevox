@@ -38,9 +38,7 @@ import { provideWelcomeStore } from "@/welcome/store";
 const store = provideWelcomeStore();
 
 onMounted(() => {
-  void store
-    .initialize()
-    .then(() => store.handleEngineInstall({ type: "automatic" }));
+  void store.startup();
 });
 </script>
 
