@@ -14,7 +14,6 @@ import { createIpcSendProxy, type IpcSendProxy } from "../../ipc";
 import { getWelcomeIpcMainHandleManager } from "../welcomeIpcMainHandleManager";
 import { themes } from "@/domain/theme";
 import type { WelcomeIpcSOData } from "@/welcome/backend/ipcType";
-import type { EngineId } from "@/type/preload";
 
 type WindowManagerOption = {
   staticDir: string;
@@ -28,7 +27,6 @@ class WelcomeWindowManager {
   private staticDir: string;
   private isDevelopment: boolean;
   private isTest: boolean;
-  private autoInstallEngineId: EngineId | undefined;
 
   constructor(payload: WindowManagerOption) {
     this.staticDir = payload.staticDir;
@@ -67,7 +65,7 @@ class WelcomeWindowManager {
     return this._ipc;
   }
 
-  public async createWindow(autoInstallEngineId?: EngineId) {
+  public async createWindow() {
     if (this.win != undefined) {
       throw new Error("Window has already been created");
     }
@@ -113,10 +111,8 @@ class WelcomeWindowManager {
     win.on("closed", () => {
       this._win = undefined;
       this._ipc = undefined;
-      this.autoInstallEngineId = undefined;
     });
     this._win = win;
-    this.autoInstallEngineId = autoInstallEngineId;
 
     await this.load();
 
@@ -131,12 +127,6 @@ class WelcomeWindowManager {
       firstUrl.pathname = "/welcome/index.html";
     } else {
       firstUrl = new URL(`app://./welcome/index.html`);
-    }
-    if (this.autoInstallEngineId != undefined) {
-      firstUrl.searchParams.append(
-        "autoInstallEngineId",
-        this.autoInstallEngineId,
-      );
     }
     await win.loadURL(firstUrl.toString());
   }

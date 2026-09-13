@@ -8,7 +8,7 @@ import type {
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
-import { engineIdSchema, type EngineId } from "@/type/preload";
+import type { EngineId } from "@/type/preload";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 
@@ -86,11 +86,6 @@ function createWelcomeStore() {
   const allEngineState = ref<AllEngineState>({
     type: "uninitialized",
   });
-  const autoInstallEngineId = engineIdSchema
-    .nullable()
-    .parse(
-      new URLSearchParams(window.location.search).get("autoInstallEngineId"),
-    );
 
   const launchEditorState = computed<LaunchEditorState>(() => {
     if (
@@ -321,20 +316,35 @@ function createWelcomeStore() {
 
   const startup = async () => {
     await initialize();
-    if (autoInstallEngineId == null) {
-      return;
-    }
     if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
-    const engineState = allEngineState.value.engineStates[autoInstallEngineId];
-    if (engineState.currentInfo.status === "installed") {
+    const allEngineStateLoaded = allEngineState.value;
+    if (
+      allEngineStateLoaded.engineIds.some(
+        (engineId) =>
+          allEngineStateLoaded.engineStates[engineId].currentInfo.status ===
+          "installed",
+      )
+    ) {
       return;
     }
+    if (allEngineStateLoaded.engineIds.length === 0) {
+      return;
+    }
+    if (allEngineStateLoaded.engineIds.length > 1) {
+      window.welcomeBackend.logWarn(
+        "Multiple default engines found. Skipping automatic installation.",
+      );
+      return;
+    }
+
+    const [engineId] = allEngineStateLoaded.engineIds;
+    const engineState = allEngineStateLoaded.engineStates[engineId];
     if (engineState.latestInfo.type !== "fetched") {
       return;
     }
-    const result = await installEngine(autoInstallEngineId);
+    const result = await installEngine(engineId);
     if (result === "succeeded") {
       await window.welcomeBackend.launchMainWindow();
     }

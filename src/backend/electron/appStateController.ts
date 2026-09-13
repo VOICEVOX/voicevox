@@ -3,10 +3,9 @@ import { getMainWindowManager } from "./manager/windowManager/main";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getConfigManager } from "./electronConfig";
 import { getWelcomeWindowManager } from "./manager/windowManager/welcome";
-import { ExhaustiveError, UnreachableError } from "@/type/utility";
+import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 import { Mutex } from "@/helpers/mutex";
-import type { EngineId } from "@/type/preload";
 
 const log = createLogger("AppStateController");
 
@@ -42,20 +41,7 @@ export class AppStateController {
       await this.launchEngineAndMainWindow();
     } else {
       log.info("No default engine found. Launching welcome window.");
-      const engineIds =
-        engineAndVvppController.getDownloadableDefaultEnginePackageIds();
-      if (engineIds.length === 0) {
-        throw new UnreachableError();
-      }
-      if (engineIds.length > 1) {
-        log.warn(
-          "Multiple default engines found. Skipping automatic installation.",
-        );
-        await this.launchWelcomeWindow();
-        return;
-      }
-      const [engineId] = engineIds;
-      await this.launchWelcomeWindow(engineId);
+      await this.launchWelcomeWindow();
     }
   }
 
@@ -91,11 +77,11 @@ export class AppStateController {
     this.quitState = "unconfirmed";
   }
 
-  private async launchWelcomeWindow(autoInstallEngineId?: EngineId) {
+  private async launchWelcomeWindow() {
     this.activeWindow = "welcome";
 
     const welcomeWindowManager = getWelcomeWindowManager();
-    await welcomeWindowManager.createWindow(autoInstallEngineId);
+    await welcomeWindowManager.createWindow();
   }
 
   private async launchEngineAndMainWindow() {
