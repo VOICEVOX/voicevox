@@ -82,7 +82,7 @@ export const themePlugin: Plugin<ThemePluginOptions> = {
           Dark.isActive,
           options.getAvailableThemes(),
         );
-        if (themeSetting === "system") {
+        if (themeSetting === "System") {
           Dark.set("auto");
         } else {
           Dark.set(configuredTheme.isDark);
@@ -108,15 +108,15 @@ export const themePlugin: Plugin<ThemePluginOptions> = {
       watch(
         () => Dark.isActive,
         (isDark) => {
-          if (themeState.value?.currentThemeSetting !== "system") return;
+          if (themeState.value?.currentThemeSetting !== "System") return;
           const resolvedTheme = resolveTheme(
-            "system",
+            "System",
             isDark,
             options.getAvailableThemes(),
           );
           setThemeToCss(resolvedTheme);
           themeState.value = {
-            currentThemeSetting: "system",
+            currentThemeSetting: "System",
             currentTheme: resolvedTheme,
           };
         },

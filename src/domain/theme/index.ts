@@ -48,7 +48,7 @@ export const resolveTheme = (
   availableThemes: readonly ThemeConf[],
 ): ThemeConf => {
   const theme = availableThemes.find((value) => {
-    return themeSetting === "system"
+    return themeSetting === "System"
       ? value.isDark === isDark
       : value.name === themeSetting;
   });
@@ -65,7 +65,7 @@ export const resolveNativeTheme = (
       return "light";
     case "Dark":
       return "dark";
-    case "system":
+    case "System":
       return "system";
     default:
       throw new ExhaustiveError(themeSetting);

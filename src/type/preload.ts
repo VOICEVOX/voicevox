@@ -332,7 +332,7 @@ export type ToolbarSettingType = z.infer<typeof toolbarSettingSchema>[];
 // base: typeof electron.nativeTheme["themeSource"];
 export type NativeThemeType = "system" | "light" | "dark";
 
-export const themeSettingSchema = z.enum(["Default", "Dark", "system"]);
+export const themeSettingSchema = z.enum(["Default", "Dark", "System"]);
 export type ThemeSetting = z.infer<typeof themeSettingSchema>;
 
 export type MoraDataType =
@@ -355,7 +355,7 @@ export type ThemeColorType =
   | "active-point-hover";
 
 export type ThemeConf = {
-  name: Exclude<ThemeSetting, "system">;
+  name: Exclude<ThemeSetting, "System">;
   displayName: string;
   order: number;
   isDark: boolean;

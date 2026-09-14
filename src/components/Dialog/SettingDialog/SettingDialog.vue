@@ -658,7 +658,7 @@ const availableThemeNameComputed = computed(() => {
       .map((theme) => {
         return { label: theme.displayName, value: theme.name };
       }),
-    { label: "システムに合わせる", value: "system" },
+    { label: "システムに合わせる", value: "System" },
   ];
 });
 
