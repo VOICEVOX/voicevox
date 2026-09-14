@@ -118,8 +118,8 @@ const builderOptions: ElectronBuilderConfiguration = {
   productName: "VOICEVOX",
   appId: "jp.hiroshiba.voicevox",
   copyright: "Hiroshiba Kazuyuki",
-  afterAllArtifactBuild:
-    installerMode === "embed" ? afterAllArtifactBuild : undefined,
+  afterAllArtifactBuild: (buildResult) =>
+    afterAllArtifactBuild(buildResult, installerMode),
   afterPack: (context) => afterPack(context, voicevoxEnginePlacement),
   electronFuses: {
     runAsNode: false,
@@ -150,7 +150,7 @@ const builderOptions: ElectronBuilderConfiguration = {
     include:
       installerMode === "embed"
         ? "build/installer.nsh"
-        : "build/installer-web.nsh",
+        : "build/installer-download.nsh",
     oneClick: false,
     allowToChangeInstallationDirectory: true,
   },
