@@ -39,6 +39,7 @@ import { themeSettingSchema } from "@/type/preload";
 
 const store = provideWelcomeStore();
 const { setCurrentTheme } = useTheme();
+setCurrentTheme("Default");
 
 onMounted(() => {
   store.initialize();

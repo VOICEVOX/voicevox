@@ -64,51 +64,35 @@ export const themePlugin: Plugin = {
     const scope = effectScope();
     scope.run(() => {
       const availableThemes = shallowRef<ThemeConf[]>(themes);
-      const themeState = shallowRef<{
-        currentThemeSetting: ThemeSetting;
-        currentTheme: ThemeConf;
-      } | null>(null);
+      const currentThemeSetting = shallowRef<ThemeSetting | null>(null);
 
       const currentTheme = computed(() => {
-        const state = themeState.value;
-        assertNonNullable(state, "テーマが設定されていません");
-        return state.currentTheme;
+        const themeSetting = currentThemeSetting.value;
+        assertNonNullable(themeSetting, "テーマが設定されていません");
+        if (themeSetting === "System") {
+          return getThemeByIsDark(Dark.isActive, availableThemes.value);
+        }
+        return getThemeByName(themeSetting, availableThemes.value);
       });
       const isDark = computed(() => currentTheme.value.isDark);
 
-      const applyThemeToRenderer = (themeSetting: ThemeSetting) => {
-        let resolvedTheme: ThemeConf;
+      const setCurrentTheme = (themeSetting: ThemeSetting) => {
         if (themeSetting === "System") {
           Dark.set("auto");
-          resolvedTheme = getThemeByIsDark(
-            Dark.isActive,
-            availableThemes.value,
-          );
-        } else {
-          resolvedTheme = getThemeByName(themeSetting, availableThemes.value);
-          Dark.set(resolvedTheme.isDark);
         }
-        setThemeToCss(resolvedTheme);
-        themeState.value = {
-          currentThemeSetting: themeSetting,
-          currentTheme: resolvedTheme,
-        };
+        currentThemeSetting.value = themeSetting;
+        const theme = currentTheme.value;
+        if (themeSetting !== "System") {
+          Dark.set(theme.isDark);
+        }
+        setThemeToCss(theme);
       };
-
-      // FIXME: Welcome画面は保存テーマの取得前に描画されるため、初期CSS変数としてDefaultを適用する。
-      // 初期テーマを描画前に渡せるようになったら削除する。
-      setThemeToCss(getThemeByName("Default", availableThemes.value));
 
       watch(
         () => Dark.isActive,
-        (isDark) => {
-          if (themeState.value?.currentThemeSetting !== "System") return;
-          const resolvedTheme = getThemeByIsDark(isDark, availableThemes.value);
-          setThemeToCss(resolvedTheme);
-          themeState.value = {
-            currentThemeSetting: "System",
-            currentTheme: resolvedTheme,
-          };
+        () => {
+          if (currentThemeSetting.value !== "System") return;
+          setThemeToCss(currentTheme.value);
         },
       );
 
@@ -117,17 +101,17 @@ export const themePlugin: Plugin = {
        * NOTE: カスタムテーマが導入された場合を見越して残している。
        */
       const setAvailableThemes = (newAvailableThemes: ThemeConf[]) => {
+        const themeSetting = currentThemeSetting.value;
+        assertNonNullable(themeSetting, "テーマが設定されていません");
         availableThemes.value = newAvailableThemes;
-        if (themeState.value != null) {
-          applyThemeToRenderer(themeState.value.currentThemeSetting);
-        }
+        setCurrentTheme(themeSetting);
       };
 
       const themeManager: ThemeManager = {
         currentTheme,
         isDark,
         availableThemes,
-        setCurrentTheme: applyThemeToRenderer,
+        setCurrentTheme,
         setAvailableThemes,
       };
       app.provide(themeKey, themeManager);
