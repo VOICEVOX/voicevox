@@ -192,7 +192,7 @@ function createWelcomeStore() {
     engineState.latestInfo.progress = progressInfo;
   };
 
-  const initializeEngines = async () => {
+  const loadEngineInfos = async () => {
     allEngineState.value = { type: "loading" };
 
     const engineIds =
@@ -302,7 +302,11 @@ function createWelcomeStore() {
     void window.welcomeBackend.launchMainWindow();
   };
 
-  const maybeAutoInstallEngineAndLaunchMainWindow = async () => {
+  /**
+   * エンジン情報の読み込み後、導入済みエンジンがない場合に自動導入し、成功後にメインウィンドウを起動する。
+   * 自動導入は候補が1件かつ最新情報を取得済みの場合だけ行い、候補が複数の場合は自動選択せず中止する。
+   */
+  const autoInstallEngineAndLaunchMainWindow = async () => {
     if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
@@ -346,8 +350,8 @@ function createWelcomeStore() {
       },
     });
     void applyThemeFromConfig();
-    await initializeEngines();
-    await maybeAutoInstallEngineAndLaunchMainWindow();
+    await loadEngineInfos();
+    await autoInstallEngineAndLaunchMainWindow();
   };
 
   return {
