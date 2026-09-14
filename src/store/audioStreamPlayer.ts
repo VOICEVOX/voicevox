@@ -1,4 +1,4 @@
-import type { WavStream } from "@/domain/streamingWavParser";
+import type { WavStream } from "@/domain/wavStream";
 
 let audioContext: AudioContext | null = null;
 if (window.AudioContext) {

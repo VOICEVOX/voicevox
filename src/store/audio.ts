@@ -34,6 +34,8 @@ import {
   handlePossiblyNotMorphableError,
   isMorphable,
 } from "./audioGenerate";
+import { playAudioWithAbort } from "./audioPlayer";
+import { playAudioStreams } from "./audioStreamPlayer";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
 import {
   convertAudioQueryFromEditorToEngine,
@@ -69,9 +71,7 @@ import { ensureNotNullish, UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
-import { playAudioWithAbort } from "./audioPlayer";
-import { StreamingWavParser } from "@/domain/streamingWavParser";
-import { playAudioStream } from "./streamingPlayer";
+import { WavStream } from "@/domain/wavStream";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -1824,11 +1824,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               ),
             );
 
-          const wavStream = new StreamingWavParser(
-            ensureNotNullish(response.raw.body),
-          );
-          await playAudioStream(wavStream, abortSignal, {
-            onChunkStart(time) {
+          const wavStream = new WavStream(ensureNotNullish(response.raw.body));
+          await playAudioStreams([wavStream], abortSignal, {
+            onChunkStart(_index, time) {
               mutations.SET_CURRENT_PLAY_STATE({
                 currentPlayState: {
                   type: "streaming",

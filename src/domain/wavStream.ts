@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export type WavHeader = {
   audioFormat: "pcm16le" | "float32le";
   numChannels: number;
@@ -13,14 +15,15 @@ export class WavStream {
   private bufferOffset: number;
   private bufferLength: number;
   private header?: WavHeader;
-  private startOffset: number;
+  /** WAV先頭からの再生開始位置（秒）。 */
+  readonly startOffset: number;
 
   constructor(stream: ReadableStream<Uint8Array>, startOffset: number = 0) {
+    this.startOffset = z.number().nonnegative().parse(startOffset);
     this.reader = stream.getReader();
     this.buffer = new Uint8Array(0);
     this.bufferOffset = 0;
     this.bufferLength = 0;
-    this.startOffset = startOffset;
   }
 
   /**
@@ -95,6 +98,16 @@ export class WavStream {
     let bytesRead = 0;
     const bytesPerSample =
       (this.header.bitsPerSample / 8) * this.header.numChannels;
+    const bytesToSkip = Math.min(
+      Math.floor(this.startOffset * this.header.sampleRate) * bytesPerSample,
+      dataChunkSize,
+    );
+    while (bytesRead < bytesToSkip) {
+      const chunk = await this.readBytes(
+        Math.min(samplesPerChunk * bytesPerSample, bytesToSkip - bytesRead),
+      );
+      bytesRead += chunk.length;
+    }
     while (bytesRead < dataChunkSize) {
       const chunk = await this.readBytes(
         Math.min(samplesPerChunk * bytesPerSample, dataChunkSize - bytesRead),
