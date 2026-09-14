@@ -10,8 +10,8 @@ import { themePlugin, useTheme } from "@/plugins/themePlugin";
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "@/styles/_index.scss";
-import { UnreachableError } from "@/type/utility";
 import { setFontToCss } from "@/domain/dom";
+import { getThemeByIsDark } from "@/domain/theme";
 
 setup((app) => {
   app.use(Quasar, {
@@ -92,11 +92,10 @@ const preview: Preview = {
             if (lastIsDark === isDark) return;
             lastIsDark = isDark;
 
-            const theme = themeManager.availableThemes.value.find(
-              (theme) => theme.isDark === isDark,
+            const theme = getThemeByIsDark(
+              isDark,
+              themeManager.availableThemes.value,
             );
-            if (!theme)
-              throw new UnreachableError("assert: theme !== undefined");
 
             themeManager.setCurrentTheme(theme.name);
           });

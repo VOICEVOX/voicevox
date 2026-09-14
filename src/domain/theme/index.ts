@@ -41,18 +41,23 @@ const dark = {
 
 export const themes = [light, dark];
 
-/** 設定値と現在の明暗状態から適用するテーマを解決する */
-export const resolveTheme = (
-  themeSetting: ThemeSetting,
+/** テーマ名からテーマを取得する */
+export const getThemeByName = (
+  themeName: ThemeConf["name"],
+  availableThemes: readonly ThemeConf[],
+): ThemeConf => {
+  const theme = availableThemes.find((value) => value.name === themeName);
+  assertNonNullable(theme, `テーマが見つかりません: ${themeName}`);
+  return theme;
+};
+
+/** 明暗状態からテーマを取得する */
+export const getThemeByIsDark = (
   isDark: boolean,
   availableThemes: readonly ThemeConf[],
 ): ThemeConf => {
-  const theme = availableThemes.find((value) => {
-    return themeSetting === "System"
-      ? value.isDark === isDark
-      : value.name === themeSetting;
-  });
-  assertNonNullable(theme, `テーマが見つかりません: ${themeSetting}`);
+  const theme = availableThemes.find((value) => value.isDark === isDark);
+  assertNonNullable(theme, `テーマが見つかりません: 明暗=${isDark}`);
   return theme;
 };
 

@@ -11,7 +11,7 @@ import {
   type ShallowRef,
 } from "vue";
 import { colors, Dark, setCssVar } from "quasar";
-import { resolveTheme, themes } from "@/domain/theme";
+import { getThemeByIsDark, getThemeByName, themes } from "@/domain/theme";
 import type { ThemeConf, ThemeSetting } from "@/type/preload";
 import { assertNonNullable } from "@/type/utility";
 
@@ -77,21 +77,17 @@ export const themePlugin: Plugin = {
       const isDark = computed(() => currentTheme.value.isDark);
 
       const applyThemeToRenderer = (themeSetting: ThemeSetting) => {
-        const configuredTheme = resolveTheme(
-          themeSetting,
-          Dark.isActive,
-          availableThemes.value,
-        );
+        let resolvedTheme: ThemeConf;
         if (themeSetting === "System") {
           Dark.set("auto");
+          resolvedTheme = getThemeByIsDark(
+            Dark.isActive,
+            availableThemes.value,
+          );
         } else {
-          Dark.set(configuredTheme.isDark);
+          resolvedTheme = getThemeByName(themeSetting, availableThemes.value);
+          Dark.set(resolvedTheme.isDark);
         }
-        const resolvedTheme = resolveTheme(
-          themeSetting,
-          Dark.isActive,
-          availableThemes.value,
-        );
         setThemeToCss(resolvedTheme);
         themeState.value = {
           currentThemeSetting: themeSetting,
@@ -101,17 +97,13 @@ export const themePlugin: Plugin = {
 
       // FIXME: Welcome画面は保存テーマの取得前に描画されるため、初期CSS変数としてDefaultを適用する。
       // 初期テーマを描画前に渡せるようになったら削除する。
-      setThemeToCss(resolveTheme("Default", false, availableThemes.value));
+      setThemeToCss(getThemeByName("Default", availableThemes.value));
 
       watch(
         () => Dark.isActive,
         (isDark) => {
           if (themeState.value?.currentThemeSetting !== "System") return;
-          const resolvedTheme = resolveTheme(
-            "System",
-            isDark,
-            availableThemes.value,
-          );
+          const resolvedTheme = getThemeByIsDark(isDark, availableThemes.value);
           setThemeToCss(resolvedTheme);
           themeState.value = {
             currentThemeSetting: "System",
