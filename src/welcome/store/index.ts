@@ -310,8 +310,9 @@ function createWelcomeStore() {
     if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
+
+    // 既にエンジン導入済みな場合は何もしない
     const allEngineStateLoaded = allEngineState.value;
-    // 既にエンジンが導入されている場合は、自動導入を行わない
     if (
       allEngineStateLoaded.engineIds.some(
         (engineId) =>
@@ -331,12 +332,13 @@ function createWelcomeStore() {
       return;
     }
 
+    // 最新情報を取得できていない場合は何もしない
     const [engineId] = allEngineStateLoaded.engineIds;
     const engineState = allEngineStateLoaded.engineStates[engineId];
-    // 最新情報を取得できない場合は、自動導入を行わない
     if (engineState.latestInfo.type !== "fetched") {
       return;
     }
+
     const result = await installEngine(engineId);
     if (result === "succeeded") {
       await window.welcomeBackend.launchMainWindow();
