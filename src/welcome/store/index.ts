@@ -192,7 +192,7 @@ function createWelcomeStore() {
     engineState.latestInfo.progress = progressInfo;
   };
 
-  const loadEngineInfos = async () => {
+  const fetchEngineInfos = async () => {
     allEngineState.value = { type: "loading" };
 
     const engineIds =
@@ -350,7 +350,7 @@ function createWelcomeStore() {
       },
     });
     void applyThemeFromConfig();
-    await loadEngineInfos();
+    await fetchEngineInfos();
     await autoInstallEngineAndLaunchMainWindow();
   };
 
