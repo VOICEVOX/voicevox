@@ -94,7 +94,6 @@ watch(
   ([currentTheme]) => setCurrentTheme(currentTheme),
   {
     immediate: true,
-    flush: "sync",
   },
 );
 
