@@ -1,11 +1,8 @@
-import { setup, type Preview, type StoryContext } from "@storybook/vue3-vite";
-import { onMounted, onUnmounted } from "vue";
+import { setup, type Preview } from "@storybook/vue3-vite";
+import { onMounted, watch } from "vue";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
-import {
-  DecoratorHelpers,
-  withThemeByDataAttribute,
-} from "@storybook/addon-themes";
+import { DecoratorHelpers } from "@storybook/addon-themes";
 import { z } from "zod";
 import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { store, storeKey } from "@/store";
@@ -16,7 +13,7 @@ import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "@/styles/_index.scss";
 import { setFontToCss } from "@/domain/dom";
-import { themeSettingSchema, type ThemeSetting } from "@/type/preload";
+import type { ThemeSetting } from "@/type/preload";
 
 setup((app) => {
   app.use(Quasar, {
@@ -47,30 +44,11 @@ const storybookThemes = {
 } satisfies Record<string, ThemeSetting>;
 const defaultStorybookTheme = "light";
 const storybookThemeNameSchema = z.enum(["light", "dark"]);
-const storybookThemeAttributeName = "data-storybook-theme";
 
-type StoryContextWithThemeParameters = StoryContext & {
-  parameters: {
-    themes?: {
-      themeOverride?: string;
-    };
-  };
-};
-
-const resolveInitialThemeSetting = (
-  context: StoryContextWithThemeParameters,
-): ThemeSetting => {
-  const themeOverride = context.parameters.themes?.themeOverride;
-  const selectedTheme = DecoratorHelpers.pluckThemeFromContext(context);
-  let themeName = defaultStorybookTheme;
-  if (themeOverride != undefined && themeOverride !== "") {
-    themeName = themeOverride;
-  } else if (selectedTheme !== "") {
-    themeName = selectedTheme;
-  }
-  const validThemeName = storybookThemeNameSchema.parse(themeName);
-  return storybookThemes[validThemeName];
-};
+DecoratorHelpers.initializeThemeState(
+  Object.keys(storybookThemes),
+  defaultStorybookTheme,
+);
 
 const preview: Preview = {
   tags: ["autodocs"],
@@ -102,40 +80,29 @@ const preview: Preview = {
     },
   },
   decorators: [
-    withThemeByDataAttribute({
-      themes: storybookThemes,
-      defaultTheme: defaultStorybookTheme,
-      attributeName: storybookThemeAttributeName,
-    }),
-
     // テーマの設定をCSSへ反映する
     (_, context) => {
-      const initialThemeSetting = resolveInitialThemeSetting(context);
       return {
         setup() {
           const { setCurrentTheme } = useTheme();
-          setCurrentTheme(initialThemeSetting);
-          const root = document.documentElement;
-          const applyTheme = () => {
-            const themeSetting = themeSettingSchema.parse(
-              root.getAttribute(storybookThemeAttributeName),
-            );
-            setCurrentTheme(themeSetting);
-          };
-          const observer = new MutationObserver(() => {
-            applyTheme();
-          });
+          watch(
+            () => {
+              const themeName = [
+                z
+                  .object({ themeOverride: z.unknown() })
+                  .nullish()
+                  .parse(context.parameters.themes)?.themeOverride,
+                DecoratorHelpers.pluckThemeFromContext(context),
+                defaultStorybookTheme,
+              ].find((candidate) => candidate != undefined && candidate !== "");
+              const validThemeName = storybookThemeNameSchema.parse(themeName);
+              return storybookThemes[validThemeName];
+            },
+            setCurrentTheme,
+            { immediate: true },
+          );
           onMounted(() => {
             setFontToCss("default");
-            root.setAttribute(storybookThemeAttributeName, initialThemeSetting);
-
-            observer.observe(root, {
-              attributes: true,
-              attributeFilter: [storybookThemeAttributeName],
-            });
-          });
-          onUnmounted(() => {
-            observer.disconnect();
           });
         },
 
