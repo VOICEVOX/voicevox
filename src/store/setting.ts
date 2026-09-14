@@ -1,7 +1,7 @@
 import type { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
-import { resolveNativeTheme, themes } from "@/domain/theme";
+import { resolveNativeTheme } from "@/domain/theme";
 import {
   hideAllLoadingScreen,
   showAlertDialog,
@@ -41,7 +41,6 @@ export const settingStoreState: SettingStoreState = {
   engineInfos: {},
   engineManifests: {},
   currentTheme: "Default",
-  availableThemes: themes,
   editorFont: "default",
   showTextLineNumber: false,
   showAddAudioItemButton: true,
@@ -93,9 +92,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       });
 
-      mutations.SET_AVAILABLE_THEMES({
-        themes,
-      });
       mutations.SET_CURRENT_THEME_SETTING({
         currentTheme: themeSettingSchema.parse(
           await window.backend.getSetting("currentTheme"),

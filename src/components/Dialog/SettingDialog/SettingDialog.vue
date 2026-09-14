@@ -534,12 +534,14 @@ import { createLogger } from "@/helpers/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { isProduction } from "@/helpers/platform";
 import { ExhaustiveError } from "@/type/utility";
+import { useTheme } from "@/plugins/themePlugin";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
 const dialogOpened = defineModel<boolean>("dialogOpened");
 
 const store = useStore();
+const { availableThemes } = useTheme();
 const { warn } = createLogger("SettingDialog");
 
 const engineIds = computed(() => store.state.engineIds);
@@ -653,7 +655,7 @@ const currentThemeNameComputed = computed({
 
 const availableThemeNameComputed = computed(() => {
   return [
-    ...[...store.state.availableThemes]
+    ...[...availableThemes.value]
       .sort((a, b) => a.order - b.order)
       .map((theme) => {
         return { label: theme.displayName, value: theme.name };

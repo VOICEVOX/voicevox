@@ -3,7 +3,6 @@ import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import App from "./components/App.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
-import { themes } from "@/domain/theme";
 import { themePlugin } from "@/plugins/themePlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
@@ -33,7 +32,5 @@ createApp(App)
     },
   })
   .use(markdownItPlugin)
-  .use(themePlugin, {
-    getAvailableThemes: () => themes,
-  })
+  .use(themePlugin)
   .mount("#app");

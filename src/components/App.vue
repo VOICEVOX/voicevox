@@ -90,8 +90,8 @@ watchEffect(
 
 const { setCurrentTheme } = useTheme();
 watch(
-  [() => store.state.currentTheme, () => store.state.availableThemes],
-  ([currentTheme]) => setCurrentTheme(currentTheme),
+  () => store.state.currentTheme,
+  (currentTheme) => setCurrentTheme(currentTheme),
   {
     immediate: true,
   },

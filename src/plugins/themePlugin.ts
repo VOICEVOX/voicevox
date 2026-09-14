@@ -8,20 +8,19 @@ import {
   type ComputedRef,
   type InjectionKey,
   type Plugin,
+  type ShallowRef,
 } from "vue";
 import { colors, Dark, setCssVar } from "quasar";
-import { resolveTheme } from "@/domain/theme";
+import { resolveTheme, themes } from "@/domain/theme";
 import type { ThemeConf, ThemeSetting } from "@/type/preload";
 import { assertNonNullable } from "@/type/utility";
 
 type ThemeManager = {
   readonly currentTheme: Readonly<ComputedRef<ThemeConf>>;
   readonly isDark: Readonly<ComputedRef<boolean>>;
+  readonly availableThemes: Readonly<ShallowRef<ThemeConf[]>>;
   setCurrentTheme: (themeSetting: ThemeSetting) => void;
-};
-
-type ThemePluginOptions = {
-  getAvailableThemes: () => readonly ThemeConf[];
+  setAvailableThemes: (themes: ThemeConf[]) => void;
 };
 
 const themeKey: InjectionKey<ThemeManager> = Symbol("theme");
@@ -60,10 +59,11 @@ const setThemeToCss = (theme: ThemeConf) => {
   );
 };
 
-export const themePlugin: Plugin<ThemePluginOptions> = {
-  install(app: App, options: ThemePluginOptions) {
+export const themePlugin: Plugin = {
+  install(app: App) {
     const scope = effectScope();
     scope.run(() => {
+      const availableThemes = shallowRef<ThemeConf[]>(themes);
       const themeState = shallowRef<{
         currentThemeSetting: ThemeSetting;
         currentTheme: ThemeConf;
@@ -80,7 +80,7 @@ export const themePlugin: Plugin<ThemePluginOptions> = {
         const configuredTheme = resolveTheme(
           themeSetting,
           Dark.isActive,
-          options.getAvailableThemes(),
+          availableThemes.value,
         );
         if (themeSetting === "System") {
           Dark.set("auto");
@@ -90,7 +90,7 @@ export const themePlugin: Plugin<ThemePluginOptions> = {
         const resolvedTheme = resolveTheme(
           themeSetting,
           Dark.isActive,
-          options.getAvailableThemes(),
+          availableThemes.value,
         );
         setThemeToCss(resolvedTheme);
         themeState.value = {
@@ -101,9 +101,7 @@ export const themePlugin: Plugin<ThemePluginOptions> = {
 
       // FIXME: Welcome画面は保存テーマの取得前に描画されるため、初期CSS変数としてDefaultを適用する。
       // 初期テーマを描画前に渡せるようになったら削除する。
-      setThemeToCss(
-        resolveTheme("Default", false, options.getAvailableThemes()),
-      );
+      setThemeToCss(resolveTheme("Default", false, availableThemes.value));
 
       watch(
         () => Dark.isActive,
@@ -112,7 +110,7 @@ export const themePlugin: Plugin<ThemePluginOptions> = {
           const resolvedTheme = resolveTheme(
             "System",
             isDark,
-            options.getAvailableThemes(),
+            availableThemes.value,
           );
           setThemeToCss(resolvedTheme);
           themeState.value = {
@@ -122,10 +120,23 @@ export const themePlugin: Plugin<ThemePluginOptions> = {
         },
       );
 
+      /**
+       * 選択可能なテーマをセットする。
+       * NOTE: カスタムテーマが導入された場合を見越して残している。
+       */
+      const setAvailableThemes = (newAvailableThemes: ThemeConf[]) => {
+        availableThemes.value = newAvailableThemes;
+        if (themeState.value != null) {
+          applyThemeToRenderer(themeState.value.currentThemeSetting);
+        }
+      };
+
       const themeManager: ThemeManager = {
         currentTheme,
         isDark,
+        availableThemes,
         setCurrentTheme: applyThemeToRenderer,
+        setAvailableThemes,
       };
       app.provide(themeKey, themeManager);
       app.onUnmount(() => {

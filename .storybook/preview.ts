@@ -12,7 +12,6 @@ import "quasar/dist/quasar.sass";
 import "@/styles/_index.scss";
 import { UnreachableError } from "@/type/utility";
 import { setFontToCss } from "@/domain/dom";
-import { themes } from "@/domain/theme";
 
 setup((app) => {
   app.use(Quasar, {
@@ -32,9 +31,7 @@ setup((app) => {
   });
   app.use(markdownItPlugin);
   app.use(store, storeKey);
-  app.use(themePlugin, {
-    getAvailableThemes: () => store.state.availableThemes,
-  });
+  app.use(themePlugin);
 });
 
 const preview: Preview = {
@@ -95,7 +92,9 @@ const preview: Preview = {
             if (lastIsDark === isDark) return;
             lastIsDark = isDark;
 
-            const theme = themes.find((theme) => theme.isDark === isDark);
+            const theme = themeManager.availableThemes.value.find(
+              (theme) => theme.isDark === isDark,
+            );
             if (!theme)
               throw new UnreachableError("assert: theme !== undefined");
 

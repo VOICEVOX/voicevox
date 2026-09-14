@@ -41,9 +41,7 @@ createApp(App)
       Notify,
     },
   })
-  .use(themePlugin, {
-    getAvailableThemes: () => store.state.availableThemes,
-  })
+  .use(themePlugin)
   .use(hotkeyPlugin)
   .use(ipcMessageReceiver, { store })
   .use(markdownItPlugin)

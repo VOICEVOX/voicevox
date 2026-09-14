@@ -316,16 +316,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  /**
-   * 選択可能なテーマをセットする。
-   * NOTE: カスタムテーマが導入された場合を見越して残している。
-   */
-  SET_AVAILABLE_THEMES: {
-    mutation(state, { themes }) {
-      state.availableThemes = themes;
-    },
-  },
-
   DETECT_UNMAXIMIZED: {
     mutation(state) {
       state.isMaximized = false;
