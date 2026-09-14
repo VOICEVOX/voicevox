@@ -303,8 +303,8 @@ function createWelcomeStore() {
   };
 
   /**
-   * エンジン情報の読み込み後、導入済みエンジンがない場合に自動導入し、成功後にメインウィンドウを起動する。
-   * 自動導入は候補が1件かつ最新情報を取得済みの場合だけ行い、候補が複数の場合は自動選択せず中止する。
+   * 条件に合う場合にエンジンを自動インストールしてメインウィンドウを起動する。
+   * 条件は、エンジン未インストールで、候補が１つで、最新情報が取得できていること。
    */
   const autoInstallEngineAndLaunchMainWindow = async () => {
     if (allEngineState.value.type !== "loaded") {
@@ -322,9 +322,8 @@ function createWelcomeStore() {
     ) {
       return;
     }
-    if (allEngineStateLoaded.engineIds.length === 0) {
-      throw new UnreachableError();
-    }
+
+    // 自動インストール候補が２つ以上ある場合は何もしない
     if (allEngineStateLoaded.engineIds.length > 1) {
       window.welcomeBackend.logWarn(
         "Multiple default engines found. Skipping automatic installation.",
@@ -333,6 +332,9 @@ function createWelcomeStore() {
     }
 
     // 最新情報を取得できていない場合は何もしない
+    if (allEngineStateLoaded.engineIds.length === 0) {
+      throw new UnreachableError();
+    }
     const [engineId] = allEngineStateLoaded.engineIds;
     const engineState = allEngineStateLoaded.engineStates[engineId];
     if (engineState.latestInfo.type !== "fetched") {
