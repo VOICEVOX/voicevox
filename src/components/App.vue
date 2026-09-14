@@ -89,10 +89,14 @@ watchEffect(
 );
 
 const { setCurrentTheme } = useTheme();
-watch(() => store.state.currentTheme, setCurrentTheme, {
-  immediate: true,
-  flush: "sync",
-});
+watch(
+  [() => store.state.currentTheme, () => store.state.availableThemes],
+  ([currentTheme]) => setCurrentTheme(currentTheme),
+  {
+    immediate: true,
+    flush: "sync",
+  },
+);
 
 // ソングの再生デバイスを同期
 watchEffect(() => {

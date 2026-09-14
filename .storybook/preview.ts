@@ -36,7 +36,9 @@ setup((app) => {
   });
   app.use(markdownItPlugin);
   app.use(store, storeKey);
-  app.use(themePlugin);
+  app.use(themePlugin, {
+    getAvailableThemes: () => store.state.availableThemes,
+  });
 });
 
 const storybookThemes = {

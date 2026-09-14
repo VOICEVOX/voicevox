@@ -39,14 +39,15 @@ const dark = {
   },
 } as const satisfies ThemeConf;
 
-export const themes = [light, dark] as const;
+export const themes = [light, dark];
 
 /** 設定値と現在の明暗状態から適用するテーマを解決する */
 export const resolveTheme = (
   themeSetting: ThemeSetting,
   isDark: boolean,
+  availableThemes: readonly ThemeConf[],
 ): ThemeConf => {
-  const theme = themes.find((value) => {
+  const theme = availableThemes.find((value) => {
     return themeSetting === "system"
       ? value.isDark === isDark
       : value.name === themeSetting;

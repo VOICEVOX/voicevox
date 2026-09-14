@@ -10,15 +10,18 @@ import {
   type Plugin,
 } from "vue";
 import { colors, Dark, setCssVar } from "quasar";
-import { resolveTheme, themes } from "@/domain/theme";
+import { resolveTheme } from "@/domain/theme";
 import type { ThemeConf, ThemeSetting } from "@/type/preload";
 import { assertNonNullable } from "@/type/utility";
 
 type ThemeManager = {
   readonly currentTheme: Readonly<ComputedRef<ThemeConf>>;
   readonly isDark: Readonly<ComputedRef<boolean>>;
-  readonly availableThemes: readonly ThemeConf[];
   setCurrentTheme: (themeSetting: ThemeSetting) => void;
+};
+
+type ThemePluginOptions = {
+  getAvailableThemes: () => readonly ThemeConf[];
 };
 
 const themeKey: InjectionKey<ThemeManager> = Symbol("theme");
@@ -57,8 +60,8 @@ const setThemeToCss = (theme: ThemeConf) => {
   );
 };
 
-export const themePlugin: Plugin = {
-  install(app: App) {
+export const themePlugin: Plugin<ThemePluginOptions> = {
+  install(app: App, options: ThemePluginOptions) {
     const scope = effectScope();
     scope.run(() => {
       const themeState = shallowRef<{
@@ -74,13 +77,21 @@ export const themePlugin: Plugin = {
       const isDark = computed(() => currentTheme.value.isDark);
 
       const applyThemeToRenderer = (themeSetting: ThemeSetting) => {
-        const configuredTheme = resolveTheme(themeSetting, Dark.isActive);
+        const configuredTheme = resolveTheme(
+          themeSetting,
+          Dark.isActive,
+          options.getAvailableThemes(),
+        );
         if (themeSetting === "system") {
           Dark.set("auto");
         } else {
           Dark.set(configuredTheme.isDark);
         }
-        const resolvedTheme = resolveTheme(themeSetting, Dark.isActive);
+        const resolvedTheme = resolveTheme(
+          themeSetting,
+          Dark.isActive,
+          options.getAvailableThemes(),
+        );
         setThemeToCss(resolvedTheme);
         themeState.value = {
           currentThemeSetting: themeSetting,
@@ -90,13 +101,19 @@ export const themePlugin: Plugin = {
 
       // FIXME: Welcome画面は保存テーマの取得前に描画されるため、初期CSS変数としてDefaultを適用する。
       // 初期テーマを描画前に渡せるようになったら削除する。
-      setThemeToCss(resolveTheme("Default", false));
+      setThemeToCss(
+        resolveTheme("Default", false, options.getAvailableThemes()),
+      );
 
       watch(
         () => Dark.isActive,
         (isDark) => {
           if (themeState.value?.currentThemeSetting !== "system") return;
-          const resolvedTheme = resolveTheme("system", isDark);
+          const resolvedTheme = resolveTheme(
+            "system",
+            isDark,
+            options.getAvailableThemes(),
+          );
           setThemeToCss(resolvedTheme);
           themeState.value = {
             currentThemeSetting: "system",
@@ -108,7 +125,6 @@ export const themePlugin: Plugin = {
       const themeManager: ThemeManager = {
         currentTheme,
         isDark,
-        availableThemes: themes,
         setCurrentTheme: applyThemeToRenderer,
       };
       app.provide(themeKey, themeManager);
