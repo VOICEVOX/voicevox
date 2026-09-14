@@ -338,6 +338,9 @@ function createWelcomeStore() {
     const [engineId] = allEngineStateLoaded.engineIds;
     const engineState = allEngineStateLoaded.engineStates[engineId];
     if (engineState.latestInfo.type !== "fetched") {
+      window.welcomeBackend.logWarn(
+        `Engine package ${engineId} latest info is unavailable. Skipping automatic installation.`,
+      );
       return;
     }
 
