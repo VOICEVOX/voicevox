@@ -311,7 +311,7 @@ function createWelcomeStore() {
       throw new UnreachableError();
     }
     const allEngineStateLoaded = allEngineState.value;
-    // 手動で開いたWelcome画面では、既存のエンジン構成を自動で変更しない。
+    // 既にエンジンが導入されている場合は、自動導入を行わない
     if (
       allEngineStateLoaded.engineIds.some(
         (engineId) =>
@@ -333,7 +333,7 @@ function createWelcomeStore() {
 
     const [engineId] = allEngineStateLoaded.engineIds;
     const engineState = allEngineStateLoaded.engineStates[engineId];
-    // 最新情報を取得できない場合は、自動導入を中止して利用者の再試行に委ねる。
+    // 最新情報を取得できない場合は、自動導入を行わない
     if (engineState.latestInfo.type !== "fetched") {
       return;
     }

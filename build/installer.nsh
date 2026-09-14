@@ -786,21 +786,22 @@ FunctionEnd
 !endif
 
 !macro customHeader
+  ; インストール成功後
   Function .onInstSuccess
+    ; %LOCALAPPDATA%\voicevox-updater\を削除する
     ; https://github.com/electron-userland/electron-builder/blob/f717e0ea67cec7c5c298889efee7df724838491a/packages/app-builder-lib/templates/nsis/include/installer.nsh#L77
     ${if} $installMode == "all"
       SetShellVarContext current
     ${endif}
     Push $R0
     ${GetParent} "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}" $R0
-    ; インストール成功後に%LOCALAPPDATA%\voicevox-updater\を削除する
     RMDir /r "$R0"
     Pop $R0
     ${if} $installMode == "all"
       SetShellVarContext all
     ${endif}
 
-    ; インストール成功後に通常ユーザーとしてアプリを自動起動する
+    ; 通常ユーザーとしてアプリを自動起動する
     ; https://github.com/electron-userland/electron-builder/blob/a6117b3011a105204af8cc2eca02a56976d1ef29/packages/app-builder-lib/templates/nsis/assistedInstaller.nsh#L50
     !ifdef VOICEVOX_AUTO_START_APP
       ${ifNot} ${Silent}
