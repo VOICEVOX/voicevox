@@ -356,6 +356,9 @@ export abstract class BaseConfigManager {
           migration(data);
         }
       }
+      if (data.currentTheme === "system") {
+        data.currentTheme = "System";
+      }
       this.config = this.migrateHotkeySettings(
         getConfigSchema({ isMac: this.isMac }).parse(data),
       );
