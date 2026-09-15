@@ -130,7 +130,7 @@ function parseTextFile(
   return audioItems;
 }
 
-// TODO: src/sing/fileUtils.tsのgenerateUniqueFilePathと統合する
+// TODO: src/song/fileUtils.tsのgenerateUniqueFilePathと統合する
 async function changeFileTailToNonExistent(
   filePath: string,
   extension: string,
