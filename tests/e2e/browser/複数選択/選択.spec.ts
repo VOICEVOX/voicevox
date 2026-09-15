@@ -1,11 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
-import { navigateToMain, gotoHome } from "../../navigators";
+import { navigateToTalk, gotoHome } from "../../navigators";
 import { ctrlLike, addAudioCells } from "./utils";
 
 test.beforeEach(async ({ page }) => {
   await gotoHome({ page });
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await page.waitForTimeout(100);
 
   await addAudioCells(page, 3);

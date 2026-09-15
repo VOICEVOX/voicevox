@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
-import { gotoHome, navigateToMain } from "../navigators";
+import { gotoHome, navigateToTalk } from "../navigators";
 import { getNewestQuasarDialog } from "../locators";
 
 test.beforeEach(gotoHome);
@@ -193,14 +193,14 @@ async function expectWarningDialog(
 }
 
 test("辞書ダイアログを表示できる", async ({ page }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
 });
 
 test("単語を追加できる", async ({ page }) => {
   const surface = createSurface("追加");
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, surface, "テスト");
 
@@ -213,7 +213,7 @@ test("単語を追加できる", async ({ page }) => {
 test("単語を削除できる", async ({ page }) => {
   const surface = createSurface("削除");
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, surface, "テスト");
   const dialog = await openDeleteWordDialog(page, surface);
@@ -227,7 +227,7 @@ test("単語を削除できる", async ({ page }) => {
 test("単語の削除をキャンセルできる", async ({ page }) => {
   const surface = createSurface("削除キャンセル");
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, surface, "テスト");
   const dialog = await openDeleteWordDialog(page, surface);
@@ -243,7 +243,7 @@ test("新しい単語を入力したあと他の単語へ切り替えようと�
 }) => {
   const existingSurface = createSurface("既存");
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, existingSurface, "テスト");
   await selectNewWord(page);
@@ -266,7 +266,7 @@ test("単語を編集したあと他の単語を選択すると保存される",
   const secondSurface = createSurface("編集先");
   const editedSurface = `${firstSurface}変更`;
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, firstSurface, "テスト");
   await addWord(page, secondSurface, "サンプル");
@@ -285,7 +285,7 @@ test("単語を編集したあとダイアログを閉じると保存される",
   const surface = createSurface("閉じる保存");
   const editedSurface = `${surface}変更`;
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, surface, "テスト");
   await selectWord(page, surface);
@@ -305,7 +305,7 @@ test("単語を無効な状態にしたあと他の単語を選択しようと�
   const firstSurface = createSurface("無効維持");
   const secondSurface = createSurface("無効維持先");
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, firstSurface, "テスト");
   await addWord(page, secondSurface, "サンプル");
@@ -336,7 +336,7 @@ test("単語を無効な状態にしたあと他の単語を選択しようと�
   const firstSurface = createSurface("無効破棄");
   const secondSurface = createSurface("無効破棄先");
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, firstSurface, "テスト");
   await addWord(page, secondSurface, "サンプル");
@@ -365,7 +365,7 @@ test("単語を無効な状態にしたあと同じ単語を選択して破棄�
 }) => {
   const surface = createSurface("同じ単語破棄");
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, surface, "テスト");
   await selectWord(page, surface);
@@ -393,7 +393,7 @@ test("単語を無効な状態にしたあと同じ単語を選択して破棄�
 });
 
 test("新しい単語の入力をリセットできる", async ({ page }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await selectNewWord(page);
   await fillWord(page, createSurface("リセット"), "テスト");
@@ -417,7 +417,7 @@ test("新しい単語の入力をリセットできる", async ({ page }) => {
 test("新しい単語の入力後に追加を選択して破棄すると入力内容が戻る", async ({
   page,
 }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await selectNewWord(page);
   await fillWord(page, createSurface("追加再選択"), "テスト");
@@ -440,7 +440,7 @@ test("新しい単語の入力後に追加を選択して破棄すると入力�
 test("読みをひらがなで入力するとカタカナで保存される", async ({ page }) => {
   const surface = createSurface("ひらがな");
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, surface, "てすと");
 
@@ -453,7 +453,7 @@ test("単語を半角で入力すると全角で保存される", async ({ page 
   const surface = "abc123";
   const convertedSurface = "ａｂｃ１２３";
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await openDictDialog(page);
   await addWord(page, surface, "テスト", convertedSurface);
 
@@ -467,7 +467,7 @@ test("追加した単語がテキストの読みに反映され、削除する�
 }) => {
   const targetString = createSurface("反映");
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
 
   // 文字列を入力して読み方を記憶する
   const yomi = await test.step("登録前の読みを取得する", async () => {

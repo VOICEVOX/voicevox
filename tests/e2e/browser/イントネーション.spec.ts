@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
 
-import { gotoHome, navigateToMain } from "../navigators";
+import { gotoHome, navigateToTalk } from "../navigators";
 import { locateQSplitterHandle } from "./utils";
 import { ensureNotNullish } from "@/type/utility";
 
 test.beforeEach(gotoHome);
 
 test("イントネーション調整欄を縦に広げられる", async ({ page }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
 
   const separatorHandle = locateQSplitterHandle(
     page.getByTestId("audio-detail-pane-splitter"),

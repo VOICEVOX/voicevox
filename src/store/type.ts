@@ -2253,6 +2253,7 @@ export type DialogStates = {
   isUpdateNotificationDialogOpen: boolean;
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
+  isInitialSettingsDialogOpen: boolean;
   isPresetManageDialogOpen: boolean;
   isHelpDialogOpen: boolean;
 };

@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { gotoHome, navigateToMain } from "../navigators";
+import { gotoHome, navigateToTalk } from "../navigators";
 import { getQuasarMenu } from "../locators";
 import { mockShowSaveFileDialog, mockWriteFile } from "./mockUtility";
 
 test.beforeEach(gotoHome);
 
 test("プロジェクトファイル切り替わり案内ダイアログ", async ({ page }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
 
   const dialog = page.getByRole("dialog").filter({
     hasText: /編集中のプロジェクトが .* に切り替わりました。/,

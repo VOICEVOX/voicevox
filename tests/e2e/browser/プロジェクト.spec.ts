@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 
-import { gotoHome, navigateToMain } from "../navigators";
+import { gotoHome, navigateToTalk } from "../navigators";
 import {
   collectAllAudioCellContents,
   fillAudioCell,
@@ -13,7 +13,7 @@ import {
 test.beforeEach(gotoHome);
 
 test("過去のプロジェクトを読み込める", async ({ page }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
   const projectJson = await fs.readFile(
     `${import.meta.dirname}/vvproj/0.14.11.vvproj`,
     "utf-8",
@@ -32,7 +32,7 @@ test("過去のプロジェクトを読み込める", async ({ page }) => {
 test("プロジェクトを保存して読み込み直せる", async ({ page }) => {
   const savedProject =
     await test.step("AudioCellにテキストを入れて保存", async () => {
-      await navigateToMain(page);
+      await navigateToTalk(page);
 
       await page.getByRole("button").filter({ hasText: "add" }).click();
       await page.getByRole("button").filter({ hasText: "add" }).click();
@@ -65,7 +65,7 @@ test("プロジェクトを保存して読み込み直せる", async ({ page }) 
 test("未来のバージョンのプロジェクトを読み込むと警告を出す", async ({
   page,
 }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
   const content = await fs.readFile(
     `${import.meta.dirname}/vvproj/future.vvproj`,
     "utf-8",

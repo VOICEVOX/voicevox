@@ -29,6 +29,7 @@
     v-model:dialogOpened="isDictionaryManageDialogOpenComputed"
   />
   <EngineManageDialog v-model:dialogOpened="isEngineManageDialogOpenComputed" />
+  <InitialSettingsDialog :canOpenDialog="canOpenInitialSettingsDialog" />
   <UpdateNotificationDialogContainer
     :canOpenDialog="canOpenNotificationDialog"
   />
@@ -50,6 +51,7 @@ import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptDialog/Acce
 import AcceptTermsDialog from "@/components/Dialog/AcceptDialog/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
+import InitialSettingsDialog from "@/components/Dialog/InitialSettingsDialog/Container.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
@@ -167,6 +169,16 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
     }),
 });
 
+// 初期設定ダイアログ
+const canOpenInitialSettingsDialog = computed(() => {
+  return (
+    !store.state.isAcceptTermsDialogOpen &&
+    !store.state.isOldCharacterOrderDialogOpen &&
+    !store.state.isOldDefaultStyleSelectDialogOpen &&
+    !store.state.isAcceptRetrieveTelemetryDialogOpen
+  );
+});
+
 // エディタのアップデート確認ダイアログ
 const canOpenNotificationDialog = computed(() => {
   return (
@@ -174,6 +186,7 @@ const canOpenNotificationDialog = computed(() => {
     !store.state.isOldCharacterOrderDialogOpen &&
     !store.state.isOldDefaultStyleSelectDialogOpen &&
     !store.state.isAcceptRetrieveTelemetryDialogOpen &&
+    !store.state.isInitialSettingsDialogOpen &&
     props.isEnginesReady
   );
 });

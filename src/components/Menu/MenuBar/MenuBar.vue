@@ -4,26 +4,30 @@
       v-if="$q.platform.is.mac && !isFullscreen"
       class="mac-traffic-light-space"
     ></div>
-    <img v-else src="/icon.png" class="window-logo" alt="application logo" />
-    <MenuButton
-      v-for="(root, index) of menudata"
-      :key="index"
-      v-model:selected="subMenuOpenFlags[index]"
-      :menudata="root"
-      :disable="
-        menubarLocked || (root.disableWhenUiLocked && uiLocked) || root.disabled
-      "
-      @mouseover="reassignSubMenuOpen(index)"
-      @mouseleave="
-        root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
-      "
-    />
+    <img v-else :src="iconPath" class="window-logo" alt="application logo" />
+    <template v-if="editor != undefined">
+      <MenuButton
+        v-for="(root, index) of menudata"
+        :key="index"
+        v-model:selected="subMenuOpenFlags[index]"
+        :menudata="root"
+        :disable="
+          menubarLocked ||
+          (root.disableWhenUiLocked && uiLocked) ||
+          root.disabled
+        "
+        @mouseover="reassignSubMenuOpen(index)"
+        @mouseleave="
+          root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
+        "
+      />
+    </template>
     <QSpace />
     <div class="window-title" :class="{ 'text-warning': isMultiEngineOffMode }">
       {{ titleText }}
     </div>
     <QSpace />
-    <TitleBarEditorSwitcher />
+    <TitleBarEditorSwitcher v-if="editor != undefined" />
     <TitleBarButtons />
   </QBar>
 </template>
@@ -38,16 +42,18 @@ import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { getAppInfos } from "@/domain/appInfo";
+import type { EditorType } from "@/type/preload";
 
 const props = defineProps<{
   /** メニューバーの全サブメニューデータ */
   subMenuData: Record<MenuBarCategory, MenuItemData[]>;
   /** エディタの種類 */
-  editor: "talk" | "song";
+  editor?: EditorType;
 }>();
 
 const $q = useQuasar();
 const store = useStore();
+const iconPath = "/icon.png";
 
 /** 追加のバージョン情報。コミットハッシュなどを書ける。 */
 const extraVersionInfo = import.meta.env.VITE_EXTRA_VERSION_INFO;

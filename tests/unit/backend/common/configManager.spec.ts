@@ -57,6 +57,53 @@ it("新規作成できる", async () => {
   const configManager = new TestConfigManager();
   await configManager.initialize();
   expect(configManager).toBeTruthy();
+  expect(configManager.get("openedEditor")).toBeUndefined();
+});
+
+it("openedEditorがない既存設定はトークエディタを開く設定に移行できる", async () => {
+  const configWithoutOpenedEditor: Record<string, unknown> = {
+    ...configBase,
+  };
+  delete configWithoutOpenedEditor.openedEditor;
+
+  vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(
+    async () => true,
+  );
+  vi.spyOn(TestConfigManager.prototype, "save").mockImplementation(
+    async () => undefined,
+  );
+  vi.spyOn(TestConfigManager.prototype, "load").mockImplementation(
+    async () => ({
+      ...configWithoutOpenedEditor,
+      __internal__: { migrations: { version: "0.26.0" } },
+    }),
+  );
+
+  const configManager = new TestConfigManager();
+  await configManager.initialize();
+
+  expect(configManager.get("openedEditor")).toBe("talk");
+});
+
+it("既存設定のソングエディタ選択を維持できる", async () => {
+  vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(
+    async () => true,
+  );
+  vi.spyOn(TestConfigManager.prototype, "save").mockImplementation(
+    async () => undefined,
+  );
+  vi.spyOn(TestConfigManager.prototype, "load").mockImplementation(
+    async () => ({
+      ...configBase,
+      openedEditor: "song",
+      __internal__: { migrations: { version: "0.26.0" } },
+    }),
+  );
+
+  const configManager = new TestConfigManager();
+  await configManager.initialize();
+
+  expect(configManager.get("openedEditor")).toBe("song");
 });
 
 it("バージョンが保存される", async () => {
