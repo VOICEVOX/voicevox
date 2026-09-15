@@ -353,9 +353,9 @@ jobs:
           bash tools/codesign_cleanup_macos.bash
           echo 'CSC_LINK=' >> $GITHUB_ENV
           echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
-          echo 'APPLE_API_KEY=' >> $GITHUB_ENV
           echo 'APPLE_API_KEY_ID=' >> $GITHUB_ENV
           echo 'APPLE_API_ISSUER=' >> $GITHUB_ENV
+          echo 'APPLE_API_KEY=' >> $GITHUB_ENV
         env:
           APPLE_API_KEY_PATH: /tmp/voicevox-apple-api-key.p8
 
