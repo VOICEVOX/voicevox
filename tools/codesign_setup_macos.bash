@@ -6,11 +6,11 @@
 set -eu
 
 if [ "${APPLE_API_KEY_BASE64+x}" != x ]; then
-    echo "APPLE_API_KEY_BASE64が未定義です" >&2
+    echo "APPLE_API_KEY_BASE64が未定義です"
     exit 1
 fi
 if [ "${APPLE_API_KEY_PATH+x}" != x ]; then
-    echo "APPLE_API_KEY_PATHが未定義です" >&2
+    echo "APPLE_API_KEY_PATHが未定義です"
     exit 1
 fi
 
