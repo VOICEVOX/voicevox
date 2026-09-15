@@ -305,6 +305,16 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       config.hotkeySettings = newHotkeySettings;
     },
   ],
+  [
+    ">=0.27",
+    (config) => {
+      // showSingCharacterPortrait -> showSongCharacterPortrait
+      if ("showSingCharacterPortrait" in config) {
+        config.showSongCharacterPortrait = config.showSingCharacterPortrait;
+        delete config.showSingCharacterPortrait;
+      }
+    },
+  ],
 ];
 
 export type Metadata = {
