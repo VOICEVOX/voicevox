@@ -77,7 +77,7 @@ class WelcomeWindowManager {
     }
     const configManager = getConfigManager();
     const currentTheme = configManager.get("currentTheme");
-    nativeTheme.themeSource = resolveNativeTheme(currentTheme);
+    nativeTheme.themeSource = resolveNativeTheme(currentTheme, themes);
     const backgroundColor =
       currentTheme === "System"
         ? getThemeByIsDark(nativeTheme.shouldUseDarkColors, themes).colors

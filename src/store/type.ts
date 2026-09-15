@@ -29,7 +29,6 @@ import type {
   AcceptTermsStatus,
   MoraDataType,
   SavingSetting,
-  ThemeSetting,
   ExperimentalSettingType,
   ToolbarSettingType,
   UpdateInfo,
@@ -2122,7 +2121,7 @@ export type SettingStoreState = {
   engineIds: EngineId[];
   engineInfos: Record<EngineId, EngineInfo>;
   engineManifests: Record<EngineId, EngineManifest>;
-  currentTheme: ThemeSetting;
+  currentTheme: string;
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSettingType;
@@ -2166,8 +2165,8 @@ export type SettingStoreTypes = {
   };
 
   SET_CURRENT_THEME_SETTING: {
-    mutation: { currentTheme: ThemeSetting };
-    action(payload: { currentTheme: ThemeSetting }): void;
+    mutation: { currentTheme: string };
+    action(payload: { currentTheme: string }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {

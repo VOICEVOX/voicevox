@@ -520,15 +520,14 @@ import {
   buildAudioFileNameFromRawData,
   buildSongTrackAudioFileNameFromRawData,
 } from "@/store/utility";
-import {
-  themeSettingSchema,
-  type SavingSetting,
-  type EngineSettingType,
-  type ExperimentalSettingType,
-  type ActivePointScrollMode,
-  type RootMiscSettingType,
-  type EngineId,
-  type EditorFontType,
+import type {
+  SavingSetting,
+  EngineSettingType,
+  ExperimentalSettingType,
+  ActivePointScrollMode,
+  RootMiscSettingType,
+  EngineId,
+  EditorFontType,
 } from "@/type/preload";
 import { createLogger } from "@/helpers/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
@@ -647,8 +646,7 @@ const undoableTrackOperations = computed({
 // 外観
 const currentThemeNameComputed = computed({
   get: () => store.state.currentTheme,
-  set: (themeSetting: string | string[]) => {
-    const currentTheme = themeSettingSchema.parse(themeSetting);
+  set: (currentTheme: string) => {
     void store.actions.SET_CURRENT_THEME_SETTING({ currentTheme });
   },
 });

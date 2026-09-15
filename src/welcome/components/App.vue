@@ -35,7 +35,6 @@ import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { provideWelcomeStore } from "@/welcome/store";
 import { useTheme } from "@/plugins/themePlugin";
-import { themeSettingSchema } from "@/type/preload";
 
 const store = provideWelcomeStore();
 const { setCurrentTheme } = useTheme();
@@ -45,9 +44,7 @@ onMounted(() => {
   store.initialize();
   void window.welcomeBackend
     .getCurrentTheme()
-    .then((themeSetting) =>
-      setCurrentTheme(themeSettingSchema.parse(themeSetting)),
-    );
+    .then((themeSetting) => setCurrentTheme(themeSetting));
 });
 </script>
 

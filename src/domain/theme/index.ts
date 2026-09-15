@@ -1,5 +1,5 @@
-import { assertNonNullable, ExhaustiveError } from "@/type/utility";
-import type { NativeThemeType, ThemeConf, ThemeSetting } from "@/type/preload";
+import { assertNonNullable } from "@/type/utility";
+import type { NativeThemeType, ThemeConf } from "@/type/preload";
 
 const light = {
   name: "Default",
@@ -63,16 +63,14 @@ export const getThemeByIsDark = (
 
 /** テーマ設定からNativeのテーマを解決する */
 export const resolveNativeTheme = (
-  themeSetting: ThemeSetting,
+  themeSetting: string,
+  availableThemes: readonly ThemeConf[],
 ): NativeThemeType => {
-  switch (themeSetting) {
-    case "Default":
-      return "light";
-    case "Dark":
-      return "dark";
-    case "System":
-      return "system";
-    default:
-      throw new ExhaustiveError(themeSetting);
+  if (themeSetting === "System") {
+    return "system";
   }
+
+  return getThemeByName(themeSetting, availableThemes).isDark
+    ? "dark"
+    : "light";
 };

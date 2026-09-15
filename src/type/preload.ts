@@ -332,9 +332,6 @@ export type ToolbarSettingType = z.infer<typeof toolbarSettingSchema>[];
 // base: typeof electron.nativeTheme["themeSource"];
 export type NativeThemeType = "system" | "light" | "dark";
 
-export const themeSettingSchema = z.enum(["Default", "Dark", "System"]);
-export type ThemeSetting = z.infer<typeof themeSettingSchema>;
-
 export type MoraDataType =
   | "consonant"
   | "vowel"
@@ -355,7 +352,7 @@ export type ThemeColorType =
   | "active-point-hover";
 
 export type ThemeConf = {
-  name: Exclude<ThemeSetting, "System">;
+  name: string;
   displayName: string;
   order: number;
   isDark: boolean;
@@ -474,7 +471,7 @@ export function getConfigSchema({ isMac }: { isMac: boolean }) {
       })
       .prefault({}),
     defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
-    currentTheme: themeSettingSchema.default("Default"),
+    currentTheme: z.string().default("Default"),
     experimentalSetting: experimentalSettingSchema.prefault({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
