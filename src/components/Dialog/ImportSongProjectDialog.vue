@@ -9,14 +9,14 @@
 
       <QCardSection class="q-py-none">
         <QFile
-          v-model="projectFile"
+          :modelValue="projectFile"
           label="インポートするファイル"
           class="q-my-sm"
           :accept="acceptExtensions"
           :errorMessage="projectFileErrorMessage"
           :error="!!projectFileErrorMessage"
           placeholder="ファイルを選択してください"
-          @input="handleFileChange"
+          @update:modelValue="handleFileChange"
         />
         <div v-if="projectFile == null">
           <span class="text-weight-bold">対応しているファイル形式</span>
@@ -240,24 +240,14 @@ const initializeValues = () => {
 };
 
 // ファイル変更時
-const handleFileChange = async (event: Event) => {
-  if (!(event.target instanceof HTMLInputElement)) {
-    throw new Error("Event target is not an HTMLInputElement");
-  }
-
-  const input = event.target;
-
-  // 入力ファイルが存在しない場合はエラー
-  if (!input.files || input.files.length === 0) {
-    throw new Error("No file selected");
-  }
+const handleFileChange = async (file: File) => {
+  projectFile.value = file;
 
   // 既存のデータおよび選択中のトラックをクリア
   project.value = null;
   selectedTrackIndexes.value = null;
   error.value = null;
 
-  const file = input.files[0];
   // ファイルをパース
   try {
     if (file.name.endsWith(".vvproj")) {
