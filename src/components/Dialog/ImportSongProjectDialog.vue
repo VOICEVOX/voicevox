@@ -99,7 +99,7 @@ import { createLogger } from "@/helpers/log";
 import { ExhaustiveError } from "@/type/utility";
 import type { IsEqual } from "@/type/utility";
 import type { LatestProjectType } from "@/infrastructures/projectFile/type";
-import { DEFAULT_TRACK_NAME } from "@/sing/domain";
+import { DEFAULT_TRACK_NAME } from "@/song/domain";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 

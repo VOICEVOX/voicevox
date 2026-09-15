@@ -18,7 +18,7 @@ import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
   DEFAULT_TRACK_NAME,
-} from "@/sing/domain";
+} from "@/song/domain";
 import { uuid4 } from "@/helpers/random";
 import { projectFileSchema } from "@/infrastructures/projectFile/schema";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
@@ -219,7 +219,7 @@ export const migrateProjectFileObject = async (
     };
 
     // ソングの情報を初期化
-    // generateSingingStoreInitialScoreが今後変わることがあるかもしれないので、
+    // generateSongStoreInitialScoreが今後変わることがあるかもしれないので、
     // 0.17時点のスコア情報を直接書く
     projectData.song = {
       tpqn: DEFAULT_TPQN,

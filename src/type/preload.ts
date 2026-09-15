@@ -406,7 +406,7 @@ export const rootMiscSettingSchema = z.object({
       panAndGain: z.boolean().default(true),
     })
     .prefault({}),
-  showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
+  showSongCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
   defaultLyricMode: z.enum(["doremi", "la"]).default("doremi"), // デフォルト歌詞の動作モード
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])

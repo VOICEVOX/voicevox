@@ -11,7 +11,7 @@ import {
 } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { createDefaultTrack } from "@/sing/domain";
+import { createDefaultTrack } from "@/song/domain";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { getEngineManifestMock } from "@/mock/engineMock/manifestMock";
 

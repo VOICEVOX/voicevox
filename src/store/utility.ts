@@ -10,7 +10,7 @@ import type {
 import type { SingingTeacher } from "@/domain/project/type";
 import type { AccentPhrase, Mora } from "@/openapi";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { DEFAULT_TRACK_NAME, isVowel } from "@/sing/domain";
+import { DEFAULT_TRACK_NAME, isVowel } from "@/song/domain";
 import { isMac } from "@/helpers/platform";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
 
