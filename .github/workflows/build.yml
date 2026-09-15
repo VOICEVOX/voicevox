@@ -312,16 +312,16 @@ jobs:
 
           echo "CSC_LINK=$CSC_LINK" >> $GITHUB_ENV
           echo "CSC_KEY_PASSWORD=$CSC_KEY_PASSWORD" >> $GITHUB_ENV
-          echo "APPLE_API_KEY=$APPLE_API_KEY" >> $GITHUB_ENV
           echo "APPLE_API_KEY_ID=$APPLE_API_KEY_ID" >> $GITHUB_ENV
           echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> $GITHUB_ENV
+          echo "APPLE_API_KEY=$APPLE_API_KEY_PATH" >> $GITHUB_ENV
         env:
           CSC_LINK: ${{ secrets.APPLE_P12_BASE64 }}
           CSC_KEY_PASSWORD: ${{ secrets.APPLE_P12_PASSWORD }}
           APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
-          APPLE_API_KEY: /tmp/voicevox-apple-api-key.p8
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_PATH: /tmp/voicevox-apple-api-key.p8
 
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
@@ -356,6 +356,8 @@ jobs:
           echo 'APPLE_API_KEY=' >> $GITHUB_ENV
           echo 'APPLE_API_KEY_ID=' >> $GITHUB_ENV
           echo 'APPLE_API_ISSUER=' >> $GITHUB_ENV
+        env:
+          APPLE_API_KEY_PATH: /tmp/voicevox-apple-api-key.p8
 
       - name: Rename Prepackage
         run: |

@@ -5,9 +5,9 @@
 
 set -eu
 
-if [ ! -v APPLE_API_KEY ]; then
-    echo "APPLE_API_KEYが未定義です" >&2
+if [ "${APPLE_API_KEY_PATH+x}" != x ]; then
+    echo "APPLE_API_KEY_PATHが未定義です" >&2
     exit 1
 fi
 
-rm "$APPLE_API_KEY"
+rm "$APPLE_API_KEY_PATH"
