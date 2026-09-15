@@ -76,7 +76,6 @@ export const settingStoreState: SettingStoreState = {
   defaultLyricMode: "doremi",
   playheadPositionDisplayFormat: "MINUTES_SECONDS",
   enableKatakanaEnglish: true,
-  enableMultiSelect: true,
   showAudioLength: false,
 };
 
@@ -158,7 +157,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "playheadPositionDisplayFormat",
         "openedEditor",
         "enableKatakanaEnglish",
-        "enableMultiSelect",
         "showAudioLength",
       ] as const;
 
