@@ -8,7 +8,7 @@
       />
       <KeepAlive>
         <Component
-          :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
+          :is="openedEditor == 'talk' ? TalkEditor : SongEditor"
           v-if="openedEditor != undefined"
           :key="openedEditor"
           :isEnginesReady
@@ -26,7 +26,7 @@ import { useGtm } from "@gtm-support/vue-gtm";
 import { TooltipProvider } from "reka-ui";
 import { useCommonMenuBarData } from "./Menu/MenuBar/useCommonMenuBarData";
 import TalkEditor from "@/components/Talk/TalkEditor.vue";
-import SingEditor from "@/components/Sing/SingEditor.vue";
+import SongEditor from "@/components/Song/SongEditor.vue";
 import type { EngineId } from "@/type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
@@ -34,7 +34,7 @@ import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
-import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
+import { useMenuBarData as useSongMenuBarData } from "@/components/Song/menuBarData";
 import { setFontToCss, setThemeToCss } from "@/domain/dom";
 import { concatMenuBarData } from "@/components/Menu/MenuBar/menuBarData";
 import { isElectron } from "@/helpers/platform";
@@ -46,7 +46,7 @@ const store = useStore();
 // TODO: useMenuBarData系の関数をcomposableじゃなくする
 const commonMenuBarData = useCommonMenuBarData(store);
 const talkMenuBarData = useTalkMenuBarData(store);
-const singMenuBarData = useSingMenuBarData(store);
+const songMenuBarData = useSongMenuBarData(store);
 const electronMenuBarData = useElectronMenuBarData(store);
 
 const subMenuData = computed(() =>
@@ -54,7 +54,7 @@ const subMenuData = computed(() =>
     removeNullableAndBoolean([
       commonMenuBarData,
       store.state.openedEditor === "talk" && talkMenuBarData,
-      store.state.openedEditor === "song" && singMenuBarData,
+      store.state.openedEditor === "song" && songMenuBarData,
       isElectron && electronMenuBarData,
     ]),
   ),

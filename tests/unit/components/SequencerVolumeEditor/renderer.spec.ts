@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   buildVolumeSegments,
   filterVolumeSegmentsByBaseXRange,
-} from "@/components/Sing/SequencerVolumeEditor/renderer";
+} from "@/components/Song/SequencerVolumeEditor/renderer";
 import {
   computeVisibleVolumePointRange,
   findFirstVolumePointAfter,
   findFirstVolumePointAtOrAfter,
   volumeNormalizedYToScreenY,
-} from "@/sing/graphics/volumeLine";
-import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
+} from "@/song/graphics/volumeLine";
+import { relativeVolumeEditMode } from "@/song/volumeEditMode";
 
 describe("buildVolumeSegments", () => {
   it("データなし区間で線分を分け、2点未満の線分を除外する", () => {

@@ -186,12 +186,6 @@
                     "
                   />
                 </BaseRowCard>
-                <ToggleCell
-                  title="複数選択"
-                  description="ONの場合、複数のテキスト欄を選択できるようにします。"
-                  :modelValue="enableMultiSelect"
-                  @update:modelValue="setEnableMultiSelect($event)"
-                />
               </div>
               <!-- Saving Card -->
               <div class="setting-card">
@@ -736,11 +730,6 @@ const [
   shouldApplyDefaultPresetOnVoiceChanged,
   changeShouldApplyDefaultPresetOnVoiceChanged,
 ] = useRootMiscSetting(store, "shouldApplyDefaultPresetOnVoiceChanged");
-
-const [enableMultiSelect, setEnableMultiSelect] = useRootMiscSetting(
-  store,
-  "enableMultiSelect",
-);
 
 const [defaultLyricMode, setDefaultLyricMode] = useRootMiscSetting(
   store,

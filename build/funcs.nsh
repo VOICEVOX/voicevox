@@ -296,9 +296,9 @@
 
 ; ${getUncompressedSizeFrom7z} Result Path
 ; 7z アーカイブから展開後の総容量を求める
-; "$PLUGINSDIR\7zr.exe" に事前にプログラムを配置しておくこと
+; "$PLUGINSDIR\7za.exe" に事前にプログラムを配置しておくこと
 ; @param Path 7zアーカイブへのパス
-; @return Result バイト単位での総容量, "Failed to execute 7zr.exe", "Failed to open file list" のどれか
+; @return Result バイト単位での総容量, "Failed to execute 7za.exe", "Failed to open file list" のどれか
 !define getUncompressedSizeFrom7z "!insertmacro getUncompressedSizeFrom7z"
 !macro getUncompressedSizeFrom7z Result Path
   Push "${Path}" ; Stack <Path>
@@ -309,11 +309,11 @@
 
   ; /C の後ろ全体をダブルクォートで括る必要がある
   ; https://superuser.com/a/238813
-  nsExec::ExecToStack '"$SYSDIR\cmd.exe" /C ""$PLUGINSDIR\7zr.exe" l -slt "$0" > "$PLUGINSDIR\7zlist.txt""'
+  nsExec::ExecToStack '"$SYSDIR\cmd.exe" /C ""$PLUGINSDIR\7za.exe" l -slt "$0" > "$PLUGINSDIR\7zlist.txt""'
   Pop $0 ; ステータス
   Pop $1 ; エラーメッセージ（ここでは使わない）
   ${If} $0 != "0"
-    StrCpy $0 "Failed to execute 7zr.exe"
+    StrCpy $0 "Failed to execute 7za.exe"
     Goto getUncompressedSizeFrom7z_finish
   ${EndIf}
 

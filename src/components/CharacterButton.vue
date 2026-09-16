@@ -6,6 +6,7 @@
     :disable="uiLocked"
     :class="{ opaque: loading }"
     aria-haspopup="menu"
+    :aria-label="characterButtonAriaLabel"
   >
     <!-- q-imgだとdisableのタイミングで点滅する -->
     <div class="icon-container">
@@ -259,6 +260,11 @@ const selectedVoiceInfoText = computed(() => {
   const styleName = selectedStyleInfo.value.styleName;
   return formatCharacterStyleName(speakerName, styleName);
 });
+
+const characterButtonAriaLabel = computed(
+  () =>
+    `キャラクターとスタイルを変更、現在のキャラクターとスタイルは${selectedVoiceInfoText.value}`,
+);
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>
   selectedCharacter.value != undefined &&
