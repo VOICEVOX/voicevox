@@ -11,7 +11,7 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
   // デフォルトでaudioCellは一つなのを確認
   await navigateToMain(page);
 
-  await test.step("AudioCellを4つ追加する", async () => {
+  await test.step("AudioCellを3つ追加する", async () => {
     await expect(
       page.getByRole("button").filter({ hasText: "add" }),
     ).toBeVisible();
