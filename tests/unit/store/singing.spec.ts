@@ -362,6 +362,9 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   expect(newTrack.solo).toBe(true);
   expect(newTrack.notes.length).toBe(1);
   expect(newTrack.notes[0].id).not.toBe(noteId);
+  expect(newTrack.notes[0].phonemeSeedSource).not.toBe(
+    notes[0].phonemeSeedSource,
+  );
   expect(newTrack.notes[0].lyric).toBe("test");
   expect(newTrack.pitchEditData).toEqual([440, 442, 440]);
   expect(newTrack.volumeEditData).toEqual([1.0, 1.2, 1.0]);

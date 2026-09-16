@@ -3869,7 +3869,7 @@ export const singingCommandStore = transformCommandStore(
       /**
        * 指定されたトラックを複製し、元のトラックの直後に挿入する。
        * ノートやピッチ／ボリューム編集データ、音素タイミング編集データなど
-       * トラックに紐付く情報を引き継いだうえで、ノートIDを新しく振り直す。
+       * トラックに紐付く情報を引き継いだうえで、ノートIDとシード値のソースを新しく振り直す。
        */
       async action({ state, actions, mutations }, { trackId }) {
         const sourceTrack = getOrThrow(state.tracks, trackId);
@@ -3879,12 +3879,12 @@ export const singingCommandStore = transformCommandStore(
         newTrack.name = `${newTrack.name} - コピー`;
         // NOTE: ソロ、ミュート状態も複製元から引き継ぐ
 
-        // ノートIDを新しく振り直し、音素タイミング編集データを対応させる
+        // ノートIDとシード値のソースを新しく振り直し、音素タイミング編集データを対応させる
         const oldNoteIdToNewNoteId = new Map<NoteId, NoteId>();
         newTrack.notes = newTrack.notes.map((note) => {
           const newNoteId = NoteId(uuid4());
           oldNoteIdToNewNoteId.set(note.id, newNoteId);
-          return { ...note, id: newNoteId };
+          return { ...note, id: newNoteId, phonemeSeedSource: randomInt32() };
         });
 
         // 音素タイミング編集データを新しいノートIDに紐付け直す
@@ -4097,11 +4097,12 @@ export const singingCommandStore = transformCommandStore(
             return toEditorTrack(importedTrack);
           });
 
-          // インポートなので、ノートIDは新しく振り直す
+          // インポートなので、ノートIDとシード値のソースは新しく振り直す
           for (const track of filteredTracks) {
             track.notes = track.notes.map((note) => ({
               ...note,
               id: NoteId(uuid4()),
+              phonemeSeedSource: randomInt32(),
             }));
           }
 
