@@ -8,7 +8,7 @@
     ]"
     @click="$emit('click', index)"
   >
-    <ContextMenu :menudata="contextMenudata" />
+    <ContextMenu ref="contextMenu" :menudata="contextMenudata" />
     <!-- スライダーここから -->
     <!-- ｱｸｾﾝﾄ項目のスライダー -->
     <template v-if="selectedDetail === 'accent'">
@@ -236,6 +236,7 @@ const container = ref<HTMLElement>();
 defineExpose({
   container,
 });
+const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
 type DetailTypes = "accent" | "pitch" | "length";
 
@@ -243,14 +244,20 @@ const store = useStore();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const resetMenuItem = computed<MenuItemButton | undefined>(() => {
-  const type = props.selectedDetail;
-  if (type === "accent") return undefined;
+const resetMenuItem = computed<MenuItemButton>(() => {
+  const type =
+    props.selectedDetail === "accent" ? "both" : props.selectedDetail;
+  const label = {
+    pitch: "イントネーションをリセット",
+    length: "長さをリセット",
+    both: "イントネーションと長さをリセット",
+  }[type];
 
   return {
     type: "button",
-    label: type === "pitch" ? "イントネーションをリセット" : "長さをリセット",
+    label,
     onClick: () => {
+      contextMenu.value?.hide();
       void store.actions.COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH({
         audioKey: props.audioKey,
         accentPhraseIndex: props.index,
@@ -262,9 +269,8 @@ const resetMenuItem = computed<MenuItemButton | undefined>(() => {
 });
 
 const contextMenudata = computed<(MenuItemButton | MenuItemSeparator)[]>(() => [
-  ...(resetMenuItem.value == undefined
-    ? []
-    : [resetMenuItem.value, { type: "separator" } as const]),
+  resetMenuItem.value,
+  { type: "separator" } as const,
   {
     type: "button",
     label: "削除",

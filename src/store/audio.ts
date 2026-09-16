@@ -2535,7 +2535,7 @@ export const audioCommandStore = transformCommandStore(
         });
         const newAccentPhrases = cloneWithUnwrapProxy(query.accentPhrases);
 
-        if (type == undefined) {
+        if (type === "both") {
           newAccentPhrases[accentPhraseIndex] =
             fetchedAccentPhrases[accentPhraseIndex];
         } else {

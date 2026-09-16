@@ -591,7 +591,7 @@ export type AudioCommandStoreTypes = {
     action(payload: {
       audioKey: AudioKey;
       accentPhraseIndex: number;
-      type?: "pitch" | "length";
+      type: "pitch" | "length" | "both";
     }): void;
   };
 

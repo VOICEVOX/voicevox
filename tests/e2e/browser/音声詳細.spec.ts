@@ -74,6 +74,12 @@ test("詳細調整欄のコンテキストメニュー", async ({ page }) => {
   await page.getByText("長さをリセット").click();
 
   await page.getByText("ｱｸｾﾝﾄ").click();
+  await firstAccentPhrase.click({ button: "right" });
+  await expect(
+    page.getByText("イントネーションと長さをリセット"),
+  ).toBeVisible();
+  await page.getByText("イントネーションと長さをリセット").click();
+
   await page.getByText("ソレモ").click({
     button: "right",
   });
