@@ -22,6 +22,7 @@ import {
   getCharacterInfo,
 } from "./audio";
 import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
+import { audioStreamPlayerStore } from "./audioStreamPlayer";
 import {
   songStoreState,
   songStore,
@@ -411,6 +412,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...uiStore.actions,
     ...audioStore.actions,
     ...audioPlayerStore.actions,
+    ...audioStreamPlayerStore.actions,
     ...engineStore.actions,
     ...commandStore.actions,
     ...projectStore.actions,

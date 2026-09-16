@@ -34,13 +34,8 @@ import {
   handlePossiblyNotMorphableError,
   isMorphable,
 } from "./audioGenerate";
-import { playAudioWithAbort } from "./audioPlayer";
-import { playAudioStreams } from "./audioStreamPlayer";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
-import {
-  convertAudioQueryFromEditorToEngine,
-  convertAudioQueryFromEngineToEditor,
-} from "./proxy";
+import { convertAudioQueryFromEngineToEditor } from "./proxy";
 import {
   convertHiraToKana,
   convertLongVowel,
@@ -67,11 +62,10 @@ import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { ensureNotNullish, UnreachableError } from "@/type/utility";
+import { UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
-import { WavStream } from "@/domain/wavStream";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -1774,86 +1768,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         return actions.PLAY_AUDIO_BLOB({
           audioBlob: blob,
           audioKey,
-        });
-      },
-    ),
-  },
-
-  PLAY_AUDIO_STREAMING: {
-    action: createUILockAction(
-      async (
-        { state, mutations, getters, actions },
-        { audioKey }: { audioKey: AudioKey },
-      ) => {
-        await actions.STOP_AUDIO();
-
-        const engineId = state.audioItems[audioKey].voice.engineId;
-        const engineManifest = state.engineManifests[engineId];
-        if (!engineManifest.supportedFeatures?.streamingSynthesis) {
-          throw new Error("Streaming synthesis is not supported.");
-        }
-        const audioItem = state.audioItems[audioKey];
-        const audioQuery = convertAudioQueryFromEditorToEngine(
-          ensureNotNullish(audioItem.query),
-          engineManifest.defaultSamplingRate,
-        );
-        const accentPhraseOffsets = await actions.GET_AUDIO_PLAY_OFFSETS({
-          audioKey,
-        });
-        if (accentPhraseOffsets.length === 0)
-          throw new Error("accentPhraseOffsets.length === 0");
-        const startTime =
-          accentPhraseOffsets[getters.AUDIO_PLAY_START_POINT ?? 0];
-
-        mutations.SET_AUDIO_NOW_GENERATING({
-          audioKey,
-          nowGenerating: true,
-        });
-        return await playAudioWithAbort(async (abortSignal) => {
-          const response = await actions
-            .INSTANTIATE_ENGINE_CONNECTOR({
-              engineId,
-            })
-            .then((instance) =>
-              instance.invoke("streamingSynthesisRaw")(
-                {
-                  audioQuery,
-                  speaker: audioItem.voice.styleId,
-                  enableInterrogativeUpspeak:
-                    state.experimentalSetting.enableInterrogativeUpspeak,
-                  startOffset: startTime,
-                },
-                {
-                  signal: abortSignal,
-                },
-              ),
-            );
-
-          const wavStream = new WavStream(ensureNotNullish(response.raw.body));
-          await playAudioStreams([wavStream], abortSignal, {
-            onStart() {
-              mutations.SET_AUDIO_NOW_GENERATING({
-                audioKey,
-                nowGenerating: false,
-              });
-            },
-            onChunkStart(_index, time) {
-              mutations.SET_CURRENT_PLAY_STATE({
-                currentPlayState: {
-                  type: "streaming",
-                  audioKey,
-                  currentTime: time + startTime,
-                },
-              });
-            },
-          });
-
-          mutations.SET_CURRENT_PLAY_STATE({
-            currentPlayState: {
-              type: "stopped",
-            },
-          });
-          return !abortSignal.aborted;
         });
       },
     ),
