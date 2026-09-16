@@ -19,7 +19,7 @@ import {
   DEFAULT_TPQN,
   DEFAULT_TRACK_NAME,
 } from "@/sing/domain";
-import { uuid4 } from "@/helpers/random";
+import { randomInt32, uuid4 } from "@/helpers/random";
 import { projectFileSchema } from "@/infrastructures/projectFile/schema";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import { validateTalkProject } from "@/infrastructures/projectFile/validation";
@@ -297,6 +297,16 @@ export const migrateProjectFileObject = async (
     for (const trackId in projectData.song.tracks) {
       if (projectData.song.tracks[trackId].volumeEditData == undefined) {
         projectData.song.tracks[trackId].volumeEditData = [];
+      }
+    }
+  }
+
+  // TODO: 仮で0.26.0としているが、音素単位のシード値を導入するバージョンが確定したら条件を更新する。
+  if (semver.satisfies(projectAppVersion, "<0.26.0", semverSatisfiesOptions)) {
+    // 音素単位のシード値のソースの追加
+    for (const trackId in projectData.song.tracks) {
+      for (const note of projectData.song.tracks[trackId].notes) {
+        note.phonemeSeedSource = randomInt32();
       }
     }
   }

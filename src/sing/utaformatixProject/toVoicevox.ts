@@ -8,7 +8,7 @@ import {
 } from "@/sing/domain";
 import { NoteId } from "@/type/preload";
 import type { Note, Tempo, TimeSignature, Track } from "@/domain/project/type";
-import { uuid4 } from "@/helpers/random";
+import { randomInt32, uuid4 } from "@/helpers/random";
 
 /** UtaformatixのプロジェクトをVoicevoxの楽譜データに変換する */
 export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
@@ -87,6 +87,7 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
         ),
         noteNumber: value.key,
         lyric: value.lyric || undefined,
+        phonemeSeedSource: randomInt32(),
       };
     });
 

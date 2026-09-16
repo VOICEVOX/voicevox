@@ -320,6 +320,41 @@ export async function calculateHash<T>(obj: T) {
     .join("");
 }
 
+const INT32_MIN = -(2 ** 31);
+const INT32_MAX = 2 ** 31 - 1;
+
+/**
+ * 値が符号付き32bit整数かどうかを判定する。
+ */
+export function isInt32(value: number) {
+  return Number.isInteger(value) && value >= INT32_MIN && value <= INT32_MAX;
+}
+
+/**
+ * 整数から32bitに収まらない桁を捨てて、符号付き32bit整数にする。
+ */
+export function wrapToInt32(value: number) {
+  return Number(BigInt.asIntN(32, BigInt(value)));
+}
+
+/**
+ * MurmurHash3の32bit finalizer（fmix32）をJavaScriptに移植したもの。
+ * 符号付き32bit整数を受け取り、異なる入力には必ず異なる値を返す。
+ * 移植元は https://github.com/aappleby/smhasher の src/MurmurHash3.cpp。
+ */
+export function fmix32(value: number) {
+  if (!isInt32(value)) {
+    throw new Error("value is not a 32-bit signed integer.");
+  }
+  let hash = value;
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x85ebca6b);
+  hash ^= hash >>> 13;
+  hash = Math.imul(hash, 0xc2b2ae35);
+  hash ^= hash >>> 16;
+  return hash;
+}
+
 export function createPromiseThatResolvesWhen(
   condition: () => boolean,
   interval = 200,
