@@ -5,6 +5,7 @@ import {
   EngineId,
   SpeakerId,
   StyleId,
+  type StyleType,
   type ToolbarButtonTagType,
 } from "@/type/preload";
 import {
@@ -19,6 +20,7 @@ import {
   buildAudioFileNameFromRawData,
   getToolbarButtonName,
   isOnCommandOrCtrlKeyDown,
+  findInitialSingingTeacher,
   filterCharacterInfosByStyleType,
 } from "@/store/utility";
 import { uuid4 } from "@/helpers/random";
@@ -297,7 +299,13 @@ test("isOnCommandOrCtrlKeyDown", () => {
 
 describe("filterCharacterInfosByStyleType", () => {
   const createCharacterInfo = (
-    styleTypes: (undefined | "talk" | "frame_decode" | "sing")[],
+    styleTypes: (
+      | undefined
+      | "talk"
+      | "frame_decode"
+      | "singing_teacher"
+      | "sing"
+    )[],
   ): CharacterInfo => {
     const engineId = EngineId(uuid4());
     return {
@@ -321,12 +329,17 @@ describe("filterCharacterInfosByStyleType", () => {
   const characterInfos: CharacterInfo[] = [
     createCharacterInfo(["talk"]),
     createCharacterInfo(["frame_decode"]),
+    createCharacterInfo(["singing_teacher"]),
     createCharacterInfo(["sing"]),
-    createCharacterInfo(["talk", "frame_decode", "sing"]),
+    createCharacterInfo(["talk", "frame_decode", "singing_teacher", "sing"]),
     createCharacterInfo([undefined]),
   ];
 
-  for (const styleType of ["frame_decode", "sing"] as const) {
+  for (const styleType of [
+    "frame_decode",
+    "singing_teacher",
+    "sing",
+  ] as const) {
     test(`${styleType}のキャラクターが取得できる`, () => {
       const filtered = filterCharacterInfosByStyleType(
         characterInfos,
@@ -352,6 +365,11 @@ describe("filterCharacterInfosByStyleType", () => {
     expect(filtered[0].metas.styles.length).toBe(1);
     expect(filtered[1].metas.styles.length).toBe(1);
     expect(filtered[2].metas.styles.length).toBe(2);
+    expect(
+      filtered.flatMap((characterInfo) => characterInfo.metas.styles),
+    ).not.toContainEqual(
+      expect.objectContaining({ styleType: "singing_teacher" }),
+    );
   });
 
   test(`talkを指定するとsingerLike以外のキャラクターが取得できる`, () => {
@@ -360,5 +378,90 @@ describe("filterCharacterInfosByStyleType", () => {
     expect(filtered[0].metas.styles.length).toBe(1);
     expect(filtered[1].metas.styles.length).toBe(1);
     expect(filtered[2].metas.styles.length).toBe(1);
+  });
+});
+
+describe("findInitialSingingTeacher", () => {
+  const createCharacterInfo = (
+    engineId: EngineId,
+    speakerUuid: string,
+    styles: { styleId: number; styleType: StyleType }[],
+  ): CharacterInfo => ({
+    portraitPath: "path/to/portrait",
+    metas: {
+      policy: "policy",
+      speakerName: "speakerName",
+      speakerUuid: SpeakerId(speakerUuid),
+      styles: styles.map(({ styleId, styleType }) => ({
+        styleType,
+        styleName: "styleName",
+        engineId,
+        styleId: StyleId(styleId),
+        iconPath: "path/to/icon",
+        portraitPath: "path/to/portrait",
+        voiceSamplePaths: [],
+      })),
+    },
+  });
+
+  const engineIdA = EngineId("00000000-0000-0000-0000-000000000001");
+  test("選択した歌手のスタイルが歌い方に使える場合はそのスタイルを選ぶ", () => {
+    const singer = { engineId: engineIdA, styleId: StyleId(1) };
+    const characterInfos = [
+      createCharacterInfo(engineIdA, uuid4(), [
+        { styleId: 2, styleType: "singing_teacher" },
+        { styleId: 1, styleType: "sing" },
+      ]),
+    ];
+
+    expect(findInitialSingingTeacher(singer.styleId, characterInfos)).toEqual({
+      styleId: singer.styleId,
+    });
+  });
+
+  test("同じキャラクターの歌い方を他の候補より優先する", () => {
+    const singer = { engineId: engineIdA, styleId: StyleId(1) };
+    const characterInfos = [
+      createCharacterInfo(engineIdA, uuid4(), [
+        { styleId: 3, styleType: "singing_teacher" },
+      ]),
+      createCharacterInfo(engineIdA, uuid4(), [
+        { styleId: 1, styleType: "frame_decode" },
+        { styleId: 6000, styleType: "singing_teacher" },
+      ]),
+    ];
+
+    expect(findInitialSingingTeacher(singer.styleId, characterInfos)).toEqual({
+      styleId: StyleId(6000),
+    });
+  });
+
+  test("同じキャラクターに候補がなければ同じエンジンの別キャラクターから選ぶ", () => {
+    const singer = { engineId: engineIdA, styleId: StyleId(1) };
+    const characterInfos = [
+      createCharacterInfo(engineIdA, uuid4(), [
+        { styleId: 1, styleType: "frame_decode" },
+      ]),
+      createCharacterInfo(engineIdA, uuid4(), [
+        { styleId: 2, styleType: "singing_teacher" },
+      ]),
+    ];
+
+    expect(findInitialSingingTeacher(singer.styleId, characterInfos)).toEqual({
+      styleId: StyleId(2),
+    });
+  });
+
+  test("利用可能な歌い方がなければundefinedを返す", () => {
+    const singer = { engineId: engineIdA, styleId: StyleId(1) };
+    const characterInfos = [
+      createCharacterInfo(engineIdA, uuid4(), [
+        { styleId: 1, styleType: "frame_decode" },
+      ]),
+    ];
+
+    expect(
+      findInitialSingingTeacher(singer.styleId, characterInfos),
+    ).toBeUndefined();
   });
 });

@@ -186,12 +186,6 @@
                     "
                   />
                 </BaseRowCard>
-                <ToggleCell
-                  title="複数選択"
-                  description="ONの場合、複数のテキスト欄を選択できるようにします。"
-                  :modelValue="enableMultiSelect"
-                  @update:modelValue="setEnableMultiSelect($event)"
-                />
               </div>
               <!-- Saving Card -->
               <div class="setting-card">
@@ -474,12 +468,11 @@
                   "
                 />
                 <ToggleCell
-                  v-if="!isProduction"
-                  title="[開発時のみ機能] ソング：パラメーターパネルの表示"
+                  title="ソング：パラメーターパネルの表示"
                   description="ONの場合、ソングエディタでパラメーターパネルが表示されます。"
-                  :modelValue="experimentalSetting.showParameterPanel"
+                  :modelValue="experimentalSetting.showSongParameterPanel"
                   @update:modelValue="
-                    changeExperimentalSetting('showParameterPanel', $event)
+                    changeExperimentalSetting('showSongParameterPanel', $event)
                   "
                 />
               </div>
@@ -737,11 +730,6 @@ const [
   shouldApplyDefaultPresetOnVoiceChanged,
   changeShouldApplyDefaultPresetOnVoiceChanged,
 ] = useRootMiscSetting(store, "shouldApplyDefaultPresetOnVoiceChanged");
-
-const [enableMultiSelect, setEnableMultiSelect] = useRootMiscSetting(
-  store,
-  "enableMultiSelect",
-);
 
 const [defaultLyricMode, setDefaultLyricMode] = useRootMiscSetting(
   store,

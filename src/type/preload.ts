@@ -365,7 +365,7 @@ export const experimentalSettingSchema = z.object({
   enableInterrogativeUpspeak: z.boolean().default(false),
   enableMorphing: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
-  showParameterPanel: z.boolean().default(false),
+  showSongParameterPanel: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
@@ -406,13 +406,12 @@ export const rootMiscSettingSchema = z.object({
       panAndGain: z.boolean().default(true),
     })
     .prefault({}),
-  showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
+  showSongCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
   defaultLyricMode: z.enum(["doremi", "la"]).default("doremi"), // デフォルト歌詞の動作モード
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
   enableKatakanaEnglish: z.boolean().default(true), // 未知の英単語をカタカナ読みに変換するかどうか
-  enableMultiSelect: z.boolean().default(true), // 複数選択を有効にするかどうか
   showAudioLength: z.boolean().default(false), // 音声の長さを表示するかどうか
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;

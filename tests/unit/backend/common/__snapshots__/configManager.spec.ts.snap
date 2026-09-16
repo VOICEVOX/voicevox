@@ -18,7 +18,6 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "enableKatakanaEnglish": true,
   "enableMemoNotation": false,
   "enableMultiEngine": false,
-  "enableMultiSelect": true,
   "enablePreset": false,
   "enableRubyNotation": false,
   "engineSettings": {
@@ -31,7 +30,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     "enableInterrogativeUpspeak": false,
     "enableMorphing": false,
     "shouldKeepTuningOnTextChange": false,
-    "showParameterPanel": false,
+    "showSongParameterPanel": false,
   },
   "hotkeySettings": [
     {
@@ -231,7 +230,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "shouldApplyDefaultPresetOnVoiceChanged": false,
   "showAddAudioItemButton": true,
   "showAudioLength": false,
-  "showSingCharacterPortrait": true,
+  "showSongCharacterPortrait": true,
   "showTextLineNumber": false,
   "splitTextWhenPaste": "PERIOD_AND_NEW_LINE",
   "splitterPosition": {},

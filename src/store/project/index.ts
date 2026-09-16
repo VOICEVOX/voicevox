@@ -22,7 +22,7 @@ import {
   createDefaultTimeSignature,
   createDefaultTrack,
   DEFAULT_TPQN,
-} from "@/sing/domain";
+} from "@/song/domain";
 import type { EditorType } from "@/type/preload";
 import { type IsEqual, UnreachableError } from "@/type/utility";
 import {

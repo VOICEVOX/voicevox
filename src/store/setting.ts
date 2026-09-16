@@ -49,7 +49,7 @@ export const settingStoreState: SettingStoreState = {
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
     shouldKeepTuningOnTextChange: false,
-    showParameterPanel: false,
+    showSongParameterPanel: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
@@ -72,11 +72,10 @@ export const settingStoreState: SettingStoreState = {
     soloAndMute: true,
     panAndGain: true,
   },
-  showSingCharacterPortrait: true,
+  showSongCharacterPortrait: true,
   defaultLyricMode: "doremi",
   playheadPositionDisplayFormat: "MINUTES_SECONDS",
   enableKatakanaEnglish: true,
-  enableMultiSelect: true,
   showAudioLength: false,
 };
 
@@ -153,12 +152,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "enableMemoNotation",
         "skipUpdateVersion",
         "undoableTrackOperations",
-        "showSingCharacterPortrait",
+        "showSongCharacterPortrait",
         "defaultLyricMode",
         "playheadPositionDisplayFormat",
         "openedEditor",
         "enableKatakanaEnglish",
-        "enableMultiSelect",
         "showAudioLength",
       ] as const;
 

@@ -336,11 +336,7 @@ const supportedFeatures = computed(
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined,
 );
 
-const selectedAudioKeys = computed(() =>
-  store.state.enableMultiSelect
-    ? store.getters.SELECTED_AUDIO_KEYS
-    : [props.activeAudioKey],
-);
+const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 
 /** パラメーターを制御するための元情報リスト */
 type ParameterConfig = {

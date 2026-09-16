@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   generateWaveformPeaksMipmap,
   resamplePeaks,
-} from "@/sing/waveformPeaks";
-import { createArray } from "@/sing/utility";
+} from "@/song/waveformPeaks";
+import { createArray } from "@/song/utility";
 
 const MIN_BUCKET_SIZE = 16;
 const SAMPLE_RATE = 24000;

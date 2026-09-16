@@ -103,7 +103,9 @@ export class EngineInfoManager {
           pathname: pathname === "/" ? "" : pathname,
           isDefault: this.isDefaultEngine(engineInfo.uuid),
           type: engineInfo.type,
+          // .envで指定された相対パスをカレントディレクトリ基準の絶対パスにするため、path.resolveを使う。
           executionFilePath: path.resolve(engineInfo.executionFilePath),
+          // .envのpathには絶対パスを指定してdefaultEngineDirの外を指すこともできるようにしたいため、path.resolveを使う。
           path:
             engineInfo.path == undefined
               ? undefined

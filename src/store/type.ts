@@ -68,11 +68,12 @@ import type { OssLicenseInfo } from "@/domain/staticAssets";
 import type {
   MultiFileProjectFormat,
   SingleFileProjectFormat,
-} from "@/sing/utaformatixProject/utils";
+} from "@/song/utaformatixProject/utils";
 import type {
   Note,
   PhonemeTimingEdit,
   Singer,
+  SingingTeacher,
   Tempo,
   TimeSignature,
   Track,
@@ -751,7 +752,7 @@ export type AudioPlayerStoreTypes = {
 };
 
 /*
- * Singing Store Types
+ * Song Store Types
  */
 
 export type PhraseState =
@@ -881,7 +882,7 @@ export type SongExportState =
   | "EXPORTING_LABEL"
   | "NOT_EXPORTING";
 
-export type SingingStoreState = {
+export type SongStoreState = {
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
@@ -921,7 +922,7 @@ export type SingingStoreState = {
   loopEndTick: number;
 };
 
-export type SingingStoreTypes = {
+export type SongStoreTypes = {
   SELECTED_TRACK_ID: {
     getter: TrackId;
   };
@@ -939,6 +940,17 @@ export type SingingStoreTypes = {
     action(payload: {
       singer?: Singer;
       withRelated?: boolean;
+      trackId: TrackId;
+    }): void;
+  };
+
+  SET_SINGING_TEACHER: {
+    mutation: {
+      singingTeacher?: SingingTeacher;
+      trackId: TrackId;
+    };
+    action(payload: {
+      singingTeacher?: SingingTeacher;
       trackId: TrackId;
     }): void;
   };
@@ -1535,11 +1547,11 @@ export type SingingStoreTypes = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export type SingingCommandStoreState = {
+export type SongCommandStoreState = {
   //
 };
 
-export type SingingCommandStoreTypes = {
+export type SongCommandStoreTypes = {
   COMMAND_SET_SINGER: {
     mutation: { singer: Singer; withRelated?: boolean; trackId: TrackId };
     action(payload: {
@@ -1547,6 +1559,11 @@ export type SingingCommandStoreTypes = {
       withRelated?: boolean;
       trackId: TrackId;
     }): void;
+  };
+
+  COMMAND_SET_SINGING_TEACHER: {
+    mutation: { singingTeacher: SingingTeacher; trackId: TrackId };
+    action(payload: { singingTeacher: SingingTeacher; trackId: TrackId }): void;
   };
 
   COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
@@ -2568,8 +2585,8 @@ export type State = AudioStoreState &
   PresetStoreState &
   DictionaryStoreState &
   ProxyStoreState &
-  SingingStoreState &
-  SingingCommandStoreState;
+  SongStoreState &
+  SongCommandStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
   AudioPlayerStoreTypes &
@@ -2583,8 +2600,8 @@ type AllStoreTypes = AudioStoreTypes &
   PresetStoreTypes &
   DictionaryStoreTypes &
   ProxyStoreTypes &
-  SingingStoreTypes &
-  SingingCommandStoreTypes;
+  SongStoreTypes &
+  SongCommandStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;

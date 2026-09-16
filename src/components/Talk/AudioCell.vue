@@ -7,11 +7,8 @@
       active: isActiveAudioCell,
       // selectedクラスはテストで使われているので残す。
       // TODO: テストをこのクラスに依存しないようにして、このクラスを消す。
-      selected: isSelectedAudioCell && isMultiSelectEnabled,
-      'selected-highlight':
-        isSelectedAudioCell &&
-        isMultiSelectEnabled &&
-        selectedAudioKeys.length > 1,
+      selected: isSelectedAudioCell,
+      'selected-highlight': isSelectedAudioCell && selectedAudioKeys.length > 1,
     }"
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
@@ -21,7 +18,7 @@
     <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->
     <div
       v-if="
-        isMultiSelectEnabled && isActiveAudioCell
+        isActiveAudioCell
           ? isCtrlOrCommandKeyDown
           : isCtrlOrCommandKeyDown || isShiftKeyDown
       "
@@ -183,8 +180,6 @@ const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
-
 const selectAndSetActiveAudioKey = () => {
   void store.actions.SET_ACTIVE_AUDIO_KEY({ audioKey: props.audioKey });
   void store.actions.SET_SELECTED_AUDIO_KEYS({
@@ -279,9 +274,7 @@ const selectedVoice = computed<Voice | undefined>({
   set(voice: Voice | undefined) {
     if (voice == undefined) return;
     void store.actions.COMMAND_MULTI_CHANGE_VOICE({
-      audioKeys: isMultiSelectEnabled.value
-        ? store.getters.SELECTED_AUDIO_KEYS
-        : [props.audioKey],
+      audioKeys: store.getters.SELECTED_AUDIO_KEYS,
       voice,
     });
   },
@@ -431,7 +424,7 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   if (e && e.isComposing) return;
   const index = audioKeys.value.indexOf(props.audioKey) + offset;
   if (index >= 0 && index < audioKeys.value.length) {
-    if (isMultiSelectEnabled.value && e?.shiftKey) {
+    if (e?.shiftKey) {
       emit("focusCell", {
         audioKey: audioKeys.value[index],
         focusTarget: "root",
@@ -457,10 +450,7 @@ const moveDownCell = moveCell(1);
 const willRemove = ref(false);
 const removeCell = async () => {
   let audioKeysToDelete: AudioKey[];
-  if (
-    isMultiSelectEnabled.value &&
-    store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
-  ) {
+  if (store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)) {
     audioKeysToDelete = store.getters.SELECTED_AUDIO_KEYS;
   } else {
     audioKeysToDelete = [props.audioKey];
@@ -527,9 +517,7 @@ const selectCharacterAt = (index: number) => {
     styleId: style.styleId,
   };
   void store.actions.COMMAND_MULTI_CHANGE_VOICE({
-    audioKeys: isMultiSelectEnabled.value
-      ? store.getters.SELECTED_AUDIO_KEYS
-      : [props.audioKey],
+    audioKeys: store.getters.SELECTED_AUDIO_KEYS,
     voice,
   });
 };
@@ -537,8 +525,7 @@ const selectCharacterAt = (index: number) => {
 // 削除ボタンの有効／無効判定
 const enableDeleteButton = computed(() => {
   return (
-    store.state.audioKeys.length >
-    (isMultiSelectEnabled.value ? store.getters.SELECTED_AUDIO_KEYS.length : 1)
+    store.state.audioKeys.length > store.getters.SELECTED_AUDIO_KEYS.length
   );
 });
 
