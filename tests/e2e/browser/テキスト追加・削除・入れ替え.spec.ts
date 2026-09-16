@@ -1,8 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 import { gotoHome, navigateToMain } from "../navigators";
-import { fillAudioCell, validateInput } from "./utils";
-import { undo, redo } from "./undo";
+import { fillAudioCell, validateInput, undo, redo } from "./utils";
 import { ensureNotNullish } from "@/type/utility";
 
 test.beforeEach(gotoHome);
