@@ -32,6 +32,7 @@ import {
   generateLabelFileData,
   type PhonemeTimingLabel,
   sanitizeFileName,
+  generateUniqueFilePath,
 } from "./utility";
 import {
   type CharacterInfo,
@@ -108,7 +109,6 @@ import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { ufProjectFromVoicevox } from "@/song/utaformatixProject/fromVoicevox";
-import { generateUniqueFilePath } from "@/song/fileUtils";
 import {
   isMultiFileProjectFormat,
   isSingleFileProjectFormat,
@@ -2613,12 +2613,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
           }
 
           if (state.savingSetting.avoidOverwrite) {
-            let tail = 1;
-            const pathWithoutExt = filePath.slice(0, -4);
-            while (await window.backend.checkFileExists(filePath)) {
-              filePath = `${pathWithoutExt}[${tail}].wav`;
-              tail += 1;
-            }
+            filePath = await generateUniqueFilePath(filePath);
           }
 
           if (state.nowRendering) {
@@ -3057,7 +3052,9 @@ export const songStore = createPartialStore<SongStoreTypes>({
       const filePathWithoutExt = path.join(directoryPath, fileName);
 
       if (state.savingSetting.avoidOverwrite) {
-        return await generateUniqueFilePath(filePathWithoutExt, extension);
+        return await generateUniqueFilePath(
+          `${filePathWithoutExt}.${extension}`,
+        );
       } else {
         return `${filePathWithoutExt}.${extension}`;
       }
@@ -3484,11 +3481,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
           if (!filePath) {
             return { result: "CANCELED", path: "" };
           }
-          filePath = await generateUniqueFilePath(
-            // 拡張子を除いたファイル名を取得
-            filePath.slice(0, -(extension.length + 1)),
-            extension,
-          );
+          filePath = await generateUniqueFilePath(filePath);
 
           return await actions.EXPORT_FILE({
             filePath,
