@@ -5,13 +5,14 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
   "renderingEventInfos": [
     {
       "phraseInfos": Map {
-        "d20a046f707fe40f61b348e537bb9d648db896a9352ceedc07e7675942cf2117" => {
+        "561dec9c718d8d49de3211b895df9cec3d862923cf5631733048f600774fce4e" => {
           "notes": [
             {
               "duration": 480,
               "id": "00000000-0000-4000-0000-000000000002",
               "lyric": "て",
               "noteNumber": 60,
+              "phonemeSeedSource": 1,
               "position": 1920,
             },
             {
@@ -19,6 +20,7 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
               "id": "00000000-0000-4000-0000-000000000003",
               "lyric": "す",
               "noteNumber": 62,
+              "phonemeSeedSource": 2,
               "position": 2400,
             },
             {
@@ -26,6 +28,7 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
               "id": "00000000-0000-4000-0000-000000000004",
               "lyric": "と",
               "noteNumber": 64,
+              "phonemeSeedSource": 3,
               "position": 2880,
             },
           ],
@@ -40,13 +43,14 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
           "startTime": 1.5,
           "trackId": "00000000-0000-4000-0000-000000000001",
         },
-        "c6b680b930c4a171f499d0a1b16818434b3cf38d8787d0ac1c5dea45d9008062" => {
+        "3008f96721df2b2a05f4891582e788d6ca0e83805de7e402973b52679a755af6" => {
           "notes": [
             {
               "duration": 480,
               "id": "00000000-0000-4000-0000-000000000005",
               "lyric": "い",
               "noteNumber": 60,
+              "phonemeSeedSource": 4,
               "position": 3840,
             },
             {
@@ -54,6 +58,7 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
               "id": "00000000-0000-4000-0000-000000000006",
               "lyric": "ち",
               "noteNumber": 60,
+              "phonemeSeedSource": 5,
               "position": 4320,
             },
           ],
@@ -68,13 +73,14 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
           "startTime": 3.5,
           "trackId": "00000000-0000-4000-0000-000000000001",
         },
-        "9f56ff7190aacf6eb22c686d458de68a24f45c0c944a0dbd801a9b601473f27f" => {
+        "9c320dabec477dc39b4d25e96cfd70ce36dedd52ef5c370bb0c55f6876779d3e" => {
           "notes": [
             {
               "duration": 480,
               "id": "00000000-0000-4000-0000-000000000007",
               "lyric": "に",
               "noteNumber": 62,
+              "phonemeSeedSource": 6,
               "position": 5280,
             },
           ],
@@ -94,13 +100,14 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
     },
     {
       "phraseInfos": Map {
-        "d20a046f707fe40f61b348e537bb9d648db896a9352ceedc07e7675942cf2117" => {
+        "561dec9c718d8d49de3211b895df9cec3d862923cf5631733048f600774fce4e" => {
           "notes": [
             {
               "duration": 480,
               "id": "00000000-0000-4000-0000-000000000002",
               "lyric": "て",
               "noteNumber": 60,
+              "phonemeSeedSource": 1,
               "position": 1920,
             },
             {
@@ -108,6 +115,7 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
               "id": "00000000-0000-4000-0000-000000000003",
               "lyric": "す",
               "noteNumber": 62,
+              "phonemeSeedSource": 2,
               "position": 2400,
             },
             {
@@ -115,6 +123,7 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
               "id": "00000000-0000-4000-0000-000000000004",
               "lyric": "と",
               "noteNumber": 64,
+              "phonemeSeedSource": 3,
               "position": 2880,
             },
           ],
@@ -129,13 +138,14 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
           "startTime": 1.5,
           "trackId": "00000000-0000-4000-0000-000000000001",
         },
-        "c6b680b930c4a171f499d0a1b16818434b3cf38d8787d0ac1c5dea45d9008062" => {
+        "3008f96721df2b2a05f4891582e788d6ca0e83805de7e402973b52679a755af6" => {
           "notes": [
             {
               "duration": 480,
               "id": "00000000-0000-4000-0000-000000000005",
               "lyric": "い",
               "noteNumber": 60,
+              "phonemeSeedSource": 4,
               "position": 3840,
             },
             {
@@ -143,6 +153,7 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
               "id": "00000000-0000-4000-0000-000000000006",
               "lyric": "ち",
               "noteNumber": 60,
+              "phonemeSeedSource": 5,
               "position": 4320,
             },
           ],
@@ -157,13 +168,14 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
           "startTime": 3.5,
           "trackId": "00000000-0000-4000-0000-000000000001",
         },
-        "9f56ff7190aacf6eb22c686d458de68a24f45c0c944a0dbd801a9b601473f27f" => {
+        "9c320dabec477dc39b4d25e96cfd70ce36dedd52ef5c370bb0c55f6876779d3e" => {
           "notes": [
             {
               "duration": 480,
               "id": "00000000-0000-4000-0000-000000000007",
               "lyric": "に",
               "noteNumber": 62,
+              "phonemeSeedSource": 6,
               "position": 5280,
             },
           ],
@@ -182,31 +194,31 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
       "type": "cacheLoaded",
     },
     {
-      "phraseKey": "d20a046f707fe40f61b348e537bb9d648db896a9352ceedc07e7675942cf2117",
+      "phraseKey": "561dec9c718d8d49de3211b895df9cec3d862923cf5631733048f600774fce4e",
       "type": "phraseRenderingStarted",
     },
     {
-      "phraseKey": "d20a046f707fe40f61b348e537bb9d648db896a9352ceedc07e7675942cf2117",
-      "queryHash": "407fd92072dbd5cfe1359fff3cf7827d255486ceeafcb7c519fcb9d0413c39f7",
-      "queryKey": "1f185f2b4ddc330d164ba11429b2a7ec50e7ab4603610162765294d3264e43ad",
+      "phraseKey": "561dec9c718d8d49de3211b895df9cec3d862923cf5631733048f600774fce4e",
+      "queryHash": "9969e3e89e2616fc3e6da6ee5f3694bbcc0b2848eb056341c62e3ce4521135db",
+      "queryKey": "e6b405a16e0a47c47dc9acf546f8db53981e1a783d9459d23c2339adabca88ca",
       "type": "queryGenerationComplete",
     },
     {
-      "phraseKey": "d20a046f707fe40f61b348e537bb9d648db896a9352ceedc07e7675942cf2117",
+      "phraseKey": "561dec9c718d8d49de3211b895df9cec3d862923cf5631733048f600774fce4e",
       "singingPitchHash": "9228d480d6cb405f77461ec4c1b7fa0f1d0bcc6ff2ecf9d038c2aadca449cff4",
-      "singingPitchKey": "998014dc5fd726c134192c7e71ca59aae37cf54523ea13f41d73af63004dc42a",
+      "singingPitchKey": "3d87943e412139517db2a3d4e193fc6f2234fd7a9825c7f23787c4334a018b0c",
       "type": "pitchGenerationComplete",
     },
     {
-      "phraseKey": "d20a046f707fe40f61b348e537bb9d648db896a9352ceedc07e7675942cf2117",
+      "phraseKey": "561dec9c718d8d49de3211b895df9cec3d862923cf5631733048f600774fce4e",
       "singingVolumeHash": "34deaab02b5eb0f134f81879e50df214a661937a0474bb0354d7067f88102eef",
-      "singingVolumeKey": "c33f7506ca263efb17f096ed9bd1cd5023bef58f106558bcffa09416157f40e7",
+      "singingVolumeKey": "7162fee52dd5a2d7ed485210544f953349d2499f9c152180fb251e907893175b",
       "type": "volumeGenerationComplete",
     },
     {
-      "phraseKey": "d20a046f707fe40f61b348e537bb9d648db896a9352ceedc07e7675942cf2117",
+      "phraseKey": "561dec9c718d8d49de3211b895df9cec3d862923cf5631733048f600774fce4e",
       "singingVoiceHash": "6f4c259b73cb8831089f8da61b8c0d34a2b6c9dc8053e27d6719ee0656773971",
-      "singingVoiceKey": "f0335f4115dc43814dc0c8a08fcaefa88c9fd979f494b80ca5e3e79558da1d28",
+      "singingVoiceKey": "67d25f105aa7cd17d18df25372121592e84862a9e33797fd875dc5cd1859ed3e",
       "type": "voiceSynthesisComplete",
     },
     {
@@ -217,6 +229,7 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
             "id": "00000000-0000-4000-0000-000000000002",
             "lyric": "て",
             "noteNumber": 60,
+            "phonemeSeedSource": 1,
             "position": 1920,
           },
           {
@@ -224,6 +237,7 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
             "id": "00000000-0000-4000-0000-000000000003",
             "lyric": "す",
             "noteNumber": 62,
+            "phonemeSeedSource": 2,
             "position": 2400,
           },
           {
@@ -231,49 +245,50 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
             "id": "00000000-0000-4000-0000-000000000004",
             "lyric": "と",
             "noteNumber": 64,
+            "phonemeSeedSource": 3,
             "position": 2880,
           },
         ],
-        "queryHash": "407fd92072dbd5cfe1359fff3cf7827d255486ceeafcb7c519fcb9d0413c39f7",
-        "queryKey": "1f185f2b4ddc330d164ba11429b2a7ec50e7ab4603610162765294d3264e43ad",
+        "queryHash": "9969e3e89e2616fc3e6da6ee5f3694bbcc0b2848eb056341c62e3ce4521135db",
+        "queryKey": "e6b405a16e0a47c47dc9acf546f8db53981e1a783d9459d23c2339adabca88ca",
         "singingPitchHash": "9228d480d6cb405f77461ec4c1b7fa0f1d0bcc6ff2ecf9d038c2aadca449cff4",
-        "singingPitchKey": "998014dc5fd726c134192c7e71ca59aae37cf54523ea13f41d73af63004dc42a",
+        "singingPitchKey": "3d87943e412139517db2a3d4e193fc6f2234fd7a9825c7f23787c4334a018b0c",
         "singingVoiceHash": "6f4c259b73cb8831089f8da61b8c0d34a2b6c9dc8053e27d6719ee0656773971",
-        "singingVoiceKey": "f0335f4115dc43814dc0c8a08fcaefa88c9fd979f494b80ca5e3e79558da1d28",
+        "singingVoiceKey": "67d25f105aa7cd17d18df25372121592e84862a9e33797fd875dc5cd1859ed3e",
         "singingVolumeHash": "34deaab02b5eb0f134f81879e50df214a661937a0474bb0354d7067f88102eef",
-        "singingVolumeKey": "c33f7506ca263efb17f096ed9bd1cd5023bef58f106558bcffa09416157f40e7",
+        "singingVolumeKey": "7162fee52dd5a2d7ed485210544f953349d2499f9c152180fb251e907893175b",
         "startTime": 1.5,
         "trackId": "00000000-0000-4000-0000-000000000001",
       },
-      "phraseKey": "d20a046f707fe40f61b348e537bb9d648db896a9352ceedc07e7675942cf2117",
+      "phraseKey": "561dec9c718d8d49de3211b895df9cec3d862923cf5631733048f600774fce4e",
       "type": "phraseRenderingComplete",
     },
     {
-      "phraseKey": "c6b680b930c4a171f499d0a1b16818434b3cf38d8787d0ac1c5dea45d9008062",
+      "phraseKey": "3008f96721df2b2a05f4891582e788d6ca0e83805de7e402973b52679a755af6",
       "type": "phraseRenderingStarted",
     },
     {
-      "phraseKey": "c6b680b930c4a171f499d0a1b16818434b3cf38d8787d0ac1c5dea45d9008062",
-      "queryHash": "a8f2b7b595373ed7bd8d6b4b68fb6c2654a82b8c0132e37dc1e9a75128d657fa",
-      "queryKey": "1ef9b8f09fc176283cc3c31f0f10a6ac463ffdd429bbf6bff901e74940fd7be4",
+      "phraseKey": "3008f96721df2b2a05f4891582e788d6ca0e83805de7e402973b52679a755af6",
+      "queryHash": "d042988b8760c555d53c6862fe71e1df34d60a6eda81271b10e947919393af44",
+      "queryKey": "20217ea4ffb176cadd593c1d03a0797a141a039f1d12e809ae24ed6157d5e920",
       "type": "queryGenerationComplete",
     },
     {
-      "phraseKey": "c6b680b930c4a171f499d0a1b16818434b3cf38d8787d0ac1c5dea45d9008062",
+      "phraseKey": "3008f96721df2b2a05f4891582e788d6ca0e83805de7e402973b52679a755af6",
       "singingPitchHash": "25558925c922c10ecc60e53ea2e85417c88cbbc5e17990045421138d9468cd35",
-      "singingPitchKey": "efc1f6b842704e3baaf39cab5bce73e4b2b5921da2f19dca081d60a8f4e06f50",
+      "singingPitchKey": "86eeec91333143dc17f87f3e4277daa193bdd5e8d145c8cf4953de9f32b8fe04",
       "type": "pitchGenerationComplete",
     },
     {
-      "phraseKey": "c6b680b930c4a171f499d0a1b16818434b3cf38d8787d0ac1c5dea45d9008062",
+      "phraseKey": "3008f96721df2b2a05f4891582e788d6ca0e83805de7e402973b52679a755af6",
       "singingVolumeHash": "01290852d0764175ff7a9bb8b23774bd80a8c8c3ce0fee4e83055c5900f3a3ba",
-      "singingVolumeKey": "1a68053b91cf9c5b2606082f036f9088dbed5cb3c54b03307093ba9e41b0ed8d",
+      "singingVolumeKey": "7d66577caf8f09e79473c9ae418a1ad69e9e7eb11a7e9f26f4271c9ddfa7dbd7",
       "type": "volumeGenerationComplete",
     },
     {
-      "phraseKey": "c6b680b930c4a171f499d0a1b16818434b3cf38d8787d0ac1c5dea45d9008062",
+      "phraseKey": "3008f96721df2b2a05f4891582e788d6ca0e83805de7e402973b52679a755af6",
       "singingVoiceHash": "dde936509a0c4c73749812e52d198a7600f7f8710aa06059977037d9654db731",
-      "singingVoiceKey": "23107c07791a14a185fdcd508c0cebb73731ea825a0d7a27d6c962636aaf9305",
+      "singingVoiceKey": "c1970f3d570c706fcd7ccaf7e583a0f2c8097351bbac0ff5b437cb1d6423dea9",
       "type": "voiceSynthesisComplete",
     },
     {
@@ -284,6 +299,7 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
             "id": "00000000-0000-4000-0000-000000000005",
             "lyric": "い",
             "noteNumber": 60,
+            "phonemeSeedSource": 4,
             "position": 3840,
           },
           {
@@ -291,49 +307,50 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
             "id": "00000000-0000-4000-0000-000000000006",
             "lyric": "ち",
             "noteNumber": 60,
+            "phonemeSeedSource": 5,
             "position": 4320,
           },
         ],
-        "queryHash": "a8f2b7b595373ed7bd8d6b4b68fb6c2654a82b8c0132e37dc1e9a75128d657fa",
-        "queryKey": "1ef9b8f09fc176283cc3c31f0f10a6ac463ffdd429bbf6bff901e74940fd7be4",
+        "queryHash": "d042988b8760c555d53c6862fe71e1df34d60a6eda81271b10e947919393af44",
+        "queryKey": "20217ea4ffb176cadd593c1d03a0797a141a039f1d12e809ae24ed6157d5e920",
         "singingPitchHash": "25558925c922c10ecc60e53ea2e85417c88cbbc5e17990045421138d9468cd35",
-        "singingPitchKey": "efc1f6b842704e3baaf39cab5bce73e4b2b5921da2f19dca081d60a8f4e06f50",
+        "singingPitchKey": "86eeec91333143dc17f87f3e4277daa193bdd5e8d145c8cf4953de9f32b8fe04",
         "singingVoiceHash": "dde936509a0c4c73749812e52d198a7600f7f8710aa06059977037d9654db731",
-        "singingVoiceKey": "23107c07791a14a185fdcd508c0cebb73731ea825a0d7a27d6c962636aaf9305",
+        "singingVoiceKey": "c1970f3d570c706fcd7ccaf7e583a0f2c8097351bbac0ff5b437cb1d6423dea9",
         "singingVolumeHash": "01290852d0764175ff7a9bb8b23774bd80a8c8c3ce0fee4e83055c5900f3a3ba",
-        "singingVolumeKey": "1a68053b91cf9c5b2606082f036f9088dbed5cb3c54b03307093ba9e41b0ed8d",
+        "singingVolumeKey": "7d66577caf8f09e79473c9ae418a1ad69e9e7eb11a7e9f26f4271c9ddfa7dbd7",
         "startTime": 3.5,
         "trackId": "00000000-0000-4000-0000-000000000001",
       },
-      "phraseKey": "c6b680b930c4a171f499d0a1b16818434b3cf38d8787d0ac1c5dea45d9008062",
+      "phraseKey": "3008f96721df2b2a05f4891582e788d6ca0e83805de7e402973b52679a755af6",
       "type": "phraseRenderingComplete",
     },
     {
-      "phraseKey": "9f56ff7190aacf6eb22c686d458de68a24f45c0c944a0dbd801a9b601473f27f",
+      "phraseKey": "9c320dabec477dc39b4d25e96cfd70ce36dedd52ef5c370bb0c55f6876779d3e",
       "type": "phraseRenderingStarted",
     },
     {
-      "phraseKey": "9f56ff7190aacf6eb22c686d458de68a24f45c0c944a0dbd801a9b601473f27f",
-      "queryHash": "7cf49460e459d9183231d696ccca779a9e4c78ee5b5fe2c56550153a7aed117c",
-      "queryKey": "19606d3341393434c1ee3c8592993e5f9465b53ab1435e659b769932b7835ebc",
+      "phraseKey": "9c320dabec477dc39b4d25e96cfd70ce36dedd52ef5c370bb0c55f6876779d3e",
+      "queryHash": "a730dc27652d3d07029364f2f15549f930c4deea5f80b6adee5aaa50f60c5e32",
+      "queryKey": "5be244819942af9a9a3d595ae701721dc91c1b1bd6ba1106024982daa63314b0",
       "type": "queryGenerationComplete",
     },
     {
-      "phraseKey": "9f56ff7190aacf6eb22c686d458de68a24f45c0c944a0dbd801a9b601473f27f",
+      "phraseKey": "9c320dabec477dc39b4d25e96cfd70ce36dedd52ef5c370bb0c55f6876779d3e",
       "singingPitchHash": "a46335a1d216cd6bac381b7eac5805ca5e24426490cb83bbba03d36cd277ea82",
-      "singingPitchKey": "984af5b252bc0bbaf65c6775e8ab8cdf19ee7891ace05502940665b53b7f8ac8",
+      "singingPitchKey": "0d4a140fcd6b8986218119430a0626a7830594eac725eea0b27bbc03fd1b948b",
       "type": "pitchGenerationComplete",
     },
     {
-      "phraseKey": "9f56ff7190aacf6eb22c686d458de68a24f45c0c944a0dbd801a9b601473f27f",
+      "phraseKey": "9c320dabec477dc39b4d25e96cfd70ce36dedd52ef5c370bb0c55f6876779d3e",
       "singingVolumeHash": "c5788679f5195210bd4fb5487e2372ee858a241853c9621d1eeda19a3d551d07",
-      "singingVolumeKey": "4e3e7d7e750a101d39bb61aef3e9a3e8544d01a051f2df53b261b5ea2e4f5712",
+      "singingVolumeKey": "892ee1899952e3d36a01e90e1c09d9db36219b0b5e17eb93dcacfb920a3cfc80",
       "type": "volumeGenerationComplete",
     },
     {
-      "phraseKey": "9f56ff7190aacf6eb22c686d458de68a24f45c0c944a0dbd801a9b601473f27f",
+      "phraseKey": "9c320dabec477dc39b4d25e96cfd70ce36dedd52ef5c370bb0c55f6876779d3e",
       "singingVoiceHash": "57b2b493e1cffcaa229282253cd805c43278d5850ff8976089d980ed90d05dec",
-      "singingVoiceKey": "2ef0cc22ff4a57ba57c486ba20143d9d76e72f8a02379b9ff60f9abf52920dce",
+      "singingVoiceKey": "47236dc5a0793cd194cdbb1d37a9d96cbb2035f937ceefc2e4d1f852d796e89d",
       "type": "voiceSynthesisComplete",
     },
     {
@@ -344,21 +361,22 @@ exports[`SongTrackRenderer > レンダリングイベントが正しく発行さ
             "id": "00000000-0000-4000-0000-000000000007",
             "lyric": "に",
             "noteNumber": 62,
+            "phonemeSeedSource": 6,
             "position": 5280,
           },
         ],
-        "queryHash": "7cf49460e459d9183231d696ccca779a9e4c78ee5b5fe2c56550153a7aed117c",
-        "queryKey": "19606d3341393434c1ee3c8592993e5f9465b53ab1435e659b769932b7835ebc",
+        "queryHash": "a730dc27652d3d07029364f2f15549f930c4deea5f80b6adee5aaa50f60c5e32",
+        "queryKey": "5be244819942af9a9a3d595ae701721dc91c1b1bd6ba1106024982daa63314b0",
         "singingPitchHash": "a46335a1d216cd6bac381b7eac5805ca5e24426490cb83bbba03d36cd277ea82",
-        "singingPitchKey": "984af5b252bc0bbaf65c6775e8ab8cdf19ee7891ace05502940665b53b7f8ac8",
+        "singingPitchKey": "0d4a140fcd6b8986218119430a0626a7830594eac725eea0b27bbc03fd1b948b",
         "singingVoiceHash": "57b2b493e1cffcaa229282253cd805c43278d5850ff8976089d980ed90d05dec",
-        "singingVoiceKey": "2ef0cc22ff4a57ba57c486ba20143d9d76e72f8a02379b9ff60f9abf52920dce",
+        "singingVoiceKey": "47236dc5a0793cd194cdbb1d37a9d96cbb2035f937ceefc2e4d1f852d796e89d",
         "singingVolumeHash": "c5788679f5195210bd4fb5487e2372ee858a241853c9621d1eeda19a3d551d07",
-        "singingVolumeKey": "4e3e7d7e750a101d39bb61aef3e9a3e8544d01a051f2df53b261b5ea2e4f5712",
+        "singingVolumeKey": "892ee1899952e3d36a01e90e1c09d9db36219b0b5e17eb93dcacfb920a3cfc80",
         "startTime": 5,
         "trackId": "00000000-0000-4000-0000-000000000001",
       },
-      "phraseKey": "9f56ff7190aacf6eb22c686d458de68a24f45c0c944a0dbd801a9b601473f27f",
+      "phraseKey": "9c320dabec477dc39b4d25e96cfd70ce36dedd52ef5c370bb0c55f6876779d3e",
       "type": "phraseRenderingComplete",
     },
   ],
@@ -369,13 +387,14 @@ exports[`SongTrackRenderer > 正しいレンダリング結果が返される 1`
 {
   "renderingResultInfo": {
     "phraseInfos": Map {
-      "d20a046f707fe40f61b348e537bb9d648db896a9352ceedc07e7675942cf2117" => {
+      "561dec9c718d8d49de3211b895df9cec3d862923cf5631733048f600774fce4e" => {
         "notes": [
           {
             "duration": 480,
             "id": "00000000-0000-4000-0000-000000000002",
             "lyric": "て",
             "noteNumber": 60,
+            "phonemeSeedSource": 1,
             "position": 1920,
           },
           {
@@ -383,6 +402,7 @@ exports[`SongTrackRenderer > 正しいレンダリング結果が返される 1`
             "id": "00000000-0000-4000-0000-000000000003",
             "lyric": "す",
             "noteNumber": 62,
+            "phonemeSeedSource": 2,
             "position": 2400,
           },
           {
@@ -390,27 +410,29 @@ exports[`SongTrackRenderer > 正しいレンダリング結果が返される 1`
             "id": "00000000-0000-4000-0000-000000000004",
             "lyric": "と",
             "noteNumber": 64,
+            "phonemeSeedSource": 3,
             "position": 2880,
           },
         ],
-        "queryHash": "407fd92072dbd5cfe1359fff3cf7827d255486ceeafcb7c519fcb9d0413c39f7",
-        "queryKey": "1f185f2b4ddc330d164ba11429b2a7ec50e7ab4603610162765294d3264e43ad",
+        "queryHash": "9969e3e89e2616fc3e6da6ee5f3694bbcc0b2848eb056341c62e3ce4521135db",
+        "queryKey": "e6b405a16e0a47c47dc9acf546f8db53981e1a783d9459d23c2339adabca88ca",
         "singingPitchHash": "9228d480d6cb405f77461ec4c1b7fa0f1d0bcc6ff2ecf9d038c2aadca449cff4",
-        "singingPitchKey": "998014dc5fd726c134192c7e71ca59aae37cf54523ea13f41d73af63004dc42a",
+        "singingPitchKey": "3d87943e412139517db2a3d4e193fc6f2234fd7a9825c7f23787c4334a018b0c",
         "singingVoiceHash": "6f4c259b73cb8831089f8da61b8c0d34a2b6c9dc8053e27d6719ee0656773971",
-        "singingVoiceKey": "f0335f4115dc43814dc0c8a08fcaefa88c9fd979f494b80ca5e3e79558da1d28",
+        "singingVoiceKey": "67d25f105aa7cd17d18df25372121592e84862a9e33797fd875dc5cd1859ed3e",
         "singingVolumeHash": "34deaab02b5eb0f134f81879e50df214a661937a0474bb0354d7067f88102eef",
-        "singingVolumeKey": "c33f7506ca263efb17f096ed9bd1cd5023bef58f106558bcffa09416157f40e7",
+        "singingVolumeKey": "7162fee52dd5a2d7ed485210544f953349d2499f9c152180fb251e907893175b",
         "startTime": 1.5,
         "trackId": "00000000-0000-4000-0000-000000000001",
       },
-      "c6b680b930c4a171f499d0a1b16818434b3cf38d8787d0ac1c5dea45d9008062" => {
+      "3008f96721df2b2a05f4891582e788d6ca0e83805de7e402973b52679a755af6" => {
         "notes": [
           {
             "duration": 480,
             "id": "00000000-0000-4000-0000-000000000005",
             "lyric": "い",
             "noteNumber": 60,
+            "phonemeSeedSource": 4,
             "position": 3840,
           },
           {
@@ -418,38 +440,40 @@ exports[`SongTrackRenderer > 正しいレンダリング結果が返される 1`
             "id": "00000000-0000-4000-0000-000000000006",
             "lyric": "ち",
             "noteNumber": 60,
+            "phonemeSeedSource": 5,
             "position": 4320,
           },
         ],
-        "queryHash": "a8f2b7b595373ed7bd8d6b4b68fb6c2654a82b8c0132e37dc1e9a75128d657fa",
-        "queryKey": "1ef9b8f09fc176283cc3c31f0f10a6ac463ffdd429bbf6bff901e74940fd7be4",
+        "queryHash": "d042988b8760c555d53c6862fe71e1df34d60a6eda81271b10e947919393af44",
+        "queryKey": "20217ea4ffb176cadd593c1d03a0797a141a039f1d12e809ae24ed6157d5e920",
         "singingPitchHash": "25558925c922c10ecc60e53ea2e85417c88cbbc5e17990045421138d9468cd35",
-        "singingPitchKey": "efc1f6b842704e3baaf39cab5bce73e4b2b5921da2f19dca081d60a8f4e06f50",
+        "singingPitchKey": "86eeec91333143dc17f87f3e4277daa193bdd5e8d145c8cf4953de9f32b8fe04",
         "singingVoiceHash": "dde936509a0c4c73749812e52d198a7600f7f8710aa06059977037d9654db731",
-        "singingVoiceKey": "23107c07791a14a185fdcd508c0cebb73731ea825a0d7a27d6c962636aaf9305",
+        "singingVoiceKey": "c1970f3d570c706fcd7ccaf7e583a0f2c8097351bbac0ff5b437cb1d6423dea9",
         "singingVolumeHash": "01290852d0764175ff7a9bb8b23774bd80a8c8c3ce0fee4e83055c5900f3a3ba",
-        "singingVolumeKey": "1a68053b91cf9c5b2606082f036f9088dbed5cb3c54b03307093ba9e41b0ed8d",
+        "singingVolumeKey": "7d66577caf8f09e79473c9ae418a1ad69e9e7eb11a7e9f26f4271c9ddfa7dbd7",
         "startTime": 3.5,
         "trackId": "00000000-0000-4000-0000-000000000001",
       },
-      "9f56ff7190aacf6eb22c686d458de68a24f45c0c944a0dbd801a9b601473f27f" => {
+      "9c320dabec477dc39b4d25e96cfd70ce36dedd52ef5c370bb0c55f6876779d3e" => {
         "notes": [
           {
             "duration": 480,
             "id": "00000000-0000-4000-0000-000000000007",
             "lyric": "に",
             "noteNumber": 62,
+            "phonemeSeedSource": 6,
             "position": 5280,
           },
         ],
-        "queryHash": "7cf49460e459d9183231d696ccca779a9e4c78ee5b5fe2c56550153a7aed117c",
-        "queryKey": "19606d3341393434c1ee3c8592993e5f9465b53ab1435e659b769932b7835ebc",
+        "queryHash": "a730dc27652d3d07029364f2f15549f930c4deea5f80b6adee5aaa50f60c5e32",
+        "queryKey": "5be244819942af9a9a3d595ae701721dc91c1b1bd6ba1106024982daa63314b0",
         "singingPitchHash": "a46335a1d216cd6bac381b7eac5805ca5e24426490cb83bbba03d36cd277ea82",
-        "singingPitchKey": "984af5b252bc0bbaf65c6775e8ab8cdf19ee7891ace05502940665b53b7f8ac8",
+        "singingPitchKey": "0d4a140fcd6b8986218119430a0626a7830594eac725eea0b27bbc03fd1b948b",
         "singingVoiceHash": "57b2b493e1cffcaa229282253cd805c43278d5850ff8976089d980ed90d05dec",
-        "singingVoiceKey": "2ef0cc22ff4a57ba57c486ba20143d9d76e72f8a02379b9ff60f9abf52920dce",
+        "singingVoiceKey": "47236dc5a0793cd194cdbb1d37a9d96cbb2035f937ceefc2e4d1f852d796e89d",
         "singingVolumeHash": "c5788679f5195210bd4fb5487e2372ee858a241853c9621d1eeda19a3d551d07",
-        "singingVolumeKey": "4e3e7d7e750a101d39bb61aef3e9a3e8544d01a051f2df53b261b5ea2e4f5712",
+        "singingVolumeKey": "892ee1899952e3d36a01e90e1c09d9db36219b0b5e17eb93dcacfb920a3cfc80",
         "startTime": 5,
         "trackId": "00000000-0000-4000-0000-000000000001",
       },

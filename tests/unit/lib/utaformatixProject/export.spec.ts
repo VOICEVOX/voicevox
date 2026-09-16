@@ -6,7 +6,7 @@ import {
   createDefaultTrack,
 } from "@/sing/domain";
 import { NoteId } from "@/type/preload";
-import { uuid4 } from "@/helpers/random";
+import { randomInt32, uuid4 } from "@/helpers/random";
 
 const createNoteId = () => NoteId(uuid4());
 
@@ -18,6 +18,7 @@ it("トラックを変換できる", async () => {
     position: 0,
     duration: 480,
     lyric: "ど",
+    phonemeSeedSource: randomInt32(),
   });
 
   const project = await ufProjectFromVoicevox(

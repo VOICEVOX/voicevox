@@ -101,7 +101,7 @@ import { createLogger } from "@/helpers/log";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
-import { uuid4 } from "@/helpers/random";
+import { randomInt32, uuid4 } from "@/helpers/random";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
@@ -3060,9 +3060,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const selectedNotes = selectedTrack.notes
         .filter((note: Note) => noteIds.has(note.id))
         .map((note: Note) => {
-          // idのみコピーしない
-          const { id, ...noteWithoutId } = note;
-          return noteWithoutId;
+          // idとシード値のソースはコピーしない
+          const { id, phonemeSeedSource, ...noteToCopy } = note;
+          return noteToCopy;
         });
       // ノートをJSONにシリアライズしてクリップボードにコピーする
       const serializedNotes = JSON.stringify(selectedNotes);
@@ -3096,7 +3096,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       let notes;
       try {
         notes = noteSchema
-          .omit({ id: true })
+          .omit({ id: true, phonemeSeedSource: true })
           .array()
           .parse(JSON.parse(clipboardText));
       } catch (error) {
@@ -3130,6 +3130,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           duration: note.duration,
           noteNumber: note.noteNumber,
           lyric: note.lyric,
+          phonemeSeedSource: randomInt32(),
         };
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
