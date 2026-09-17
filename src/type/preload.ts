@@ -412,7 +412,6 @@ export const rootMiscSettingSchema = z.object({
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
   enableKatakanaEnglish: z.boolean().default(true), // 未知の英単語をカタカナ読みに変換するかどうか
-  enableMultiSelect: z.boolean().default(true), // 複数選択を有効にするかどうか
   showAudioLength: z.boolean().default(false), // 音声の長さを表示するかどうか
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;

@@ -303,6 +303,9 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
           return hotkeySetting;
         });
       config.hotkeySettings = newHotkeySettings;
+
+      // 複数選択機能を常時有効にする
+      delete config.enableMultiSelect;
     },
   ],
   [
