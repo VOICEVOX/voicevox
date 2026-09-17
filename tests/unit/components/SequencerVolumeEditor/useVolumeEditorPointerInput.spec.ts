@@ -4,9 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 import {
   useVolumeEditorPointerInput,
   type VolumeEditorPointerEvent,
-} from "@/components/Sing/SequencerVolumeEditor/useVolumeEditorPointerInput";
-import { relativeVolumeEditMode } from "@/sing/volumeEditMode";
-import type { VolumeEditorPreviewMode } from "@/sing/volumeEditorStateMachine/common";
+} from "@/components/Song/SequencerVolumeEditor/useVolumeEditorPointerInput";
+import { relativeVolumeEditMode } from "@/song/volumeEditMode";
+import type { VolumeEditorPreviewMode } from "@/song/volumeEditorStateMachine/common";
 
 describe("useVolumeEditorPointerInput", () => {
   it("ポインタイベントをエディタの座標と編集値へ変換する", () => {

@@ -1,5 +1,5 @@
 import { computed, ref, shallowRef, watch } from "vue";
-import type { CursorState } from "@/sing/viewHelper";
+import type { CursorState } from "@/song/viewHelper";
 import type {
   VolumePreviewEdit,
   VolumeEditorIdleStateId,
@@ -8,10 +8,10 @@ import type {
   VolumeEditorInput,
   VolumeEditorComputedRefs,
   VolumeEditorTooltipData,
-} from "@/sing/volumeEditorStateMachine/common";
+} from "@/song/volumeEditorStateMachine/common";
 import type { TrackId } from "@/type/preload";
-import { createVolumeEditorStateMachine } from "@/sing/volumeEditorStateMachine";
-import type { VolumeEditableFrameRange } from "@/sing/volumeEditRanges";
+import { createVolumeEditorStateMachine } from "@/song/volumeEditorStateMachine";
+import type { VolumeEditableFrameRange } from "@/song/volumeEditRanges";
 
 export const useVolumeEditorStateMachine = (
   store: VolumeEditorPartialStore,
