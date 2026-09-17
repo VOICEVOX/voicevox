@@ -1,4 +1,4 @@
-import { it, expect, describe, test } from "vitest";
+import { afterEach, beforeEach, it, expect, describe, test, vi } from "vitest";
 import type { AccentPhrase, Mora } from "@/openapi";
 import {
   type CharacterInfo,
@@ -22,9 +22,54 @@ import {
   isOnCommandOrCtrlKeyDown,
   findInitialSingingTeacher,
   filterCharacterInfosByStyleType,
+  generateUniqueFilePath,
 } from "@/store/utility";
 import { uuid4 } from "@/helpers/random";
 import { isMac } from "@/helpers/platform";
+
+describe("generateUniqueFilePath", () => {
+  const checkFileExists = vi.fn<(filePath: string) => Promise<boolean>>();
+
+  beforeEach(() => {
+    checkFileExists.mockReset();
+    vi.stubGlobal("window", { backend: { checkFileExists } });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test("ファイルが存在しない場合は元のパスを返す", async () => {
+    checkFileExists.mockResolvedValue(false);
+
+    await expect(generateUniqueFilePath("audio.wav")).resolves.toBe(
+      "audio.wav",
+    );
+    expect(checkFileExists).toHaveBeenCalledWith("audio.wav");
+  });
+
+  test("ファイルが存在する場合は連番を付ける", async () => {
+    checkFileExists
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+
+    await expect(generateUniqueFilePath("audio.wav")).resolves.toBe(
+      "audio[2].wav",
+    );
+    expect(checkFileExists.mock.calls).toEqual([
+      ["audio.wav"],
+      ["audio[1].wav"],
+      ["audio[2].wav"],
+    ]);
+  });
+
+  test("拡張子がない場合も連番を付ける", async () => {
+    checkFileExists.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    await expect(generateUniqueFilePath("audio")).resolves.toBe("audio[1]");
+  });
+});
 
 function createDummyMora(text: string): Mora {
   return {
