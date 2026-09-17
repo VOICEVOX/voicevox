@@ -588,7 +588,11 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH: {
-    action(payload: { audioKey: AudioKey; accentPhraseIndex: number }): void;
+    action(payload: {
+      audioKey: AudioKey;
+      accentPhraseIndex: number;
+      type: "pitch" | "length" | "both";
+    }): void;
   };
 
   COMMAND_SET_AUDIO_MORA_DATA: {

@@ -2507,7 +2507,7 @@ export const audioCommandStore = transformCommandStore(
     COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH: {
       async action(
         { state, actions, mutations },
-        { audioKey, accentPhraseIndex },
+        { audioKey, accentPhraseIndex, type },
       ) {
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
@@ -2515,12 +2515,38 @@ export const audioCommandStore = transformCommandStore(
         const query = state.audioItems[audioKey].query;
         if (query == undefined) throw new Error("query == undefined");
 
-        const newAccentPhrases = await actions.FETCH_AND_COPY_MORA_DATA({
-          accentPhrases: [...query.accentPhrases],
+        const fetchedAccentPhrases = await actions.FETCH_MORA_DATA({
+          accentPhrases: query.accentPhrases,
           engineId,
           styleId,
-          copyIndexes: [accentPhraseIndex],
         });
+        const newAccentPhrases = cloneWithUnwrapProxy(query.accentPhrases);
+
+        if (type === "both") {
+          newAccentPhrases[accentPhraseIndex] =
+            fetchedAccentPhrases[accentPhraseIndex];
+        } else {
+          const newAccentPhrase = newAccentPhrases[accentPhraseIndex];
+          const fetchedAccentPhrase = fetchedAccentPhrases[accentPhraseIndex];
+
+          for (const [moraIndex, newMora] of newAccentPhrase.moras.entries()) {
+            const fetchedMora = fetchedAccentPhrase.moras[moraIndex];
+            if (type === "pitch") {
+              newMora.pitch = fetchedMora.pitch;
+            } else {
+              newMora.consonantLength = fetchedMora.consonantLength;
+              newMora.vowelLength = fetchedMora.vowelLength;
+            }
+          }
+          if (
+            type === "length" &&
+            newAccentPhrase.pauseMora != undefined &&
+            fetchedAccentPhrase.pauseMora != undefined
+          ) {
+            newAccentPhrase.pauseMora.vowelLength =
+              fetchedAccentPhrase.pauseMora.vowelLength;
+          }
+        }
 
         mutations.COMMAND_CHANGE_ACCENT({
           audioKey,
