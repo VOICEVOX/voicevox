@@ -18,7 +18,7 @@ import "./styles/_index.scss";
 window.dataLayer = [];
 
 if (isMac) {
-  document.body.classList.add("macos");
+  document.body.dataset.platform = "macos";
 }
 
 createApp(App)

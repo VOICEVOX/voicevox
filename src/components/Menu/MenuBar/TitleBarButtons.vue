@@ -4,7 +4,7 @@
     transparent
     color="transparent"
     textColor="display"
-    class="full-height cursor-not-allowed no-border-radius mac-pinned-btn"
+    class="full-height cursor-not-allowed no-border-radius ma pinned-btn"
   >
     <QBtn
       v-if="isPinned"
@@ -14,7 +14,7 @@
       round
       icon="push_pin"
       color="teal"
-      class="title-bar-buttons"
+      class="title-bar-button"
       aria-label="最前面固定を解除"
       @click="changePinWindow()"
     >
@@ -30,7 +30,7 @@
       round
       icon="push_pin"
       color="display"
-      class="title-bar-buttons rotate-45"
+      class="title-bar-button rotate-45"
       aria-label="最前面に固定"
       @click="changePinWindow()"
     >
@@ -54,7 +54,7 @@
         round
         icon="push_pin"
         color="teal"
-        class="title-bar-buttons"
+        class="title-bar-button"
         aria-label="最前面固定を解除"
         @click="changePinWindow()"
       >
@@ -69,7 +69,7 @@
         flat
         round
         icon="push_pin"
-        class="title-bar-buttons rotate-45"
+        class="title-bar-button rotate-45"
         aria-label="最前面に固定"
         @click="changePinWindow()"
       >
@@ -108,13 +108,14 @@ const isPinned = computed(() => store.state.isPinned);
   z-index: 2000;
 }
 
-.title-bar-buttons {
+.title-bar-button {
   overflow: visible;
 }
 
-.mac-pinned-btn {
+[data-platform="macos"] .pinned-btn {
   // 少し位置を調整する
   margin-right: 3px;
+  margin-left: 3px;
   margin-top: 3px;
 }
 </style>
