@@ -271,6 +271,7 @@ export const audioStreamPlayerStore =
                   }
                 },
                 async onFetchEnd() {
+                  if (abortSignal.aborted) return;
                   log.info(
                     `Caching audio for ${audioKey} starting at ${startTime}`,
                   );
