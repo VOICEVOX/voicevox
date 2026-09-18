@@ -61,6 +61,7 @@ export const settingStoreState: SettingStoreState = {
     tweakableSliderByScroll: false,
     engineStartedOnAltPort: false,
     notifyOnGenerate: false,
+    streamingUnrecommended: false,
   },
   engineSettings: {},
   enablePreset: false,
