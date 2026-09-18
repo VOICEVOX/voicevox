@@ -71,7 +71,14 @@ function generateAudioKey() {
   return AudioKey(uuid4());
 }
 
-function parseTextFile(
+function normalizeCharacterName(name: string): string {
+  // 幅の違いだけを正規化し、丸数字などの互換文字は同一視しない。
+  return name
+    .replace(/[\u3000\uFF01-\uFFEF]+/g, (text) => text.normalize("NFKC"))
+    .toLowerCase();
+}
+
+export function parseTextFile(
   body: string,
   defaultStyleIds: DefaultStyleId[],
   userOrderedCharacterInfos: CharacterInfo[],
@@ -92,7 +99,7 @@ function parseTextFile(
     const speakerName = characterInfo.metas.speakerName;
     if (voice == undefined)
       throw new Error(`style is undefined. speakerUuid: ${uuid}`);
-    name2Voice.set(speakerName, voice);
+    name2Voice.set(normalizeCharacterName(speakerName), voice);
   }
   // setup characters with style name
   for (const characterInfo of userOrderedCharacterInfos) {
@@ -104,10 +111,17 @@ function parseTextFile(
         speakerId: characterInfo.metas.speakerUuid,
         styleId: style.styleId,
       };
-      name2Voice.set(formatCharacterStyleName(characterName, styleName), voice);
+      name2Voice.set(
+        normalizeCharacterName(
+          formatCharacterStyleName(characterName, styleName),
+        ),
+        voice,
+      );
       // 古いフォーマットにも対応するため
       name2Voice.set(
-        `${characterName}(${styleName || DEFAULT_STYLE_NAME})`,
+        normalizeCharacterName(
+          `${characterName}(${styleName || DEFAULT_STYLE_NAME})`,
+        ),
         voice,
       );
     }
@@ -120,7 +134,7 @@ function parseTextFile(
     initVoice ?? uuid2Voice.get(userOrderedCharacterInfos[0].metas.speakerUuid);
   if (lastVoice == undefined) throw new Error(`lastStyle is undefined.`);
   for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
-    const voice = name2Voice.get(splitText);
+    const voice = name2Voice.get(normalizeCharacterName(splitText));
     if (voice != undefined) {
       lastVoice = voice;
       continue;
