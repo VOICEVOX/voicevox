@@ -69,7 +69,7 @@ export class WavStream {
           "Invalid WAV file: 'data' chunk found before 'fmt ' chunk",
         );
       } else {
-        // Skip unknown chunk
+        await this.readBytes(size + (size % 2));
       }
     }
   }
@@ -91,7 +91,7 @@ export class WavStream {
         dataChunkSize = size;
         break;
       } else {
-        // Skip unknown chunk
+        await this.readBytes(size + (size % 2));
       }
     }
 
