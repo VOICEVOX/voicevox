@@ -204,6 +204,6 @@ watch(uiLocked, () => {
 }
 
 .mac-traffic-light-space {
-  margin-right: 70px;
+  margin-right: 80px;
 }
 </style>

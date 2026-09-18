@@ -19,18 +19,6 @@ body:not(#dummy) {
   user-select: none;
   color: colors.$display;
   background: colors.$background;
-
-  // Storybookでは枠線を付けない
-  &:not(.sb-show-main) {
-    border-left: solid #{vars.$window-border-width} #{colors.$splitter};
-    border-right: solid #{vars.$window-border-width} #{colors.$splitter};
-    border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
-
-    &.macos {
-      border-radius: 16px;
-      -electron-corner-smoothing: system-ui;
-    }
-  }
 }
 
 body[data-editor-font="default"] {
