@@ -181,7 +181,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
     async singFrameF0(payload: SingFrameF0Request): Promise<Array<number>> {
       const {
         speaker: styleId,
-        bodySingFrameF0SingFrameF0Post: { score, frameAudioQuery },
+        bodySingFrameF0: { score, frameAudioQuery },
       } = cloneWithUnwrapProxy(payload);
 
       const f0 = notesAndFramePhonemesToPitchMock(
@@ -197,7 +197,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
     ): Promise<Array<number>> {
       const {
         speaker: styleId,
-        bodySingFrameVolumeSingFrameVolumePost: { score, frameAudioQuery },
+        bodySingFrameVolume: { score, frameAudioQuery },
       } = cloneWithUnwrapProxy(payload);
 
       const volume = notesAndFramePhonemesAndPitchToVolumeMock(
