@@ -9,6 +9,7 @@ import { WavStream } from "@/domain/wavStream";
 import type { AudioKey } from "@/type/preload";
 import { assertNonNullable, ensureNotNullish } from "@/type/utility";
 import { LruCache } from "@/helpers/lruCache";
+import { showAlertDialog } from "@/components/Dialog/Dialog";
 
 const log = createLogger("store/audioStreamPlayer");
 let audioContext: AudioContext | null = null;
@@ -35,7 +36,7 @@ export async function playAudioStreams(
     onStart?: (index: number) => void;
     onChunkStart?: (index: number, time: number) => void;
     onDelay?: () => void;
-    onFetchEnd?: (index: number) => void;
+    onFetchEnd?: (index: number) => void | Promise<void>;
   } = {},
 ) {
   if (!audioContext) {
@@ -44,6 +45,7 @@ export async function playAudioStreams(
   if (audioContext.state === "suspended") {
     await audioContext.resume();
   }
+  if (cancel.aborted) return;
 
   const bufferSources: AudioBufferSourceNode[] = [];
   const { promise: cancelledPromise, resolve: resolveCancel } =
@@ -56,21 +58,16 @@ export async function playAudioStreams(
   const chunkStartNotifiers: ReturnType<typeof setTimeout>[] = [];
   for (const [index, audioStream] of audioStreams.entries()) {
     try {
-      const header = await audioStream.readHeader();
+      const header = await Promise.race([
+        cancelledPromise,
+        audioStream.readHeader(),
+      ]);
+      if (header === cancelled) return;
       const sampleRate = header.sampleRate;
 
       const samplesIterator = audioStream.readSamples(samplesPerChunk);
       let numTotalSamples = 0;
       while (true) {
-        const audioBuffer = audioContext.createBuffer(
-          2,
-          samplesPerChunk,
-          sampleRate,
-        );
-        const leftChannel = audioBuffer.getChannelData(0);
-        const rightChannel = audioBuffer.getChannelData(1);
-        let offset = 0;
-
         // 最初のチャンクは遅延通知をしない
         if (numTotalSamples > 0) {
           lastDelayNotifier = setTimeout(
@@ -89,7 +86,7 @@ export async function playAudioStreams(
           lastDelayNotifier = null;
         }
         if (chunkOrDone === cancelled) {
-          break;
+          return;
         }
         if (chunkOrDone.done) {
           break;
@@ -98,6 +95,14 @@ export async function playAudioStreams(
           callbacks.onStart?.(index);
         }
 
+        const audioBuffer = audioContext.createBuffer(
+          2,
+          chunkOrDone.value.length,
+          sampleRate,
+        );
+        const leftChannel = audioBuffer.getChannelData(0);
+        const rightChannel = audioBuffer.getChannelData(1);
+        let offset = 0;
         for (const [left, right] of chunkOrDone.value) {
           leftChannel[offset] = left;
           rightChannel[offset] = right;
@@ -121,8 +126,9 @@ export async function playAudioStreams(
         bufferSources.push(source);
       }
 
-      callbacks.onFetchEnd?.(index);
+      if (!cancel.aborted) await callbacks.onFetchEnd?.(index);
     } finally {
+      if (lastDelayNotifier != null) clearTimeout(lastDelayNotifier);
       await Promise.race([
         new Promise<void>((resolve) => {
           setTimeout(
@@ -184,113 +190,129 @@ export const audioStreamPlayerStore =
             accentPhraseOffsets[getters.AUDIO_PLAY_START_POINT ?? 0];
 
           return await playAudioWithAbort(async (abortSignal) => {
-            const existingCache = audioCache.get(cacheKey);
-            if (existingCache && existingCache.startsAt <= startTime) {
-              log.info(
-                `Using cached audio for ${audioKey} starting at ${existingCache.startsAt} with offset ${startTime - existingCache.startsAt}`,
-              );
-              const wavBlob = existingCache.wav;
-              const wavStreamForPlay = new WavStream(
-                wavBlob.stream(),
-                startTime - existingCache.startsAt,
-              );
-
-              await playAudioStreams([wavStreamForPlay], abortSignal, {
-                onChunkStart(_index, time) {
-                  mutations.SET_CURRENT_PLAY_STATE({
-                    currentPlayState: {
-                      type: "streaming",
-                      audioKey,
-                      currentTime: time + startTime,
-                    },
+            try {
+              if (audioContext?.setSinkId) {
+                const device = state.savingSetting.audioOutputDevice;
+                await audioContext
+                  .setSinkId(device === "default" ? "" : device)
+                  .catch((err: unknown) => {
+                    void showAlertDialog({
+                      title: "エラー",
+                      message: "再生デバイスが見つかりません",
+                    });
+                    throw err;
                   });
-                },
-              });
-              mutations.SET_CURRENT_PLAY_STATE({
-                currentPlayState: {
-                  type: "stopped",
-                },
-              });
-              return !abortSignal.aborted;
-            } else {
-              log.info(
-                `Generating audio for ${audioKey} starting at ${startTime}`,
-              );
-
-              mutations.SET_AUDIO_NOW_GENERATING({
-                audioKey,
-                nowGenerating: true,
-              });
-              const response = await actions
-                .INSTANTIATE_ENGINE_CONNECTOR({
-                  engineId,
-                })
-                .then((instance) =>
-                  instance.invoke("streamingSynthesisRaw")(
-                    {
-                      audioQuery,
-                      speaker: audioItem.voice.styleId,
-                      enableInterrogativeUpspeak:
-                        state.experimentalSetting.enableInterrogativeUpspeak,
-                      startOffset: startTime,
-                      segmentLength,
-                    },
-                    {
-                      signal: abortSignal,
-                    },
-                  ),
+              }
+              const existingCache = audioCache.get(cacheKey);
+              if (existingCache && existingCache.startsAt <= startTime) {
+                log.info(
+                  `Using cached audio for ${audioKey} starting at ${existingCache.startsAt} with offset ${startTime - existingCache.startsAt}`,
+                );
+                const wavBlob = existingCache.wav;
+                const wavStreamForPlay = new WavStream(
+                  wavBlob.stream(),
+                  startTime - existingCache.startsAt,
                 );
 
-              const wavBody = ensureNotNullish(response.raw.body);
-              const [wavBodyForPlay, wavBodyForSave] = wavBody.tee();
-
-              const wavStream = new WavStream(wavBodyForPlay);
-              let delayNotified = false;
-              await playAudioStreams([wavStream], abortSignal, {
-                onStart() {
-                  mutations.SET_AUDIO_NOW_GENERATING({
-                    audioKey,
-                    nowGenerating: false,
-                  });
-                },
-                onChunkStart(_index, time) {
-                  mutations.SET_CURRENT_PLAY_STATE({
-                    currentPlayState: {
-                      type: "streaming",
-                      audioKey,
-                      currentTime: time + startTime,
-                    },
-                  });
-                },
-                onDelay() {
-                  if (!delayNotified) {
-                    delayNotified = true;
-
-                    void actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
-                      message: "このPCではストリーミング再生が推奨されません",
-                      icon: "warning",
-                      tipName: "streamingUnrecommended",
+                await playAudioStreams([wavStreamForPlay], abortSignal, {
+                  onChunkStart(_index, time) {
+                    mutations.SET_CURRENT_PLAY_STATE({
+                      currentPlayState: {
+                        type: "streaming",
+                        audioKey,
+                        currentTime: time + startTime,
+                      },
                     });
-                  }
-                },
-                async onFetchEnd() {
-                  if (abortSignal.aborted) return;
-                  log.info(
-                    `Caching audio for ${audioKey} starting at ${startTime}`,
+                  },
+                });
+                return !abortSignal.aborted;
+              } else {
+                log.info(
+                  `Generating audio for ${audioKey} starting at ${startTime}`,
+                );
+
+                mutations.SET_AUDIO_NOW_GENERATING({
+                  audioKey,
+                  nowGenerating: true,
+                });
+                const response = await actions
+                  .INSTANTIATE_ENGINE_CONNECTOR({
+                    engineId,
+                  })
+                  .then((instance) =>
+                    instance.invoke("streamingSynthesisRaw")(
+                      {
+                        audioQuery,
+                        speaker: audioItem.voice.styleId,
+                        enableInterrogativeUpspeak:
+                          state.experimentalSetting.enableInterrogativeUpspeak,
+                        startOffset: startTime,
+                        segmentLength,
+                      },
+                      {
+                        signal: abortSignal,
+                      },
+                    ),
                   );
-                  const wavBlob = await new Response(wavBodyForSave).blob();
-                  audioCache.set(cacheKey, {
-                    wav: wavBlob,
-                    startsAt: startTime,
-                  });
-                },
+
+                const wavBody = ensureNotNullish(response.raw.body);
+                const [wavBodyForPlay, wavBodyForSave] = wavBody.tee();
+
+                const wavStream = new WavStream(wavBodyForPlay);
+                let delayNotified = false;
+                await playAudioStreams([wavStream], abortSignal, {
+                  onStart() {
+                    mutations.SET_AUDIO_NOW_GENERATING({
+                      audioKey,
+                      nowGenerating: false,
+                    });
+                  },
+                  onChunkStart(_index, time) {
+                    mutations.SET_CURRENT_PLAY_STATE({
+                      currentPlayState: {
+                        type: "streaming",
+                        audioKey,
+                        currentTime: time + startTime,
+                      },
+                    });
+                  },
+                  onDelay() {
+                    if (
+                      !delayNotified &&
+                      !state.confirmedTips.streamingUnrecommended
+                    ) {
+                      delayNotified = true;
+
+                      void actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
+                        message: "このPCではストリーミング再生が推奨されません",
+                        icon: "warning",
+                        tipName: "streamingUnrecommended",
+                      });
+                    }
+                  },
+                  async onFetchEnd() {
+                    if (abortSignal.aborted) return;
+                    log.info(
+                      `Caching audio for ${audioKey} starting at ${startTime}`,
+                    );
+                    const wavBlob = await new Response(wavBodyForSave).blob();
+                    if (abortSignal.aborted) return;
+                    audioCache.set(cacheKey, {
+                      wav: wavBlob,
+                      startsAt: startTime,
+                    });
+                  },
+                });
+                return !abortSignal.aborted;
+              }
+            } finally {
+              mutations.SET_AUDIO_NOW_GENERATING({
+                audioKey,
+                nowGenerating: false,
               });
               mutations.SET_CURRENT_PLAY_STATE({
-                currentPlayState: {
-                  type: "stopped",
-                },
+                currentPlayState: { type: "stopped" },
               });
-              return !abortSignal.aborted;
             }
           });
         },
