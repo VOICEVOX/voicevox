@@ -725,8 +725,22 @@ export type AudioCommandStoreTypes = {
  * Audio Player Store Types
  */
 
+export type CurrentPlayState =
+  | {
+      type: "stopped";
+    }
+  | {
+      type: "playing";
+      audioKey: AudioKey;
+    }
+  | {
+      type: "streaming";
+      audioKey: AudioKey;
+      currentTime: number;
+    };
+
 export type AudioPlayerStoreState = {
-  nowPlayingAudioKey?: AudioKey;
+  currentPlayState: CurrentPlayState;
 };
 
 export type AudioPlayerStoreTypes = {
@@ -738,8 +752,8 @@ export type AudioPlayerStoreTypes = {
     getter: boolean;
   };
 
-  SET_AUDIO_NOW_PLAYING: {
-    mutation: { audioKey: AudioKey; nowPlaying: boolean };
+  SET_CURRENT_PLAY_STATE: {
+    mutation: { currentPlayState: CurrentPlayState };
   };
 
   SET_AUDIO_SOURCE: {
@@ -752,6 +766,16 @@ export type AudioPlayerStoreTypes = {
 
   STOP_AUDIO: {
     action(): void;
+  };
+};
+
+/*
+ * Audio Stream Player Store Types
+ */
+
+export type AudioStreamPlayerStoreTypes = {
+  PLAY_AUDIO_STREAMING: {
+    action(payload: { audioKey: AudioKey }): Promise<boolean>;
   };
 };
 
@@ -2562,7 +2586,8 @@ export type IEngineConnectorFactoryActionsMapper = <
 >(
   action: K,
 ) => (
-  _: Parameters<IEngineConnectorFactoryActions[K]>[0],
+  params: Parameters<IEngineConnectorFactoryActions[K]>[0],
+  initOverrides?: Parameters<IEngineConnectorFactoryActions[K]>[1],
 ) => ReturnType<IEngineConnectorFactoryActions[K]>;
 
 export type ProxyStoreTypes = {
@@ -2594,6 +2619,7 @@ export type State = AudioStoreState &
 
 type AllStoreTypes = AudioStoreTypes &
   AudioPlayerStoreTypes &
+  AudioStreamPlayerStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
   EngineStoreTypes &

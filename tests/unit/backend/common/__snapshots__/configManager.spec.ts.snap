@@ -8,6 +8,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "confirmedTips": {
     "engineStartedOnAltPort": false,
     "notifyOnGenerate": false,
+    "streamingUnrecommended": false,
     "tweakableSliderByScroll": false,
   },
   "currentTheme": "Default",
@@ -234,6 +235,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "showTextLineNumber": false,
   "splitTextWhenPaste": "PERIOD_AND_NEW_LINE",
   "splitterPosition": {},
+  "streamingMode": "BALANCED",
   "toolbarSetting": [
     "PLAY_CONTINUOUSLY",
     "STOP",

@@ -141,7 +141,12 @@ export type AppInfos = {
   version: string;
 };
 
-export type StyleType = "talk" | "singing_teacher" | "frame_decode" | "sing";
+export type StyleType =
+  | "talk"
+  | "streaming_talk"
+  | "singing_teacher"
+  | "frame_decode"
+  | "sing";
 
 export type StyleInfo = {
   styleName?: string;
@@ -382,6 +387,7 @@ export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
   engineStartedOnAltPort: boolean; // エンジンのポート変更の通知
   notifyOnGenerate: boolean; // 音声書き出し時の通知
+  streamingUnrecommended: boolean; // ストリーミング再生のRTFが1.0未満のPCを検出したときの通知
 };
 
 // ルート直下にある雑多な設定値
@@ -413,6 +419,9 @@ export const rootMiscSettingSchema = z.object({
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
   enableKatakanaEnglish: z.boolean().default(true), // 未知の英単語をカタカナ読みに変換するかどうか
   showAudioLength: z.boolean().default(false), // 音声の長さを表示するかどうか
+  streamingMode: z
+    .enum(["LOW_LATENCY", "BALANCED", "STABLE"])
+    .default("BALANCED"),
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
@@ -483,6 +492,7 @@ export function getConfigSchema({ isMac }: { isMac: boolean }) {
         tweakableSliderByScroll: z.boolean().default(false),
         engineStartedOnAltPort: z.boolean().default(false),
         notifyOnGenerate: z.boolean().default(false),
+        streamingUnrecommended: z.boolean().default(false),
       })
       .prefault({}),
     registeredEngineDirs: z.string().array().default([]),

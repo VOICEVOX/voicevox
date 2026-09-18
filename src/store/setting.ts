@@ -61,6 +61,7 @@ export const settingStoreState: SettingStoreState = {
     tweakableSliderByScroll: false,
     engineStartedOnAltPort: false,
     notifyOnGenerate: false,
+    streamingUnrecommended: false,
   },
   engineSettings: {},
   enablePreset: false,
@@ -77,6 +78,7 @@ export const settingStoreState: SettingStoreState = {
   playheadPositionDisplayFormat: "MINUTES_SECONDS",
   enableKatakanaEnglish: true,
   showAudioLength: false,
+  streamingMode: "BALANCED",
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -158,6 +160,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "openedEditor",
         "enableKatakanaEnglish",
         "showAudioLength",
+        "streamingMode",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード

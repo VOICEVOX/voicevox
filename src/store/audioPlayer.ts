@@ -2,7 +2,11 @@
  * HTMLAudioElement周りの音声再生・停止などを担当する。
  */
 import { createPartialStore } from "./vuex";
-import type { AudioPlayerStoreState, AudioPlayerStoreTypes } from "./type";
+import type {
+  AudioPlayerStoreState,
+  AudioPlayerStoreTypes,
+  CurrentPlayState,
+} from "./type";
 import type { AudioKey } from "@/type/preload";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
 
@@ -17,17 +21,31 @@ const getAudioElement = (() => {
   };
 })();
 
+let lastPlayController: AbortController | undefined = undefined;
+export function playAudioWithAbort<T>(
+  callback: (signal: AbortSignal) => Promise<T>,
+): Promise<T> {
+  if (lastPlayController) {
+    lastPlayController.abort();
+  }
+  const controller = new AbortController();
+  lastPlayController = controller;
+  return callback(controller.signal);
+}
+
 export const audioPlayerStoreState: AudioPlayerStoreState = {
-  nowPlayingAudioKey: undefined,
+  currentPlayState: { type: "stopped" },
 };
 
 export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER: {
     getter: (state) => {
       return () =>
-        state._activeAudioKey != undefined
+        state.currentPlayState.type === "playing"
           ? getAudioElement().currentTime
-          : undefined;
+          : state.currentPlayState.type === "streaming"
+            ? state.currentPlayState.currentTime
+            : undefined;
     },
   },
 
@@ -35,18 +53,18 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     getter(state, getters) {
       const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
       return (
-        activeAudioKey != undefined &&
-        activeAudioKey === state.nowPlayingAudioKey
+        state.currentPlayState.type !== "stopped" &&
+        state.currentPlayState.audioKey === activeAudioKey
       );
     },
   },
 
-  SET_AUDIO_NOW_PLAYING: {
+  SET_CURRENT_PLAY_STATE: {
     mutation(
       state,
-      { audioKey, nowPlaying }: { audioKey: AudioKey; nowPlaying: boolean },
+      { currentPlayState }: { currentPlayState: CurrentPlayState },
     ) {
-      state.nowPlayingAudioKey = nowPlaying ? audioKey : undefined;
+      state.currentPlayState = currentPlayState;
     },
   },
 
@@ -88,7 +106,12 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       // 再生終了時にresolveされるPromiseを返す
       const played = async () => {
         if (audioKey) {
-          mutations.SET_AUDIO_NOW_PLAYING({ audioKey, nowPlaying: true });
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: {
+              type: "playing",
+              audioKey,
+            },
+          });
         }
       };
       audioElement.addEventListener("play", played);
@@ -103,7 +126,11 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         audioElement.removeEventListener("play", played);
         audioElement.removeEventListener("pause", paused);
         if (audioKey) {
-          mutations.SET_AUDIO_NOW_PLAYING({ audioKey, nowPlaying: false });
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: {
+              type: "stopped",
+            },
+          });
         }
       });
 
@@ -116,6 +143,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   STOP_AUDIO: {
     // 停止中でも呼び出して問題ない
     action() {
+      void playAudioWithAbort(async () => {});
       // PLAY_ でonpause時の処理が設定されているため、pauseするだけで良い
       getAudioElement().pause();
     },

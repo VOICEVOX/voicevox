@@ -1730,8 +1730,21 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   PLAY_AUDIO: {
     action: createUILockAction(
-      async ({ mutations, actions }, { audioKey }: { audioKey: AudioKey }) => {
+      async (
+        { state, mutations, actions },
+        { audioKey }: { audioKey: AudioKey },
+      ) => {
         await actions.STOP_AUDIO();
+
+        // TODO: そのうち移動する
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const engineManifest = state.engineManifests[engineId];
+        if (
+          engineManifest.supportedFeatures?.streamingSynthesis &&
+          !state.audioItems[audioKey].morphingInfo
+        ) {
+          return actions.PLAY_AUDIO_STREAMING({ audioKey });
+        }
 
         // 音声用意
         let fetchAudioResult: FetchAudioResult;

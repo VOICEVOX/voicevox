@@ -118,7 +118,7 @@ export async function generateLabFromAudioQuery(
   return labString;
 }
 
-async function generateUniqueIdAndQuery(
+export async function generateUniqueIdAndQuery(
   state: SettingStoreState,
   audioItem: AudioItem,
 ): Promise<[string, EditorAudioQuery | undefined]> {

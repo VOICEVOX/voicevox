@@ -2470,7 +2470,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
           engineId,
         });
         return await instance.invoke("singFrameF0")({
-          bodySingFrameF0SingFrameF0Post: {
+          bodySingFrameF0: {
             score: {
               notes,
             },
@@ -2512,7 +2512,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
           engineId,
         });
         return await instance.invoke("singFrameVolume")({
-          bodySingFrameVolumeSingFrameVolumePost: {
+          bodySingFrameVolume: {
             score: {
               notes,
             },
