@@ -142,7 +142,11 @@ export type AppInfos = {
 };
 
 export type StyleType =
-  "talk" | "streaming_talk" | "singing_teacher" | "frame_decode" | "sing";
+  | "talk"
+  | "streaming_talk"
+  | "singing_teacher"
+  | "frame_decode"
+  | "sing";
 
 export type StyleInfo = {
   styleName?: string;
@@ -186,7 +190,9 @@ export type Voice = {
 export type Encoding = "UTF-8" | "Shift_JIS";
 
 export type AcceptRetrieveTelemetryStatus =
-  "Unconfirmed" | "Accepted" | "Refused";
+  | "Unconfirmed"
+  | "Accepted"
+  | "Refused";
 
 export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
@@ -279,7 +285,8 @@ export type Preset = {
   morphingInfo?: MorphingInfo;
 };
 export type PresetSliderKey =
-  keyof Omit<Preset, "name" | "morphingInfo"> | "morphingRate";
+  | keyof Omit<Preset, "name" | "morphingInfo">
+  | "morphingRate";
 
 export type MorphingInfo = {
   rate: number;
@@ -305,7 +312,10 @@ export type MorphableTargetInfoTable = Record<
 >;
 
 export type HotkeyReturnType =
-  void | boolean | Promise<void> | Promise<boolean>;
+  | void
+  | boolean
+  | Promise<void>
+  | Promise<boolean>;
 
 export const toolbarButtonTagSchema = z.enum([
   "PLAY_CONTINUOUSLY",
@@ -328,7 +338,11 @@ export type ToolbarSettingType = z.infer<typeof toolbarSettingSchema>[];
 export type NativeThemeType = "system" | "light" | "dark";
 
 export type MoraDataType =
-  "consonant" | "vowel" | "pitch" | "pause" | "voicing";
+  | "consonant"
+  | "vowel"
+  | "pitch"
+  | "pause"
+  | "voicing";
 
 export type ThemeColorType =
   | "primary"
