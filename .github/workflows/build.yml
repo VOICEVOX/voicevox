@@ -287,10 +287,10 @@ jobs:
           gtm_id=$(jq -er '.gtm_container_id' resource/editor/metas.json)
           echo "VITE_GTM_CONTAINER_ID=$gtm_id" >> $GITHUB_ENV
 
-      - name: Define Code Signing Envs
+      - name: Setup Windows Code Signing
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash tools/codesign_setup.bash
+          bash tools/codesign_setup_windows.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
           SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
           echo "::add-mask::$THUMBPRINT"
@@ -305,6 +305,24 @@ jobs:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
           SIGNTOOL_PATH_PATH: /tmp/signtool_path.txt
 
+      - name: Setup macOS Code Signing
+        if: startsWith(matrix.os, 'macos-') && github.event.inputs.code_signing == 'true'
+        run: |
+          bash tools/codesign_setup_macos.bash
+
+          echo "CSC_LINK=$CSC_LINK" >> $GITHUB_ENV
+          echo "CSC_KEY_PASSWORD=$CSC_KEY_PASSWORD" >> $GITHUB_ENV
+          echo "APPLE_API_KEY_ID=$APPLE_API_KEY_ID" >> $GITHUB_ENV
+          echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> $GITHUB_ENV
+          echo "APPLE_API_KEY=$APPLE_API_KEY_PATH" >> $GITHUB_ENV
+        env:
+          CSC_LINK: ${{ secrets.APPLE_P12_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_P12_PASSWORD }}
+          APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_PATH: /tmp/voicevox-apple-api-key.p8
+
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
         env:
@@ -312,6 +330,7 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+          MACOS_AD_HOC_CODE_SIGNING: ${{ startsWith(matrix.os, 'macos-') && github.event.inputs.code_signing != 'true' && 'true' || 'false' }}
           VOICEVOX_ENGINE_DIR: ${{ matrix.voicevox_engine_asset_name != null && format('{0}/voicevox_engine', github.workspace) || '' }}
           VOICEVOX_ENGINE_PLACEMENT_MODE: ${{ matrix.voicevox_engine_asset_name != null && 'move' || 'none' }}
 
@@ -319,23 +338,31 @@ jobs:
           USE_HARD_LINKS: false
         run: pnpm run electron:build --dir
 
-      - name: Reset Code Signing Envs
+      - name: Cleanup Windows Code Signing
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash tools/codesign_cleanup.bash
+          bash tools/codesign_cleanup_windows.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
           echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
         env:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
+      - name: Cleanup macOS Code Signing
+        if: startsWith(matrix.os, 'macos-') && github.event.inputs.code_signing == 'true'
+        run: |
+          bash tools/codesign_cleanup_macos.bash
+          echo 'CSC_LINK=' >> $GITHUB_ENV
+          echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
+          echo 'APPLE_API_KEY_ID=' >> $GITHUB_ENV
+          echo 'APPLE_API_ISSUER=' >> $GITHUB_ENV
+          echo 'APPLE_API_KEY=' >> $GITHUB_ENV
+        env:
+          APPLE_API_KEY_PATH: /tmp/voicevox-apple-api-key.p8
+
       - name: Rename Prepackage
         run: |
           mv ${{ matrix.artifact_path }} ./prepackage
-
-      - name: Ad hoc code signing
-        if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
-        run: codesign --force --deep -s - prepackage/VOICEVOX.app
 
       - name: Create Linux tar.gz (without nvidia)
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
@@ -399,10 +426,10 @@ jobs:
         run: |
           rm ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
 
-      - name: Define Code Signing Envs
+      - name: Setup Windows Code Signing
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash tools/codesign_setup.bash
+          bash tools/codesign_setup_windows.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
           SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
           echo "::add-mask::$THUMBPRINT"
@@ -434,10 +461,10 @@ jobs:
         run: |
           pnpm run electron:build:pack --prepackaged prepackage/VOICEVOX.app
 
-      - name: Reset Code Signing Envs
+      - name: Cleanup Windows Code Signing
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash tools/codesign_cleanup.bash
+          bash tools/codesign_cleanup_windows.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
           echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV

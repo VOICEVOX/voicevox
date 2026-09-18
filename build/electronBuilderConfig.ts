@@ -32,6 +32,11 @@ const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 
 // ${productName}-${version}.${ext}
 const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
+const MACOS_AD_HOC_CODE_SIGNING = z
+  .enum(["true", "false"])
+  .default("false")
+  .transform((value) => value === "true")
+  .parse(process.env.MACOS_AD_HOC_CODE_SIGNING);
 
 // コード署名証明書
 const winSigningHashAlgorithmsSchema = z.array(z.enum(["sha1", "sha256"]));
@@ -50,7 +55,7 @@ const isArm64 = process.arch === "arm64";
 // しかし、実行ファイルはVOICEVOX.app/Contents/MacOS/にあるため、extraFilesをVOICEVOX.app/Contents/ディレクトリにコピーするのは正しくない。
 // VOICEVOX.app/Contents/MacOS/ディレクトリにコピーされるように修正する。
 // cf: https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
-const extraFilePrefix = isMac ? "MacOS/" : "";
+const executableDirectory = isMac ? "MacOS/" : "";
 
 const sevenZipFile = readdirSync(path.join(rootDir, "vendored", "7z")).find(
   // Windows: 7za.exe, Linux: 7zzs, macOS: 7zz
@@ -101,12 +106,13 @@ const builderOptions: ElectronBuilderConfiguration = {
   ],
   extraFiles: [
     {
+      // NOTE: macOSでは実行ファイル配置領域にテキストファイルを置くとコード署名に失敗するため、別の場所に配置する。
       from: "build/README.txt",
-      to: extraFilePrefix + "README.txt",
+      to: isMac ? "Resources/README.txt" : executableDirectory + "README.txt",
     },
     {
       from: path.join(rootDir, "vendored", "7z", sevenZipFile),
-      to: extraFilePrefix + sevenZipFile,
+      to: executableDirectory + sevenZipFile,
     },
   ],
   // electron-builder installer
@@ -173,7 +179,8 @@ const builderOptions: ElectronBuilderConfiguration = {
         arch: [isArm64 ? "arm64" : "x64"],
       },
     ],
-    identity: null, // ad-hoc署名をしない
+    // NOTE: "-"を指定するとelectron-builderがad hoc署名する
+    identity: MACOS_AD_HOC_CODE_SIGNING ? "-" : undefined,
   },
   dmg: {
     icon: "build/icons/icon-dmg.icns",
