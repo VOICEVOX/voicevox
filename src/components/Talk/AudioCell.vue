@@ -109,6 +109,10 @@
         @beforeHide="endContextMenuOperation()"
       />
     </QInput>
+    <DictionaryRegistrationDialog
+      v-model:dialogOpened="isDictionaryRegistrationDialogOpen"
+      :initialSurface="selectedSurfaceForDictionary"
+    />
   </div>
 </template>
 
@@ -116,6 +120,7 @@
 import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
+import DictionaryRegistrationDialog from "@/components/Dialog/DictionaryManageDialog/DictionaryRegistrationDialog.vue";
 import type { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
@@ -531,6 +536,8 @@ const enableDeleteButton = computed(() => {
 
 // テキスト編集エリアの右クリック
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+const selectedSurfaceForDictionary = ref("");
+const isDictionaryRegistrationDialogOpen = ref(false);
 
 // FIXME: 可能なら`isRangeSelected`と`contextMenuHeader`をcomputedに
 const isRangeSelected = ref(false);
@@ -539,6 +546,8 @@ const contextMenudata = ref<
   [
     MenuItemButton,
     MenuItemButton,
+    MenuItemButton,
+    MenuItemSeparator,
     MenuItemButton,
     MenuItemSeparator,
     MenuItemButton,
@@ -608,6 +617,20 @@ const contextMenudata = ref<
     },
     disableWhenUiLocked: true,
   },
+  { type: "separator" },
+  {
+    type: "button",
+    label: "辞書に登録",
+    onClick: () => {
+      const selectedSurface = textFieldSelection.getAsString();
+      if (selectedSurface.length === 0) return;
+
+      selectedSurfaceForDictionary.value = selectedSurface;
+      contextMenu.value?.hide();
+      isDictionaryRegistrationDialogOpen.value = true;
+    },
+    disableWhenUiLocked: true,
+  },
 ]);
 /**
  * コンテキストメニューの開閉によりFocusやBlurが発生する可能性のある間は`true`。
@@ -649,10 +672,12 @@ const readyForContextMenu = () => {
     isRangeSelected.value = false;
     getMenuItemButton("切り取り").disabled = true;
     getMenuItemButton("コピー").disabled = true;
+    getMenuItemButton("辞書に登録").disabled = true;
   } else {
     isRangeSelected.value = true;
     getMenuItemButton("切り取り").disabled = false;
     getMenuItemButton("コピー").disabled = false;
+    getMenuItemButton("辞書に登録").disabled = false;
   }
 };
 const endContextMenuOperation = async () => {
