@@ -1,12 +1,16 @@
+import { generateUniqueIdAndQuery } from "./audioGenerate";
 import { playAudioWithAbort } from "./audioPlayer";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import type { AudioStreamPlayerStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
+import { createLogger } from "@/helpers/log";
 import { WavStream } from "@/domain/wavStream";
 import type { AudioKey } from "@/type/preload";
-import { ensureNotNullish } from "@/type/utility";
+import { assertNonNullable, ensureNotNullish } from "@/type/utility";
+import { LruCache } from "@/helpers/lruCache";
 
+const log = createLogger("store/audioStreamPlayer");
 let audioContext: AudioContext | null = null;
 if (window.AudioContext) {
   audioContext = new AudioContext();
@@ -16,6 +20,14 @@ const samplesPerChunk = 4096;
 
 const cancelled = Symbol("cancelled");
 
+const audioCache = new LruCache<
+  string,
+  {
+    wav: Blob;
+    startsAt: number;
+  }
+>(64);
+
 export async function playAudioStreams(
   audioStreams: WavStream[],
   cancel: AbortSignal,
@@ -23,6 +35,7 @@ export async function playAudioStreams(
     onStart?: (index: number) => void;
     onChunkStart?: (index: number, time: number) => void;
     onDelay?: () => void;
+    onFetchEnd?: (index: number) => void;
   } = {},
 ) {
   if (!audioContext) {
@@ -104,6 +117,8 @@ export async function playAudioStreams(
         lastBufferEndTime = baseTime + audioBuffer.duration;
         bufferSources.push(source);
       }
+
+      callbacks.onFetchEnd?.(index);
     } finally {
       await Promise.race([
         new Promise<void>((resolve) => {
@@ -142,8 +157,13 @@ export const audioStreamPlayerStore =
             throw new Error("Streaming synthesis is not supported.");
           }
           const audioItem = state.audioItems[audioKey];
+          const [id, editorAudioQuery] = await generateUniqueIdAndQuery(
+            state,
+            audioItem,
+          );
+          assertNonNullable(editorAudioQuery);
           const audioQuery = convertAudioQueryFromEditorToEngine(
-            ensureNotNullish(audioItem.query),
+            editorAudioQuery,
             engineManifest.defaultSamplingRate,
           );
           const accentPhraseOffsets = await actions.GET_AUDIO_PLAY_OFFSETS({
@@ -154,57 +174,101 @@ export const audioStreamPlayerStore =
           const startTime =
             accentPhraseOffsets[getters.AUDIO_PLAY_START_POINT ?? 0];
 
-          mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey,
-            nowGenerating: true,
-          });
           return await playAudioWithAbort(async (abortSignal) => {
-            const response = await actions
-              .INSTANTIATE_ENGINE_CONNECTOR({
-                engineId,
-              })
-              .then((instance) =>
-                instance.invoke("streamingSynthesisRaw")(
-                  {
-                    audioQuery,
-                    speaker: audioItem.voice.styleId,
-                    enableInterrogativeUpspeak:
-                      state.experimentalSetting.enableInterrogativeUpspeak,
-                    startOffset: startTime,
-                  },
-                  {
-                    signal: abortSignal,
-                  },
-                ),
+            const existingCache = audioCache.get(id);
+            if (existingCache && existingCache.startsAt <= startTime) {
+              log.info(
+                `Using cached audio for ${audioKey} starting at ${existingCache.startsAt} with offset ${startTime - existingCache.startsAt}`,
+              );
+              const wavBlob = existingCache.wav;
+              const wavStreamForPlay = new WavStream(
+                wavBlob.stream(),
+                startTime - existingCache.startsAt,
               );
 
-            const wavStream = new WavStream(
-              ensureNotNullish(response.raw.body),
-            );
-            await playAudioStreams([wavStream], abortSignal, {
-              onStart() {
-                mutations.SET_AUDIO_NOW_GENERATING({
-                  audioKey,
-                  nowGenerating: false,
-                });
-              },
-              onChunkStart(_index, time) {
-                mutations.SET_CURRENT_PLAY_STATE({
-                  currentPlayState: {
-                    type: "streaming",
-                    audioKey,
-                    currentTime: time + startTime,
-                  },
-                });
-              },
-            });
+              await playAudioStreams([wavStreamForPlay], abortSignal, {
+                onChunkStart(_index, time) {
+                  mutations.SET_CURRENT_PLAY_STATE({
+                    currentPlayState: {
+                      type: "streaming",
+                      audioKey,
+                      currentTime: time + startTime,
+                    },
+                  });
+                },
+              });
+              mutations.SET_CURRENT_PLAY_STATE({
+                currentPlayState: {
+                  type: "stopped",
+                },
+              });
+              return !abortSignal.aborted;
+            } else {
+              log.info(
+                `Generating audio for ${audioKey} starting at ${startTime}`,
+              );
 
-            mutations.SET_CURRENT_PLAY_STATE({
-              currentPlayState: {
-                type: "stopped",
-              },
-            });
-            return !abortSignal.aborted;
+              mutations.SET_AUDIO_NOW_GENERATING({
+                audioKey,
+                nowGenerating: true,
+              });
+              const response = await actions
+                .INSTANTIATE_ENGINE_CONNECTOR({
+                  engineId,
+                })
+                .then((instance) =>
+                  instance.invoke("streamingSynthesisRaw")(
+                    {
+                      audioQuery,
+                      speaker: audioItem.voice.styleId,
+                      enableInterrogativeUpspeak:
+                        state.experimentalSetting.enableInterrogativeUpspeak,
+                      startOffset: startTime,
+                    },
+                    {
+                      signal: abortSignal,
+                    },
+                  ),
+                );
+
+              const wavBody = ensureNotNullish(response.raw.body);
+              const [wavBodyForPlay, wavBodyForSave] = wavBody.tee();
+
+              const wavStream = new WavStream(wavBodyForPlay);
+              await playAudioStreams([wavStream], abortSignal, {
+                onStart() {
+                  mutations.SET_AUDIO_NOW_GENERATING({
+                    audioKey,
+                    nowGenerating: false,
+                  });
+                },
+                onChunkStart(_index, time) {
+                  mutations.SET_CURRENT_PLAY_STATE({
+                    currentPlayState: {
+                      type: "streaming",
+                      audioKey,
+                      currentTime: time + startTime,
+                    },
+                  });
+                },
+                async onFetchEnd() {
+                  log.info(
+                    `Caching audio for ${audioKey} starting at ${startTime}`,
+                  );
+                  const wavBlob = await new Response(wavBodyForSave).blob();
+                  audioCache.set(id, {
+                    wav: wavBlob,
+                    startsAt: startTime,
+                  });
+                },
+              });
+              mutations.SET_CURRENT_PLAY_STATE({
+                currentPlayState: {
+                  type: "stopped",
+                },
+              });
+              return !abortSignal.aborted;
+            }
           });
         },
       ),
