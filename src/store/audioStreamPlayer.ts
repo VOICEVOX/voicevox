@@ -41,6 +41,9 @@ export async function playAudioStreams(
   if (!audioContext) {
     throw new Error("AudioContext is not supported in this browser.");
   }
+  if (audioContext.state === "suspended") {
+    await audioContext.resume();
+  }
 
   const bufferSources: AudioBufferSourceNode[] = [];
   const { promise: cancelledPromise, resolve: resolveCancel } =
