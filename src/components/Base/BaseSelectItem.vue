@@ -10,7 +10,7 @@ import {
   SelectItem,
   SelectItemText,
   SelectItemIndicator,
-  AcceptableValue,
+  type AcceptableValue,
 } from "reka-ui";
 
 defineProps<{

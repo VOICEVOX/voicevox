@@ -1,4 +1,4 @@
-import { expect, Locator, Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { getNewestQuasarDialog, getQuasarMenu } from "./locators";
 
 export async function gotoHome({ page }: { page: Page }) {

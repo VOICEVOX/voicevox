@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { beforeAll, afterAll, beforeEach, expect, test } from "vitest";
 import { createVvppFile } from "./helper";
-import { EngineId, MinimumEngineManifestType } from "@/type/preload";
+import { EngineId, type MinimumEngineManifestType } from "@/type/preload";
 import VvppManager from "@/backend/electron/manager/vvppManager";
 import { uuid4 } from "@/helpers/random";
 

@@ -186,12 +186,6 @@
                     "
                   />
                 </BaseRowCard>
-                <ToggleCell
-                  title="複数選択"
-                  description="ONの場合、複数のテキスト欄を選択できるようにします。"
-                  :modelValue="enableMultiSelect"
-                  @update:modelValue="setEnableMultiSelect($event)"
-                />
               </div>
               <!-- Saving Card -->
               <div class="setting-card">
@@ -403,6 +397,15 @@
                     description="ONの場合、エンジンが対応している場合は、未知の英単語をカタカナ読みに変換します。"
                   />
                 </BaseTooltip>
+                <ButtonToggleCell
+                  v-model="defaultLyricModeComputed"
+                  title="ソング：デフォルト歌詞"
+                  description="歌詞が未設定の音符に対してデフォルトで設定される歌詞を設定できます。"
+                  :options="[
+                    { label: 'ドレミ（階名）', value: 'doremi' },
+                    { label: 'ら（固定）', value: 'la' },
+                  ]"
+                />
                 <BaseRowCard
                   title="ソング：元に戻すトラック操作"
                   description="「元に戻す」機能の対象とするトラック操作を指定します。"
@@ -465,12 +468,11 @@
                   "
                 />
                 <ToggleCell
-                  v-if="!isProduction"
-                  title="[開発時のみ機能] ソング：パラメーターパネルの表示"
+                  title="ソング：パラメーターパネルの表示"
                   description="ONの場合、ソングエディタでパラメーターパネルが表示されます。"
-                  :modelValue="experimentalSetting.showParameterPanel"
+                  :modelValue="experimentalSetting.showSongParameterPanel"
                   @update:modelValue="
-                    changeExperimentalSetting('showParameterPanel', $event)
+                    changeExperimentalSetting('showSongParameterPanel', $event)
                   "
                 />
               </div>
@@ -512,7 +514,7 @@ import {
   buildAudioFileNameFromRawData,
   buildSongTrackAudioFileNameFromRawData,
 } from "@/store/utility";
-import {
+import type {
   SavingSetting,
   EngineSettingType,
   ExperimentalSettingType,
@@ -729,10 +731,17 @@ const [
   changeShouldApplyDefaultPresetOnVoiceChanged,
 ] = useRootMiscSetting(store, "shouldApplyDefaultPresetOnVoiceChanged");
 
-const [enableMultiSelect, setEnableMultiSelect] = useRootMiscSetting(
+const [defaultLyricMode, setDefaultLyricMode] = useRootMiscSetting(
   store,
-  "enableMultiSelect",
+  "defaultLyricMode",
 );
+
+const defaultLyricModeComputed = computed({
+  get: () => defaultLyricMode.value,
+  set: (value: "doremi" | "la") => {
+    setDefaultLyricMode(value);
+  },
+});
 
 const canSetAudioOutputDevice = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;

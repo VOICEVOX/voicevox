@@ -8,7 +8,7 @@
     ]"
     @click="$emit('click', index)"
   >
-    <ContextMenu :menudata="contextMenudata" />
+    <ContextMenu ref="contextMenu" :menudata="contextMenudata" />
     <!-- スライダーここから -->
     <!-- ｱｸｾﾝﾄ項目のスライダー -->
     <template v-if="selectedDetail === 'accent'">
@@ -210,12 +210,12 @@
 import { computed, ref } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import { MenuItemButton } from "@/components/Menu/type";
+import type { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
-import { AudioKey, MoraDataType } from "@/type/preload";
-import { Mora } from "@/openapi/models/Mora";
-import { AccentPhrase } from "@/openapi";
+import type { AudioKey, MoraDataType } from "@/type/preload";
+import type { Mora } from "@/openapi/models/Mora";
+import type { AccentPhrase } from "@/openapi";
 
 const props = defineProps<{
   audioKey: AudioKey;
@@ -236,6 +236,7 @@ const container = ref<HTMLElement>();
 defineExpose({
   container,
 });
+const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
 type DetailTypes = "accent" | "pitch" | "length";
 
@@ -243,7 +244,33 @@ const store = useStore();
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const contextMenudata = ref<[MenuItemButton]>([
+const resetMenuItem = computed<MenuItemButton>(() => {
+  const type =
+    props.selectedDetail === "accent" ? "both" : props.selectedDetail;
+  const label = {
+    pitch: "イントネーションをリセット",
+    length: "長さをリセット",
+    both: "イントネーションと長さをリセット",
+  }[type];
+
+  return {
+    type: "button",
+    label,
+    onClick: () => {
+      contextMenu.value?.hide();
+      void store.actions.COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH({
+        audioKey: props.audioKey,
+        accentPhraseIndex: props.index,
+        type,
+      });
+    },
+    disableWhenUiLocked: true,
+  };
+});
+
+const contextMenudata = computed<(MenuItemButton | MenuItemSeparator)[]>(() => [
+  resetMenuItem.value,
+  { type: "separator" } as const,
   {
     type: "button",
     label: "削除",

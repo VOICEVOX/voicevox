@@ -1,16 +1,16 @@
 import { toBase64 } from "fast-base64";
 import { createUILockAction, withProgress } from "./ui";
 import {
-  AudioItem,
-  SaveResultObject,
-  State,
-  AudioStoreState,
-  AudioCommandStoreState,
-  AudioStoreTypes,
-  AudioCommandStoreTypes,
+  type AudioItem,
+  type SaveResultObject,
+  type State,
+  type AudioStoreState,
+  type AudioCommandStoreState,
+  type AudioStoreTypes,
+  type AudioCommandStoreTypes,
   transformCommandStore,
-  FetchAudioResult,
-  EditorAudioQuery,
+  type FetchAudioResult,
+  type EditorAudioQuery,
 } from "./type";
 import {
   buildAudioFileNameFromRawData,
@@ -24,6 +24,7 @@ import {
   TuningTranscription,
   filterCharacterInfosByStyleType,
   DEFAULT_PROJECT_NAME,
+  generateUniqueFilePath,
 } from "./utility";
 import { createPartialStore } from "./vuex";
 import { determineNextPresetKey } from "./preset";
@@ -42,20 +43,20 @@ import {
 } from "@/domain/japanese";
 import {
   AudioKey,
-  CharacterInfo,
-  DefaultStyleId,
-  Encoding as EncodingType,
-  EngineId,
-  MoraDataType,
-  MorphingInfo,
-  Preset,
-  PresetKey,
+  type CharacterInfo,
+  type DefaultStyleId,
+  type Encoding as EncodingType,
+  type EngineId,
+  type MoraDataType,
+  type MorphingInfo,
+  type Preset,
+  type PresetKey,
   SpeakerId,
   StyleId,
-  StyleInfo,
-  Voice,
+  type StyleInfo,
+  type Voice,
 } from "@/type/preload";
-import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
+import type { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
@@ -70,7 +71,14 @@ function generateAudioKey() {
   return AudioKey(uuid4());
 }
 
-function parseTextFile(
+function normalizeCharacterName(name: string): string {
+  // 幅の違いだけを正規化し、丸数字などの互換文字は同一視しない。
+  return name
+    .replace(/[\u3000\uFF01-\uFFEF]+/g, (text) => text.normalize("NFKC"))
+    .toLowerCase();
+}
+
+export function parseTextFile(
   body: string,
   defaultStyleIds: DefaultStyleId[],
   userOrderedCharacterInfos: CharacterInfo[],
@@ -91,7 +99,7 @@ function parseTextFile(
     const speakerName = characterInfo.metas.speakerName;
     if (voice == undefined)
       throw new Error(`style is undefined. speakerUuid: ${uuid}`);
-    name2Voice.set(speakerName, voice);
+    name2Voice.set(normalizeCharacterName(speakerName), voice);
   }
   // setup characters with style name
   for (const characterInfo of userOrderedCharacterInfos) {
@@ -103,10 +111,17 @@ function parseTextFile(
         speakerId: characterInfo.metas.speakerUuid,
         styleId: style.styleId,
       };
-      name2Voice.set(formatCharacterStyleName(characterName, styleName), voice);
+      name2Voice.set(
+        normalizeCharacterName(
+          formatCharacterStyleName(characterName, styleName),
+        ),
+        voice,
+      );
       // 古いフォーマットにも対応するため
       name2Voice.set(
-        `${characterName}(${styleName || DEFAULT_STYLE_NAME})`,
+        normalizeCharacterName(
+          `${characterName}(${styleName || DEFAULT_STYLE_NAME})`,
+        ),
         voice,
       );
     }
@@ -119,7 +134,7 @@ function parseTextFile(
     initVoice ?? uuid2Voice.get(userOrderedCharacterInfos[0].metas.speakerUuid);
   if (lastVoice == undefined) throw new Error(`lastStyle is undefined.`);
   for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
-    const voice = name2Voice.get(splitText);
+    const voice = name2Voice.get(normalizeCharacterName(splitText));
     if (voice != undefined) {
       lastVoice = voice;
       continue;
@@ -128,20 +143,6 @@ function parseTextFile(
     audioItems.push({ text: splitText, voice: lastVoice });
   }
   return audioItems;
-}
-
-// TODO: src/sing/fileUtils.tsのgenerateUniqueFilePathと統合する
-async function changeFileTailToNonExistent(
-  filePath: string,
-  extension: string,
-) {
-  let tail = 1;
-  const name = filePath.slice(0, filePath.length - 1 - extension.length);
-  while (await window.backend.checkFileExists(filePath)) {
-    filePath = `${name}[${tail}].${extension}`;
-    tail += 1;
-  }
-  return filePath;
 }
 
 export async function writeTextFile(obj: {
@@ -1396,7 +1397,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath, "wav");
+          filePath = await generateUniqueFilePath(filePath);
         }
 
         let fetchAudioResult: FetchAudioResult;
@@ -1546,7 +1547,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath, "wav");
+          filePath = await generateUniqueFilePath(filePath);
         }
 
         const encodedBlobs: string[] = [];
@@ -1679,7 +1680,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath, "txt");
+          filePath = await generateUniqueFilePath(filePath);
         }
 
         const characters = new Map<string, string>();
@@ -1831,8 +1832,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const player = new ContinuousPlayer(state.audioKeys.slice(index), {
           generateAudio: ({ audioKey }) =>
             actions.FETCH_AUDIO({ audioKey }).then((result) => result.blob),
-          playAudioBlob: ({ audioBlob, audioKey }) =>
-            actions.PLAY_AUDIO_BLOB({ audioBlob, audioKey }),
+          playAudioBlob: ({ audioBlob, audioKey }) => {
+            if (currentAudioKey !== audioKey) {
+              mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
+            }
+            return actions.PLAY_AUDIO_BLOB({ audioBlob, audioKey });
+          },
         });
         player.addEventListener("playstart", (e) => {
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
@@ -2400,7 +2405,7 @@ export const audioCommandStore = transformCommandStore(
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
 
-        let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
+        let newAccentPhrasesSegment: AccentPhrase[];
 
         const kanaRegex = createKanaRegex(true);
         if (kanaRegex.test(newPronunciation)) {
@@ -2516,7 +2521,7 @@ export const audioCommandStore = transformCommandStore(
     COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH: {
       async action(
         { state, actions, mutations },
-        { audioKey, accentPhraseIndex },
+        { audioKey, accentPhraseIndex, type },
       ) {
         const engineId = state.audioItems[audioKey].voice.engineId;
         const styleId = state.audioItems[audioKey].voice.styleId;
@@ -2524,12 +2529,38 @@ export const audioCommandStore = transformCommandStore(
         const query = state.audioItems[audioKey].query;
         if (query == undefined) throw new Error("query == undefined");
 
-        const newAccentPhrases = await actions.FETCH_AND_COPY_MORA_DATA({
-          accentPhrases: [...query.accentPhrases],
+        const fetchedAccentPhrases = await actions.FETCH_MORA_DATA({
+          accentPhrases: query.accentPhrases,
           engineId,
           styleId,
-          copyIndexes: [accentPhraseIndex],
         });
+        const newAccentPhrases = cloneWithUnwrapProxy(query.accentPhrases);
+
+        if (type === "both") {
+          newAccentPhrases[accentPhraseIndex] =
+            fetchedAccentPhrases[accentPhraseIndex];
+        } else {
+          const newAccentPhrase = newAccentPhrases[accentPhraseIndex];
+          const fetchedAccentPhrase = fetchedAccentPhrases[accentPhraseIndex];
+
+          for (const [moraIndex, newMora] of newAccentPhrase.moras.entries()) {
+            const fetchedMora = fetchedAccentPhrase.moras[moraIndex];
+            if (type === "pitch") {
+              newMora.pitch = fetchedMora.pitch;
+            } else {
+              newMora.consonantLength = fetchedMora.consonantLength;
+              newMora.vowelLength = fetchedMora.vowelLength;
+            }
+          }
+          if (
+            type === "length" &&
+            newAccentPhrase.pauseMora != undefined &&
+            fetchedAccentPhrase.pauseMora != undefined
+          ) {
+            newAccentPhrase.pauseMora.vowelLength =
+              fetchedAccentPhrase.pauseMora.vowelLength;
+          }
+        }
 
         mutations.COMMAND_CHANGE_ACCENT({
           audioKey,

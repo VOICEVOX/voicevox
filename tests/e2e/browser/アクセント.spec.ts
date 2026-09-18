@@ -16,6 +16,29 @@ test("アクセント分割したらアクセント区間が増える", async ({
   expect(await page.locator(".accent-phrase").count()).toBe(2);
 });
 
+test("分割したアクセント区間を結合できる", async ({ page }) => {
+  await navigateToMain(page);
+
+  const accentPhrases = page.locator(".accent-phrase");
+
+  await test.step("アクセント区間を表示する", async () => {
+    const input = page.locator(".audio-cell input").first();
+    await input.fill("こんにちは");
+    await input.press("Enter");
+    await expect(accentPhrases).toHaveCount(1);
+  });
+
+  await test.step("アクセント区間を分割する", async () => {
+    await page.locator(".splitter-cell").nth(1).click();
+    await expect(accentPhrases).toHaveCount(2);
+  });
+
+  await test.step("分割したアクセント区間を結合する", async () => {
+    await accentPhrases.first().locator(".splitter-cell").last().click();
+    await expect(accentPhrases).toHaveCount(1);
+  });
+});
+
 test("アクセントの読み部分をクリックすると読みを変更できる", async ({
   page,
 }) => {

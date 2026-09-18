@@ -16,6 +16,6 @@ export const Default: Story = {
       return { args };
     },
     template:
-      '<BaseScrollArea style="width: 100%; height:480px" v-bind="args"><div style="width: 100%; height:4800px;"></div></BaseScrollArea>',
+      '<BaseScrollArea style="width: 100%; height:480px" v-bind="args"><div style="width: 4800px; height:4800px;"></div></BaseScrollArea>',
   }),
 };

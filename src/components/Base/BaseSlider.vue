@@ -20,6 +20,13 @@
     <SliderTrack class="SliderTrack">
       <SliderRange class="SliderRange" />
     </SliderTrack>
+    <div v-if="showStepMarkers" class="step-markers">
+      <div
+        v-for="n in (max - min + 1) / step"
+        :key="n"
+        class="step-marker"
+      ></div>
+    </div>
     <SliderThumb class="SliderThumb" />
   </SliderRoot>
 </template>
@@ -36,6 +43,7 @@ const props = withDefaults(
     step?: number;
     scrollStep?: number;
     disabled?: boolean;
+    showStepMarkers?: boolean;
     modelValue: number;
   }>(),
   {
@@ -132,5 +140,22 @@ const onWheel = (event: WheelEvent) => {
   &:focus-visible {
     @include mixin.on-focus;
   }
+}
+
+.step-markers {
+  position: absolute;
+  inset: 0;
+  padding-inline: 3px;
+  padding-block: 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.step-marker {
+  width: 2px;
+  height: 4px;
+  opacity: 0.5;
+  background-color: colors.$display;
 }
 </style>

@@ -2,11 +2,11 @@
  * トーク系の構造体を作るモック。
  */
 
-import { builder, IpadicFeatures, Tokenizer } from "kuromoji";
+import { builder, type IpadicFeatures, type Tokenizer } from "kuromoji";
 import { moraToPhonemes } from "./phonemeMock";
 import { parseKana } from "./aquestalkLikeMock";
 import { moraPattern } from "@/domain/japanese";
-import { AccentPhrase, Mora } from "@/openapi";
+import type { AccentPhrase, Mora } from "@/openapi";
 import { isNode } from "@/helpers/platform";
 
 let _tokenizer: Tokenizer<IpadicFeatures> | undefined;

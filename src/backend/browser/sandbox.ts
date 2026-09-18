@@ -5,24 +5,20 @@ import {
   showSaveFilePickerImpl,
   showOpenDirectoryDialogImpl,
   showOpenFilePickerImpl,
-  WritableFilePath,
+  type WritableFilePath,
   writeFileImpl,
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
 import { isFakePath } from "./fakePath";
 import {
   defaultToolbarButtonSetting,
-  EngineId,
-  EngineSettingType,
-  EngineSettings,
-  Sandbox,
+  type EngineId,
+  type EngineSettingType,
+  type EngineSettings,
+  type Sandbox,
 } from "@/type/preload";
-import { AssetTextFileNames } from "@/type/staticResources";
-import { HotkeySettingType } from "@/domain/hotkeyAction";
+import type { HotkeySettingType } from "@/domain/hotkeyAction";
 import path from "@/helpers/path";
-
-const toStaticPath = (fileName: string) =>
-  `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/g, "/");
 
 /**
  * Browser版のSandBox実装
@@ -30,15 +26,6 @@ const toStaticPath = (fileName: string) =>
  * まだ開発中のため、Browser版の実装も同時に行えない場合は、メソッドを追加して throw new Error() する
  */
 export const api: Sandbox = {
-  async getTextAsset(textType) {
-    const fileName = AssetTextFileNames[textType];
-    const v = await fetch(toStaticPath(fileName));
-    if (textType === "OssLicenses" || textType === "UpdateInfos") {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return v.json();
-    }
-    return v.text();
-  },
   getAltPortInfos() {
     // NOTE: ブラウザ版ではサポートされていません
     return Promise.resolve({});
@@ -111,6 +98,9 @@ export const api: Sandbox = {
   },
   closeWindow() {
     throw new Error(`Not supported on Browser version: closeWindow`);
+  },
+  launchWelcomeWindow() {
+    throw new Error(`Not supported on Browser version: launchWelcomeWindow`);
   },
   minimizeWindow() {
     throw new Error(`Not supported on Browser version: minimizeWindow`);
@@ -218,5 +208,11 @@ export const api: Sandbox = {
   },
   getPathForFile(/* file: File */) {
     throw new Error(`Not supported on Browser version: getPathForFile`);
+  },
+  hasDownloadableDefaultEngine() {
+    return Promise.resolve(false);
+  },
+  getDownloadableDefaultEnginePackageIds() {
+    return Promise.resolve([]);
   },
 };

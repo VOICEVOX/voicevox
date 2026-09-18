@@ -1,11 +1,12 @@
-import { ProjectFileTrack } from "./type";
-import { Track } from "@/domain/project/type";
-import { mapToRecord, recordToMap } from "@/sing/utility";
+import type { ProjectFileTrack } from "./type";
+import type { Track } from "@/domain/project/type";
+import { mapToRecord, recordToMap } from "@/song/utility";
 
 export function toProjectFileTrack(track: Track): ProjectFileTrack {
   return {
     name: track.name,
     singer: track.singer,
+    singingTeacher: track.singingTeacher,
     keyRangeAdjustment: track.keyRangeAdjustment,
     volumeRangeAdjustment: track.volumeRangeAdjustment,
     notes: track.notes,
@@ -23,6 +24,7 @@ export function toEditorTrack(projectFileTrack: ProjectFileTrack): Track {
   return {
     name: projectFileTrack.name,
     singer: projectFileTrack.singer,
+    singingTeacher: projectFileTrack.singingTeacher,
     keyRangeAdjustment: projectFileTrack.keyRangeAdjustment,
     volumeRangeAdjustment: projectFileTrack.volumeRangeAdjustment,
     notes: projectFileTrack.notes,

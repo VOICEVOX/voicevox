@@ -9,14 +9,14 @@
 
       <QCardSection class="q-py-none">
         <QFile
-          v-model="projectFile"
+          :modelValue="projectFile"
           label="インポートするファイル"
           class="q-my-sm"
           :accept="acceptExtensions"
           :errorMessage="projectFileErrorMessage"
           :error="!!projectFileErrorMessage"
           placeholder="ファイルを選択してください"
-          @input="handleFileChange"
+          @update:modelValue="handleFileChange"
         />
         <div v-if="projectFile == null">
           <span class="text-weight-bold">対応しているファイル形式</span>
@@ -90,30 +90,21 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useDialogPluginComponent } from "quasar";
-import {
+import type {
   Project as UfProject,
-  EmptyProjectException,
-  IllegalFileException,
-  NotesOverlappingException,
-  supportedExtensions,
   SupportedExtensions as UfSupportedExtensions,
 } from "@sevenc-nanashi/utaformatix-ts";
 import { useStore } from "@/store";
 import { createLogger } from "@/helpers/log";
 import { ExhaustiveError } from "@/type/utility";
-import { IsEqual } from "@/type/utility";
-import { LatestProjectType } from "@/infrastructures/projectFile/type";
-import { DEFAULT_TRACK_NAME } from "@/sing/domain";
+import type { IsEqual } from "@/type/utility";
+import type { LatestProjectType } from "@/infrastructures/projectFile/type";
+import { DEFAULT_TRACK_NAME } from "@/song/domain";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const store = useStore();
 const log = createLogger("ImportExternalProjectDialog");
-
-// 受け入れる拡張子
-const acceptExtensions = computed(
-  () => supportedExtensions.map((ext) => `.${ext}`).join(",") + ",.vvproj",
-);
 
 type SupportedExtensions = UfSupportedExtensions | "vvproj";
 
@@ -139,6 +130,14 @@ const _: IsEqual<
   (typeof projectNameToExtensions)[number][1][number],
   SupportedExtensions
 > = true;
+
+// 受け入れる拡張子
+const acceptExtensions = computed(() =>
+  projectNameToExtensions
+    .flatMap((value) => value[1])
+    .map((ext) => `.${ext}`)
+    .join(","),
+);
 
 // プロジェクトファイル
 const projectFile = ref<File | null>(null);
@@ -241,24 +240,14 @@ const initializeValues = () => {
 };
 
 // ファイル変更時
-const handleFileChange = async (event: Event) => {
-  if (!(event.target instanceof HTMLInputElement)) {
-    throw new Error("Event target is not an HTMLInputElement");
-  }
-
-  const input = event.target;
-
-  // 入力ファイルが存在しない場合はエラー
-  if (!input.files || input.files.length === 0) {
-    throw new Error("No file selected");
-  }
+const handleFileChange = async (file: File) => {
+  projectFile.value = file;
 
   // 既存のデータおよび選択中のトラックをクリア
   project.value = null;
   selectedTrackIndexes.value = null;
   error.value = null;
 
-  const file = input.files[0];
   // ファイルをパース
   try {
     if (file.name.endsWith(".vvproj")) {
@@ -276,6 +265,8 @@ const handleFileChange = async (event: Event) => {
         project: parsedProject,
       };
     } else {
+      const { Project: UfProject } =
+        await import("@sevenc-nanashi/utaformatix-ts");
       project.value = {
         type: "utaformatix",
         project: await UfProject.fromAny(file, {
@@ -296,6 +287,11 @@ const handleFileChange = async (event: Event) => {
     }
     selectedTrackIndexes.value = [firstSelectableTrack];
   } catch (e) {
+    const {
+      EmptyProjectException,
+      IllegalFileException,
+      NotesOverlappingException,
+    } = await import("@sevenc-nanashi/utaformatix-ts");
     log.error(e);
     error.value = "unknown";
     if (e instanceof EmptyProjectException) {

@@ -9,7 +9,7 @@
 import type { PlaywrightTestConfig, Project } from "@playwright/test";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.test", override: true });
+dotenv.config({ path: ".env.test", override: true, quiet: true });
 
 let project: Project;
 let webServers: PlaywrightTestConfig["webServer"];
@@ -53,7 +53,8 @@ const config: PlaywrightTestConfig = {
   // NOTE: Linux環境ではCIでGPU版をダウンロードしてしまい、かなりの時間がかかってしまうため、タイムアウトを長めに設定する。
   // TODO: CIでCPU版をダウンロードするように修正し、タイムアウトを元に戻す。
   timeout: isElectron ? 5 * 60 * 1000 : 60 * 1000,
-  globalTimeout: 5 * 60 * 1000,
+  globalTimeout: process.env.CI ? 15 * 60 * 1000 : 5 * 60 * 1000,
+  globalSetup: isElectron ? "./tests/e2e/electron/setup.ts" : undefined,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.

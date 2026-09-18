@@ -2,17 +2,23 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import semver from "semver";
-import { z } from "zod";
+import type { z } from "zod";
 
-import { AccentPhrase } from "@/openapi";
-import { EngineId, SpeakerId, StyleId, TrackId, Voice } from "@/type/preload";
+import type { AccentPhrase } from "@/openapi";
+import {
+  EngineId,
+  SpeakerId,
+  type StyleId,
+  TrackId,
+  type Voice,
+} from "@/type/preload";
 import {
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
   DEFAULT_BPM,
   DEFAULT_TPQN,
   DEFAULT_TRACK_NAME,
-} from "@/sing/domain";
+} from "@/song/domain";
 import { uuid4 } from "@/helpers/random";
 import { projectFileSchema } from "@/infrastructures/projectFile/schema";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
@@ -213,7 +219,7 @@ export const migrateProjectFileObject = async (
     };
 
     // ソングの情報を初期化
-    // generateSingingStoreInitialScoreが今後変わることがあるかもしれないので、
+    // generateSongStoreInitialScoreが今後変わることがあるかもしれないので、
     // 0.17時点のスコア情報を直接書く
     projectData.song = {
       tpqn: DEFAULT_TPQN,
@@ -286,11 +292,25 @@ export const migrateProjectFileObject = async (
     }
   }
 
-  if (semver.satisfies(projectAppVersion, "<0.25.0", semverSatisfiesOptions)) {
+  // TODO: 仮で0.26.0としているが、ボリューム編集を導入するバージョンが確定したら条件を更新する。
+  if (semver.satisfies(projectAppVersion, "<0.26.0", semverSatisfiesOptions)) {
     // ボリューム編集値の追加
     for (const trackId in projectData.song.tracks) {
       if (projectData.song.tracks[trackId].volumeEditData == undefined) {
         projectData.song.tracks[trackId].volumeEditData = [];
+      }
+    }
+  }
+
+  // TODO: 歌い方変更のバージョンは未定で、仮で0.26.0以下に指定しているため、バージョンが決まったら修正
+  if (semver.satisfies(projectAppVersion, "<0.26.0", semverSatisfiesOptions)) {
+    // 歌い方設定がない場合、歌い方変更実装前のデフォルトである波音リツ(id:6000)に設定する
+    for (const trackId in projectData.song.tracks) {
+      const track = projectData.song.tracks[trackId];
+      if (track.singer != undefined && track.singingTeacher == undefined) {
+        track.singingTeacher = {
+          styleId: 6000,
+        };
       }
     }
   }

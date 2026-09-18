@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { enableMapSet, enablePatches, Immer, Patch } from "immer";
+import { enableMapSet, enablePatches, Immer, type Patch } from "immer";
 import { applyPatches } from "@/store/immerPatchUtility";
 
 describe("object", () => {

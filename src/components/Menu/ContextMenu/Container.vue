@@ -10,7 +10,7 @@ export type { ContextMenuItemData } from "./Presentation.vue";
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
-import Presentation, { ContextMenuItemData } from "./Presentation.vue";
+import Presentation, { type ContextMenuItemData } from "./Presentation.vue";
 import { useStore } from "@/store";
 
 defineOptions({

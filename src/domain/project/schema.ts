@@ -75,11 +75,18 @@ export const noteSchema = z.object({
   position: z.number(),
   duration: z.number(),
   noteNumber: z.number(),
-  lyric: z.union([z.string(), z.undefined()]), // 歌詞未入力のときはundefined
+  lyric: z.string().nullable(), // 歌詞未入力のときはnull
 });
 
 export const singerSchema = z.object({
   engineId: engineIdSchema,
+  styleId: styleIdSchema,
+});
+
+export const singingTeacherSchema = z.object({
+  // TODO: 歌い方設定UIをまずは実装するため、現状はシンガーと歌い方教師が
+  // 同一エンジンを使用する前提で、歌い方教師にはstyleIdのみを保持している。
+  // 実際のマルチエンジン環境でどう扱うかは未調査で、また型として妥当かも仮でしかないため、仕様を整理してから修正する
   styleId: styleIdSchema,
 });
 
@@ -88,14 +95,18 @@ export const phonemeTimingEditSchema = z.object({
   offsetSeconds: z.number(), // 単位は秒
 });
 
+/** 元のボリュームからのdB変化量。データが無いところはnull。 */
+export const volumeEditValueSchema = z.number().nullable();
+
 export const trackSchema = z.object({
   name: z.string(),
   singer: singerSchema.optional(),
+  singingTeacher: singingTeacherSchema.optional(),
   keyRangeAdjustment: z.number(), // 音域調整量
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
   pitchEditData: z.array(z.number()), // 値の単位はHzで、データが無いところはVALUE_INDICATING_NO_DATAの値
-  volumeEditData: z.array(z.number()), // 値は0以上の振幅、データが無いところはVALUE_INDICATING_NO_DATAの値
+  volumeEditData: z.array(volumeEditValueSchema),
   phonemeTimingEditData: z.map(noteIdSchema, z.array(phonemeTimingEditSchema)), // 音素タイミングの編集データはノートと紐づけて保持
 
   solo: z.boolean(),

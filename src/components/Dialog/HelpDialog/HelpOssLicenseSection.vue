@@ -42,9 +42,10 @@ import { ref } from "vue";
 import BaseRowCard from "@/components/Base/BaseRowCard.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import type { OssLicenseInfo } from "@/domain/staticAssets";
 
 const props = defineProps<{
-  licenses: Record<string, string>[];
+  licenses: OssLicenseInfo[];
 }>();
 
 const detailIndex = ref<number | undefined>(undefined);

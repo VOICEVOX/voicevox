@@ -15,7 +15,7 @@ jobs:
   check_node_version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Check synchronize volta and .node_version
-        uses: My-MC/check-sync-volta-and-node-version@v0.0.3
+        uses: My-MC/check-sync-volta-and-node-version@0857819805bc620f7014c7e08963ad5aa0c815ac # v0.0.3

@@ -2,8 +2,8 @@
  * HTMLAudioElement周りの音声再生・停止などを担当する。
  */
 import { createPartialStore } from "./vuex";
-import { AudioPlayerStoreState, AudioPlayerStoreTypes } from "./type";
-import { AudioKey } from "@/type/preload";
+import type { AudioPlayerStoreState, AudioPlayerStoreTypes } from "./type";
+import type { AudioKey } from "@/type/preload";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
 
 // ユニットテストが落ちるのを回避するための遅延読み込み

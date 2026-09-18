@@ -18,8 +18,16 @@
   cursor: move;
 }
 
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
 .cursor-draw {
   cursor:
     url("/draw-cursor.png") 2 2,
     auto;
+}
+
+.cursor-erase {
+  cursor: crosshair; // TODO: 削除用消しゴム的カーソルが現状ないため、用意するまではcrosshair
 }

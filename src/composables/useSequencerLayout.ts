@@ -2,10 +2,10 @@
  * シーケンサーのレイアウト計算に関するコンポーザブル
  * NOTE: 雑多です
  */
-import { computed, ComputedRef, Ref } from "vue";
-import { getTimeSignaturePositions } from "@/sing/music";
-import { tickToBaseX } from "@/sing/viewHelper";
-import { getTotalTicks, calculateMeasureInfos } from "@/sing/rulerHelper";
+import { computed, type ComputedRef, type Ref } from "vue";
+import { getTimeSignaturePositions } from "@/song/music";
+import { tickToBaseX } from "@/song/viewHelper";
+import { getTotalTicks, calculateMeasureInfos } from "@/song/rulerHelper";
 import type { TimeSignature } from "@/domain/project/type";
 
 // 小節のレイアウト位置

@@ -1,9 +1,9 @@
 import { computed, ref, watch } from "vue";
-import { MenuItemData } from "../type";
-import { MaybeComputedMenuBarContent } from "./menuBarData";
-import { ensureNotNullish } from "@/helpers/errorHelper";
-import { useHotkeyManager, HotkeyAction } from "@/plugins/hotkeyPlugin";
-import { Store } from "@/store";
+import type { MenuItemData } from "../type";
+import type { MaybeComputedMenuBarContent } from "./menuBarData";
+import { ensureNotNullish } from "@/type/utility";
+import { useHotkeyManager, type HotkeyAction } from "@/plugins/hotkeyPlugin";
+import type { Store } from "@/store";
 import { isProduction } from "@/helpers/platform";
 
 export const useCommonMenuBarData = (store: Store) => {
@@ -16,8 +16,6 @@ export const useCommonMenuBarData = (store: Store) => {
   const canRedo = computed(
     () => editor.value && store.getters.CAN_REDO(editor.value),
   );
-
-  const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
 
   const audioKeys = computed(() => store.state.audioKeys);
 
@@ -237,22 +235,18 @@ export const useCommonMenuBarData = (store: Store) => {
           disabled: !canRedo.value,
           disableWhenUiLocked: true,
         },
-        ...(isMultiSelectEnabled.value
-          ? [
-              {
-                type: "button",
-                label: "すべて選択",
-                onClick: async () => {
-                  if (!uiLocked.value && isMultiSelectEnabled.value) {
-                    await store.actions.SET_SELECTED_AUDIO_KEYS({
-                      audioKeys: audioKeys.value,
-                    });
-                  }
-                },
-                disableWhenUiLocked: true,
-              } as const,
-            ]
-          : []),
+        {
+          type: "button",
+          label: "すべて選択",
+          onClick: async () => {
+            if (!uiLocked.value) {
+              await store.actions.SET_SELECTED_AUDIO_KEYS({
+                audioKeys: audioKeys.value,
+              });
+            }
+          },
+          disableWhenUiLocked: true,
+        },
       ],
     },
 

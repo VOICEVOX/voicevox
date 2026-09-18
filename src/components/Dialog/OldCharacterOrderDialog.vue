@@ -108,7 +108,12 @@ import Draggable from "vuedraggable";
 import { useQuasar } from "quasar";
 import CharacterTryListenCard from "./OldCharacterTryListenCard.vue";
 import { useStore } from "@/store";
-import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
+import type {
+  CharacterInfo,
+  SpeakerId,
+  StyleId,
+  StyleInfo,
+} from "@/type/preload";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{

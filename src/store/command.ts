@@ -1,15 +1,20 @@
 import { toRaw } from "vue";
 import { enablePatches, enableMapSet, Immer } from "immer";
 
-import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
+import type {
+  Command,
+  CommandStoreState,
+  CommandStoreTypes,
+  State,
+} from "./type";
 import { applyPatches } from "@/store/immerPatchUtility";
 import {
   createPartialStore,
-  Mutation,
-  MutationsBase,
-  MutationTree,
+  type Mutation,
+  type MutationsBase,
+  type MutationTree,
 } from "@/store/vuex";
-import { CommandId, EditorType } from "@/type/preload";
+import { CommandId, type EditorType } from "@/type/preload";
 import { uuid4 } from "@/helpers/random";
 import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 
@@ -52,14 +57,7 @@ export const createCommandMutation =
     editor: EditorType,
   ): Mutation<S, M, K> =>
   (state: S, payload: M[K]): void => {
-    // HACK: コマンド履歴を除外してproduceWithPatchesを高速化
-    // ref: https://github.com/VOICEVOX/voicevox/issues/2143
-    const { undoCommands, redoCommands, ...stateWithoutHistory } = toRaw(state);
-    const command = recordPatches(payloadRecipe)(
-      stateWithoutHistory as S,
-      payload,
-    );
-
+    const command = recordPatches(payloadRecipe)(state, payload);
     applyPatches(state, command.redoPatches);
     state.undoCommands[editor].push(command);
     state.redoCommands[editor].splice(0);
@@ -73,7 +71,7 @@ const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
-      state,
+      toRaw(state),
       (draft: S) => recipe(draft, payload),
     );
     return {
@@ -115,13 +113,11 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.undoPatches);
       }
     },
-    action({ mutations, actions }, { editor }: { editor: EditorType }) {
+    action({ mutations }, { editor }: { editor: EditorType }) {
       mutations.UNDO({ editor });
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.RENDER();
       }
     },
   },
@@ -134,13 +130,11 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.redoPatches);
       }
     },
-    action({ mutations, actions }, { editor }: { editor: EditorType }) {
+    action({ mutations }, { editor }: { editor: EditorType }) {
       mutations.REDO({ editor });
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.RENDER();
       }
     },
   },

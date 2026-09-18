@@ -1,4 +1,4 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { navigateToMain, gotoHome } from "../../navigators";
 import { addAudioCells } from "./utils";
 
@@ -74,6 +74,27 @@ test.beforeEach(async ({ page }) => {
   await page.waitForTimeout(100);
 
   await addAudioCells(page, 3);
+});
+
+test("スタイル選択メニューではスタイル名のみ表示される", async ({ page }) => {
+  await page.locator(".audio-cell:nth-child(1) .character-button").click();
+
+  await page
+    .getByRole("application", {
+      name: "dummy1のスタイル、マウスオーバーするか、右矢印キーを押してスタイル選択を表示できます",
+    })
+    .hover();
+
+  await expect(
+    page.getByRole("button", { name: "style0", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "style1", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "style1", exact: true }).click();
+  await expect(
+    page.locator(".audio-cell:nth-child(1) .icon-container > img"),
+  ).toHaveAttribute("alt", "dummy1（style1）");
 });
 
 test("複数選択：キャラクター選択", async ({ page }) => {

@@ -1,5 +1,5 @@
-import { QInput } from "quasar";
-import { Ref } from "vue";
+import type { QInput } from "quasar";
+import type { Ref } from "vue";
 
 /**
  * QInput の選択範囲への操作を簡単にできるようにするクラス

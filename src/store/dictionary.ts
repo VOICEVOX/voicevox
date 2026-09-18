@@ -1,7 +1,7 @@
 import { createPartialStore } from "./vuex";
-import { UserDictWord, UserDictWordToJSON } from "@/openapi";
-import { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
-import { EngineId } from "@/type/preload";
+import { type UserDictWord, UserDictWordToJSON } from "@/openapi";
+import type { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
+import type { EngineId } from "@/type/preload";
 
 export const dictionaryStoreState: DictionaryStoreState = {};
 
@@ -71,7 +71,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
 
       if (engineId == undefined)
         throw new Error(`No such engine registered: index == 0`);
-      await actions
+      const wordUuid = await actions
         .INSTANTIATE_ENGINE_CONNECTOR({
           engineId,
         })
@@ -85,6 +85,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
         );
 
       await actions.SYNC_ALL_USER_DICT();
+      return wordUuid;
     },
   },
 

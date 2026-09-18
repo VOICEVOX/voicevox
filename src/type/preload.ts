@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { AltPortInfos } from "@/store/type";
-import { Result } from "@/type/result";
+import type { AltPortInfos } from "@/store/type";
+import type { Result } from "@/type/result";
 import {
-  HotkeySettingType,
+  type HotkeySettingType,
   hotkeySettingSchema,
   getDefaultHotkeySettings,
 } from "@/domain/hotkeyAction";
@@ -57,19 +57,7 @@ export const defaultToolbarButtonSetting: ToolbarSettingType = [
   "REDO",
 ];
 
-export type TextAsset = {
-  Contact: string;
-  HowToUse: string;
-  OssCommunityInfos: string;
-  Policy: string;
-  PrivacyPolicy: string;
-  QAndA: string;
-  OssLicenses: Record<string, string>[];
-  UpdateInfos: UpdateInfo[];
-};
-
 export interface Sandbox {
-  getTextAsset<K extends keyof TextAsset>(textType: K): Promise<TextAsset[K]>;
   getAltPortInfos(): Promise<AltPortInfos>;
   getInitialProjectFilePath(): Promise<string | undefined>;
   showSaveDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
@@ -104,12 +92,13 @@ export interface Sandbox {
     detectEnterFullscreen: () => void;
     detectLeaveFullscreen: () => void;
     checkEditedAndNotSave: (obj: {
-      closeOrReload: "close" | "reload";
+      nextAction: "close" | "reload" | "switchToWelcome";
       isMultiEngineOffMode?: boolean;
     }) => void;
     detectResized: (obj: { width: number; height: number }) => void;
   }): void;
   closeWindow(): void;
+  launchWelcomeWindow(): void;
   minimizeWindow(): void;
   toggleMaximizeWindow(): void;
   toggleFullScreen(): void;
@@ -143,6 +132,8 @@ export interface Sandbox {
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): Promise<string>;
+  hasDownloadableDefaultEngine(): Promise<boolean>;
+  getDownloadableDefaultEnginePackageIds(): Promise<EngineId[]>;
 }
 
 export type AppInfos = {
@@ -374,7 +365,7 @@ export const experimentalSettingSchema = z.object({
   enableInterrogativeUpspeak: z.boolean().default(false),
   enableMorphing: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
-  showParameterPanel: z.boolean().default(false),
+  showSongParameterPanel: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
@@ -383,6 +374,7 @@ export const splitterPositionSchema = z.object({
   portraitPaneWidth: z.number().optional(),
   audioInfoPaneWidth: z.number().optional(),
   audioDetailPaneHeight: z.number().optional(),
+  parameterPanelHeight: z.number().optional(),
 });
 export type SplitterPositionType = z.infer<typeof splitterPositionSchema>;
 
@@ -414,12 +406,12 @@ export const rootMiscSettingSchema = z.object({
       panAndGain: z.boolean().default(true),
     })
     .prefault({}),
-  showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
+  showSongCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
+  defaultLyricMode: z.enum(["doremi", "la"]).default("doremi"), // デフォルト歌詞の動作モード
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
   enableKatakanaEnglish: z.boolean().default(true), // 未知の英単語をカタカナ読みに変換するかどうか
-  enableMultiSelect: z.boolean().default(true), // 複数選択を有効にするかどうか
   showAudioLength: z.boolean().default(false), // 音声の長さを表示するかどうか
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;

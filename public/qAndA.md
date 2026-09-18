@@ -10,7 +10,7 @@ Windows／Mac／Linux 搭載の PC に対応しています。
 
 ※Windows：Windows 10・Windows 11  
 ※Mac：macOS 14(Sonoma)以降  
-※Linux：Ubuntu 20.04・Ubuntu 22.04
+※Linux：Ubuntu 22.04・Ubuntu 24.04
 
 #### GPU 版
 

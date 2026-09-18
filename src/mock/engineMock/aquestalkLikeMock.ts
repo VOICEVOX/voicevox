@@ -4,7 +4,7 @@
  */
 
 import { moraToPhonemes } from "./phonemeMock";
-import { AccentPhrase, Mora } from "@/openapi";
+import type { AccentPhrase, Mora } from "@/openapi";
 
 enum ParseKanaErrorCode {
   UNKNOWN_TEXT = "判別できない読み仮名があります: {text}",

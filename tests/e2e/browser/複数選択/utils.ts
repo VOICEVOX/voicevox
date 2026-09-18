@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 export async function addAudioCells(page: Page, count: number) {
   for (let i = 0; i < count; i++) {

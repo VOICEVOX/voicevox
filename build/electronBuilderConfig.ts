@@ -1,18 +1,25 @@
 import path from "node:path";
 import { readdirSync, existsSync, rmSync } from "node:fs";
-import { config } from "dotenv";
-import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
+import dotenv from "dotenv";
+import type { Configuration as ElectronBuilderConfiguration } from "electron-builder";
 import { z } from "zod";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
 import afterPack from "./afterPack";
-import artifactBuildCompleted from "./artifactBuildCompleted";
+import type { VoicevoxEnginePlacement } from "./afterPack";
 
 const rootDir = path.join(import.meta.dirname, "..");
-const dotenvPath = path.join(rootDir, ".env.production");
-config({ path: dotenvPath });
+const dotenvPath = [
+  path.join(rootDir, ".env.production.local"),
+  path.join(rootDir, ".env.production"),
+  path.join(rootDir, ".env.local"),
+  path.join(rootDir, ".env"),
+];
+dotenv.config({ path: dotenvPath, quiet: true });
 
-const VOICEVOX_ENGINE_DIR =
-  process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/dist/run/";
+const voicevoxEnginePlacement = parseVoicevoxEnginePlacementFromEnv(
+  process.env.VOICEVOX_ENGINE_PLACEMENT_MODE,
+  process.env.VOICEVOX_ENGINE_DIR,
+);
 
 // ${productName} Web Setup ${version}.${ext}
 const NSIS_WEB_ARTIFACT_NAME = process.env.NSIS_WEB_ARTIFACT_NAME;
@@ -98,10 +105,6 @@ const builderOptions: ElectronBuilderConfiguration = {
       to: extraFilePrefix + "README.txt",
     },
     {
-      from: VOICEVOX_ENGINE_DIR,
-      to: path.join(extraFilePrefix, "vv-engine"),
-    },
-    {
       from: path.join(rootDir, "vendored", "7z", sevenZipFile),
       to: extraFilePrefix + sevenZipFile,
     },
@@ -111,9 +114,18 @@ const builderOptions: ElectronBuilderConfiguration = {
   appId: "jp.hiroshiba.voicevox",
   copyright: "Hiroshiba Kazuyuki",
   afterAllArtifactBuild,
-  afterPack,
-  artifactBuildCompleted,
+  afterPack: (context) => afterPack(context, voicevoxEnginePlacement),
+  electronFuses: {
+    runAsNode: false,
+    enableNodeOptionsEnvironmentVariable: false,
+    enableNodeCliInspectArguments: false,
+    onlyLoadAppFromAsar: true,
+    grantFileProtocolExtraPrivileges: false,
+  },
   electronLanguages: ["en-US", "ja"],
+  toolsets: {
+    appimage: "1.0.3",
+  },
   win: {
     icon: "public/icon.png",
     target: [
@@ -167,5 +179,23 @@ const builderOptions: ElectronBuilderConfiguration = {
     icon: "build/icons/icon-dmg.icns",
   },
 };
+
+/** 環境変数からVOICEVOX ENGINEの配置設定を得る */
+function parseVoicevoxEnginePlacementFromEnv(
+  modeValue: string | undefined,
+  directory: string | undefined,
+): VoicevoxEnginePlacement {
+  const hasDirectoryValue = directory != undefined && directory !== "";
+  const mode = modeValue ?? "none";
+
+  if (mode === "none" && !hasDirectoryValue) {
+    return { mode };
+  }
+  if ((mode === "copy" || mode === "move") && hasDirectoryValue) {
+    return { mode, directory };
+  }
+
+  throw new Error("VOICEVOX ENGINEの配置設定が不正です");
+}
 
 export default builderOptions;
