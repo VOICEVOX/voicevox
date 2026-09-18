@@ -74,7 +74,7 @@ export async function playAudioStreams(
             () => {
               callbacks.onDelay?.();
             },
-            (samplesPerChunk / sampleRate) * 1000,
+            Math.max(0, lastBufferEndTime - audioContext.currentTime) * 1000,
           );
         }
         const chunkOrDone = await Promise.race([
@@ -162,6 +162,12 @@ export const audioStreamPlayerStore =
             audioItem,
           );
           assertNonNullable(editorAudioQuery);
+          const segmentLength = {
+            LOW_LATENCY: 0.3,
+            BALANCED: 1.0,
+            STABLE: 9999,
+          }[state.streamingMode];
+          const cacheKey = `${id}:${segmentLength}`;
           const audioQuery = convertAudioQueryFromEditorToEngine(
             editorAudioQuery,
             engineManifest.defaultSamplingRate,
@@ -175,7 +181,7 @@ export const audioStreamPlayerStore =
             accentPhraseOffsets[getters.AUDIO_PLAY_START_POINT ?? 0];
 
           return await playAudioWithAbort(async (abortSignal) => {
-            const existingCache = audioCache.get(id);
+            const existingCache = audioCache.get(cacheKey);
             if (existingCache && existingCache.startsAt <= startTime) {
               log.info(
                 `Using cached audio for ${audioKey} starting at ${existingCache.startsAt} with offset ${startTime - existingCache.startsAt}`,
@@ -224,6 +230,7 @@ export const audioStreamPlayerStore =
                       enableInterrogativeUpspeak:
                         state.experimentalSetting.enableInterrogativeUpspeak,
                       startOffset: startTime,
+                      segmentLength,
                     },
                     {
                       signal: abortSignal,
@@ -235,6 +242,7 @@ export const audioStreamPlayerStore =
               const [wavBodyForPlay, wavBodyForSave] = wavBody.tee();
 
               const wavStream = new WavStream(wavBodyForPlay);
+              let delayNotified = false;
               await playAudioStreams([wavStream], abortSignal, {
                 onStart() {
                   mutations.SET_AUDIO_NOW_GENERATING({
@@ -251,12 +259,23 @@ export const audioStreamPlayerStore =
                     },
                   });
                 },
+                onDelay() {
+                  if (!delayNotified) {
+                    delayNotified = true;
+
+                    void actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
+                      message: "このPCではストリーミング再生が推奨されません",
+                      icon: "warning",
+                      tipName: "streamingUnrecommended",
+                    });
+                  }
+                },
                 async onFetchEnd() {
                   log.info(
                     `Caching audio for ${audioKey} starting at ${startTime}`,
                   );
                   const wavBlob = await new Response(wavBodyForSave).blob();
-                  audioCache.set(id, {
+                  audioCache.set(cacheKey, {
                     wav: wavBlob,
                     startsAt: startTime,
                   });
