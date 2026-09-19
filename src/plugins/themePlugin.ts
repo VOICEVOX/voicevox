@@ -16,7 +16,6 @@ import type { ThemeColorType, ThemeConf } from "@/type/preload";
 import { assertNonNullable } from "@/type/utility";
 
 type ThemeManager = {
-  readonly currentTheme: Readonly<ComputedRef<ThemeConf>>;
   readonly isDark: Readonly<ComputedRef<boolean>>;
   readonly availableThemes: Readonly<ShallowRef<ThemeConf[]>>;
   setCurrentTheme: (themeSetting: string) => void;
@@ -108,7 +107,6 @@ export const themePlugin: Plugin = {
       };
 
       const themeManager: ThemeManager = {
-        currentTheme,
         isDark,
         availableThemes,
         setCurrentTheme,
