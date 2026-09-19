@@ -1,0 +1,699 @@
+<template>
+  <QToolbar class="song-toolbar">
+    <!-- configs for entire song -->
+    <div class="song-configs">
+      <QBtn
+        class="q-mr-sm"
+        :icon="isSidebarOpen ? 'menu_open' : 'menu'"
+        round
+        flat
+        @click="toggleSidebar"
+      />
+      <SingerRow :trackId="selectedTrackId" />
+      <QInput
+        type="number"
+        :modelValue="currentBpm"
+        dense
+        hideBottomSpace
+        outlined
+        unelevated
+        label="テンポ"
+        class="song-tempo"
+        padding="0"
+        @change="setBpm"
+      />
+      <QField
+        hideBottomSpace
+        dense
+        class="song-time-signature-field"
+        label="拍子"
+        stackLabel
+        outlined
+      >
+        <template #control>
+          <div class="song-beats">
+            <QSelect
+              :modelValue="currentTimeSignature.beats"
+              :options="beatsOptions"
+              hideBottomSpace
+              hideDropdownIcon
+              dense
+              userInputs
+              unelevated
+              optionsDense
+              transitionShow="none"
+              transitionHide="none"
+              class="song-time-signature beats"
+              @update:modelValue="setBeats"
+            />
+            <div class="song-beats-separator">/</div>
+            <QSelect
+              :modelValue="currentTimeSignature.beatType"
+              :options="beatTypeOptions"
+              hideBottomSpace
+              hideDropdownIcon
+              dense
+              userInputs
+              unelevated
+              optionsDense
+              transitionShow="none"
+              transitionHide="none"
+              class="song-time-signature beat-type"
+              @update:modelValue="setBeatType"
+            />
+          </div>
+        </template>
+      </QField>
+    </div>
+    <!-- player -->
+    <div class="song-player">
+      <QBtn
+        flat
+        round
+        class="song-transport-button"
+        icon="skip_previous"
+        @click="goToZero"
+      />
+      <QBtn
+        v-if="!nowPlaying"
+        round
+        class="song-playback-button song-playback-play"
+        icon="play_arrow"
+        @click="play"
+      />
+      <QBtn
+        v-else
+        round
+        class="song-playback-button song-playback-stop"
+        icon="stop"
+        @click="stop"
+      />
+      <QBtn
+        flat
+        round
+        size="sm"
+        class="song-playback-button song-playback-loop"
+        :class="{ 'song-playback-loop-enabled': isLoopEnabled }"
+        icon="loop"
+        @click="toggleLoop"
+      />
+      <PlayheadPositionDisplay class="song-playhead-position" />
+    </div>
+    <!-- settings for edit controls -->
+    <div class="song-controls">
+      <EditTargetSwitcher :editTarget :changeEditTarget />
+      <QBtn
+        flat
+        dense
+        round
+        class="song-undo-button"
+        :disable="!canUndo"
+        @click="undo"
+      >
+        <QIcon name="undo" size="24px" />
+      </QBtn>
+      <QBtn
+        flat
+        dense
+        round
+        class="song-redo-button"
+        :disable="!canRedo"
+        @click="redo"
+      >
+        <QIcon name="redo" size="24px" />
+      </QBtn>
+      <QIcon name="volume_up" size="xs" class="song-volume-icon" />
+      <QSlider v-model.number="volume" trackSize="2px" class="song-volume" />
+      <QSelect
+        v-model="snapTypeSelectModel"
+        :options="snapTypeSelectOptions"
+        dense
+        outlined
+        hideBottomSpace
+        optionsDense
+        hideDropdownIcon
+        unelevated
+        label="スナップ"
+        transitionShow="none"
+        transitionHide="none"
+        class="song-snap"
+      />
+    </div>
+  </QToolbar>
+</template>
+
+<script setup lang="ts">
+import { computed } from "vue";
+import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
+import EditTargetSwitcher from "./EditTargetSwitcher.vue";
+import { useStore } from "@/store";
+
+import {
+  BEAT_TYPES,
+  getMeasureDuration,
+  getNoteDuration,
+  getTimeSignaturePositions,
+  isTriplet,
+  isValidBeats,
+  isValidBeatType,
+  isValidBpm,
+} from "@/song/music";
+import { getSnapTypes } from "@/song/domain";
+import SingerRow from "@/components/Song/TrackCard/SingerRow.vue";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import type { SequencerEditTarget } from "@/store/type";
+import { UnreachableError } from "@/type/utility";
+
+const store = useStore();
+
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+const editor = "song";
+const canUndo = computed(() => store.getters.CAN_UNDO(editor));
+const canRedo = computed(() => store.getters.CAN_REDO(editor));
+
+const { registerHotkeyWithCleanup } = useHotkeyManager();
+registerHotkeyWithCleanup({
+  editor,
+  name: "元に戻す",
+  callback: () => {
+    if (!uiLocked.value && canUndo.value) {
+      undo();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor,
+  name: "やり直す",
+  callback: () => {
+    if (!uiLocked.value && canRedo.value) {
+      redo();
+    }
+  },
+});
+
+registerHotkeyWithCleanup({
+  editor,
+  name: "再生/停止",
+  callback: () => {
+    if (nowPlaying.value) {
+      stop();
+    } else {
+      play();
+    }
+  },
+});
+
+const undo = () => {
+  void store.actions.UNDO({ editor });
+};
+const redo = () => {
+  void store.actions.REDO({ editor });
+};
+
+const editTarget = computed(() => store.state.sequencerEditTarget);
+
+const changeEditTarget = (editTarget: SequencerEditTarget) => {
+  void store.actions.SET_EDIT_TARGET({ editTarget });
+};
+
+const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
+const toggleSidebar = () => {
+  void store.actions.SET_SONG_SIDEBAR_OPEN({
+    isSongSidebarOpen: !isSidebarOpen.value,
+  });
+};
+
+const tempos = computed(() => store.state.tempos);
+const timeSignatures = computed(() => store.state.timeSignatures);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
+const tpqn = computed(() => store.state.tpqn);
+const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
+
+const tsPositions = computed(() => {
+  return getTimeSignaturePositions(timeSignatures.value, tpqn.value);
+});
+
+const snapTicks = computed(() => {
+  return getNoteDuration(store.state.sequencerSnapType, tpqn.value);
+});
+
+const beatsOptions = computed(() => {
+  return Array.from({ length: 32 }, (_, i) => ({
+    label: (i + 1).toString(),
+    value: i + 1,
+  }));
+});
+
+const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
+  label: beatType.toString(),
+  value: beatType,
+}));
+
+const currentTimeSignature = computed(() => {
+  const maybeTimeSignature = timeSignatures.value.findLast(
+    (_timeSignature, i) => tsPositions.value[i] <= playheadTicks.value,
+  );
+  if (!maybeTimeSignature) {
+    throw new UnreachableError("assert: at least one time signature exists");
+  }
+  return maybeTimeSignature;
+});
+
+const setBeats = (beats: { label: string; value: number }) => {
+  if (!isValidBeats(beats.value)) {
+    return;
+  }
+
+  void store.actions.COMMAND_SET_TIME_SIGNATURE({
+    timeSignature: {
+      measureNumber: currentTimeSignature.value.measureNumber,
+      beats: beats.value,
+      beatType: currentTimeSignature.value.beatType,
+    },
+  });
+};
+
+const setBeatType = (beatType: { label: string; value: number }) => {
+  if (!isValidBeatType(beatType.value)) {
+    return;
+  }
+  void store.actions.COMMAND_SET_TIME_SIGNATURE({
+    timeSignature: {
+      measureNumber: currentTimeSignature.value.measureNumber,
+      beats: currentTimeSignature.value.beats,
+      beatType: beatType.value,
+    },
+  });
+};
+
+const setBpm = (bpm: string | number | null) => {
+  const bpmValue = Number(bpm);
+  if (!isValidBpm(bpmValue)) {
+    return;
+  }
+  const position = tempos.value.findLast(
+    (tempo) => tempo.position <= playheadTicks.value,
+  )?.position;
+  if (position == undefined) {
+    throw new UnreachableError("assert: at least one tempo exists");
+  }
+  void store.actions.COMMAND_SET_TEMPO({
+    tempo: {
+      position,
+      bpm: bpmValue,
+    },
+  });
+};
+
+const currentBpm = computed(() => {
+  const currentTempo = tempos.value.findLast(
+    (tempo) => tempo.position <= playheadTicks.value,
+  );
+  if (!currentTempo) {
+    throw new UnreachableError("assert: at least one tempo exists");
+  }
+  return currentTempo.bpm;
+});
+
+const nowPlaying = computed(() => store.state.nowPlaying);
+
+const play = () => {
+  void store.actions.SING_PLAY_AUDIO();
+};
+
+const stop = () => {
+  void store.actions.SING_STOP_AUDIO();
+};
+
+const goToZero = () => {
+  void store.actions.SET_PLAYHEAD_POSITION({ position: 0 });
+};
+
+const isLoopEnabled = computed(() => store.state.isLoopEnabled);
+
+const toggleLoop = async () => {
+  // ループを有効にする場合
+  if (!isLoopEnabled.value) {
+    // ループ範囲が未設定の場合のみ、現在のplayheadが含まれる1小節をループ範囲とする
+    if (store.state.loopStartTick === 0 && store.state.loopEndTick === 0) {
+      // NOTE: LoopLaneのaddOneMeasureLoopと基本的なロジックは同じなものの、
+      // 開始位置の指定方法が異なるため共通化はしていない。
+      // Toolbar内はplayhead位置を基準に設定
+      // LoopLaneはユーザーのクリック位置を基準に設定
+      // 共通化の意味ではむしろ特定の位置の拍子記号を取得する関数を作った方がいいかもです
+
+      // 現在のplayhead位置のTimeSignature位置index
+      const playheadTsIndex = tsPositions.value.findIndex(
+        (pos) => pos > playheadTicks.value,
+      );
+      // 現在の拍子index
+      const currentTsIndex =
+        playheadTsIndex === -1
+          ? tsPositions.value.length - 1
+          : playheadTsIndex - 1;
+      // 現在のplayheadがある拍子
+      const currentTs = timeSignatures.value[currentTsIndex];
+
+      if (!currentTs) {
+        throw new Error("Could not find current time signature");
+      }
+
+      // 現在のplayheadがある小節の長さ
+      const oneMeasureTicks = getMeasureDuration(
+        currentTs.beats,
+        currentTs.beatType,
+        tpqn.value,
+      );
+
+      // 現在のplayheadがある位置をスナップ位置に調整
+      const currentMeasureStartTick =
+        Math.round(playheadTicks.value / snapTicks.value) * snapTicks.value;
+
+      // 現在のplayheadがある小節の終了位置
+      const currentMeasureEndTick = currentMeasureStartTick + oneMeasureTicks;
+
+      // 小節の頭から1小節分のループ範囲を設定
+      void store.actions.SET_LOOP_RANGE({
+        loopStartTick: currentMeasureStartTick,
+        loopEndTick: currentMeasureEndTick,
+      });
+    }
+    // ループ範囲が設定済みの場合は何もしない (SET_LOOP_ENABLED のみ実行される)
+  }
+
+  // ループをトグルする
+  void store.actions.SET_LOOP_ENABLED({
+    isLoopEnabled: !isLoopEnabled.value,
+  });
+};
+
+const volume = computed({
+  get() {
+    return store.state.volume * 100;
+  },
+  set(value: number) {
+    void store.actions.SET_VOLUME({ volume: value / 100 });
+  },
+});
+
+const snapTypeSelectOptions = computed(() => {
+  const tpqn = store.state.tpqn;
+  return getSnapTypes(tpqn)
+    .sort((a, b) => {
+      if (isTriplet(a) === isTriplet(b)) {
+        return a - b;
+      } else {
+        return isTriplet(a) ? 1 : -1;
+      }
+    })
+    .map((snapType) => {
+      if (isTriplet(snapType)) {
+        return { snapType, label: `1/${(snapType / 3) * 2} T` };
+      } else {
+        return { snapType, label: `1/${snapType}` };
+      }
+    });
+});
+const snapTypeSelectModel = computed({
+  get() {
+    const snapType = store.state.sequencerSnapType;
+    const selectOptions = snapTypeSelectOptions.value;
+    return (
+      selectOptions.find((value) => value.snapType === snapType) ??
+      selectOptions[0]
+    );
+  },
+  set(value) {
+    void store.actions.SET_SNAP_TYPE({
+      snapType: value.snapType,
+    });
+  },
+});
+</script>
+
+<style scoped lang="scss">
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/colors" as colors;
+
+// テキストフィールドのデフォルト
+:deep(.q-field__native) {
+  color: var(--scheme-color-on-surface);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* QInput のアウトラインをoutline-variantにする */
+:deep(.q-input .q-field__control:before, .q-select .q-field__control:before) {
+  border: 1px solid var(--scheme-color-outline-variant);
+}
+
+:deep(.q-field--outlined .q-field__control) {
+  padding-right: 8px;
+  padding-left: 8px;
+}
+
+// ラベルのフォントサイズを小さくする()
+:deep(.q-input .q-field__label, .q-select .q-field__label) {
+  font-size: 12px;
+  color: var(--scheme-color-on-surface-variant);
+}
+
+// 数字入力のテキストフィールド
+:deep(.q-field__native[type="number"]) {
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    cursor: pointer;
+  }
+
+  // スピンボタンのホバー状態
+  &:hover::-webkit-inner-spin-button,
+  &:hover::-webkit-outer-spin-button {
+    background: var(--scheme-color-surface-container-highest);
+  }
+
+  // スピンボタンのアクティブ状態
+  &:active::-webkit-inner-spin-button,
+  &:active::-webkit-outer-spin-button {
+    background: var(--scheme-color-surface-container-low);
+  }
+}
+
+:deep(
+  .q-input .q-field__control:hover:before,
+  .q-select .q-field__control:hover:before
+) {
+  border: 1px solid var(--scheme-color-outline);
+}
+
+// オプションメニュー全体の背景色
+:deep(.q-menu) {
+  background: var(--scheme-color-surface-container);
+}
+
+// TODO: アクティブ色が効かないので修正したい
+:deep(.q-menu .q-item--active) {
+  //background-color: var(--scheme-color-secondary-container);
+  color: var(--scheme-color-primary);
+}
+
+.song-toolbar {
+  background: var(--scheme-color-song-toolbar-container);
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 8px 12px 8px 8px;
+  width: 100%;
+  letter-spacing: 0.01em;
+}
+
+.song-configs {
+  align-items: center;
+  display: flex;
+  flex: 1;
+}
+
+.song-player {
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  flex: 1;
+}
+
+.song-tempo {
+  margin-left: 16px;
+  margin-right: 4px;
+  width: 60px;
+}
+
+.song-time-signature-field {
+  height: 40px;
+
+  :deep(.q-field__control) {
+    height: 40px;
+    padding: 0 2px;
+  }
+
+  :deep(.q-field__label) {
+    font-size: 9px;
+    top: 5.5px;
+    margin-left: 6px;
+    transform: translateY(0) !important;
+    color: var(--scheme-color-on-surface-variant);
+    opacity: 0.9;
+  }
+
+  :deep(.q-field__native) {
+    padding-top: 4px;
+  }
+
+  :deep(.q-field__control:before) {
+    border-color: var(--scheme-color-outline-variant);
+  }
+
+  :deep(.q-field__control:hover:before) {
+    border-color: var(--scheme-color-outline);
+  }
+}
+
+.song-time-signature.beats {
+  :deep(.q-field__control) {
+    padding: 0 4px 0 8px;
+  }
+}
+
+.song-time-signature.beat-type {
+  :deep(.q-field__control) {
+    padding: 0 8px 0 4px;
+  }
+}
+
+.song-beats {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  margin-top: -14px;
+
+  &:deep(.q-field__control:before) {
+    border: 1px solid transparent;
+  }
+
+  &:deep(.q-field__control) {
+    background: transparent;
+    padding: 0 4px;
+  }
+
+  &:deep(.q-field__control:hover:before) {
+    border-color: transparent;
+  }
+}
+
+.song-beats-separator {
+  font-weight: 400;
+  color: var(--scheme-color-outline);
+  pointer-events: none;
+  transform: translateY(6px);
+}
+
+.song-transport-button {
+  color: var(--scheme-color-on-surface-variant);
+  margin-right: 0.25rem;
+}
+
+.song-playback-button {
+  background: var(--scheme-color-song-playback-button-container);
+  color: var(--scheme-color-song-on-playback-button-container);
+  &:before {
+    box-shadow: none;
+  }
+
+  &.song-playback-play .q-btn__wrapper .q-icon {
+    transform: translateX(-0.5px);
+  }
+
+  &.song-playback-stop .q-btn__wrapper .q-icon {
+    transform: translateX(-0.5px);
+  }
+}
+
+.song-playback-loop {
+  margin-left: 8px;
+  color: var(--scheme-color-on-surface-variant);
+  background: transparent;
+
+  &-enabled {
+    color: var(--scheme-color-primary);
+    background: var(--scheme-color-secondary-container);
+  }
+}
+
+.song-playhead-position {
+  margin-left: 16px;
+}
+
+.song-controls {
+  align-items: center;
+  justify-content: flex-end;
+  display: flex;
+  flex: 1;
+}
+
+.song-undo-button {
+  margin-left: 24px;
+}
+
+.song-undo-button,
+.song-redo-button {
+  color: var(--scheme-color-on-surface-variant);
+  width: 40px;
+  height: 40px;
+  &.disabled {
+    opacity: 0.38 !important;
+  }
+}
+.song-redo-button {
+  margin-right: 8px;
+}
+
+.song-volume-icon {
+  margin-right: 8px;
+
+  :deep() {
+    color: var(--scheme-color-outline);
+  }
+}
+
+.song-volume {
+  margin-right: 16px;
+  width: 72px;
+
+  :deep(.q-slider__track) {
+    background-color: var(--scheme-color-surface-variant);
+    color: var(--scheme-color-primary-fixed-dim);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--scheme-color-primary-fixed-dim);
+  }
+}
+
+.song-snap {
+  min-width: 64px;
+  height: 40px;
+
+  &:deep(.q-field__control:before) {
+    height: 40px;
+    border: 1px solid var(--scheme-color-outline-variant);
+  }
+
+  :deep(.q-field__control:hover:before) {
+    border-color: var(--scheme-color-outline);
+  }
+
+  :deep(.q-field__label) {
+    font-size: 12px;
+    color: var(--scheme-color-on-surface-variant);
+  }
+}
+</style>

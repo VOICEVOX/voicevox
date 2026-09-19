@@ -312,16 +312,16 @@ jobs:
 
           echo "CSC_LINK=$CSC_LINK" >> $GITHUB_ENV
           echo "CSC_KEY_PASSWORD=$CSC_KEY_PASSWORD" >> $GITHUB_ENV
-          echo "APPLE_API_KEY=$APPLE_API_KEY" >> $GITHUB_ENV
           echo "APPLE_API_KEY_ID=$APPLE_API_KEY_ID" >> $GITHUB_ENV
           echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> $GITHUB_ENV
+          echo "APPLE_API_KEY=$APPLE_API_KEY_PATH" >> $GITHUB_ENV
         env:
           CSC_LINK: ${{ secrets.APPLE_P12_BASE64 }}
           CSC_KEY_PASSWORD: ${{ secrets.APPLE_P12_PASSWORD }}
           APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
-          APPLE_API_KEY: /tmp/voicevox-apple-api-key.p8
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_PATH: /tmp/voicevox-apple-api-key.p8
 
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
@@ -330,6 +330,7 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+          MACOS_AD_HOC_CODE_SIGNING: ${{ startsWith(matrix.os, 'macos-') && github.event.inputs.code_signing != 'true' && 'true' || 'false' }}
           VOICEVOX_ENGINE_DIR: ${{ matrix.voicevox_engine_asset_name != null && format('{0}/voicevox_engine', github.workspace) || '' }}
           VOICEVOX_ENGINE_PLACEMENT_MODE: ${{ matrix.voicevox_engine_asset_name != null && 'move' || 'none' }}
           VOICEVOX_ENGINE_MODE: ${{ matrix.voicevox_engine_asset_name != null && 'embed' || 'download' }}
@@ -354,17 +355,15 @@ jobs:
           bash tools/codesign_cleanup_macos.bash
           echo 'CSC_LINK=' >> $GITHUB_ENV
           echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
-          echo 'APPLE_API_KEY=' >> $GITHUB_ENV
           echo 'APPLE_API_KEY_ID=' >> $GITHUB_ENV
           echo 'APPLE_API_ISSUER=' >> $GITHUB_ENV
+          echo 'APPLE_API_KEY=' >> $GITHUB_ENV
+        env:
+          APPLE_API_KEY_PATH: /tmp/voicevox-apple-api-key.p8
 
       - name: Rename Prepackage
         run: |
           mv ${{ matrix.artifact_path }} ./prepackage
-
-      - name: Ad hoc code signing
-        if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.code_signing != 'true' # macOS
-        run: codesign --force --deep -s - prepackage/VOICEVOX.app
 
       - name: Create Linux tar.gz (without nvidia)
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')

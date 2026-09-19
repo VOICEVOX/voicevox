@@ -36,6 +36,11 @@ const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 
 // ${productName}-${version}.${ext}
 const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
+const MACOS_AD_HOC_CODE_SIGNING = z
+  .enum(["true", "false"])
+  .default("false")
+  .transform((value) => value === "true")
+  .parse(process.env.MACOS_AD_HOC_CODE_SIGNING);
 
 // コード署名証明書
 const winSigningHashAlgorithmsSchema = z.array(z.enum(["sha1", "sha256"]));
@@ -182,6 +187,8 @@ const builderOptions: ElectronBuilderConfiguration = {
         arch: [isArm64 ? "arm64" : "x64"],
       },
     ],
+    // NOTE: "-"を指定するとelectron-builderがad hoc署名する
+    identity: MACOS_AD_HOC_CODE_SIGNING ? "-" : undefined,
   },
   dmg: {
     icon: "build/icons/icon-dmg.icns",

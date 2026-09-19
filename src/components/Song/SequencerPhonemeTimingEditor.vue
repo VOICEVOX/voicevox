@@ -1,0 +1,271 @@
+<template>
+  <div class="phoneme-timing-editor">
+    <div class="axis-area"></div>
+    <div
+      ref="parameterArea"
+      class="parameter-area"
+      @pointerdown="onPointerDown"
+      @pointermove="onPointerMove"
+      @wheel="onWheel"
+    >
+      <SequencerParameterGrid class="parameter-grid" :viewportInfo />
+      <SequencerWaveform class="waveform" :viewportInfo />
+      <SequencerNoteTimings class="note-timings" :viewportInfo />
+      <SequencerPhonemeTimings
+        class="phoneme-timings"
+        :viewportInfo
+        :previewPhonemeTiming
+        :phonemeTimingInfos
+        :phonemeTextY
+      />
+      <SequencerPhonemeTimingToolPalette
+        :sequencerPhonemeTimingTool
+        @update:sequencerPhonemeTimingTool="setSequencerPhonemeTimingTool"
+      />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { getXInBorderBox, type ViewportInfo } from "@/song/viewHelper";
+import { useStore } from "@/store";
+import { usePhonemeTimingEditorStateMachine } from "@/composables/usePhonemeTimingEditorStateMachine";
+import {
+  onMountedOrActivated,
+  onUnmountedOrDeactivated,
+} from "@/composables/onMountOrActivate";
+import SequencerParameterGrid from "@/components/Song/SequencerParameterGrid.vue";
+import SequencerWaveform from "@/components/Song/SequencerWaveform.vue";
+import SequencerPhonemeTimings from "@/components/Song/SequencerPhonemeTimings.vue";
+import SequencerNoteTimings from "@/components/Song/SequencerNoteTimings.vue";
+import SequencerPhonemeTimingToolPalette from "@/components/Song/SequencerPhonemeTimingToolPalette.vue";
+import { assertNonNullable } from "@/type/utility";
+import {
+  computePhonemeTimingInfos,
+  getPhraseInfosForTrack,
+} from "@/song/phonemeTimingEditorStateMachine/common";
+import type { PhonemeTimingEditTool } from "@/store/type";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+
+const store = useStore();
+const sequencerPhonemeTimingTool = computed(
+  () => store.state.sequencerPhonemeTimingTool,
+);
+
+const setSequencerPhonemeTimingTool = (tool: PhonemeTimingEditTool) => {
+  void store.actions.SET_SEQUENCER_PHONEME_TIMING_TOOL({
+    sequencerPhonemeTimingTool: tool,
+  });
+};
+
+const props = defineProps<{
+  viewportInfo: ViewportInfo;
+}>();
+
+const emit = defineEmits<{
+  panTimeline: [deltaX: number];
+  zoomTimeline: [anchorX: number, deltaY: number];
+}>();
+
+const viewportInfo = computed(() => props.viewportInfo);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
+const phonemeTimingEditData = computed(
+  () => store.getters.SELECTED_TRACK.phonemeTimingEditData,
+);
+const phraseInfos = computed(() =>
+  getPhraseInfosForTrack(
+    store.state.phrases,
+    store.state.phraseQueries,
+    selectedTrackId.value,
+  ),
+);
+const phonemeTimingInfos = computed(() => {
+  return computePhonemeTimingInfos(
+    phraseInfos.value,
+    phonemeTimingEditData.value,
+  );
+});
+
+const { stateMachineProcess, cursorState, previewMode, previewPhonemeTiming } =
+  usePhonemeTimingEditorStateMachine(
+    store,
+    viewportInfo,
+    phonemeTimingInfos,
+    phraseInfos,
+  );
+
+const parameterArea = ref<HTMLElement | null>(null);
+
+const cursorStyle = computed(() => {
+  switch (cursorState.value) {
+    case "EW_RESIZE":
+      return "ew-resize";
+    case "ERASE":
+      // NOTE: 消しゴム用のカーソル・画像がないため、一旦defaultにしている
+      // TODO: 消しゴム用のカーソル・画像を用意して差し替える
+      return "default";
+    default:
+      return "default";
+  }
+});
+
+const getLocalPositionX = (event: PointerEvent): number => {
+  const parameterAreaElement = parameterArea.value;
+  assertNonNullable(parameterAreaElement);
+  return getXInBorderBox(event.clientX, parameterAreaElement);
+};
+
+const onPointerDown = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "PhonemeTimingArea",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
+const onPointerMove = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "PhonemeTimingArea",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
+const onWheel = (event: WheelEvent) => {
+  // ドラッグ編集中はビューを動かさない
+  if (previewMode.value !== "IDLE") {
+    event.preventDefault();
+    return;
+  }
+
+  // Ctrl/Cmd + ホイールは時間軸方向のズーム
+  if (isOnCommandOrCtrlKeyDown(event)) {
+    event.preventDefault();
+    const parameterAreaElement = parameterArea.value;
+    assertNonNullable(parameterAreaElement);
+    const anchorX = getXInBorderBox(event.clientX, parameterAreaElement);
+    emit("zoomTimeline", anchorX, event.deltaY);
+    return;
+  }
+
+  // 横ホイールは時間軸方向のパン
+  if (event.deltaX !== 0) {
+    event.preventDefault();
+    emit("panTimeline", event.deltaX);
+    return;
+  }
+
+  // Shift + 縦ホイールも時間軸方向のパン
+  if (event.shiftKey && event.deltaY !== 0) {
+    event.preventDefault();
+    emit("panTimeline", event.deltaY);
+    return;
+  }
+};
+
+const onWindowPointerMove = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "Window",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
+const onWindowPointerUp = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "Window",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
+const onWindowPointerCancel = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "Window",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
+onMountedOrActivated(() => {
+  window.addEventListener("pointermove", onWindowPointerMove);
+  window.addEventListener("pointerup", onWindowPointerUp);
+  window.addEventListener("pointercancel", onWindowPointerCancel);
+});
+
+onUnmountedOrDeactivated(() => {
+  window.removeEventListener("pointermove", onWindowPointerMove);
+  window.removeEventListener("pointerup", onWindowPointerUp);
+  window.removeEventListener("pointercancel", onWindowPointerCancel);
+});
+
+// parameter-areaの各行の高さ
+const TOP_ROW_HEIGHT = 12;
+const NOTES_ROW_HEIGHT = 26;
+const PHONEME_TEXTS_ROW_HEIGHT = 28;
+
+// 音素文字行内での音素文字の上端オフセット
+const PHONEME_TEXT_TOP_OFFSET_IN_ROW = 12;
+
+// SequencerPhonemeTimingsの音素文字のY座標
+const phonemeTextY =
+  TOP_ROW_HEIGHT + NOTES_ROW_HEIGHT + PHONEME_TEXT_TOP_OFFSET_IN_ROW;
+</script>
+
+<style scoped lang="scss">
+.phoneme-timing-editor {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  display: grid;
+  grid-template-columns: 48px 1fr;
+}
+
+.axis-area {
+  grid-column: 1;
+  grid-row: 1;
+  border-right: solid 1px var(--scheme-color-song-piano-keys-right-border);
+}
+
+.parameter-area {
+  grid-column: 2;
+  grid-row: 1;
+  overflow: hidden;
+  position: relative;
+
+  display: grid;
+  grid-template-rows:
+    v-bind("`${TOP_ROW_HEIGHT}px`")
+    v-bind("`${NOTES_ROW_HEIGHT}px`")
+    v-bind("`${PHONEME_TEXTS_ROW_HEIGHT}px`")
+    1fr;
+  cursor: v-bind(cursorStyle);
+}
+
+.parameter-grid {
+  grid-column: 1;
+  grid-row: 1 / 5;
+}
+
+.waveform {
+  grid-column: 1;
+  grid-row: 4 / 5;
+}
+
+.note-timings {
+  grid-column: 1;
+  grid-row: 2 / 3;
+}
+
+.phoneme-timings {
+  grid-column: 1;
+  grid-row: 1 / 5;
+}
+</style>

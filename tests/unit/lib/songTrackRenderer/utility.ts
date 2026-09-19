@@ -13,9 +13,9 @@ import {
   SongTrackRenderer,
   type SongTrackRenderingEvent,
   type SongTrackRenderingResult,
-} from "@/sing/songTrackRendering";
-import { getOverlappingNoteIds } from "@/sing/storeHelper";
-import { calculateHash, getLast } from "@/sing/utility";
+} from "@/song/songTrackRendering";
+import { getOverlappingNoteIds } from "@/song/storeHelper";
+import { calculateHash, getLast } from "@/song/utility";
 import type { PhraseKey, SingingVoice } from "@/store/type";
 import {
   type EngineId,
@@ -25,7 +25,7 @@ import {
 } from "@/type/preload";
 import { ExhaustiveError } from "@/type/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { createDefaultTrack } from "@/sing/domain";
+import { createDefaultTrack } from "@/song/domain";
 import type {
   Note,
   Singer,

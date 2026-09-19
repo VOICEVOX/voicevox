@@ -6,7 +6,7 @@ import {
 import type { RenderingEventInfo } from "./type";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { EngineId, StyleId, TrackId } from "@/type/preload";
-import { createDefaultTempo, DEFAULT_TPQN } from "@/sing/domain";
+import { createDefaultTempo, DEFAULT_TPQN } from "@/song/domain";
 import { UnreachableError } from "@/type/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 

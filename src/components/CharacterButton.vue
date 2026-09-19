@@ -6,6 +6,7 @@
     :disable="uiLocked"
     :class="{ opaque: loading }"
     aria-haspopup="menu"
+    :aria-label="characterButtonAriaLabel"
   >
     <!-- q-imgだとdisableのタイミングで点滅する -->
     <div class="icon-container">
@@ -173,11 +174,9 @@
                           />
                         </QAvatar>
                       </QAvatar>
-                      <QItemSection v-if="style.styleName"
-                        >{{ characterInfo.metas.speakerName }}（{{
-                          style.styleName
-                        }}）</QItemSection
-                      >
+                      <QItemSection v-if="style.styleName">{{
+                        style.styleName
+                      }}</QItemSection>
                       <QItemSection v-else>{{
                         characterInfo.metas.speakerName
                       }}</QItemSection>
@@ -259,6 +258,11 @@ const selectedVoiceInfoText = computed(() => {
   const styleName = selectedStyleInfo.value.styleName;
   return formatCharacterStyleName(speakerName, styleName);
 });
+
+const characterButtonAriaLabel = computed(
+  () =>
+    `キャラクターとスタイルを変更、現在のキャラクターとスタイルは${selectedVoiceInfoText.value}`,
+);
 
 const isSelectedItem = (characterInfo: CharacterInfo) =>
   selectedCharacter.value != undefined &&
