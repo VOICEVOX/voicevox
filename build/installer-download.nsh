@@ -4,6 +4,7 @@
 !ifndef BUILD_UNINSTALLER
 !define VOICEVOX_AUTO_START_APP
 
+; 空の customFinishPage で electron-builder の標準完了画面を省略する
 !macro customFinishPage
 !macroend
 
