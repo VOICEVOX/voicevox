@@ -6,8 +6,6 @@ import type {
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
-import { setThemeToCss } from "@/domain/dom";
-import { themes } from "@/domain/theme";
 import type { EngineId } from "@/type/preload";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
@@ -258,13 +256,6 @@ function createWelcomeStore() {
     }
   };
 
-  const applyThemeFromConfig = async () => {
-    const currentTheme = await window.welcomeBackend.getCurrentTheme();
-    const theme = themes.find((value) => value.name === currentTheme);
-    assertNonNullable(theme, `Theme not found: ${currentTheme}`);
-    setThemeToCss(theme);
-  };
-
   const installEngine = async (engineId: EngineId) => {
     const target = getSelectedRuntimeTarget(engineId);
     setEngineProgress(engineId, { type: "download", progress: 0 });
@@ -302,7 +293,6 @@ function createWelcomeStore() {
       },
     });
     void loadEngineEmbeddedInfos();
-    void applyThemeFromConfig();
   };
 
   return {

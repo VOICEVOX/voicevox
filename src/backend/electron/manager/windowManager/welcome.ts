@@ -1,6 +1,7 @@
 import path from "node:path";
 import {
   BrowserWindow,
+  nativeTheme,
   dialog,
   type MessageBoxOptions,
   type MessageBoxSyncOptions,
@@ -12,7 +13,12 @@ import { getConfigManager } from "../../electronConfig";
 import { getAppStateController } from "../../appStateController";
 import { createIpcSendProxy, type IpcSendProxy } from "../../ipc";
 import { getWelcomeIpcMainHandleManager } from "../welcomeIpcMainHandleManager";
-import { themes } from "@/domain/theme";
+import {
+  getThemeByIsDark,
+  getThemeByName,
+  resolveNativeTheme,
+  themes,
+} from "@/domain/theme";
 import type { WelcomeIpcSOData } from "@/welcome/backend/ipcType";
 
 type WindowManagerOption = {
@@ -71,8 +77,12 @@ class WelcomeWindowManager {
     }
     const configManager = getConfigManager();
     const currentTheme = configManager.get("currentTheme");
-    const backgroundColor = themes.find((value) => value.name == currentTheme)
-      ?.colors.background;
+    nativeTheme.themeSource = resolveNativeTheme(currentTheme, themes);
+    const backgroundColor =
+      currentTheme === "System"
+        ? getThemeByIsDark(nativeTheme.shouldUseDarkColors, themes).colors
+            .background
+        : getThemeByName(currentTheme, themes).colors.background;
 
     const win = new BrowserWindow({
       minWidth: 320,

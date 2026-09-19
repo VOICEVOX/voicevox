@@ -7,6 +7,7 @@ import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
 import App from "@/components/App.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { themePlugin } from "@/plugins/themePlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
@@ -40,6 +41,7 @@ createApp(App)
       Notify,
     },
   })
+  .use(themePlugin)
   .use(hotkeyPlugin)
   .use(ipcMessageReceiver, { store })
   .use(markdownItPlugin)

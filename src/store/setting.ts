@@ -1,7 +1,7 @@
 import type { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
-import { themes } from "@/domain/theme";
+import { themes, resolveNativeTheme } from "@/domain/theme";
 import {
   hideAllLoadingScreen,
   showAlertDialog,
@@ -39,7 +39,6 @@ export const settingStoreState: SettingStoreState = {
   engineInfos: {},
   engineManifests: {},
   currentTheme: "Default",
-  availableThemes: [],
   editorFont: "default",
   showTextLineNumber: false,
   showAddAudioItemButton: true,
@@ -90,10 +89,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       });
 
-      mutations.SET_AVAILABLE_THEMES({
-        themes,
-      });
-      void actions.SET_CURRENT_THEME_SETTING({
+      mutations.SET_CURRENT_THEME_SETTING({
         currentTheme: await window.backend.getSetting("currentTheme"),
       });
 
@@ -242,21 +238,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { currentTheme }: { currentTheme: string }) {
       state.currentTheme = currentTheme;
     },
-    action({ state, mutations }, { currentTheme }: { currentTheme: string }) {
+    action({ mutations }, { currentTheme }: { currentTheme: string }) {
       void window.backend.setSetting("currentTheme", currentTheme);
-      const theme = state.availableThemes.find((value) => {
-        return value.name == currentTheme;
-      });
-
-      if (theme == undefined) {
-        throw Error("Theme not found");
-      }
-
-      window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
-
-      mutations.SET_CURRENT_THEME_SETTING({
-        currentTheme: currentTheme,
-      });
+      window.backend.setNativeTheme(resolveNativeTheme(currentTheme, themes));
+      mutations.SET_CURRENT_THEME_SETTING({ currentTheme });
     },
   },
 

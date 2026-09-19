@@ -35,7 +35,8 @@ import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
 import { useMenuBarData as useSongMenuBarData } from "@/components/Song/menuBarData";
-import { setFontToCss, setThemeToCss } from "@/domain/dom";
+import { setFontToCss } from "@/domain/dom";
+import { useTheme } from "@/plugins/themePlugin";
 import { concatMenuBarData } from "@/components/Menu/MenuBar/menuBarData";
 import { isElectron } from "@/helpers/platform";
 import { useElectronMenuBarData } from "@/backend/electron/renderer/menuBarData";
@@ -87,21 +88,14 @@ watchEffect(
   { flush: "post" },
 );
 
-// テーマの変更を監視してCSS変数を変更する
-watchEffect(() => {
-  const theme = store.state.availableThemes.find((value) => {
-    return value.name == store.state.currentTheme;
-  });
-  if (theme == undefined) {
-    // NOTE: Vuexが初期化されていない場合はまだテーマが読み込まれていないので無視
-    if (store.state.isVuexReady) {
-      throw Error(`Theme not found: ${store.state.currentTheme}`);
-    } else {
-      return;
-    }
-  }
-  setThemeToCss(theme);
-});
+const { setCurrentTheme } = useTheme();
+watch(
+  () => store.state.currentTheme,
+  (currentTheme) => setCurrentTheme(currentTheme),
+  {
+    immediate: true,
+  },
+);
 
 // ソングの再生デバイスを同期
 watchEffect(() => {

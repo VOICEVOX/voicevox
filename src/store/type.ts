@@ -29,7 +29,6 @@ import type {
   AcceptTermsStatus,
   MoraDataType,
   SavingSetting,
-  ThemeConf,
   ExperimentalSettingType,
   ToolbarSettingType,
   UpdateInfo,
@@ -2127,7 +2126,6 @@ export type SettingStoreState = {
   engineInfos: Record<EngineId, EngineInfo>;
   engineManifests: Record<EngineId, EngineManifest>;
   currentTheme: string;
-  availableThemes: ThemeConf[];
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSettingType;
@@ -2349,10 +2347,6 @@ export type UiStoreTypes = {
   SET_ACTIVE_POINT_SCROLL_MODE: {
     mutation: { activePointScrollMode: ActivePointScrollMode };
     action(payload: { activePointScrollMode: ActivePointScrollMode }): void;
-  };
-
-  SET_AVAILABLE_THEMES: {
-    mutation: { themes: ThemeConf[] };
   };
 
   DETECT_UNMAXIMIZED: {
