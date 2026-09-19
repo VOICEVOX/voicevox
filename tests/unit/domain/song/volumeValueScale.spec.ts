@@ -27,27 +27,4 @@ describe("volumeValueScale", () => {
     expect(relativeVolumeValueScale.formatDbLabel(0)).toBe("0.0");
     expect(relativeVolumeValueScale.formatDbLabel(-0.04)).toBe("0.0");
   });
-
-  it("相対ボリューム用グリッド線を定義する", () => {
-    expect(
-      relativeVolumeValueScale.gridLines
-        .filter((line) => line.kind !== "minor")
-        .map((line) => line.label),
-    ).toEqual(["+12", "+6", "0", "-6", "-12"]);
-    expect(
-      relativeVolumeValueScale.gridLines
-        .filter((line) => line.kind === "minor")
-        .map((line) => line.db),
-    ).toEqual([9, 3, -3, -9]);
-    const baseline = relativeVolumeValueScale.gridLines.find(
-      (line) => line.kind === "baseline",
-    );
-    expect(baseline?.db).toBe(0);
-    expect(baseline?.labelOnly).toBeUndefined();
-    expect(
-      relativeVolumeValueScale.gridLines
-        .filter((line) => line.labelOnly !== true)
-        .map((line) => line.label),
-    ).toEqual(["+9", "+6", "+3", "0", "-3", "-6", "-9"]);
-  });
 });

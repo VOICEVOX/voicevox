@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   buildVolumeSegments,
+  buildVolumeEndpointNodes,
+  isVolumeEndpointInFeedbackRange,
+  splitVolumeSegmentAtBaseline,
   filterVolumeSegmentsByBaseXRange,
 } from "@/components/Song/SequencerVolumeEditor/renderer";
 import {
@@ -57,6 +60,129 @@ describe("buildVolumeSegments", () => {
     expect(findFirstVolumePointAtOrAfter(segment, 21)).toBe(3);
     expect(findFirstVolumePointAfter(segment, 20)).toBe(3);
     expect(findFirstVolumePointAfter(segment, 30)).toBe(4);
+  });
+});
+
+describe("splitVolumeSegmentAtBaseline", () => {
+  const point = (baseX: number, normalizedY: number) => ({
+    baseX,
+    normalizedY,
+  });
+
+  it("基準線を跨ぐ位置を補間し、増幅と減衰の面を分ける", () => {
+    expect(
+      splitVolumeSegmentAtBaseline([point(0, 0.75), point(30, 0)], 0.5),
+    ).toEqual([
+      [point(0, 0.75), point(10, 0.5)],
+      [point(10, 0.5), point(30, 0)],
+    ]);
+  });
+
+  it("0dBの平坦部は塗らず、前後の面をその端まで描く", () => {
+    expect(
+      splitVolumeSegmentAtBaseline(
+        [point(0, 0.75), point(10, 0.5), point(20, 0.5), point(30, 0.25)],
+        0.5,
+      ),
+    ).toEqual([
+      [point(0, 0.75), point(10, 0.5)],
+      [point(20, 0.5), point(30, 0.25)],
+    ]);
+    expect(
+      splitVolumeSegmentAtBaseline([point(0, 0.5), point(10, 0.5)], 0.5),
+    ).toEqual([]);
+  });
+});
+
+describe("buildVolumeEndpointNodes", () => {
+  const point = (baseX: number, normalizedY = 0.5) => ({ baseX, normalizedY });
+  const viewInfo = {
+    viewportWidth: 200,
+    viewportHeight: 100,
+    zoomX: 1,
+    offsetX: 0,
+    leftPadding: 48,
+  };
+
+  it("中間の編集位置に丸を付けず、区間の両端だけに配置する", () => {
+    expect(
+      buildVolumeEndpointNodes(
+        [[point(0), point(20, 0.75), point(40)]],
+        viewInfo,
+      ),
+    ).toEqual([
+      { x: 48, y: 50, startBaseX: 0, endBaseX: 0 },
+      { x: 88, y: 50, startBaseX: 40, endBaseX: 40 },
+    ]);
+  });
+
+  it("横距離が8px未満の隣接端点を中間位置に統合する", () => {
+    expect(
+      buildVolumeEndpointNodes(
+        [
+          [point(0), point(20, 0.75)],
+          [point(27, 0.25), point(50)],
+        ],
+        viewInfo,
+      ),
+    ).toEqual([
+      { x: 48, y: 50, startBaseX: 0, endBaseX: 0 },
+      { x: 71.5, y: 50, startBaseX: 20, endBaseX: 27 },
+      { x: 98, y: 50, startBaseX: 50, endBaseX: 50 },
+    ]);
+  });
+
+  it("8pxちょうどでは統合せず、判定にはズーム後の距離を使う", () => {
+    expect(
+      buildVolumeEndpointNodes([[point(0), point(4)]], {
+        ...viewInfo,
+        zoomX: 2,
+      }),
+    ).toEqual([
+      { x: 48, y: 50, startBaseX: 0, endBaseX: 0 },
+      { x: 56, y: 50, startBaseX: 4, endBaseX: 4 },
+    ]);
+    expect(buildVolumeEndpointNodes([[point(0), point(4)]], viewInfo)).toEqual([
+      { x: 50, y: 50, startBaseX: 0, endBaseX: 4 },
+    ]);
+  });
+
+  it("スクロール端に偽の端点を作らず、1点だけの区間も表示しない", () => {
+    expect(
+      buildVolumeEndpointNodes(
+        [[point(0), point(40), point(300)], [point(320)]],
+        { ...viewInfo, offsetX: 20 },
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("isVolumeEndpointInFeedbackRange", () => {
+  it("ホバー・描画の範囲だけ端点を強調する", () => {
+    const feedbackRange = { startBaseX: 0, endBaseX: 25 };
+    expect(
+      isVolumeEndpointInFeedbackRange(
+        { startBaseX: 20, endBaseX: 20 },
+        feedbackRange,
+      ),
+    ).toBe(true);
+    expect(
+      isVolumeEndpointInFeedbackRange(
+        { startBaseX: 30, endBaseX: 30 },
+        feedbackRange,
+      ),
+    ).toBe(false);
+  });
+
+  it("統合した端点も片側の強調を引き継ぎ、範囲がなくなれば通常に戻る", () => {
+    const merged = { startBaseX: 20, endBaseX: 27 };
+    expect(
+      isVolumeEndpointInFeedbackRange(merged, {
+        startBaseX: 27,
+        endBaseX: 50,
+      }),
+    ).toBe(true);
+    expect(isVolumeEndpointInFeedbackRange(merged, undefined)).toBe(false);
   });
 });
 

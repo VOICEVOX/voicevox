@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="state != undefined"
+    v-if="state != undefined && showGuide"
     class="volume-value-guide-line"
     :style="guideLineStyle"
   ></div>
@@ -15,11 +15,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import {
-  VOLUME_EDITOR_ALPHA,
-  VOLUME_EDITOR_LAYOUT,
-  VOLUME_EDITOR_LINE_WIDTH,
-} from "./style";
+import { VOLUME_EDITOR_LAYOUT, VOLUME_EDITOR_LINE_WIDTH } from "./style";
 import { clamp } from "@/song/utility";
 
 defineOptions({
@@ -34,6 +30,7 @@ type VolumeEditorTooltipState = {
 
 const props = defineProps<{
   state?: VolumeEditorTooltipState;
+  showGuide: boolean;
   viewportWidth?: number;
   viewportHeight?: number;
 }>();
@@ -47,17 +44,17 @@ const tooltipStyle = computed(() => {
   if (tooltip == undefined || width == undefined || height == undefined) {
     return undefined;
   }
-  const minLeft = VOLUME_EDITOR_LAYOUT.tooltipPaddingPx;
-  // エリアが狭くてツールチップが余白内に収まらない場合は、
-  // 左上の余白位置に置き、右下へのはみ出しは許容する
+  const minLeft = VOLUME_EDITOR_LAYOUT.keyColumnWidthPx;
+  // エリアが狭くてツールチップが収まらない場合は、
+  // レーンの左上に置き、右下へのはみ出しは許容する
   const maxLeft = Math.max(
     minLeft,
-    width - VOLUME_EDITOR_LAYOUT.tooltipWidthPx - minLeft,
+    width - VOLUME_EDITOR_LAYOUT.tooltipClampWidthPx,
   );
-  const minTop = VOLUME_EDITOR_LAYOUT.tooltipPaddingPx;
+  const minTop = 0;
   const maxTop = Math.max(
     minTop,
-    height - VOLUME_EDITOR_LAYOUT.tooltipHeightPx - minTop,
+    height - VOLUME_EDITOR_LAYOUT.tooltipHeightPx,
   );
   const left = clamp(
     tooltip.pointerX + VOLUME_EDITOR_LAYOUT.tooltipOffsetPx,
@@ -96,8 +93,7 @@ const guideLineStyle = computed(() => {
   z-index: 2;
   height: 0;
   border-top: v-bind("`${VOLUME_EDITOR_LINE_WIDTH.tooltipGuide}px`") solid
-    color-mix(in oklch, var(--scheme-color-primary) 60%, transparent);
-  opacity: v-bind("VOLUME_EDITOR_ALPHA.tooltipGuide");
+    var(--scheme-color-song-volume-value-guide-line);
   transform: translateY(-0.5px);
   pointer-events: none;
 }
@@ -106,15 +102,19 @@ const guideLineStyle = computed(() => {
   position: absolute;
   z-index: calc(#{vars.$z-index-song-tool-palette} + 1);
   box-sizing: border-box;
-  width: v-bind("`${VOLUME_EDITOR_LAYOUT.tooltipWidthPx}px`");
-  min-height: v-bind("`${VOLUME_EDITOR_LAYOUT.tooltipHeightPx}px`");
-  padding: 3px 6px;
-  border-radius: 4px;
-  // カーブと重なっても下が透けて見えるように半透明にする
-  background: rgb(0 0 0 / 72%);
-  color: #fff;
-  font-size: 11px;
-  line-height: 14px;
+  min-width: v-bind("`${VOLUME_EDITOR_LAYOUT.tooltipMinWidthPx}px`");
+  height: v-bind("`${VOLUME_EDITOR_LAYOUT.tooltipHeightPx}px`");
+  padding: 0 8px;
+  border-radius: var(--radius-basis);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--scheme-color-song-volume-tooltip-container);
+  border: 1px solid var(--scheme-color-song-volume-tooltip-border);
+  color: var(--scheme-color-song-on-volume-tooltip-container);
+  box-shadow: 0 2px 4px var(--scheme-color-song-volume-tooltip-shadow);
+  font-size: 12px;
+  line-height: 16px;
   font-variant-numeric: tabular-nums;
   text-align: center;
   white-space: nowrap;

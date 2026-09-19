@@ -13,7 +13,7 @@ describe("DrawVolumeState", () => {
     vi.unstubAllGlobals();
   });
 
-  it("idle中はポインタ位置の編集可能区間をハイライトする", () => {
+  it("idle中はポインタ位置の編集可能区間をハイライトし、ホバー座標を保持する", () => {
     const context = createContext();
     const state = new DrawVolumeIdleState();
 
@@ -31,6 +31,22 @@ describe("DrawVolumeState", () => {
 
     expect(context.cursorState.value).toBe("DRAW");
     expect(context.highlightedFrame.value).toBe(10);
+    expect(context.hoverPointer.value).toEqual({ x: 100, y: 60 });
+
+    state.process({
+      input: {
+        type: "pointerEvent",
+        targetArea: "VolumeEditorArea",
+        pointerEvent: { type: "pointermove" } as PointerEvent,
+        pointerInfo: createPointerInfo(150, 0),
+      },
+      context,
+      setNextState: vi.fn(),
+    });
+
+    expect(context.cursorState.value).toBe("NOT_ALLOWED");
+    expect(context.highlightedFrame.value).toBeUndefined();
+    expect(context.hoverPointer.value).toBeUndefined();
 
     state.process({
       input: {
@@ -45,6 +61,7 @@ describe("DrawVolumeState", () => {
 
     expect(context.cursorState.value).toBe("UNSET");
     expect(context.highlightedFrame.value).toBeUndefined();
+    expect(context.hoverPointer.value).toBeUndefined();
   });
 
   it("描画中は現在の編集可能区間へハイライトを追随させる", () => {
@@ -183,6 +200,7 @@ function createContext(
     cursorState: ref("UNSET"),
     tooltipData: ref(undefined),
     highlightedFrame: ref(undefined),
+    hoverPointer: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     getEditableFrameRanges: () => editableRanges,
     store: {
