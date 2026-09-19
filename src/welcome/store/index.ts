@@ -192,7 +192,7 @@ function createWelcomeStore() {
     engineState.latestInfo.progress = progressInfo;
   };
 
-  const loadEngineEmbeddedInfos = async () => {
+  const fetchEngineInfos = async () => {
     allEngineState.value = { type: "loading" };
 
     const engineIds =
@@ -215,9 +215,12 @@ function createWelcomeStore() {
       engineStates,
     };
 
-    for (const engineId of engineIds) {
-      void fetchCurrentEngineInfo(engineId);
-    }
+    await Promise.all(
+      engineIds.map(async (engineId) => {
+        await fetchCurrentEngineInfo(engineId);
+        await fetchEngineLatestInfo(engineId);
+      }),
+    );
   };
 
   const fetchCurrentEngineInfo = async (engineId: EngineId) => {
@@ -228,7 +231,6 @@ function createWelcomeStore() {
       await window.welcomeBackend.getEnginePackageCurrentInfo(engineId);
     const engineState = allEngineState.value.engineStates[engineId];
     engineState.currentInfo = currentInfo;
-    void fetchEngineLatestInfo(engineId);
   };
 
   const fetchEngineLatestInfo = async (engineId: EngineId) => {
@@ -265,7 +267,9 @@ function createWelcomeStore() {
     setThemeToCss(theme);
   };
 
-  const installEngine = async (engineId: EngineId) => {
+  const installEngine = async (
+    engineId: EngineId,
+  ): Promise<"succeeded" | "failed"> => {
     const target = getSelectedRuntimeTarget(engineId);
     setEngineProgress(engineId, { type: "download", progress: 0 });
     try {
@@ -282,10 +286,13 @@ function createWelcomeStore() {
         error,
       );
       await showErrorDialog("エンジンのインストールに失敗しました", error);
+      return "failed";
     } finally {
       setEngineProgress(engineId, { type: "idle" });
       void fetchCurrentEngineInfo(engineId);
     }
+
+    return "succeeded";
   };
 
   const switchToMainWindow = () => {
@@ -295,14 +302,63 @@ function createWelcomeStore() {
     void window.welcomeBackend.launchMainWindow();
   };
 
-  const initialize = () => {
+  /**
+   * 条件に合う場合にエンジンを自動インストールしてメインウィンドウを起動する。
+   * 条件は、エンジン未インストールで、候補が１つで、最新情報が取得できていること。
+   */
+  const autoInstallEngineAndLaunchMainWindow = async () => {
+    if (allEngineState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+
+    // 既にエンジン導入済みな場合は何もしない
+    const allEngineStateLoaded = allEngineState.value;
+    if (
+      allEngineStateLoaded.engineIds.some(
+        (engineId) =>
+          allEngineStateLoaded.engineStates[engineId].currentInfo.status ===
+          "installed",
+      )
+    ) {
+      return;
+    }
+
+    // 自動インストール候補が２つ以上ある場合は何もしない
+    if (allEngineStateLoaded.engineIds.length > 1) {
+      window.welcomeBackend.logWarn(
+        "Multiple default engines found. Skipping automatic installation.",
+      );
+      return;
+    }
+
+    // 最新情報を取得できていない場合は何もしない
+    if (allEngineStateLoaded.engineIds.length === 0) {
+      throw new UnreachableError();
+    }
+    const [engineId] = allEngineStateLoaded.engineIds;
+    const engineState = allEngineStateLoaded.engineStates[engineId];
+    if (engineState.latestInfo.type !== "fetched") {
+      window.welcomeBackend.logWarn(
+        `Engine package ${engineId} latest info is unavailable. Skipping automatic installation.`,
+      );
+      return;
+    }
+
+    const result = await installEngine(engineId);
+    if (result === "succeeded") {
+      await window.welcomeBackend.launchMainWindow();
+    }
+  };
+
+  const startup = async () => {
     window.welcomeBackend.registerIpcHandler({
       updateEngineDownloadProgress: ({ engineId, progress, type }) => {
         setEngineProgress(engineId, { progress, type });
       },
     });
-    void loadEngineEmbeddedInfos();
     void applyThemeFromConfig();
+    await fetchEngineInfos();
+    await autoInstallEngineAndLaunchMainWindow();
   };
 
   return {
@@ -315,7 +371,7 @@ function createWelcomeStore() {
     fetchEngineLatestInfo,
     installEngine,
     switchToMainWindow,
-    initialize,
+    startup,
   };
 }
 

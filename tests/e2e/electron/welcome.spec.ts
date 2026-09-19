@@ -37,42 +37,20 @@ test.beforeEach(async () => {
 test("エディタウィンドウを起動できる", async ({ launchElectronApp }) => {
   const app = await launchElectronApp();
 
-  const welcomePage =
-    await test.step("デフォルトエンジンをインストールする", async () => {
-      const welcomePage = await app.firstWindow({
+  await test.step("自動導入後にエディタを表示する", async () => {
+    let editorPage = app
+      .windows()
+      .find((page) => !page.url().includes("/welcome/"));
+    if (editorPage == undefined) {
+      editorPage = await app.waitForEvent("window", {
+        predicate: (page) => !page.url().includes("/welcome/"),
         timeout: process.env.CI ? 90000 : 60000,
       });
-      await welcomePage.waitForSelector("text=エンジンのセットアップ", {
-        timeout: 60000,
-      });
+    }
 
-      const install = welcomePage.getByText(/インストール（.+?）/);
-      await install.waitFor({
-        timeout: 60000,
-      });
-      await install.click();
-
-      const reinstall = welcomePage.getByText(/再インストール（.+?）/);
-      await reinstall.waitFor({
-        timeout: 60000,
-      });
-
-      return welcomePage;
-    });
-
-  await test.step("エディタを起動する", async () => {
-    const launchEditor = welcomePage.getByText(/エディタを起動/);
-    await expect(launchEditor).toBeEnabled({
-      timeout: 60000,
-    });
-    await launchEditor.click();
-  });
-
-  await test.step("エディタウィンドウが開く", async () => {
-    const editorPage = await app.waitForEvent("window", {
-      timeout: process.env.CI ? 90000 : 60000,
-    });
-    await editorPage.waitForSelector("text=利用規約に関するお知らせ", {
+    await expect(
+      editorPage.getByRole("button", { name: "エンジン" }),
+    ).toBeVisible({
       timeout: 60000,
     });
   });
