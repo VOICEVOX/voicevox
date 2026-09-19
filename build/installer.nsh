@@ -1,3 +1,5 @@
+; エンジン同梱版と非同梱版で使う Windows インストーラー用の NSIS スクリプト
+; 同梱版の分割ファイル処理と、両方に共通するインストール・アンインストール処理を定義する
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
 !include "funcs.nsh"
