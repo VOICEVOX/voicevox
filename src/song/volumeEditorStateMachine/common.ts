@@ -55,6 +55,14 @@ export type VolumeEditorRefs = {
    * 増減し、区間の値を保持すると既に消えた区間や動く前の境界を指し続けるため。
    */
   readonly highlightedFrame: Ref<number | undefined>;
+  /**
+   * ホバー中のポインタの画面座標。
+   * ツールチップの値はここでは持たず、highlightedFrameのその時点のカーブの値から導く。
+   * 値を保持すると、ポインタを動かさずにUndoなどでカーブが変わったときに古いままになるため。
+   */
+  readonly hoverPointer: Ref<
+    { readonly x: number; readonly y: number } | undefined
+  >;
 };
 
 export type VolumeEditorComputedRefs = {

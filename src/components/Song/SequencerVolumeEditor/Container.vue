@@ -2,6 +2,8 @@
   <Presentation
     :viewportInfo="props.viewportInfo"
     :effectiveFramewise
+    :editableFrameRanges
+    :notes
     :previewEraseRanges
     :tempos
     :tpqn
@@ -9,6 +11,7 @@
     :previewMode
     :cursorState
     :tooltipData
+    :highlightedFrame
     :highlightedEditableRange
     :tool
     :isDark
@@ -20,7 +23,10 @@
     @zoomTimeline="(anchorX, deltaY) => emit('zoomTimeline', anchorX, deltaY)"
   >
     <template #grid>
-      <SequencerParameterGrid :viewportInfo="props.viewportInfo" />
+      <SequencerParameterGrid
+        :viewportInfo="props.viewportInfo"
+        beatLineColorVariable="--scheme-color-song-volume-grid-beat-line"
+      />
     </template>
   </Presentation>
 </template>
@@ -34,6 +40,7 @@ import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
 import { relativeVolumeEditMode } from "@/song/volumeEditMode";
+import { getDefaultLyric } from "@/song/domain";
 import { buildVolumeEditDisplayData } from "@/song/volumeEditDisplay";
 import {
   deriveVolumeEditableFrameRanges,
@@ -62,6 +69,14 @@ const volumeEditMode = relativeVolumeEditMode;
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
+const notes = computed(() =>
+  selectedTrack.value.notes.map((note) => ({
+    ...note,
+    lyric:
+      note.lyric ??
+      getDefaultLyric(note.noteNumber, store.state.defaultLyricMode),
+  })),
+);
 const tempos = computed(() => store.state.tempos);
 const tpqn = computed(() => store.state.tpqn);
 const editorFrameRate = computed(() => store.state.editorFrameRate);
@@ -87,6 +102,9 @@ const {
   highlightedFrame,
 } = useVolumeEditorStateMachine(store, {
   getEditableFrameRanges: () => editableFrameRanges.value,
+  // 実効値はステートマシンのプレビューから導くため後で定義されるが、
+  // 呼ばれるのはポインタ操作時なので初期化順は問題にならない
+  getEffectiveVolumeValue: (frame) => effectiveFramewise.value[frame],
 });
 
 // レンダリングが進むと編集可能区間は増減し、区間オブジェクトを保持すると

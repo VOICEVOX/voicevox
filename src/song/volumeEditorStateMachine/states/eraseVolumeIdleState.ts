@@ -18,6 +18,7 @@ export class EraseVolumeIdleState implements State<
     context.cursorState.value = "UNSET";
     context.tooltipData.value = undefined;
     context.highlightedFrame.value = undefined;
+    context.hoverPointer.value = undefined;
   }
 
   process({
@@ -41,6 +42,7 @@ export class EraseVolumeIdleState implements State<
     if (pointerEvent.type === "pointerleave") {
       context.cursorState.value = "UNSET";
       context.highlightedFrame.value = undefined;
+      context.hoverPointer.value = undefined;
       return;
     }
 
@@ -52,6 +54,9 @@ export class EraseVolumeIdleState implements State<
     const isEditable = editableRange != undefined;
     context.cursorState.value = isEditable ? "ERASE" : "NOT_ALLOWED";
     context.highlightedFrame.value = isEditable ? position.frame : undefined;
+    context.hoverPointer.value = isEditable
+      ? { x: pointerInfo.x, y: pointerInfo.y }
+      : undefined;
 
     if (
       pointerEvent.type === "pointerdown" &&
@@ -70,5 +75,6 @@ export class EraseVolumeIdleState implements State<
     context.cursorState.value = "UNSET";
     context.tooltipData.value = undefined;
     context.highlightedFrame.value = undefined;
+    context.hoverPointer.value = undefined;
   }
 }
