@@ -23,20 +23,6 @@
 
 <details><summary>クリックで展開</summary>
 
-初回起動時は Apple に登録されていないアプリケーションとして警告ダイアログが表示されるかもしれません。
-
-<img src="res/gatekeeper.png" style="max-height: 16rem" alt="「VOICEVOXは開発を検証できないため開けません」というダイアログ"/>
-
-その際は Finder で `Ctrl` キーを押しながら VOICEVOX アプリケーションアイコンをクリックし、ショートカットメニューから「開く」を選択してから、「開く」をクリックしてください。
-
-もしくは、アップルメニューから「システム設定」を選択して「プライバシーとセキュリティ」 をクリックし、ページの下にあるセキュリティの「このまま開く」を選んでください。
-
-<img src="res/macos-system-settings-security.png" style="max-height: 16rem" alt="Macのシステム設定の「プライバシーとセキュリティ」を開いた画面"/>
-
-macOS Ventura 以前をお使いの場合は、アップルメニューから「システム環境設定」を選択して「セキュリティとプライバシー」 をクリックし、「一般」パネルで「このまま開く」選んでください。
-
-<img src="res/macos-system-preferences-security.png" style="max-height: 16rem" alt="Macのシステム環境設定の「セキュリティとプライバシー」を開いた画面"/>
-
 #### Apple Silicon 搭載の Mac をお使いの場合
 
 初めて VOICEVOX を起動する際に Rosetta のインストールを促される場合は、案内に従ってインストールしてください。
