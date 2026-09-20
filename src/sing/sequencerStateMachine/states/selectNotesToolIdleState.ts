@@ -17,7 +17,7 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import type { Note } from "@/domain/project/type";
 import { NoteId } from "@/type/preload";
 import { clamp } from "@/sing/utility";
-import { uuid4 } from "@/helpers/random";
+import { randomInt32, uuid4 } from "@/helpers/random";
 
 export class SelectNotesToolIdleState implements State<
   SequencerStateDefinitions,
@@ -125,6 +125,7 @@ export class SelectNotesToolIdleState implements State<
               duration: context.snapTicks.value,
               noteNumber: clamp(input.cursorPos.noteNumber, 0, 127),
               lyric: undefined,
+              phonemeSeedSource: randomInt32(),
             };
 
             void context.store.actions.COMMAND_ADD_NOTES({

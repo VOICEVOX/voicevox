@@ -5,7 +5,7 @@ import type {
   RenderingEventInfo,
   RenderingResultInfo,
 } from "./type";
-import { uuid4 } from "@/helpers/random";
+import { randomInt32, uuid4 } from "@/helpers/random";
 import { createOpenAPIEngineMock } from "@/mock/engineMock";
 import {
   type PhraseForRender,
@@ -326,6 +326,7 @@ export class SongTrackRendererTestUtility {
         duration: quarterNoteDuration,
         noteNumber: pattern.noteNumbers[i],
         lyric: pattern.lyrics[i],
+        phonemeSeedSource: randomInt32(),
       });
     }
 
@@ -347,6 +348,7 @@ export class SongTrackRendererTestUtility {
         duration: quarterNoteDuration,
         noteNumber: 60,
         lyric: "て",
+        phonemeSeedSource: randomInt32(),
       },
       {
         id: NoteId(uuid4()),
@@ -354,6 +356,7 @@ export class SongTrackRendererTestUtility {
         duration: quarterNoteDuration,
         noteNumber: 62,
         lyric: "すと",
+        phonemeSeedSource: randomInt32(),
       },
     ];
   }

@@ -76,6 +76,7 @@ export const noteSchema = z.object({
   duration: z.number(),
   noteNumber: z.number(),
   lyric: z.union([z.string(), z.undefined()]), // 歌詞未入力のときはundefined
+  phonemeSeedSource: z.number(), // 音素のシード値の元になる値
 });
 
 export const singerSchema = z.object({

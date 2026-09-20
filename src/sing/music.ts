@@ -1,4 +1,5 @@
 import type { Note, Tempo, TimeSignature } from "@/domain/project/type";
+import { isInt32 } from "@/sing/utility";
 
 export type MeasuresBeats = {
   measures: number;
@@ -54,7 +55,9 @@ export const isValidNote = (note: Note) => {
     note.position >= 0 &&
     note.duration >= 1 &&
     note.noteNumber >= 0 &&
-    note.noteNumber <= 127
+    note.noteNumber <= 127 &&
+    // TODO: 音楽に関する検証ではないので、適切な置き場所ができたらそこへ移す
+    isInt32(note.phonemeSeedSource)
   );
 };
 

@@ -23,6 +23,7 @@ import {
   applyPhonemeTimingEdit,
   applyPitchEdit,
   applyVolumeEdit,
+  assignSeedingToPhonemes,
   calculatePhraseKey,
   toPhonemeTimings,
   toPhonemes,
@@ -818,6 +819,8 @@ const generateQuery = async (
     querySource.maxNonPauseEndFrame,
   );
   query.phonemes = toPhonemes(phonemeTimings);
+
+  assignSeedingToPhonemes(query.phonemes, querySource.notes);
 
   return query;
 };

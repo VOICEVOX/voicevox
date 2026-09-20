@@ -11,7 +11,7 @@ import { NoteId, type TrackId } from "@/type/preload";
 import type { Note } from "@/domain/project/type";
 import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
 import { clamp } from "@/sing/utility";
-import { uuid4 } from "@/helpers/random";
+import { randomInt32, uuid4 } from "@/helpers/random";
 
 export class AddNoteState implements State<
   SequencerStateDefinitions,
@@ -56,6 +56,7 @@ export class AddNoteState implements State<
       duration: context.snapTicks.value,
       noteNumber: clamp(this.cursorPosAtStart.noteNumber, 0, 127),
       lyric: undefined,
+      phonemeSeedSource: randomInt32(),
     };
     const noteEndPos = noteToAdd.position + noteToAdd.duration;
 

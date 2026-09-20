@@ -1,8 +1,12 @@
 import {
   applySmoothTransitions,
   calculateHash,
+  fmix32,
+  getLast,
   getNext,
   getPrev,
+  isInt32,
+  wrapToInt32,
 } from "@/sing/utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
@@ -11,17 +15,19 @@ import {
   PhraseKey,
   type EditorFrameAudioQuery,
 } from "@/store/type";
-import type { FramePhoneme } from "@/openapi";
+import type { FramePhoneme, Seeding } from "@/openapi";
 import { NoteId, type TrackId } from "@/type/preload";
 import type {
+  Note,
   PhonemeTimingEditData,
   Tempo,
   TimeSignature,
   Track,
 } from "@/domain/project/type";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
-import { ExhaustiveError } from "@/type/utility";
+import { ExhaustiveError, UnreachableError } from "@/type/utility";
 import { getRepresentableNoteTypes, isValidNotes } from "@/sing/music";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 const MAX_SNAP_TYPE = 32;
 
@@ -232,6 +238,7 @@ export type PhonemeTiming = {
   startFrame: number;
   endFrame: number;
   phoneme: string;
+  seeding: Seeding | undefined;
 };
 
 /**
@@ -246,6 +253,7 @@ export function toPhonemeTimings(phonemes: FramePhoneme[]) {
       startFrame: cumulativeFrame,
       endFrame: cumulativeFrame + phoneme.frameLength,
       phoneme: phoneme.phoneme,
+      seeding: phoneme.seeding ?? undefined,
     });
     cumulativeFrame += phoneme.frameLength;
   }
@@ -261,6 +269,7 @@ export function toPhonemes(phonemeTimings: PhonemeTiming[]) {
       phoneme: value.phoneme,
       frameLength: value.endFrame - value.startFrame,
       noteId: value.noteId,
+      seeding: value.seeding,
     }),
   );
 }
@@ -420,6 +429,87 @@ export function adjustPhonemeTimings(
     if (nextPhonemeTiming != undefined) {
       nextPhonemeTiming.startFrame = phonemeTiming.endFrame;
     }
+  }
+}
+
+/**
+ * 符号付き32bit整数の乱数列の、index番目の値を返す。
+ * seedが同じなら、indexが異なると値も必ず異なる。
+ *
+ * @param seed シード値。符号付き32bit整数。
+ * @param index 乱数列での位置。符号付き32bit整数。
+ */
+export function statelessRandomInt32(seed: number, index: number) {
+  if (!isInt32(seed) || !isInt32(index)) {
+    throw new Error("seed or index is not a 32-bit signed integer.");
+  }
+
+  // 奇数を掛けた値は、掛けた整数が異なれば、32bitに収まらない桁を捨てても同じ値にならないので、
+  // seedが同じでindexが異なる場合に同じ値が出ないように、奇数にしている
+  // また、黄金比から作った値は、小さな整数を掛けて32bitに収まらない桁を捨てても、0に近い値になりにくいので、
+  // seedが数値的に近い乱数列どうしで、indexを少しずらしただけで同じ値が出ないように、
+  // 2の32乗を黄金比で割って小数点以下を切り捨てた値にしている
+  const randomSequenceIncrement = 0x9e3779b9;
+
+  const hashInput = wrapToInt32(
+    seed + Math.imul(index, randomSequenceIncrement),
+  );
+  return fmix32(hashInput);
+}
+
+/**
+ * 各音素にシード値を割り当てる。
+ *
+ * 各音素のシード値は、その音素が属するノートのシード値のソースから求める。
+ * フレーズ前後のpauは、それぞれフレーズ先頭のノート、フレーズ末尾のノートに
+ * 属するものとして扱う。
+ *
+ * 学習時のシード値はランダムで、同じシード値が続く入力は学習データに無い形になって
+ * 推論の品質を下げる可能性があるため、同じノートに属する音素どうしには
+ * 必ず異なるシード値を割り当てる。
+ *
+ * pauに割り当てられるシード値は、pauが属するノートの音素の数が増減しても変わらない。
+ *
+ * @param phonemes シード値を割り当てる音素列。
+ * @param notes フレーズのノート列。
+ */
+export function assignSeedingToPhonemes(
+  phonemes: FramePhoneme[],
+  notes: Note[],
+) {
+  if (notes.length === 0) {
+    throw new UnreachableError("notes is empty.");
+  }
+  const seedSources = new Map(
+    notes.map((note) => [note.id, note.phonemeSeedSource]),
+  );
+  const phonemeIndicesInNote = computePhonemeIndicesInNote(phonemes);
+
+  for (const [i, phoneme] of phonemes.entries()) {
+    // seedSourceを基に生成される乱数列のseedIndex番目の値を、シード値として設定する
+    // pau以外の音素では、その音素が属するノートの乱数列の値を、0番目から順番に使う
+    // フレーズ先頭のpauでは、フレーズ先頭のノートの乱数列の-2番目の値を、
+    // フレーズ末尾のpauでは、フレーズ末尾のノートの乱数列の-1番目の値を使う
+    let seedSource: number;
+    let seedIndex: number;
+    if (phoneme.noteId != undefined) {
+      seedSource = getOrThrow(seedSources, NoteId(phoneme.noteId));
+      seedIndex = phonemeIndicesInNote[i];
+    } else if (i === 0) {
+      seedSource = notes[0].phonemeSeedSource;
+      seedIndex = -2;
+    } else if (i === phonemes.length - 1) {
+      seedSource = getLast(notes).phonemeSeedSource;
+      seedIndex = -1;
+    } else {
+      // フレーズ内のノートは途切れないため、pauはフレーズの前後にしか現れない
+      throw new UnreachableError(
+        "A phoneme without noteId is not at either end of the phrase.",
+      );
+    }
+    phoneme.seeding = {
+      seed: statelessRandomInt32(seedSource, seedIndex),
+    };
   }
 }
 
