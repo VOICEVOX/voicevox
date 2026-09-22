@@ -244,5 +244,5 @@ jobs:
       - name: Check pinact
         uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
         with:
-          skip_push: "true"
+          fix: false
           min_age: "7"
