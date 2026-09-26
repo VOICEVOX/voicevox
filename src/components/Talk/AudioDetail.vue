@@ -172,6 +172,7 @@ registerHotkeyWithCleanup({
       void store.actions.COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH({
         audioKey: store.getters.ACTIVE_AUDIO_KEY,
         accentPhraseIndex: store.getters.AUDIO_PLAY_START_POINT,
+        type: "both",
       });
     }
   },

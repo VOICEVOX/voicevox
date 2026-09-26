@@ -187,7 +187,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Purge disk space
         if: startsWith(matrix.os, 'ubuntu-')
@@ -216,16 +216,16 @@ jobs:
           $sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: ".node-version"
           cache: "pnpm"
 
       - name: Cache Electron
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.ELECTRON_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -233,7 +233,7 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
 
       - name: Cache Electron-Builder
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.ELECTRON_BUILDER_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -244,7 +244,7 @@ jobs:
         run: pnpm i --frozen-lockfile
 
       - name: Checkout Product Version Resource
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: VOICEVOX/voicevox_resource
           ref: ${{ env.VOICEVOX_RESOURCE_VERSION }}
@@ -287,10 +287,10 @@ jobs:
           gtm_id=$(jq -er '.gtm_container_id' resource/editor/metas.json)
           echo "VITE_GTM_CONTAINER_ID=$gtm_id" >> $GITHUB_ENV
 
-      - name: Define Code Signing Envs
+      - name: Setup Windows Code Signing
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash tools/codesign_setup.bash
+          bash tools/codesign_setup_windows.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
           SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
           echo "::add-mask::$THUMBPRINT"
@@ -305,6 +305,24 @@ jobs:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
           SIGNTOOL_PATH_PATH: /tmp/signtool_path.txt
 
+      - name: Setup macOS Code Signing
+        if: startsWith(matrix.os, 'macos-') && github.event.inputs.code_signing == 'true'
+        run: |
+          bash tools/codesign_setup_macos.bash
+
+          echo "CSC_LINK=$CSC_LINK" >> $GITHUB_ENV
+          echo "CSC_KEY_PASSWORD=$CSC_KEY_PASSWORD" >> $GITHUB_ENV
+          echo "APPLE_API_KEY_ID=$APPLE_API_KEY_ID" >> $GITHUB_ENV
+          echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> $GITHUB_ENV
+          echo "APPLE_API_KEY=$APPLE_API_KEY_PATH" >> $GITHUB_ENV
+        env:
+          CSC_LINK: ${{ secrets.APPLE_P12_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_P12_PASSWORD }}
+          APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_PATH: /tmp/voicevox-apple-api-key.p8
+
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
         env:
@@ -312,6 +330,7 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+          MACOS_AD_HOC_CODE_SIGNING: ${{ startsWith(matrix.os, 'macos-') && github.event.inputs.code_signing != 'true' && 'true' || 'false' }}
           VOICEVOX_ENGINE_DIR: ${{ matrix.voicevox_engine_asset_name != null && format('{0}/voicevox_engine', github.workspace) || '' }}
           VOICEVOX_ENGINE_PLACEMENT_MODE: ${{ matrix.voicevox_engine_asset_name != null && 'move' || 'none' }}
 
@@ -319,23 +338,31 @@ jobs:
           USE_HARD_LINKS: false
         run: pnpm run electron:build --dir
 
-      - name: Reset Code Signing Envs
+      - name: Cleanup Windows Code Signing
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash tools/codesign_cleanup.bash
+          bash tools/codesign_cleanup_windows.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
           echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
         env:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
 
+      - name: Cleanup macOS Code Signing
+        if: startsWith(matrix.os, 'macos-') && github.event.inputs.code_signing == 'true'
+        run: |
+          bash tools/codesign_cleanup_macos.bash
+          echo 'CSC_LINK=' >> $GITHUB_ENV
+          echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
+          echo 'APPLE_API_KEY_ID=' >> $GITHUB_ENV
+          echo 'APPLE_API_ISSUER=' >> $GITHUB_ENV
+          echo 'APPLE_API_KEY=' >> $GITHUB_ENV
+        env:
+          APPLE_API_KEY_PATH: /tmp/voicevox-apple-api-key.p8
+
       - name: Rename Prepackage
         run: |
           mv ${{ matrix.artifact_path }} ./prepackage
-
-      - name: Ad hoc code signing
-        if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
-        run: codesign --force --deep -s - prepackage/VOICEVOX.app
 
       - name: Create Linux tar.gz (without nvidia)
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
@@ -348,7 +375,7 @@ jobs:
 
       - name: Upload Linux tar.gz (without nvidia) to Artifacts
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.artifact_name }}-targz
           path: |-
@@ -356,7 +383,7 @@ jobs:
 
       - name: Upload Linux tar.gz (without nvidia) to Release Assets
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.version != ''
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -378,7 +405,7 @@ jobs:
 
       - name: Upload Windows & Mac zip (without nvidia) to Artifacts
         if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.artifact_name }}-zip
           path: |-
@@ -386,7 +413,7 @@ jobs:
 
       - name: Upload Windows & Mac zip (without nvidia) to Release Assets
         if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.version != ''
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -399,10 +426,10 @@ jobs:
         run: |
           rm ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
 
-      - name: Define Code Signing Envs
+      - name: Setup Windows Code Signing
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash tools/codesign_setup.bash
+          bash tools/codesign_setup_windows.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
           SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
           echo "::add-mask::$THUMBPRINT"
@@ -434,10 +461,10 @@ jobs:
         run: |
           pnpm run electron:build:pack --prepackaged prepackage/VOICEVOX.app
 
-      - name: Reset Code Signing Envs
+      - name: Cleanup Windows Code Signing
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash tools/codesign_cleanup.bash
+          bash tools/codesign_cleanup_windows.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
           echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
@@ -474,7 +501,7 @@ jobs:
 
       - name: Upload Linux AppImage split and installer to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
@@ -483,7 +510,7 @@ jobs:
 
       - name: Upload Linux AppImage split and installer to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.version != ''
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -494,7 +521,7 @@ jobs:
 
       - name: Upload macOS dmg to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
@@ -502,7 +529,7 @@ jobs:
 
       - name: Upload macOS dmg to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.version != ''
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -512,7 +539,7 @@ jobs:
 
       - name: Upload Windows NSIS Web to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
@@ -521,7 +548,7 @@ jobs:
 
       - name: Upload Windows NSIS Web to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.version != ''
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}

@@ -13,9 +13,29 @@ import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { DEFAULT_TRACK_NAME, isVowel } from "@/song/domain";
 import { isMac } from "@/helpers/platform";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
+import path from "@/helpers/path";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 export const DEFAULT_PROJECT_NAME = "Untitled";
+
+/**
+ * 指定されたファイルパスに対応するファイルが既に存在する場合、
+ * ファイル名に連番のサフィックスを追加してユニークなファイルパスを生成する。
+ */
+export async function generateUniqueFilePath(filePath: string) {
+  const extension = path.extname(filePath);
+  const filePathWithoutExtension = filePath.slice(
+    0,
+    filePath.length - extension.length,
+  );
+  let uniqueFilePath = filePath;
+  let tail = 1;
+  while (await window.backend.checkFileExists(uniqueFilePath)) {
+    uniqueFilePath = `${filePathWithoutExtension}[${tail}]${extension}`;
+    tail += 1;
+  }
+  return uniqueFilePath;
+}
 
 export const formatCharacterStyleName = (
   characterName: string,

@@ -70,12 +70,13 @@ const subMenuOpenFlags = ref(
     : [],
 );
 
-const isDisabledMenuItem = computed(() => (menu: MenuItemData) => {
+const isDisabledMenuItem = (menu: MenuItemData) => {
   if (menu.type === "separator") return false;
   if (menu.disableWhenUiLocked && uiLocked.value) return true;
   if (menu.disableWhileReloadingLock && reloadingLocked.value) return true;
+  if (menu.disabled) return true;
   return false;
-});
+};
 
 const reassignSubMenuOpen = debounce((idx: number) => {
   if (subMenuOpenFlags.value[idx]) return;
