@@ -2,15 +2,19 @@
  * AudioContextによる音声再生・停止などを担当する。
  */
 import { createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
+import { ContinuousPlayer } from "./audioContinuousPlayer";
 import type {
   AudioPlayerStoreState,
   AudioPlayerStoreTypes,
   CurrentPlayState,
 } from "./type";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { ensureNotNullish } from "@/type/utility";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { AbortableMutex } from "@/helpers/abortableMutex";
 import { createLogger } from "@/helpers/log";
-import type { WavStream } from "@/domain/wavStream";
+import { WavStream } from "@/domain/wavStream";
 import { DisposableTimeout } from "@/helpers/disposableTimeout";
 
 const log = createLogger("store/audioPlayer");
@@ -46,7 +50,15 @@ const cancelled = Symbol("cancelled");
  * - `onDelay()`: バッファが枯渇して再生が遅延したときに呼ばれる。
  */
 export async function playAudioStream(
-  { stream, offset }: { stream: WavStream; offset: number },
+  {
+    stream,
+    offset,
+    audioOutputDevice,
+  }: {
+    stream: WavStream;
+    offset: number;
+    audioOutputDevice: string;
+  },
   cancel: AbortSignal,
   callbacks: {
     onStart?: () => void;
@@ -59,6 +71,7 @@ export async function playAudioStream(
   if (!audioContext) {
     throw new Error("AudioContext is not supported in this browser.");
   }
+  await setAudioContextSinkId(audioOutputDevice);
   // TODO: interruptedも考慮する
   if (audioContext.state === "suspended") {
     // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
@@ -166,13 +179,6 @@ export async function playAudioStream(
 
 const audioPlayMutex = new AbortableMutex();
 
-/** 取得・先読みを含めた再生セッションを中断可能にする。 */
-export function withAudioPlayback<T>(
-  callback: (signal: AbortSignal) => Promise<T>,
-): Promise<T> {
-  return audioPlayMutex.lock(callback);
-}
-
 export const audioPlayerStoreState: AudioPlayerStoreState = {
   currentPlayState: { type: "stopped" },
 };
@@ -189,7 +195,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     getter(state, getters) {
       return (
         state.currentPlayState.type === "playing" &&
-        state.currentPlayState.audioKey != undefined &&
         state.currentPlayState.audioKey === getters.ACTIVE_AUDIO_KEY
       );
     },
@@ -202,6 +207,148 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     ) {
       state.currentPlayState = currentPlayState;
     },
+  },
+
+  PLAY_AUDIO: {
+    action: createUILockAction(
+      async ({ state, getters, mutations, actions }, { audioKey }) =>
+        audioPlayMutex.lock(async (signal) => {
+          if (signal.aborted) return false;
+          const audioItem = cloneWithUnwrapProxy(state.audioItems[audioKey]);
+          mutations.SET_AUDIO_NOW_GENERATING({
+            audioKey,
+            nowGenerating: true,
+          });
+          void actions.START_PROGRESS();
+          try {
+            const startTime = ensureNotNullish(
+              (await actions.GET_AUDIO_PLAY_OFFSETS({ audioKey })).at(
+                getters.AUDIO_PLAY_START_POINT ?? 0,
+              ),
+            );
+            const { stream, startOffset } = await actions.FETCH_AUDIO_STREAM({
+              audioItem,
+              mode: "preview",
+              startOffset: startTime,
+              signal,
+            });
+            void actions.RESET_PROGRESS();
+            mutations.SET_AUDIO_NOW_GENERATING({
+              audioKey,
+              nowGenerating: false,
+            });
+            return await actions.PLAY_AUDIO_STREAM({
+              stream: new WavStream(stream),
+              startOffset,
+              audioKey,
+              startTime,
+              signal,
+              notifyOnDelay:
+                getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem),
+            });
+          } catch (error) {
+            if (signal.aborted) return false;
+            throw error;
+          } finally {
+            void actions.RESET_PROGRESS();
+            mutations.SET_AUDIO_NOW_GENERATING({
+              audioKey,
+              nowGenerating: false,
+            });
+          }
+        }),
+    ),
+  },
+
+  PLAY_CONTINUOUSLY_AUDIO: {
+    action: createUILockAction(async ({ state, getters, mutations, actions }) =>
+      audioPlayMutex.lock(async (signal) => {
+        if (signal.aborted) return;
+        const currentAudioKey = state._activeAudioKey;
+        const currentAudioPlayStartPoint = getters.AUDIO_PLAY_START_POINT;
+        const index =
+          currentAudioKey == undefined
+            ? 0
+            : state.audioKeys.indexOf(currentAudioKey);
+        const startTime =
+          currentAudioKey == undefined
+            ? 0
+            : ensureNotNullish(
+                (
+                  await actions.GET_AUDIO_PLAY_OFFSETS({
+                    audioKey: currentAudioKey,
+                  })
+                ).at(currentAudioPlayStartPoint ?? 0),
+              );
+        const audioKeys = state.audioKeys.slice(index);
+        const player = new ContinuousPlayer(audioKeys, {
+          signal,
+          async generateAudio({ audioKey }) {
+            const result = await actions.FETCH_AUDIO_STREAM({
+              audioItem: state.audioItems[audioKey],
+              mode: "preview",
+              signal,
+              startOffset: audioKey === currentAudioKey ? startTime : 0,
+            });
+            return {
+              stream: new WavStream(result.stream),
+              startOffset: result.startOffset,
+            };
+          },
+          playAudioStream({ audioKey, audio: { startOffset, stream } }) {
+            if (currentAudioKey !== audioKey) {
+              mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
+            }
+            void actions.RESET_PROGRESS();
+            mutations.SET_AUDIO_NOW_GENERATING({
+              audioKey,
+              nowGenerating: false,
+            });
+            return actions.PLAY_AUDIO_STREAM({
+              stream,
+              startOffset,
+              audioKey,
+              signal,
+              startTime: audioKey === currentAudioKey ? startTime : 0,
+              notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(
+                state.audioItems[audioKey],
+              ),
+            });
+          },
+        });
+        player.addEventListener("playstart", (event) => {
+          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: event.audioKey });
+        });
+        player.addEventListener("waitstart", (event) => {
+          void actions.START_PROGRESS();
+          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: event.audioKey });
+          mutations.SET_AUDIO_NOW_GENERATING({
+            audioKey: event.audioKey,
+            nowGenerating: true,
+          });
+        });
+
+        mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: true });
+        try {
+          await player.playUntilComplete();
+        } catch (error) {
+          if (!signal.aborted) throw error;
+        } finally {
+          void actions.RESET_PROGRESS();
+          for (const audioKey of audioKeys) {
+            mutations.SET_AUDIO_NOW_GENERATING({
+              audioKey,
+              nowGenerating: false,
+            });
+          }
+          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: currentAudioKey });
+          mutations.SET_AUDIO_PLAY_START_POINT({
+            startPoint: currentAudioPlayStartPoint,
+          });
+          mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: false });
+        }
+      }),
+    ),
   },
 
   STOP_AUDIO: {
@@ -217,34 +364,41 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     ) {
       try {
         if (signal.aborted) return false;
-        await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
         let delayNotified = false;
-        await playAudioStream({ stream, offset: startOffset }, signal, {
-          onDelay() {
-            if (
-              notifyOnDelay &&
-              !delayNotified &&
-              !state.confirmedTips.streamingUnrecommended
-            ) {
-              delayNotified = true;
-              void actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
-                message:
-                  "音声が途切れる場合は設定の「ストリーミング再生」を「安定」に変更してください",
-                icon: "warning",
-                tipName: "streamingUnrecommended",
+        await playAudioStream(
+          {
+            stream,
+            offset: startOffset,
+            audioOutputDevice: state.savingSetting.audioOutputDevice,
+          },
+          signal,
+          {
+            onDelay() {
+              if (
+                notifyOnDelay &&
+                !delayNotified &&
+                !state.confirmedTips.streamingUnrecommended
+              ) {
+                delayNotified = true;
+                void actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
+                  message:
+                    "音声が途切れる場合は設定の「ストリーミング再生」を「安定」に変更してください",
+                  icon: "warning",
+                  tipName: "streamingUnrecommended",
+                });
+              }
+            },
+            onChunkStart(time) {
+              mutations.SET_CURRENT_PLAY_STATE({
+                currentPlayState: {
+                  type: "playing",
+                  audioKey,
+                  currentTime: startTime + time,
+                },
               });
-            }
+            },
           },
-          onChunkStart(time) {
-            mutations.SET_CURRENT_PLAY_STATE({
-              currentPlayState: {
-                type: "playing",
-                audioKey,
-                currentTime: startTime + time,
-              },
-            });
-          },
-        });
+        );
         return !signal.aborted;
       } catch (error) {
         if (signal.aborted) return false;

@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { uiLocked } from "./common";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSlider from "@/components/Base/BaseSlider.vue";
@@ -144,7 +144,8 @@ import {
 } from "@/domain/japanese";
 import type { AccentPhrase } from "@/openapi";
 import { useStore } from "@/store";
-import { withAudioPlayback } from "@/store/audioPlayer";
+import { playAudioStream } from "@/store/audioPlayer";
+import { AbortableMutex } from "@/helpers/abortableMutex";
 import { WavStream } from "@/domain/wavStream";
 import { UnreachableError } from "@/type/utility";
 
@@ -254,6 +255,7 @@ const kanaRegex = createKanaRegex();
 const accentPhrase = ref<AccentPhrase | undefined>();
 const nowGenerating = ref(false);
 const nowPlaying = ref(false);
+const audioPlayMutex = new AbortableMutex();
 const surfaceInput = ref<typeof BaseTextField>();
 const yomiInput = ref<typeof BaseTextField>();
 let latestSetYomiRequest = 0;
@@ -319,37 +321,67 @@ const setYomi = async (text: string) => {
 };
 
 const play = async () => {
-  if (accentPhrase.value == undefined) return;
+  const phrase = accentPhrase.value;
+  if (phrase == undefined) return;
 
   nowGenerating.value = true;
   try {
-    const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
-      text: yomi.value,
-      voice: voiceComputed.value,
-    });
+    await audioPlayMutex.lock(async (signal) => {
+      let wavStream: WavStream | undefined;
+      try {
+        if (signal.aborted) return;
+        const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
+          text: yomi.value,
+          voice: voiceComputed.value,
+        });
 
-    if (audioItem.query == undefined)
-      throw new Error(`assert audioItem.query !== undefined`);
+        if (audioItem.query == undefined)
+          throw new Error(`assert audioItem.query !== undefined`);
 
-    audioItem.query.accentPhrases = [accentPhrase.value];
+        audioItem.query.accentPhrases = [phrase];
 
-    await withAudioPlayback(async (signal) => {
-      const { stream, startOffset } = await store.actions.FETCH_AUDIO_STREAM({
-        audioItem,
-        mode: "preview",
-        startOffset: 0,
-        signal,
-      });
-      nowGenerating.value = false;
-      nowPlaying.value = true;
-      await store.actions.PLAY_AUDIO_STREAM({
-        stream: new WavStream(stream),
-        startOffset,
-        startTime: 0,
-        signal,
-        notifyOnDelay:
-          store.getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem),
-      });
+        const { stream, startOffset } = await store.actions.FETCH_AUDIO_STREAM({
+          audioItem,
+          mode: "preview",
+          startOffset: 0,
+          signal,
+        });
+        nowGenerating.value = false;
+        nowPlaying.value = true;
+        wavStream = new WavStream(stream);
+        let delayNotified = false;
+        await playAudioStream(
+          {
+            stream: wavStream,
+            offset: startOffset,
+            audioOutputDevice: store.state.savingSetting.audioOutputDevice,
+          },
+          signal,
+          {
+            onDelay() {
+              if (
+                store.getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem) &&
+                !delayNotified &&
+                !store.state.confirmedTips.streamingUnrecommended
+              ) {
+                delayNotified = true;
+                void store.actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
+                  message:
+                    "音声が途切れる場合は設定の「ストリーミング再生」を「安定」に変更してください",
+                  icon: "warning",
+                  tipName: "streamingUnrecommended",
+                });
+              }
+            },
+          },
+        );
+      } catch (error) {
+        if (!signal.aborted) throw error;
+      } finally {
+        void wavStream?.cancel().catch((error: unknown) => {
+          if (!signal.aborted) window.backend.logError(error);
+        });
+      }
     });
   } catch (e) {
     window.backend.logError(e);
@@ -364,8 +396,10 @@ const play = async () => {
 };
 
 const stop = () => {
-  void store.actions.STOP_AUDIO();
+  void audioPlayMutex.abort();
 };
+
+onUnmounted(stop);
 
 const changeAccent = async (_: number, accent: number) => {
   const { engineId, styleId } = voiceComputed.value;

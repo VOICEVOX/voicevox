@@ -487,19 +487,11 @@ export type AudioStoreTypes = {
     action(payload: { filePath?: string }): SaveResultObject | undefined;
   };
 
-  PLAY_AUDIO: {
-    action(payload: { audioKey: AudioKey }): boolean;
-  };
-
   SET_AUDIO_PRESET_KEY: {
     mutation: {
       audioKey: AudioKey;
       presetKey: PresetKey | undefined;
     };
-  };
-
-  PLAY_CONTINUOUSLY_AUDIO: {
-    action(): void;
   };
 };
 
@@ -750,9 +742,7 @@ export type CurrentPlayState =
     }
   | {
       type: "playing";
-      // 辞書管理ダイアログではaudioKeyが存在しないので、undefinedを許容する
-      // FIXME: CurrentPlayStateに辞書ダイアログが依存しているのはおかしいので、辞書ダイアログ側で再生管理を行うようにする
-      audioKey?: AudioKey;
+      audioKey: AudioKey;
       currentTime: number;
     };
 
@@ -761,6 +751,14 @@ export type AudioPlayerStoreState = {
 };
 
 export type AudioPlayerStoreTypes = {
+  PLAY_AUDIO: {
+    action(payload: { audioKey: AudioKey }): boolean;
+  };
+
+  PLAY_CONTINUOUSLY_AUDIO: {
+    action(): void;
+  };
+
   ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER: {
     getter: () => number | undefined;
   };
@@ -785,7 +783,7 @@ export type AudioPlayerStoreTypes = {
       /** streamが元の音声の何秒目からかを示す。*/
       startTime: number;
 
-      audioKey?: AudioKey;
+      audioKey: AudioKey;
       signal: AbortSignal;
       notifyOnDelay?: boolean;
     }): Promise<boolean>;

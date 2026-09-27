@@ -35,10 +35,7 @@ import {
   handlePossiblyNotMorphableError,
   isMorphable,
 } from "./audioGenerate";
-import { ContinuousPlayer } from "./audioContinuousPlayer";
-import { withAudioPlayback } from "./audioPlayer";
 import { convertAudioQueryFromEngineToEditor } from "./proxy";
-import { WavStream } from "@/domain/wavStream";
 import { LruCache } from "@/helpers/lruCache";
 import { createLogger } from "@/helpers/log";
 import {
@@ -1841,57 +1838,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
-  PLAY_AUDIO: {
-    action: createUILockAction(
-      async ({ state, getters, mutations, actions }, { audioKey }) =>
-        withAudioPlayback(async (signal) => {
-          if (signal.aborted) return false;
-          const audioItem = cloneWithUnwrapProxy(state.audioItems[audioKey]);
-          mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey,
-            nowGenerating: true,
-          });
-          void actions.START_PROGRESS();
-          try {
-            const startTime = ensureNotNullish(
-              (await actions.GET_AUDIO_PLAY_OFFSETS({ audioKey })).at(
-                getters.AUDIO_PLAY_START_POINT ?? 0,
-              ),
-            );
-            const { stream, startOffset } = await actions.FETCH_AUDIO_STREAM({
-              audioItem,
-              mode: "preview",
-              startOffset: startTime,
-              signal,
-            });
-            void actions.RESET_PROGRESS();
-            mutations.SET_AUDIO_NOW_GENERATING({
-              audioKey,
-              nowGenerating: false,
-            });
-            return await actions.PLAY_AUDIO_STREAM({
-              stream: new WavStream(stream),
-              startOffset,
-              audioKey,
-              startTime,
-              signal,
-              notifyOnDelay:
-                getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem),
-            });
-          } catch (error) {
-            if (signal.aborted) return false;
-            throw error;
-          } finally {
-            void actions.RESET_PROGRESS();
-            mutations.SET_AUDIO_NOW_GENERATING({
-              audioKey,
-              nowGenerating: false,
-            });
-          }
-        }),
-    ),
-  },
-
   SET_AUDIO_PRESET_KEY: {
     mutation(
       state,
@@ -1906,97 +1852,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         state.audioItems[audioKey].presetKey = presetKey;
       }
     },
-  },
-
-  PLAY_CONTINUOUSLY_AUDIO: {
-    action: createUILockAction(async ({ state, getters, mutations, actions }) =>
-      withAudioPlayback(async (signal) => {
-        if (signal.aborted) return;
-        const currentAudioKey = state._activeAudioKey;
-        const currentAudioPlayStartPoint = getters.AUDIO_PLAY_START_POINT;
-        const index =
-          currentAudioKey == undefined
-            ? 0
-            : state.audioKeys.indexOf(currentAudioKey);
-        const startTime =
-          currentAudioKey == undefined
-            ? 0
-            : ensureNotNullish(
-                (
-                  await actions.GET_AUDIO_PLAY_OFFSETS({
-                    audioKey: currentAudioKey,
-                  })
-                ).at(currentAudioPlayStartPoint ?? 0),
-              );
-        const audioKeys = state.audioKeys.slice(index);
-        const player = new ContinuousPlayer(audioKeys, {
-          signal,
-          async generateAudio({ audioKey }) {
-            const result = await actions.FETCH_AUDIO_STREAM({
-              audioItem: state.audioItems[audioKey],
-              mode: "preview",
-              signal,
-              startOffset: audioKey === currentAudioKey ? startTime : 0,
-            });
-            return {
-              stream: new WavStream(result.stream),
-              startOffset: result.startOffset,
-            };
-          },
-          playAudioStream({ audioKey, audio: { startOffset, stream } }) {
-            if (currentAudioKey !== audioKey) {
-              mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
-            }
-            void actions.RESET_PROGRESS();
-            mutations.SET_AUDIO_NOW_GENERATING({
-              audioKey,
-              nowGenerating: false,
-            });
-            return actions.PLAY_AUDIO_STREAM({
-              stream,
-              startOffset,
-              audioKey,
-              signal,
-              startTime: audioKey === currentAudioKey ? startTime : 0,
-              notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(
-                state.audioItems[audioKey],
-              ),
-            });
-          },
-        });
-        player.addEventListener("playstart", (event) => {
-          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: event.audioKey });
-        });
-        player.addEventListener("waitstart", (event) => {
-          void actions.START_PROGRESS();
-          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: event.audioKey });
-          mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey: event.audioKey,
-            nowGenerating: true,
-          });
-        });
-
-        mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: true });
-        try {
-          await player.playUntilComplete();
-        } catch (error) {
-          if (!signal.aborted) throw error;
-        } finally {
-          void actions.RESET_PROGRESS();
-          for (const audioKey of audioKeys) {
-            mutations.SET_AUDIO_NOW_GENERATING({
-              audioKey,
-              nowGenerating: false,
-            });
-          }
-          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: currentAudioKey });
-          mutations.SET_AUDIO_PLAY_START_POINT({
-            startPoint: currentAudioPlayStartPoint,
-          });
-          mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: false });
-        }
-      }),
-    ),
   },
 });
 
