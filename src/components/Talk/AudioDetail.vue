@@ -26,7 +26,7 @@
         </div>
         <div class="play-button-wrapper">
           <QBtn
-            v-if="!nowPlaying && !nowGenerating"
+            v-if="!nowPlaying && !nowPreparing"
             fab
             color="primary"
             textColor="display-on-primary"
@@ -39,7 +39,7 @@
             color="primary"
             textColor="display-on-primary"
             icon="stop"
-            :disable="nowGenerating"
+            :disable="nowPreparing"
             @click="stop"
           ></QBtn>
         </div>
@@ -117,7 +117,7 @@ registerHotkeyWithCleanup({
   editor: "talk",
   name: "再生/停止",
   callback: () => {
-    if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+    if (!nowPlaying.value && !nowPreparing.value && !uiLocked.value) {
       void play();
     } else {
       stop();
@@ -262,8 +262,8 @@ const stop = () => {
 };
 
 const nowPlaying = computed(() => store.getters.NOW_PLAYING);
-const nowGenerating = computed(
-  () => store.state.audioStates[props.activeAudioKey]?.nowGenerating,
+const nowPreparing = computed(
+  () => store.state.currentPlayState.type === "preparing",
 );
 
 const audioDetail = ref<HTMLElement>();

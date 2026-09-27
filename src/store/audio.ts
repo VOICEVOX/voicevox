@@ -199,7 +199,6 @@ export const audioStoreState: AudioStoreState = {
   morphableTargetsInfo: {},
   audioItems: {},
   audioKeys: [],
-  audioStates: {},
   nowPlayingContinuously: false,
 };
 
@@ -608,18 +607,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SET_AUDIO_NOW_GENERATING: {
-    mutation(
-      state,
-      {
-        audioKey,
-        nowGenerating,
-      }: { audioKey: AudioKey; nowGenerating: boolean },
-    ) {
-      state.audioStates[audioKey].nowGenerating = nowGenerating;
-    },
-  },
-
   SET_NOW_PLAYING_CONTINUOUSLY: {
     mutation(state, { nowPlaying }: { nowPlaying: boolean }) {
       state.nowPlayingContinuously = nowPlaying;
@@ -766,9 +753,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           : state.audioKeys.length;
       state.audioKeys.splice(index, 0, audioKey);
       state.audioItems[audioKey] = audioItem;
-      state.audioStates[audioKey] = {
-        nowGenerating: false,
-      };
     },
   },
 
@@ -791,9 +775,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       state.audioKeys.splice(index, 0, ...audioKeys);
       for (const { audioKey, audioItem } of audioKeyItemPairs) {
         state.audioItems[audioKey] = audioItem;
-        state.audioStates[audioKey] = {
-          nowGenerating: false,
-        };
       }
     },
   },
@@ -802,7 +783,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     mutation(state, { audioKey }: { audioKey: AudioKey }) {
       state.audioKeys.splice(state.audioKeys.indexOf(audioKey), 1);
       delete state.audioItems[audioKey];
-      delete state.audioStates[audioKey];
     },
   },
 
@@ -1763,9 +1743,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         // 音声用意
         let fetchAudioResult: FetchAudioResult;
-        mutations.SET_AUDIO_NOW_GENERATING({
-          audioKey,
-          nowGenerating: true,
+        mutations.SET_CURRENT_PLAY_STATE({
+          currentPlayState: { type: "preparing" },
         });
         try {
           fetchAudioResult = await withProgress(
@@ -1773,9 +1752,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             actions,
           );
         } finally {
-          mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey,
-            nowGenerating: false,
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: { type: "stopped" },
           });
         }
 
@@ -1859,16 +1837,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         player.addEventListener("waitstart", (e) => {
           void actions.START_PROGRESS();
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
-          mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey: e.audioKey,
-            nowGenerating: true,
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: { type: "preparing" },
           });
         });
-        player.addEventListener("waitend", (e) => {
+        player.addEventListener("waitend", () => {
           void actions.RESET_PROGRESS();
-          mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey: e.audioKey,
-            nowGenerating: false,
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: { type: "stopped" },
           });
         });
 
