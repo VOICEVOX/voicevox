@@ -1,9 +1,6 @@
 import type { AudioKey } from "@/type/preload";
 import type { WavStream } from "@/domain/wavStream";
-import { createLogger } from "@/helpers/log";
 import { type Result, success, failure } from "@/type/result";
-
-const log = createLogger("store/audioContinuousPlayer");
 
 type GenerateAudioResult = {
   stream: WavStream;
