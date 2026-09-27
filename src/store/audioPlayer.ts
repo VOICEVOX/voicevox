@@ -35,24 +35,22 @@ async function setAudioContextSinkId(device: string) {
 const cancelled = Symbol("cancelled");
 
 /**
- * WavStreamの配列を順番に再生する。
+ * WavStreamを再生する。
  * 再生中にキャンセルされた場合、再生を中止する。
  *
  * # コールバック
  *
- * - `onStart(index: number)`: 新しいWavStreamの再生が開始されたときに呼ばれる。
- *   - `index`: 再生中のWavStreamのインデックス。
- * - `onChunkStart(index: number, time: number)`: 新しいチャンクの再生が開始されたときに呼ばれる。
- *   - `index`: 再生中のWavStreamのインデックス。
+ * - `onStart()`: WavStreamの再生が開始されたときに呼ばれる。
+ * - `onChunkStart(time: number)`: 新しいチャンクの再生が開始されたときに呼ばれる。
  *   - `time`: 再生中のWavStreamの再生時間（秒）。
  * - `onDelay()`: バッファが枯渇して再生が遅延したときに呼ばれる。
  */
-export async function playAudioStreams(
-  audioStreams: { stream: WavStream; offset: number }[],
+export async function playAudioStream(
+  { stream, offset }: { stream: WavStream; offset: number },
   cancel: AbortSignal,
   callbacks: {
-    onStart?: (index: number) => void;
-    onChunkStart?: (index: number, time: number) => void;
+    onStart?: () => void;
+    onChunkStart?: (time: number) => void;
     onDelay?: () => void;
   } = {},
 ) {
@@ -76,96 +74,93 @@ export async function playAudioStreams(
   cancelables.defer(() => cancel.removeEventListener("abort", onAbort));
   let lastBufferEndTime = audioContext.currentTime;
 
-  for (const [index, { stream, offset }] of audioStreams.entries()) {
-    const header = await Promise.race([cancelledPromise, stream.readHeader()]);
-    if (header === cancelled) return;
-    const sampleRate = header.sampleRate;
+  const header = await Promise.race([cancelledPromise, stream.readHeader()]);
+  if (header === cancelled) return;
+  const sampleRate = header.sampleRate;
 
-    const samplesIterator = stream.readSamples(
-      samplesPerChunk,
-      Math.floor(offset * sampleRate),
+  const samplesIterator = stream.readSamples(
+    samplesPerChunk,
+    Math.floor(offset * sampleRate),
+  );
+  let numTotalSamples = 0;
+  while (true) {
+    // 現在のバッファの終了時刻に向けて遅延通知をセットする
+    // ただし、初回のチャンクは再生開始前なので遅延通知をセットしない
+    using delayNotifier =
+      numTotalSamples > 0
+        ? new DisposableTimeout(
+            (lastBufferEndTime - audioContext.currentTime) * 1000,
+            () => callbacks.onDelay?.(),
+          )
+        : undefined;
+
+    // 中断されるか、次のチャンクが読み込まれるまで待つ
+    const chunkOrDone = await Promise.race([
+      cancelledPromise,
+      samplesIterator.next(),
+    ]);
+    delayNotifier?.clear();
+
+    if (chunkOrDone === cancelled) {
+      return;
+    }
+    if (chunkOrDone.done) {
+      break;
+    }
+
+    const [leftSamples, rightSamples] = chunkOrDone.value;
+
+    // 最初のチャンクの再生が開始されるときにonStartを呼ぶ
+    if (numTotalSamples === 0) {
+      callbacks.onStart?.();
+    }
+
+    // AudioBufferを作ってチャンクのサンプルをコピーする
+    const audioBuffer = audioContext.createBuffer(
+      2,
+      leftSamples.length,
+      sampleRate,
     );
-    let numTotalSamples = 0;
-    while (true) {
-      // 現在のバッファの終了時刻に向けて遅延通知をセットする
-      // ただし、初回のチャンクは再生開始前なので遅延通知をセットしない
-      using delayNotifier =
-        numTotalSamples > 0
-          ? new DisposableTimeout(
-              (lastBufferEndTime - audioContext.currentTime) * 1000,
-              () => callbacks.onDelay?.(),
-            )
-          : undefined;
+    const leftChannel = audioBuffer.getChannelData(0);
+    const rightChannel = audioBuffer.getChannelData(1);
+    leftChannel.set(leftSamples);
+    rightChannel.set(rightSamples);
 
-      // 中断されるか、次のチャンクが読み込まれるまで待つ
-      const chunkOrDone = await Promise.race([
-        cancelledPromise,
-        samplesIterator.next(),
-      ]);
-      delayNotifier?.clear();
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(audioContext.destination);
+    cancelables.use({
+      [Symbol.dispose]() {
+        source.disconnect();
+        source.stop();
+      },
+    });
 
-      if (chunkOrDone === cancelled) {
-        return;
-      }
-      if (chunkOrDone.done) {
-        break;
-      }
+    // 現在のバッファの終了時刻に合わせて再生を予約する
+    // ただし現在のバッファがすでに終了している場合は現在時刻で再生を予約する（=今すぐ再生する）
+    const baseTime = Math.max(lastBufferEndTime, audioContext.currentTime);
+    source.start(baseTime);
 
-      const [leftSamples, rightSamples] = chunkOrDone.value;
+    // 予約した再生時刻に合わせてonChunkStartを呼ぶ
+    const currentSampleTime = numTotalSamples / sampleRate;
+    cancelables.use(
+      new DisposableTimeout((baseTime - audioContext.currentTime) * 1000, () =>
+        callbacks.onChunkStart?.(currentSampleTime),
+      ),
+    );
+    numTotalSamples += leftSamples.length;
+    lastBufferEndTime = baseTime + audioBuffer.duration;
+  }
 
-      // 最初のチャンクの再生が開始されるときにonStartを呼ぶ
-      if (numTotalSamples === 0) {
-        callbacks.onStart?.(index);
-      }
-
-      // AudioBufferを作ってチャンクのサンプルをコピーする
-      const audioBuffer = audioContext.createBuffer(
-        2,
-        leftSamples.length,
-        sampleRate,
-      );
-      const leftChannel = audioBuffer.getChannelData(0);
-      const rightChannel = audioBuffer.getChannelData(1);
-      leftChannel.set(leftSamples);
-      rightChannel.set(rightSamples);
-
-      const source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
-      cancelables.use({
-        [Symbol.dispose]() {
-          source.disconnect();
-          source.stop();
-        },
-      });
-
-      // 現在のバッファの終了時刻に合わせて再生を予約する
-      // ただし現在のバッファがすでに終了している場合は現在時刻で再生を予約する（=今すぐ再生する）
-      const baseTime = Math.max(lastBufferEndTime, audioContext.currentTime);
-      source.start(baseTime);
-
-      // 予約した再生時刻に合わせてonChunkStartを呼ぶ
-      const currentSampleTime = numTotalSamples / sampleRate;
-      cancelables.use(
-        new DisposableTimeout(
-          (baseTime - audioContext.currentTime) * 1000,
-          () => callbacks.onChunkStart?.(index, currentSampleTime),
-        ),
-      );
-      numTotalSamples += leftSamples.length;
-      lastBufferEndTime = baseTime + audioBuffer.duration;
-    }
-
-    if (!cancel.aborted) {
-      // 最後のチャンクの再生が終了するか、中断されるまで待つ
-      const { promise: playbackEnded, resolve: resolvePlaybackEnd } =
-        Promise.withResolvers<void>();
-      using _playbackEndNotifier = new DisposableTimeout(
-        (lastBufferEndTime - audioContext.currentTime) * 1000,
-        resolvePlaybackEnd,
-      );
-      await Promise.race([playbackEnded, cancelledPromise]);
-    }
+  if (!cancel.aborted) {
+    // 最後のチャンクの再生が終了するか、中断されるまで待つ
+    const { promise: playbackEnded, resolve: resolvePlaybackEnd } =
+      Promise.withResolvers<void>();
+    using _playbackEndNotifier = new DisposableTimeout(
+      (lastBufferEndTime - audioContext.currentTime) * 1000,
+      resolvePlaybackEnd,
+    );
+    await Promise.race([playbackEnded, cancelledPromise]);
   }
 }
 
@@ -224,7 +219,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         if (signal.aborted) return false;
         await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
         let delayNotified = false;
-        await playAudioStreams([{ stream, offset: startOffset }], signal, {
+        await playAudioStream({ stream, offset: startOffset }, signal, {
           onDelay() {
             if (
               notifyOnDelay &&
@@ -240,7 +235,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               });
             }
           },
-          onChunkStart(_index, time) {
+          onChunkStart(time) {
             mutations.SET_CURRENT_PLAY_STATE({
               currentPlayState: {
                 type: "playing",
