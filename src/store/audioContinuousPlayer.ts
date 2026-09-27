@@ -10,7 +10,6 @@ type GenerateAudioResult = {
   startOffset: number;
 };
 interface DI {
-  signal: AbortSignal;
   generateAudio: (params: {
     audioKey: AudioKey;
   }) => Promise<GenerateAudioResult>;
@@ -30,7 +29,7 @@ export class ContinuousPlayer extends EventTarget {
   }
 
   async playUntilComplete() {
-    const { generateAudio, playAudioStream, signal } = this.di;
+    const { generateAudio, playAudioStream } = this.di;
     const prepareAudio = (
       audioKey: AudioKey,
     ): Promise<Result<GenerateAudioResult>> => {
@@ -48,7 +47,6 @@ export class ContinuousPlayer extends EventTarget {
     let active: WavStream | undefined;
     try {
       for (const [index, audioKey] of this.audioKeys.entries()) {
-        signal.throwIfAborted();
         pending ??= prepareAudio(audioKey);
         this.dispatchEvent(new WaitStartEvent(audioKey));
         const result = await pending;
@@ -57,7 +55,6 @@ export class ContinuousPlayer extends EventTarget {
           throw result.error;
         }
         active = result.value.stream;
-        signal.throwIfAborted();
         this.dispatchEvent(new WaitEndEvent(audioKey));
         const nextAudioKey = this.audioKeys[index + 1];
         if (nextAudioKey != undefined) pending = prepareAudio(nextAudioKey);
@@ -71,18 +68,13 @@ export class ContinuousPlayer extends EventTarget {
         if (!completed) return;
       }
     } finally {
-      const onCancelError = (error: unknown) => {
-        if (!signal.aborted) log.error(error);
-      };
-      void active?.cancel().catch(onCancelError);
+      void active?.cancel();
       if (pending != undefined) {
-        void pending
-          .then((result) => {
-            if (result.ok) {
-              return result.value.stream.cancel();
-            }
-          })
-          .catch(onCancelError);
+        void pending.then((result) => {
+          if (result.ok) {
+            return result.value.stream.cancel();
+          }
+        });
       }
     }
   }

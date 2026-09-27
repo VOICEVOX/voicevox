@@ -246,9 +246,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               notifyOnDelay:
                 getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem),
             });
-          } catch (error) {
-            if (signal.aborted) return false;
-            throw error;
           } finally {
             void actions.RESET_PROGRESS();
             mutations.SET_AUDIO_NOW_GENERATING({
@@ -282,7 +279,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               );
         const audioKeys = state.audioKeys.slice(index);
         const player = new ContinuousPlayer(audioKeys, {
-          signal,
           async generateAudio({ audioKey }) {
             const result = await actions.FETCH_AUDIO_STREAM({
               audioItem: state.audioItems[audioKey],
@@ -331,8 +327,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: true });
         try {
           await player.playUntilComplete();
-        } catch (error) {
-          if (!signal.aborted) throw error;
         } finally {
           void actions.RESET_PROGRESS();
           for (const audioKey of audioKeys) {
@@ -400,9 +394,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
           },
         );
         return !signal.aborted;
-      } catch (error) {
-        if (signal.aborted) return false;
-        throw error;
       } finally {
         void stream.cancel().catch((error: unknown) => {
           if (!signal.aborted) log.error(error);

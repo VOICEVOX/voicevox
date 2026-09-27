@@ -1317,6 +1317,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   IS_STREAMING_SYNTHESIS_SUPPORTED: {
     getter: (state, getters) => (audioItem: AudioItem) => {
+      // # ストリーミング対応の条件
+      //
+      // - モーフィングがないこと
+      // - エンジンがストリーミング合成に対応していること
+      // - style_typeがstreaming_talkであること
       const { engineId, styleId } = audioItem.voice;
       if (
         audioItem.morphingInfo != undefined ||
