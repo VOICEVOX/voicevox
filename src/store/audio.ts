@@ -1,5 +1,5 @@
 import { toBase64 } from "fast-base64";
-import { createUILockAction, withProgress } from "./ui";
+import { createUILockAction } from "./ui";
 import {
   type AudioItem,
   type SaveResultObject,
@@ -29,13 +29,18 @@ import {
 import { createPartialStore } from "./vuex";
 import { determineNextPresetKey } from "./preset";
 import {
-  fetchAudioFromAudioItem,
+  generateUniqueIdAndQuery,
+  NotMorphableError,
   generateLabFromAudioQuery,
   handlePossiblyNotMorphableError,
   isMorphable,
 } from "./audioGenerate";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
+import { withAudioPlayback } from "./audioPlayer";
 import { convertAudioQueryFromEngineToEditor } from "./proxy";
+import { WavStream } from "@/domain/wavStream";
+import { LruCache } from "@/helpers/lruCache";
+import { createLogger } from "@/helpers/log";
 import {
   convertHiraToKana,
   convertLongVowel,
@@ -62,14 +67,13 @@ import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import {
-  assertNonNullable,
-  ensureNotNullish,
-  UnreachableError,
-} from "@/type/utility";
+import { ensureNotNullish, UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
+
+const log = createLogger("store/audio");
+const audioCache = new LruCache<string, { wav: Blob; startsAt: number }>(64);
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -1302,32 +1306,137 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   FETCH_AUDIO: {
-    async action(
-      { actions, state },
-      { audioKey, ...options }: { audioKey: AudioKey; cacheOnly?: boolean },
-    ) {
-      const audioItem: AudioItem = cloneWithUnwrapProxy(
-        state.audioItems[audioKey],
-      );
-      return actions.FETCH_AUDIO_FROM_AUDIO_ITEM({
+    action: createUILockAction(async ({ actions, state }, { audioKey }) => {
+      const audioItem = cloneWithUnwrapProxy(state.audioItems[audioKey]);
+      const audioQuery = ensureNotNullish(audioItem.query);
+      const { stream } = await actions.FETCH_AUDIO_STREAM({
         audioItem,
-        ...options,
+        mode: "export",
       });
+      const blob = await new Response(stream).blob();
+      return { audioQuery, blob };
+    }),
+  },
+
+  IS_STREAMING_SYNTHESIS_SUPPORTED: {
+    getter: (state, getters) => (audioItem: AudioItem) => {
+      const { engineId, styleId } = audioItem.voice;
+      if (
+        audioItem.morphingInfo != undefined ||
+        !state.engineManifests[engineId].supportedFeatures?.streamingSynthesis
+      ) {
+        return false;
+      }
+      const characterInfo = ensureNotNullish(
+        getters.CHARACTER_INFO(engineId, styleId),
+      );
+      return (
+        ensureNotNullish(
+          characterInfo.metas.styles.find((style) => style.styleId === styleId),
+        ).styleType === "streaming_talk"
+      );
     },
   },
 
-  FETCH_AUDIO_FROM_AUDIO_ITEM: {
-    action: createUILockAction(
-      async (
-        { actions, state },
-        options: { audioItem: AudioItem; cacheOnly?: boolean },
-      ) => {
-        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-          engineId: options.audioItem.voice.engineId,
+  FETCH_AUDIO_STREAM: {
+    async action({ state, getters, actions }, payload) {
+      const { mode, signal } = payload;
+      const audioItem = cloneWithUnwrapProxy(payload.audioItem);
+      const startOffset = mode === "preview" ? payload.startOffset : 0;
+
+      // # キャッシュについて
+      //
+      // - AudioQueryやstyleIdなどの音声を生成するためのパラメーターから生成されるIDをキャッシュのキーにする。
+      // - 音声をすべて取得しきったあとにキャッシュにいれる。
+      //   - そのため、キャッシュには`(キャッシュのキー) -> (開始時刻, 開始時刻から終端までの音声)`、しか入らない。
+      //   - 開始時刻は、ストリーミングAPIでは`startOffset`、それ以外のAPIでは0になる。
+      // - もしキャッシュが存在していて、再生しようとしている時刻からの音声を含んでいる場合は、キャッシュから再生する。
+      //   - ここで、「再生しようとしている時刻からの音声を含んでいる場合」はキャッシュの開始時刻が再生しようとしている時刻よりも前かどうかで判定する。
+      // - 再生用（preview）と保存用（export）でキャッシュを分ける。
+      //   - ストリーミング再生だと音声の質が微妙に悪化する可能性があるため。
+      const { id, engineAudioQuery: audioQuery } =
+        await generateUniqueIdAndQuery(state, audioItem);
+      const cacheKey = `${mode}:${id}`;
+      const cached = audioCache.get(cacheKey);
+      if (cached && cached.startsAt <= startOffset) {
+        return {
+          stream: cached.wav.stream(),
+          startOffset: startOffset - cached.startsAt,
+        };
+      }
+
+      const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+        engineId: audioItem.voice.engineId,
+      });
+      const speaker = audioItem.voice.styleId;
+      const enableInterrogativeUpspeak =
+        state.experimentalSetting.enableInterrogativeUpspeak;
+
+      // AudioItemの何秒目からの音声が取得されているか。
+      let audioStartOffset = 0;
+      let response;
+
+      // モーフィングがある場合：常にモーフィング用のAPIを呼ぶ（ストリーミング非対応）
+      if (audioItem.morphingInfo != undefined) {
+        if (!isMorphable(state, { audioItem })) throw new NotMorphableError();
+        response = await instance.invoke("synthesisMorphingRaw")(
+          {
+            audioQuery,
+            baseSpeaker: speaker,
+            targetSpeaker: audioItem.morphingInfo.targetStyleId,
+            morphRate: audioItem.morphingInfo.rate,
+          },
+          { signal },
+        );
+      } else if (
+        // 再生用、かつストリーミング対応の場合：ストリーミングAPIを呼ぶ
+        mode === "preview" &&
+        getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem)
+      ) {
+        audioStartOffset = startOffset;
+        const segmentLength = {
+          LOW_LATENCY: 0.3,
+          BALANCED: 1.0,
+          STABLE: 9999,
+        }[state.streamingMode];
+        response = await instance.invoke("streamingSynthesisRaw")(
+          {
+            audioQuery,
+            speaker,
+            enableInterrogativeUpspeak,
+            startOffset,
+            segmentLength,
+          },
+          { signal },
+        );
+      } else {
+        // その他の場合：通常のAPIを呼ぶ
+        response = await instance.invoke("synthesisRaw")(
+          { audioQuery, speaker, enableInterrogativeUpspeak },
+          { signal },
+        );
+      }
+
+      // ストリームをキャッシュにいれる用と呼び出し元に帰す用の2つに分ける
+      const [stream, cacheStream] = ensureNotNullish(response.raw.body).tee();
+
+      void new Response(cacheStream)
+        .blob()
+        .then((wav) => {
+          if (signal?.aborted) return;
+          const existing = audioCache.get(cacheKey);
+          if (existing == undefined || audioStartOffset <= existing.startsAt) {
+            audioCache.set(cacheKey, { wav, startsAt: audioStartOffset });
+          }
+        })
+        .catch((error: unknown) => {
+          if (!signal?.aborted) {
+            log.error(`Failed to cache audio for key "${cacheKey}".`, error);
+          }
         });
-        return fetchAudioFromAudioItem(state, instance, options);
-      },
-    ),
+
+      return { stream, startOffset: startOffset - audioStartOffset };
+    },
   },
 
   CONNECT_AUDIO: {
@@ -1734,85 +1843,52 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   PLAY_AUDIO: {
     action: createUILockAction(
-      async (
-        { state, mutations, actions, getters },
-        { audioKey }: { audioKey: AudioKey },
-      ) => {
-        const voice = state.audioItems[audioKey].voice;
-        const engineManifest = state.engineManifests[voice.engineId];
-        const characterInfo = getters.CHARACTER_INFO(
-          voice.engineId,
-          voice.styleId,
-        );
-        assertNonNullable(characterInfo);
-        const styleInfo = ensureNotNullish(
-          characterInfo.metas.styles.find(
-            (style) =>
-              style.styleId === state.audioItems[audioKey].voice.styleId,
-          ),
-        );
-        if (
-          engineManifest.supportedFeatures?.streamingSynthesis &&
-          !state.audioItems[audioKey].morphingInfo &&
-          styleInfo.styleType === "streaming_talk"
-        ) {
-          return actions.PLAY_AUDIO_STREAMING({ audioKey });
-        }
-
-        await actions.STOP_AUDIO();
-
-        // 音声用意
-        let fetchAudioResult: FetchAudioResult;
-        mutations.SET_AUDIO_NOW_GENERATING({
-          audioKey,
-          nowGenerating: true,
-        });
-        try {
-          fetchAudioResult = await withProgress(
-            actions.FETCH_AUDIO({ audioKey }),
-            actions,
-          );
-        } finally {
+      async ({ state, getters, mutations, actions }, { audioKey }) =>
+        withAudioPlayback(async (signal) => {
+          if (signal.aborted) return false;
+          const audioItem = cloneWithUnwrapProxy(state.audioItems[audioKey]);
           mutations.SET_AUDIO_NOW_GENERATING({
             audioKey,
-            nowGenerating: false,
+            nowGenerating: true,
           });
-        }
-
-        const { blob } = fetchAudioResult;
-        return actions.PLAY_AUDIO_BLOB({
-          audioBlob: blob,
-          audioKey,
-        });
-      },
-    ),
-  },
-
-  PLAY_AUDIO_BLOB: {
-    action: createUILockAction(
-      async (
-        { getters, mutations, actions },
-        { audioBlob, audioKey }: { audioBlob: Blob; audioKey?: AudioKey },
-      ) => {
-        mutations.SET_AUDIO_SOURCE({ audioBlob });
-        let offset: number | undefined;
-        // 途中再生用の処理
-        if (audioKey) {
-          const accentPhraseOffsets = await actions.GET_AUDIO_PLAY_OFFSETS({
-            audioKey,
-          });
-          if (accentPhraseOffsets.length === 0)
-            throw new Error("accentPhraseOffsets.length === 0");
-          const startTime =
-            accentPhraseOffsets[getters.AUDIO_PLAY_START_POINT ?? 0];
-          if (startTime == undefined) throw Error("startTime == undefined");
-          // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
-          // 再生に影響のない程度かつ切り捨てられない値を加算する
-          offset = startTime + 10e-6;
-        }
-
-        return actions.PLAY_AUDIO_PLAYER({ offset, audioKey });
-      },
+          void actions.START_PROGRESS();
+          try {
+            const startTime = ensureNotNullish(
+              (await actions.GET_AUDIO_PLAY_OFFSETS({ audioKey })).at(
+                getters.AUDIO_PLAY_START_POINT ?? 0,
+              ),
+            );
+            const { stream, startOffset } = await actions.FETCH_AUDIO_STREAM({
+              audioItem,
+              mode: "preview",
+              startOffset: startTime,
+              signal,
+            });
+            void actions.RESET_PROGRESS();
+            mutations.SET_AUDIO_NOW_GENERATING({
+              audioKey,
+              nowGenerating: false,
+            });
+            return await actions.PLAY_AUDIO_STREAM({
+              stream: new WavStream(stream),
+              startOffset,
+              audioKey,
+              startTime,
+              signal,
+              notifyOnDelay:
+                getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem),
+            });
+          } catch (error) {
+            if (signal.aborted) return false;
+            throw error;
+          } finally {
+            void actions.RESET_PROGRESS();
+            mutations.SET_AUDIO_NOW_GENERATING({
+              audioKey,
+              nowGenerating: false,
+            });
+          }
+        }),
     ),
   },
 
@@ -1833,55 +1909,93 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   PLAY_CONTINUOUSLY_AUDIO: {
-    action: createUILockAction(
-      async ({ state, getters, mutations, actions }) => {
+    action: createUILockAction(async ({ state, getters, mutations, actions }) =>
+      withAudioPlayback(async (signal) => {
+        if (signal.aborted) return;
         const currentAudioKey = state._activeAudioKey;
         const currentAudioPlayStartPoint = getters.AUDIO_PLAY_START_POINT;
-
-        let index = 0;
-        if (currentAudioKey != undefined) {
-          index = state.audioKeys.findIndex((v) => v === currentAudioKey);
-        }
-
-        const player = new ContinuousPlayer(state.audioKeys.slice(index), {
-          generateAudio: ({ audioKey }) =>
-            actions.FETCH_AUDIO({ audioKey }).then((result) => result.blob),
-          playAudioBlob: ({ audioBlob, audioKey }) => {
+        const index =
+          currentAudioKey == undefined
+            ? 0
+            : state.audioKeys.indexOf(currentAudioKey);
+        const startTime =
+          currentAudioKey == undefined
+            ? 0
+            : ensureNotNullish(
+                (
+                  await actions.GET_AUDIO_PLAY_OFFSETS({
+                    audioKey: currentAudioKey,
+                  })
+                ).at(currentAudioPlayStartPoint ?? 0),
+              );
+        const audioKeys = state.audioKeys.slice(index);
+        const player = new ContinuousPlayer(audioKeys, {
+          signal,
+          async generateAudio({ audioKey }) {
+            const result = await actions.FETCH_AUDIO_STREAM({
+              audioItem: state.audioItems[audioKey],
+              mode: "preview",
+              signal,
+              startOffset: audioKey === currentAudioKey ? startTime : 0,
+            });
+            return {
+              stream: new WavStream(result.stream),
+              startOffset: result.startOffset,
+            };
+          },
+          playAudioStream({ audioKey, audio: { startOffset, stream } }) {
             if (currentAudioKey !== audioKey) {
               mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
             }
-            return actions.PLAY_AUDIO_BLOB({ audioBlob, audioKey });
+            void actions.RESET_PROGRESS();
+            mutations.SET_AUDIO_NOW_GENERATING({
+              audioKey,
+              nowGenerating: false,
+            });
+            return actions.PLAY_AUDIO_STREAM({
+              stream,
+              startOffset,
+              audioKey,
+              signal,
+              startTime: audioKey === currentAudioKey ? startTime : 0,
+              notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(
+                state.audioItems[audioKey],
+              ),
+            });
           },
         });
-        player.addEventListener("playstart", (e) => {
-          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
+        player.addEventListener("playstart", (event) => {
+          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: event.audioKey });
         });
-        player.addEventListener("waitstart", (e) => {
+        player.addEventListener("waitstart", (event) => {
           void actions.START_PROGRESS();
-          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
+          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: event.audioKey });
           mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey: e.audioKey,
+            audioKey: event.audioKey,
             nowGenerating: true,
-          });
-        });
-        player.addEventListener("waitend", (e) => {
-          void actions.RESET_PROGRESS();
-          mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey: e.audioKey,
-            nowGenerating: false,
           });
         });
 
         mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: true });
-
-        await player.playUntilComplete();
-
-        mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: currentAudioKey });
-        mutations.SET_AUDIO_PLAY_START_POINT({
-          startPoint: currentAudioPlayStartPoint,
-        });
-        mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: false });
-      },
+        try {
+          await player.playUntilComplete();
+        } catch (error) {
+          if (!signal.aborted) throw error;
+        } finally {
+          void actions.RESET_PROGRESS();
+          for (const audioKey of audioKeys) {
+            mutations.SET_AUDIO_NOW_GENERATING({
+              audioKey,
+              nowGenerating: false,
+            });
+          }
+          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: currentAudioKey });
+          mutations.SET_AUDIO_PLAY_START_POINT({
+            startPoint: currentAudioPlayStartPoint,
+          });
+          mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: false });
+        }
+      }),
     ),
   },
 });

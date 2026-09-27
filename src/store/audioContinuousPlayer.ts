@@ -1,112 +1,90 @@
 import type { AudioKey } from "@/type/preload";
+import type { WavStream } from "@/domain/wavStream";
+import { createLogger } from "@/helpers/log";
+import { type Result, success, failure } from "@/type/result";
 
+const log = createLogger("store/audioContinuousPlayer");
+
+type GenerateAudioResult = {
+  stream: WavStream;
+  startOffset: number;
+};
 interface DI {
-  /**
-   * 音声を生成する
-   */
-  generateAudio: (params: { audioKey: AudioKey }) => Promise<Blob>;
-
-  /**
-   * 音声を再生する。
-   * 再生が完了した場合trueを、途中で停止した場合falseを返す。
-   */
-  playAudioBlob: (params: {
-    audioBlob: Blob;
+  signal: AbortSignal;
+  generateAudio: (params: {
     audioKey: AudioKey;
+  }) => Promise<GenerateAudioResult>;
+  playAudioStream: (params: {
+    audioKey: AudioKey;
+    audio: GenerateAudioResult;
   }) => Promise<boolean>;
 }
 
-/**
- * 音声を生成しながら連続再生する。
- * 生成の開始・完了、再生の開始・完了、生成待機の開始・完了のイベントを発行する。
- */
+/** 現在の音声を再生しながら、次の1件を取得する。 */
 export class ContinuousPlayer extends EventTarget {
-  private generating?: AudioKey;
-  private playQueue: { audioKey: AudioKey; audioBlob: Blob }[] = [];
-  private playing?: { audioKey: AudioKey; audioBlob: Blob };
-
-  private finished = false;
-  private resolve!: () => void;
-  private promise: Promise<void>;
-
   constructor(
-    private generationQueue: AudioKey[],
-    { generateAudio, playAudioBlob }: DI,
+    private readonly audioKeys: AudioKey[],
+    private readonly di: DI,
   ) {
     super();
-
-    this.addEventListener("generatestart", (e) => {
-      this.generating = e.audioKey;
-    });
-    this.addEventListener("generatestart", async (e) => {
-      const audioBlob = await generateAudio({ audioKey: e.audioKey });
-      this.dispatchEvent(new GenerateEndEvent(e.audioKey, audioBlob));
-    });
-    this.addEventListener("generateend", (e) => {
-      delete this.generating;
-
-      const { audioKey, audioBlob } = e;
-      if (this.playing) {
-        this.playQueue.push({ audioKey, audioBlob });
-      } else {
-        this.dispatchEvent(new WaitEndEvent(e.audioKey));
-        if (this.finished) return;
-        this.dispatchEvent(new PlayStartEvent(audioKey, audioBlob));
-      }
-
-      const next = this.generationQueue.shift();
-      if (next) {
-        this.dispatchEvent(new GenerateStartEvent(next));
-      }
-    });
-    this.addEventListener("playstart", (e) => {
-      this.playing = { audioKey: e.audioKey, audioBlob: e.audioBlob };
-    });
-    this.addEventListener("playstart", async (e) => {
-      const isEnded = await playAudioBlob({
-        audioBlob: e.audioBlob,
-        audioKey: e.audioKey,
-      });
-      this.dispatchEvent(new PlayEndEvent(e.audioKey, !isEnded));
-    });
-    this.addEventListener("playend", (e) => {
-      delete this.playing;
-      if (e.forceFinish) {
-        this.finish();
-        return;
-      }
-
-      const next = this.playQueue.shift();
-      if (next) {
-        this.dispatchEvent(new PlayStartEvent(next.audioKey, next.audioBlob));
-      } else if (this.generating) {
-        this.dispatchEvent(new WaitStartEvent(this.generating));
-      } else {
-        this.finish();
-      }
-    });
-
-    this.promise = new Promise((resolve) => {
-      this.resolve = resolve;
-    });
   }
 
-  private finish() {
-    this.finished = true;
-    this.resolve();
-  }
-
-  /**
-   * 音声の生成・再生を開始する。
-   * すべての音声の再生が完了するか、途中で停止されるとresolveする。
-   */
   async playUntilComplete() {
-    const next = this.generationQueue.shift();
-    if (!next) return;
-    this.dispatchEvent(new WaitStartEvent(next));
-    this.dispatchEvent(new GenerateStartEvent(next));
-
-    await this.promise;
+    const { generateAudio, playAudioStream, signal } = this.di;
+    const prepareAudio = (
+      audioKey: AudioKey,
+    ): Promise<Result<GenerateAudioResult>> => {
+      this.dispatchEvent(new GenerateStartEvent(audioKey));
+      // エラー吐くタイミングを再生まで遅延させる（どこでエラーが起きたかをユーザーにわかりやすくするため）
+      return generateAudio({ audioKey }).then(
+        (result) => {
+          this.dispatchEvent(new GenerateEndEvent(audioKey, result.stream));
+          return success(result);
+        },
+        (error: unknown) => failure(error as Error),
+      );
+    };
+    let pending: ReturnType<typeof prepareAudio> | undefined;
+    let active: WavStream | undefined;
+    try {
+      for (const [index, audioKey] of this.audioKeys.entries()) {
+        signal.throwIfAborted();
+        pending ??= prepareAudio(audioKey);
+        this.dispatchEvent(new WaitStartEvent(audioKey));
+        const result = await pending;
+        pending = undefined;
+        if (!result.ok) {
+          throw result.error;
+        }
+        active = result.value.stream;
+        signal.throwIfAborted();
+        this.dispatchEvent(new WaitEndEvent(audioKey));
+        const nextAudioKey = this.audioKeys[index + 1];
+        if (nextAudioKey != undefined) pending = prepareAudio(nextAudioKey);
+        this.dispatchEvent(new PlayStartEvent(audioKey, active));
+        const completed = await playAudioStream({
+          audioKey,
+          audio: result.value,
+        });
+        active = undefined;
+        this.dispatchEvent(new PlayEndEvent(audioKey, !completed));
+        if (!completed) return;
+      }
+    } finally {
+      const onCancelError = (error: unknown) => {
+        if (!signal.aborted) log.error(error);
+      };
+      void active?.cancel().catch(onCancelError);
+      if (pending != undefined) {
+        void pending
+          .then((result) => {
+            if (result.ok) {
+              return result.value.stream.cancel();
+            }
+          })
+          .catch(onCancelError);
+      }
+    }
   }
 
   addEventListener<K extends keyof ContinuousPlayerEvents>(
@@ -148,7 +126,7 @@ export class GenerateStartEvent extends Event {
 export class GenerateEndEvent extends Event {
   constructor(
     public audioKey: AudioKey,
-    public audioBlob: Blob,
+    public stream: WavStream,
   ) {
     super("generateend");
   }
@@ -157,7 +135,7 @@ export class GenerateEndEvent extends Event {
 export class PlayStartEvent extends Event {
   constructor(
     public audioKey: AudioKey,
-    public audioBlob: Blob,
+    public stream: WavStream,
   ) {
     super("playstart");
   }

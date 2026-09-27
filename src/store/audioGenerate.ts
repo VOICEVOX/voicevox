@@ -2,65 +2,11 @@ import type {
   AudioItem,
   AudioStoreState,
   EditorAudioQuery,
-  FetchAudioResult,
-  IEngineConnectorFactoryActionsMapper,
   SettingStoreState,
 } from "./type";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { generateTempUniqueId } from "./utility";
 import { ensureNotNullish, type Brand } from "@/type/utility";
-
-const audioBlobCache: Record<string, Blob> = {};
-
-type Instance = {
-  invoke: IEngineConnectorFactoryActionsMapper;
-};
-
-/**
- * エンジンで音声を合成する。音声のキャッシュ機構も備える。
- */
-export async function fetchAudioFromAudioItem(
-  state: AudioStoreState & SettingStoreState,
-  instance: Instance,
-  {
-    audioItem,
-  }: {
-    audioItem: AudioItem;
-  },
-): Promise<FetchAudioResult> {
-  const { id, audioQuery, engineAudioQuery } = await generateUniqueIdAndQuery(
-    state,
-    audioItem,
-  );
-
-  if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
-    const blob = audioBlobCache[id];
-    return { audioQuery, blob };
-  }
-
-  const speaker = audioItem.voice.styleId;
-
-  let blob: Blob;
-  // FIXME: モーフィングが設定で無効化されていてもモーフィングが行われるので気づけるUIを作成する
-  if (audioItem.morphingInfo != undefined) {
-    if (!isMorphable(state, { audioItem })) throw new NotMorphableError();
-    blob = await instance.invoke("synthesisMorphing")({
-      audioQuery: engineAudioQuery,
-      baseSpeaker: speaker,
-      targetSpeaker: audioItem.morphingInfo.targetStyleId,
-      morphRate: audioItem.morphingInfo.rate,
-    });
-  } else {
-    blob = await instance.invoke("synthesis")({
-      audioQuery: engineAudioQuery,
-      speaker,
-      enableInterrogativeUpspeak:
-        state.experimentalSetting.enableInterrogativeUpspeak,
-    });
-  }
-  audioBlobCache[id] = blob;
-  return { audioQuery, blob };
-}
 
 export async function generateLabFromAudioQuery(
   audioQuery: EditorAudioQuery,
@@ -159,7 +105,7 @@ export function isMorphable(
   return info.isMorphable;
 }
 
-class NotMorphableError extends Error {
+export class NotMorphableError extends Error {
   constructor() {
     super("モーフィングの設定が無効です。");
   }

@@ -144,7 +144,8 @@ import {
 } from "@/domain/japanese";
 import type { AccentPhrase } from "@/openapi";
 import { useStore } from "@/store";
-import type { FetchAudioResult } from "@/store/type";
+import { withAudioPlayback } from "@/store/audioPlayer";
+import { WavStream } from "@/domain/wavStream";
 import { UnreachableError } from "@/type/utility";
 
 const store = useStore();
@@ -321,36 +322,45 @@ const play = async () => {
   if (accentPhrase.value == undefined) return;
 
   nowGenerating.value = true;
-  const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
-    text: yomi.value,
-    voice: voiceComputed.value,
-  });
-
-  if (audioItem.query == undefined)
-    throw new Error(`assert audioItem.query !== undefined`);
-
-  audioItem.query.accentPhrases = [accentPhrase.value];
-
-  let fetchAudioResult: FetchAudioResult;
   try {
-    fetchAudioResult = await store.actions.FETCH_AUDIO_FROM_AUDIO_ITEM({
-      audioItem,
+    const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
+      text: yomi.value,
+      voice: voiceComputed.value,
+    });
+
+    if (audioItem.query == undefined)
+      throw new Error(`assert audioItem.query !== undefined`);
+
+    audioItem.query.accentPhrases = [accentPhrase.value];
+
+    await withAudioPlayback(async (signal) => {
+      const { stream, startOffset } = await store.actions.FETCH_AUDIO_STREAM({
+        audioItem,
+        mode: "preview",
+        startOffset: 0,
+        signal,
+      });
+      nowGenerating.value = false;
+      nowPlaying.value = true;
+      await store.actions.PLAY_AUDIO_STREAM({
+        stream: new WavStream(stream),
+        startOffset,
+        startTime: 0,
+        signal,
+        notifyOnDelay:
+          store.getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem),
+      });
     });
   } catch (e) {
     window.backend.logError(e);
-    nowGenerating.value = false;
     void store.actions.SHOW_ALERT_DIALOG({
       title: "生成に失敗しました",
       message: "エンジンの再起動をお試しください。",
     });
-    return;
+  } finally {
+    nowGenerating.value = false;
+    nowPlaying.value = false;
   }
-
-  const { blob } = fetchAudioResult;
-  nowGenerating.value = false;
-  nowPlaying.value = true;
-  await store.actions.PLAY_AUDIO_BLOB({ audioBlob: blob });
-  nowPlaying.value = false;
 };
 
 const stop = () => {
