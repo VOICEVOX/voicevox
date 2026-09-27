@@ -12,6 +12,7 @@ import type {
   DotNotationActionContext,
 } from "./vuex";
 import { createCommandMutationTree, type PayloadRecipeTree } from "./command";
+import type { AudioUniqueId } from "./audioGenerate";
 import type {
   AccentPhrase,
   AudioQuery,
@@ -725,8 +726,23 @@ export type AudioCommandStoreTypes = {
  * Audio Player Store Types
  */
 
+export type CurrentPlayState =
+  | {
+      type: "stopped";
+    }
+  | {
+      type: "streaming";
+      audioKey: AudioKey;
+      currentTime: number;
+    }
+  // NOTE: 単体再生のルートを置き換えるときに消えるはず
+  | {
+      type: "playing";
+      audioKey: AudioKey;
+    };
+
 export type AudioPlayerStoreState = {
-  nowPlayingAudioKey?: AudioKey;
+  currentPlayState: CurrentPlayState;
 };
 
 export type AudioPlayerStoreTypes = {
@@ -738,8 +754,8 @@ export type AudioPlayerStoreTypes = {
     getter: boolean;
   };
 
-  SET_AUDIO_NOW_PLAYING: {
-    mutation: { audioKey: AudioKey; nowPlaying: boolean };
+  SET_CURRENT_PLAY_STATE: {
+    mutation: { currentPlayState: CurrentPlayState };
   };
 
   SET_AUDIO_SOURCE: {
@@ -752,6 +768,28 @@ export type AudioPlayerStoreTypes = {
 
   STOP_AUDIO: {
     action(): void;
+  };
+
+  PLAY_AUDIO_STREAMING: {
+    action(payload: { audioKey: AudioKey }): Promise<boolean>;
+  };
+
+  PLAY_AUDIO_STREAMING_FROM_CACHE: {
+    action(payload: {
+      audioKey: AudioKey;
+      cache: { wav: Blob; startsAt: number };
+      startTime: number;
+    }): Promise<boolean>;
+  };
+
+  GENERATE_AND_PLAY_AUDIO_STREAMING: {
+    action(payload: {
+      audioKey: AudioKey;
+      audioItem: AudioItem;
+      audioQuery: AudioQuery;
+      cacheKey: AudioUniqueId;
+      startTime: number;
+    }): Promise<boolean>;
   };
 };
 
@@ -2562,7 +2600,8 @@ export type IEngineConnectorFactoryActionsMapper = <
 >(
   action: K,
 ) => (
-  _: Parameters<IEngineConnectorFactoryActions[K]>[0],
+  params: Parameters<IEngineConnectorFactoryActions[K]>[0],
+  initOverrides?: Parameters<IEngineConnectorFactoryActions[K]>[1],
 ) => ReturnType<IEngineConnectorFactoryActions[K]>;
 
 export type ProxyStoreTypes = {

@@ -389,7 +389,7 @@ export const showNotifyAndNotShowAgainButton = (
     message: options.message,
     color: "toast" + suffix,
     textColor: "toast-display" + suffix,
-    icon: options.isWarning ? "warning" : "info",
+    icon: options.icon,
     timeout: NOTIFY_TIMEOUT,
     actions: [
       {

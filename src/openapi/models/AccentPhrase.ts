@@ -39,7 +39,7 @@ export interface AccentPhrase {
      */
     accent: number;
     /**
-     * 後ろに無音を付けるかどうか
+     * アクセント句の末尾につく無音モーラ。null の場合は無音モーラを付けない。
      * @type {Mora}
      * @memberof AccentPhrase
      */

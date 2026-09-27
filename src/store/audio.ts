@@ -62,7 +62,11 @@ import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { UnreachableError } from "@/type/utility";
+import {
+  assertNonNullable,
+  ensureNotNullish,
+  UnreachableError,
+} from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
@@ -1730,7 +1734,31 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   PLAY_AUDIO: {
     action: createUILockAction(
-      async ({ mutations, actions }, { audioKey }: { audioKey: AudioKey }) => {
+      async (
+        { state, mutations, actions, getters },
+        { audioKey }: { audioKey: AudioKey },
+      ) => {
+        const voice = state.audioItems[audioKey].voice;
+        const engineManifest = state.engineManifests[voice.engineId];
+        const characterInfo = getters.CHARACTER_INFO(
+          voice.engineId,
+          voice.styleId,
+        );
+        assertNonNullable(characterInfo);
+        const styleInfo = ensureNotNullish(
+          characterInfo.metas.styles.find(
+            (style) =>
+              style.styleId === state.audioItems[audioKey].voice.styleId,
+          ),
+        );
+        if (
+          engineManifest.supportedFeatures?.streamingSynthesis &&
+          !state.audioItems[audioKey].morphingInfo &&
+          styleInfo.styleType === "streaming_talk"
+        ) {
+          return actions.PLAY_AUDIO_STREAMING({ audioKey });
+        }
+
         await actions.STOP_AUDIO();
 
         // 音声用意
