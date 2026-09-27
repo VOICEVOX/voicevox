@@ -329,7 +329,6 @@ const play = async () => {
     await audioPlayMutex.lock(async (signal) => {
       let wavStream: WavStream | undefined;
       try {
-        if (signal.aborted) return;
         const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
           text: yomi.value,
           voice: voiceComputed.value,
@@ -349,7 +348,6 @@ const play = async () => {
         nowGenerating.value = false;
         nowPlaying.value = true;
         wavStream = new WavStream(stream);
-        let delayNotified = false;
         await playAudioStream(
           {
             stream: wavStream,
@@ -357,26 +355,7 @@ const play = async () => {
             audioOutputDevice: store.state.savingSetting.audioOutputDevice,
           },
           signal,
-          {
-            onDelay() {
-              if (
-                store.getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem) &&
-                !delayNotified &&
-                !store.state.confirmedTips.streamingUnrecommended
-              ) {
-                delayNotified = true;
-                void store.actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
-                  message:
-                    "音声が途切れる場合は設定の「ストリーミング再生」を「安定」に変更してください",
-                  icon: "warning",
-                  tipName: "streamingUnrecommended",
-                });
-              }
-            },
-          },
         );
-      } catch (error) {
-        if (!signal.aborted) throw error;
       } finally {
         void wavStream?.cancel().catch((error: unknown) => {
           if (!signal.aborted) window.backend.logError(error);
