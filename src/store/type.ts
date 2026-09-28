@@ -111,24 +111,6 @@ export type FetchAudioResult = {
   blob: Blob;
 };
 
-export type FetchAudioStreamPayload = {
-  audioItem: AudioItem;
-  signal?: AbortSignal;
-} & (
-  | {
-      mode: "preview";
-      /** 元の音声上の再生開始位置（秒）。 */
-      startOffset: number;
-    }
-  | { mode: "export" }
-);
-
-export type FetchAudioStreamResult = {
-  stream: ReadableStream<Uint8Array>;
-  /** 返したWAVの先頭からの読み飛ばし量（秒）。 */
-  startOffset: number;
-};
-
 export type Command = {
   id: CommandId;
   undoPatches: Patch[];
@@ -450,7 +432,23 @@ export type AudioStoreTypes = {
   };
 
   FETCH_AUDIO_STREAM: {
-    action(payload: FetchAudioStreamPayload): Promise<FetchAudioStreamResult>;
+    action(
+      payload: {
+        audioItem: AudioItem;
+        signal?: AbortSignal;
+      } & (
+        | {
+            mode: "preview";
+            /** 元の音声上の再生開始位置（秒）。 */
+            startOffset: number;
+          }
+        | { mode: "export" }
+      ),
+    ): Promise<{
+      stream: ReadableStream<Uint8Array>;
+      /** 返したWAVの先頭からの読み飛ばし量（秒）。 */
+      startOffset: number;
+    }>;
   };
 
   IS_STREAMING_SYNTHESIS_SUPPORTED: {
