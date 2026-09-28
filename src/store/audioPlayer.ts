@@ -36,8 +36,6 @@ async function setAudioContextSinkId(device: string) {
     });
 }
 
-const cancelled = Symbol("cancelled");
-
 /**
  * WavStreamを再生する。
  * 再生中にキャンセルされた場合、再生を中止する。
@@ -80,15 +78,16 @@ export async function playAudioStream(
   if (cancel.aborted) return;
 
   const { promise: cancelledPromise, resolve: resolveCancel } =
-    Promise.withResolvers<typeof cancelled>();
+    Promise.withResolvers<typeof cancelledMarker>();
   using cancelables = new DisposableStack();
-  const onAbort = () => resolveCancel(cancelled);
+  const cancelledMarker = Symbol.for("cancelled");
+  const onAbort = () => resolveCancel(cancelledMarker);
   cancel.addEventListener("abort", onAbort, { once: true });
-  cancelables.defer(() => cancel.removeEventListener("abort", onAbort));
+
   let lastBufferEndTime = audioContext.currentTime;
 
   const header = await Promise.race([cancelledPromise, stream.readHeader()]);
-  if (header === cancelled) return;
+  if (header === cancelledMarker) return;
   const sampleRate = header.sampleRate;
 
   const samplesIterator = stream.readSamples(
@@ -114,7 +113,7 @@ export async function playAudioStream(
     ]);
     delayNotifier?.clear();
 
-    if (chunkOrDone === cancelled) {
+    if (chunkOrDone === cancelledMarker) {
       return;
     }
     if (chunkOrDone.done) {
