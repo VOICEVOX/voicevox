@@ -351,13 +351,7 @@ const play = async () => {
         await setAudioContextSinkId(
           store.state.savingSetting.audioOutputDevice,
         );
-        await playAudioStream(
-          {
-            stream: wavStream,
-            offset: startOffset,
-          },
-          signal,
-        );
+        await playAudioStream(wavStream, startOffset, signal);
       } finally {
         void wavStream?.cancel().catch((error: unknown) => {
           if (!signal.aborted) window.backend.logError(error);
