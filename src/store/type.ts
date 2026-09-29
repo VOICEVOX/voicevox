@@ -427,6 +427,7 @@ export type AudioStoreTypes = {
     action(payload: { audioKey: AudioKey }): number[];
   };
 
+  // TODO: 将来的にはFETCH_AUDIO_STREAMに統合する
   FETCH_AUDIO: {
     action(payload: { audioKey: AudioKey }): Promise<FetchAudioResult>;
   };
