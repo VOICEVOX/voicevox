@@ -438,11 +438,15 @@ export type AudioStoreTypes = {
         signal?: AbortSignal;
       } & (
         | {
+            /** エディタ内での再生する用の音声を生成する。 */
             mode: "preview";
             /** 元の音声上の再生開始位置（秒）。 */
             startOffset: number;
           }
-        | { mode: "export" }
+        | {
+            /** 出力用の音声を生成する。 */
+            mode: "export";
+          }
       ),
     ): Promise<{
       stream: ReadableStream<Uint8Array>;

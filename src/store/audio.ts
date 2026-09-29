@@ -1354,7 +1354,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       //   - 開始時刻は、ストリーミングAPIでは`startOffset`、それ以外のAPIでは0になる。
       // - もしキャッシュが存在していて、再生しようとしている時刻からの音声を含んでいる場合は、キャッシュから再生する。
       //   - ここで、「再生しようとしている時刻からの音声を含んでいる場合」はキャッシュの開始時刻が再生しようとしている時刻よりも前かどうかで判定する。
-      // - 再生用（preview）と保存用（export）でキャッシュを分ける。
+      // - 再生用と保存用でキャッシュを分ける。
       //   - ストリーミング再生だと音声の質が微妙に悪化する可能性があるため。
       const { id, engineAudioQuery: audioQuery } =
         await generateUniqueIdAndQuery(state, audioItem);
