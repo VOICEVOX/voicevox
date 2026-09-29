@@ -144,7 +144,7 @@ import {
 } from "@/domain/japanese";
 import type { AccentPhrase } from "@/openapi";
 import { useStore } from "@/store";
-import { playAudioStream } from "@/store/audioPlayer";
+import { playAudioStream, setAudioContextSinkId } from "@/store/audioPlayer";
 import { AbortableMutex } from "@/helpers/abortableMutex";
 import { WavStream } from "@/domain/wavStream";
 import { UnreachableError } from "@/type/utility";
@@ -348,11 +348,13 @@ const play = async () => {
         nowGenerating.value = false;
         nowPlaying.value = true;
         wavStream = new WavStream(stream);
+        await setAudioContextSinkId(
+          store.state.savingSetting.audioOutputDevice,
+        );
         await playAudioStream(
           {
             stream: wavStream,
             offset: startOffset,
-            audioOutputDevice: store.state.savingSetting.audioOutputDevice,
           },
           signal,
         );

@@ -23,7 +23,7 @@ if (window.AudioContext) {
   audioContext = new AudioContext();
 }
 
-async function setAudioContextSinkId(device: string) {
+export async function setAudioContextSinkId(device: string) {
   if (!audioContext?.setSinkId) return;
   await audioContext
     .setSinkId(device === "default" ? "" : device)
@@ -51,11 +51,9 @@ export async function playAudioStream(
   {
     stream,
     offset,
-    audioOutputDevice,
   }: {
     stream: WavStream;
     offset: number;
-    audioOutputDevice: string;
   },
   cancel: AbortSignal,
   callbacks: {
@@ -69,7 +67,6 @@ export async function playAudioStream(
   if (!audioContext) {
     throw new Error("AudioContext is not supported in this browser.");
   }
-  await setAudioContextSinkId(audioOutputDevice);
   // TODO: interruptedも考慮する
   if (audioContext.state === "suspended") {
     // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
@@ -358,11 +355,11 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       try {
         if (signal.aborted) return false;
         let delayNotified = false;
+        await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
         await playAudioStream(
           {
             stream,
             offset: startOffset,
-            audioOutputDevice: state.savingSetting.audioOutputDevice,
           },
           signal,
           {
