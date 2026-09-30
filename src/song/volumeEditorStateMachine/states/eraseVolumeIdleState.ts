@@ -61,8 +61,7 @@ export class EraseVolumeIdleState implements State<
 
     if (
       pointerEvent.type === "pointerdown" &&
-      getButton(pointerEvent) === "LEFT_BUTTON" &&
-      isEditable
+      getButton(pointerEvent) === "LEFT_BUTTON"
     ) {
       setNextState("eraseVolume", {
         startPosition: position,
