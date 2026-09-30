@@ -3,7 +3,7 @@
  */
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
-import { ContinuousPlayer } from "./audioContinuousPlayer";
+import { playContinuously } from "./audioContinuousPlayer";
 import type {
   AudioPlayerStoreState,
   AudioPlayerStoreTypes,
@@ -246,7 +246,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     action: createUILockAction(async ({ state, getters, mutations, actions }) =>
       audioPlayMutex.lock(async (signal) => {
         if (signal.aborted) return;
-        const currentAudioKey = state._activeAudioKey;
+        const currentAudioKey = getters.ACTIVE_AUDIO_KEY;
         const currentAudioPlayStartPoint = getters.AUDIO_PLAY_START_POINT;
         const index =
           currentAudioKey == undefined
@@ -263,50 +263,46 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
                 ).at(currentAudioPlayStartPoint ?? 0),
               );
         const audioKeys = state.audioKeys.slice(index);
-        const player = new ContinuousPlayer(audioKeys, {
-          async generateAudio({ audioKey }) {
-            const result = await actions.FETCH_AUDIO_STREAM({
-              audioItem: state.audioItems[audioKey],
-              mode: "preview",
-              signal,
-              startOffset: audioKey === currentAudioKey ? startTime : 0,
-            });
-            return {
-              stream: new WavStream(result.stream),
-              startOffset: result.startOffset,
-            };
-          },
-          playAudioStream({ audioKey, audio: { startOffset, stream } }) {
-            if (currentAudioKey !== audioKey) {
-              mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
-            }
-            void actions.RESET_PROGRESS();
-            return actions.PLAY_AUDIO_STREAM({
-              stream,
-              startOffset,
-              audioKey,
-              signal,
-              startTime: audioKey === currentAudioKey ? startTime : 0,
-              notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(
-                state.audioItems[audioKey],
-              ),
-            });
-          },
-        });
-        player.addEventListener("playstart", (event) => {
-          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: event.audioKey });
-        });
-        player.addEventListener("waitstart", (event) => {
-          void actions.START_PROGRESS();
-          mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: event.audioKey });
-          mutations.SET_CURRENT_PLAY_STATE({
-            currentPlayState: { type: "preparing" },
-          });
-        });
-
         mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: true });
         try {
-          await player.playUntilComplete();
+          await playContinuously(audioKeys, {
+            async fetchAudio({ audioKey, abortSignal }) {
+              const result = await actions.FETCH_AUDIO_STREAM({
+                audioItem: state.audioItems[audioKey],
+                mode: "preview",
+                signal: AbortSignal.any([signal, abortSignal]),
+                startOffset: audioKey === currentAudioKey ? startTime : 0,
+              });
+              return {
+                stream: result.stream,
+                startOffset: result.startOffset,
+              };
+            },
+            playAudioStream({ audioKey, audio: { startOffset, stream } }) {
+              mutations.SET_ACTIVE_AUDIO_KEY({ audioKey });
+              if (currentAudioKey !== audioKey) {
+                mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
+              }
+              void actions.RESET_PROGRESS();
+              return actions.PLAY_AUDIO_STREAM({
+                stream: new WavStream(stream),
+                startOffset,
+                audioKey,
+                signal,
+                startTime: audioKey === currentAudioKey ? startTime : 0,
+                notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(
+                  state.audioItems[audioKey],
+                ),
+              });
+            },
+            onWaitStart(audioKey) {
+              void actions.START_PROGRESS();
+              mutations.SET_ACTIVE_AUDIO_KEY({ audioKey });
+              mutations.SET_CURRENT_PLAY_STATE({
+                currentPlayState: { type: "preparing" },
+              });
+            },
+          });
         } finally {
           void actions.RESET_PROGRESS();
           mutations.SET_CURRENT_PLAY_STATE({

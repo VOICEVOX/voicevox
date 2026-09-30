@@ -1406,10 +1406,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         .blob()
         .then((wav) => {
           if (signal?.aborted) return;
-          const existing = audioCache.get(cacheKey);
-          if (existing == undefined || audioStartOffset <= existing.startsAt) {
             audioCache.set(cacheKey, { wav, startsAt: audioStartOffset });
-          }
         })
         .catch((error: unknown) => {
           if (!signal?.aborted) {

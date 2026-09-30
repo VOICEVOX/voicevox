@@ -1,152 +1,91 @@
+import { createLogger } from "@/helpers/log";
+import { consumeStream } from "@/helpers/consumeStream";
 import type { AudioKey } from "@/type/preload";
-import type { WavStream } from "@/domain/wavStream";
 import { type Result, success, failure } from "@/type/result";
+import { ensureNotNullish } from "@/type/utility";
+
+const log = createLogger("store/audioContinuousPlayer");
 
 type GenerateAudioResult = {
-  stream: WavStream;
+  stream: ReadableStream<Uint8Array>;
   startOffset: number;
 };
-interface DI {
-  generateAudio: (params: {
-    audioKey: AudioKey;
-  }) => Promise<GenerateAudioResult>;
-  playAudioStream: (params: {
-    audioKey: AudioKey;
-    audio: GenerateAudioResult;
-  }) => Promise<boolean>;
-}
 
-/** 現在の音声を再生しながら、次の1件を取得する。 */
-export class ContinuousPlayer extends EventTarget {
-  constructor(
-    private readonly audioKeys: AudioKey[],
-    private readonly di: DI,
-  ) {
-    super();
-  }
+/** 音声を再生しながら後続の音声を順番に取得する。 */
+export async function playContinuously(
+  audioKeys: AudioKey[],
+  {
+    fetchAudio,
+    playAudioStream,
+    onWaitStart,
+  }: {
+    fetchAudio: (params: {
+      audioKey: AudioKey;
+      abortSignal: AbortSignal;
+    }) => Promise<GenerateAudioResult>;
+    playAudioStream: (params: {
+      audioKey: AudioKey;
+      audio: GenerateAudioResult;
+    }) => Promise<boolean>;
+    onWaitStart: (audioKey: AudioKey) => void;
+  },
+) {
+  const abortOnExit = new AbortController();
+  using cancellables = new DisposableStack();
+  cancellables.defer(() => {
+    abortOnExit.abort();
+  });
 
-  async playUntilComplete() {
-    const { generateAudio, playAudioStream } = this.di;
-    const prepareAudio = (
-      audioKey: AudioKey,
-    ): Promise<Result<GenerateAudioResult>> => {
-      this.dispatchEvent(new GenerateStartEvent(audioKey));
-      // エラー吐くタイミングを再生まで遅延させる（どこでエラーが起きたかをユーザーにわかりやすくするため）
-      return generateAudio({ audioKey }).then(
-        (result) => {
-          this.dispatchEvent(new GenerateEndEvent(audioKey, result.stream));
-          return success(result);
-        },
-        (error: unknown) => failure(error as Error),
-      );
-    };
-    let pending: ReturnType<typeof prepareAudio> | undefined;
-    let active: WavStream | undefined;
-    try {
-      for (const [index, audioKey] of this.audioKeys.entries()) {
-        pending ??= prepareAudio(audioKey);
-        this.dispatchEvent(new WaitStartEvent(audioKey));
-        const result = await pending;
-        pending = undefined;
-        if (!result.ok) {
-          throw result.error;
-        }
-        active = result.value.stream;
-        this.dispatchEvent(new WaitEndEvent(audioKey));
-        const nextAudioKey = this.audioKeys[index + 1];
-        if (nextAudioKey != undefined) pending = prepareAudio(nextAudioKey);
-        this.dispatchEvent(new PlayStartEvent(audioKey, active));
-        const completed = await playAudioStream({
+  // 1つ前の音声のストリームが終了してから次の音声のストリームを取得するPromiseのチェーン
+  let previousStreamEnded = Promise.resolve();
+  const pending = audioKeys.map((audioKey) => {
+    const { promise: streamEnded, resolve: resolveStreamEnd } =
+      Promise.withResolvers<void>();
+
+    const prepared = previousStreamEnded
+      .then(async (): Promise<Result<GenerateAudioResult> | undefined> => {
+        log.info(`fetching audio for ${audioKey}`);
+
+        const audio = await fetchAudio({
           audioKey,
-          audio: result.value,
+          abortSignal: abortOnExit.signal,
         });
-        active = undefined;
-        this.dispatchEvent(new PlayEndEvent(audioKey, !completed));
-        if (!completed) return;
-      }
-    } finally {
-      void active?.cancel();
-      if (pending != undefined) {
-        void pending.then((result) => {
-          if (result.ok) {
-            return result.value.stream.cancel();
-          }
+        if (abortOnExit.signal.aborted) {
+          await audio.stream.cancel();
+          return;
+        }
+
+        // ストリームを複製して、1つは再生用、もう1つは終了待ち用にする
+        const [mainStream, endWaitStream] = audio.stream.tee();
+        void consumeStream(endWaitStream, {
+          signal: abortOnExit.signal,
+        }).then(() => {
+          log.info(`audio stream for ${audioKey} completed`);
+          resolveStreamEnd();
         });
-      }
+
+        return success({ ...audio, stream: mainStream });
+      })
+      // エラーはその音声の再生時に通知する。
+      .catch((error: unknown) => failure(error as Error));
+
+    previousStreamEnded = streamEnded;
+    return prepared;
+  });
+
+  for (const [index, audioKey] of audioKeys.entries()) {
+    onWaitStart(audioKey);
+    const result = ensureNotNullish(await pending[index]);
+
+    if (!result.ok) {
+      throw result.error;
     }
-  }
 
-  addEventListener<K extends keyof ContinuousPlayerEvents>(
-    type: K,
-    listener: (this: ContinuousPlayer, ev: ContinuousPlayerEvents[K]) => void,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
-
-  // FIXME: 上のシグネチャ定義と同じ形なので冗長かも？
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ) {
-    super.addEventListener(type, listener, options);
-  }
-}
-
-interface ContinuousPlayerEvents {
-  generatestart: GenerateStartEvent;
-  generateend: GenerateEndEvent;
-  playstart: PlayStartEvent;
-  playend: PlayEndEvent;
-  waitstart: WaitStartEvent;
-  waitend: WaitEndEvent;
-}
-
-export class GenerateStartEvent extends Event {
-  constructor(public audioKey: AudioKey) {
-    super("generatestart");
-  }
-}
-
-export class GenerateEndEvent extends Event {
-  constructor(
-    public audioKey: AudioKey,
-    public stream: WavStream,
-  ) {
-    super("generateend");
-  }
-}
-
-export class PlayStartEvent extends Event {
-  constructor(
-    public audioKey: AudioKey,
-    public stream: WavStream,
-  ) {
-    super("playstart");
-  }
-}
-
-export class PlayEndEvent extends Event {
-  constructor(
-    public audioKey: AudioKey,
-    public forceFinish: boolean,
-  ) {
-    super("playend");
-  }
-}
-
-export class WaitStartEvent extends Event {
-  constructor(public audioKey: AudioKey) {
-    super("waitstart");
-  }
-}
-
-export class WaitEndEvent extends Event {
-  constructor(public audioKey: AudioKey) {
-    super("waitend");
+    log.info(`playing audio for ${audioKey}`);
+    const completed = await playAudioStream({
+      audioKey,
+      audio: result.value,
+    });
+    if (!completed) return;
   }
 }
