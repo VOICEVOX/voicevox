@@ -230,7 +230,8 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     getter(state, getters) {
       const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
       return (
-        state.currentPlayState.type !== "stopped" &&
+        (state.currentPlayState.type === "playing" ||
+          state.currentPlayState.type === "streaming") &&
         state.currentPlayState.audioKey === activeAudioKey
       );
     },
@@ -434,19 +435,14 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         using cleanup = new DisposableStack();
         cleanup.defer(() => {
           void actions.RESET_PROGRESS();
-          mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey,
-            nowGenerating: false,
-          });
           mutations.SET_CURRENT_PLAY_STATE({
             currentPlayState: { type: "stopped" },
           });
         });
         await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
         if (abortSignal.aborted) return false;
-        mutations.SET_AUDIO_NOW_GENERATING({
-          audioKey,
-          nowGenerating: true,
+        mutations.SET_CURRENT_PLAY_STATE({
+          currentPlayState: { type: "preparing" },
         });
         void actions.START_PROGRESS();
         const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
@@ -475,11 +471,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
           {
             onStart() {
               void actions.RESET_PROGRESS();
-              // TODO: GENERATING（生成）自体は終わっていないので、generatingという名称を変更する
-              mutations.SET_AUDIO_NOW_GENERATING({
-                audioKey,
-                nowGenerating: false,
-              });
             },
             onChunkStart(_index, time) {
               mutations.SET_CURRENT_PLAY_STATE({
