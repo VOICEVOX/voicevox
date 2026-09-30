@@ -23,6 +23,7 @@ if (window.AudioContext) {
   audioContext = new AudioContext();
 }
 
+// TODO: AudioContextをアプリケーション内で一つ持つようにして、エラーハンドリングや再生デバイスの切り替えを統一する
 export async function setAudioContextSinkId(device: string) {
   if (!audioContext?.setSinkId) return;
   await audioContext
