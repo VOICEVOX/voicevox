@@ -206,9 +206,8 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         audioPlayMutex.lock(async (signal) => {
           if (signal.aborted) return false;
           const audioItem = cloneWithUnwrapProxy(state.audioItems[audioKey]);
-          mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey,
-            nowGenerating: true,
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: { type: "preparing" },
           });
           void actions.START_PROGRESS();
           try {
@@ -224,10 +223,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               signal,
             });
             void actions.RESET_PROGRESS();
-            mutations.SET_AUDIO_NOW_GENERATING({
-              audioKey,
-              nowGenerating: false,
-            });
             return await actions.PLAY_AUDIO_STREAM({
               stream: new WavStream(stream),
               startOffset,
@@ -239,9 +234,8 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             });
           } finally {
             void actions.RESET_PROGRESS();
-            mutations.SET_AUDIO_NOW_GENERATING({
-              audioKey,
-              nowGenerating: false,
+            mutations.SET_CURRENT_PLAY_STATE({
+              currentPlayState: { type: "stopped" },
             });
           }
         }),
@@ -287,10 +281,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
             }
             void actions.RESET_PROGRESS();
-            mutations.SET_AUDIO_NOW_GENERATING({
-              audioKey,
-              nowGenerating: false,
-            });
             return actions.PLAY_AUDIO_STREAM({
               stream,
               startOffset,
@@ -309,9 +299,8 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         player.addEventListener("waitstart", (event) => {
           void actions.START_PROGRESS();
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: event.audioKey });
-          mutations.SET_AUDIO_NOW_GENERATING({
-            audioKey: event.audioKey,
-            nowGenerating: true,
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: { type: "preparing" },
           });
         });
 
@@ -320,12 +309,9 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
           await player.playUntilComplete();
         } finally {
           void actions.RESET_PROGRESS();
-          for (const audioKey of audioKeys) {
-            mutations.SET_AUDIO_NOW_GENERATING({
-              audioKey,
-              nowGenerating: false,
-            });
-          }
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: { type: "stopped" },
+          });
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: currentAudioKey });
           mutations.SET_AUDIO_PLAY_START_POINT({
             startPoint: currentAudioPlayStartPoint,

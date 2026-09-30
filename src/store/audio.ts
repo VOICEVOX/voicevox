@@ -200,7 +200,6 @@ export const audioStoreState: AudioStoreState = {
   morphableTargetsInfo: {},
   audioItems: {},
   audioKeys: [],
-  audioStates: {},
   nowPlayingContinuously: false,
 };
 
@@ -609,18 +608,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SET_AUDIO_NOW_GENERATING: {
-    mutation(
-      state,
-      {
-        audioKey,
-        nowGenerating,
-      }: { audioKey: AudioKey; nowGenerating: boolean },
-    ) {
-      state.audioStates[audioKey].nowGenerating = nowGenerating;
-    },
-  },
-
   SET_NOW_PLAYING_CONTINUOUSLY: {
     mutation(state, { nowPlaying }: { nowPlaying: boolean }) {
       state.nowPlayingContinuously = nowPlaying;
@@ -767,9 +754,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           : state.audioKeys.length;
       state.audioKeys.splice(index, 0, audioKey);
       state.audioItems[audioKey] = audioItem;
-      state.audioStates[audioKey] = {
-        nowGenerating: false,
-      };
     },
   },
 
@@ -792,9 +776,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       state.audioKeys.splice(index, 0, ...audioKeys);
       for (const { audioKey, audioItem } of audioKeyItemPairs) {
         state.audioItems[audioKey] = audioItem;
-        state.audioStates[audioKey] = {
-          nowGenerating: false,
-        };
       }
     },
   },
@@ -803,7 +784,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     mutation(state, { audioKey }: { audioKey: AudioKey }) {
       state.audioKeys.splice(state.audioKeys.indexOf(audioKey), 1);
       delete state.audioItems[audioKey];
-      delete state.audioStates[audioKey];
     },
   },
 

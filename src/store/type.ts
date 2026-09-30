@@ -102,10 +102,6 @@ export type AudioItem = {
   morphingInfo?: MorphingInfo;
 };
 
-export type AudioState = {
-  nowGenerating: boolean;
-};
-
 export type FetchAudioResult = {
   audioQuery: EditorAudioQuery;
   blob: Blob;
@@ -166,7 +162,6 @@ export type AudioStoreState = {
   audioKeysWithInitializingSpeaker: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;
   audioKeys: AudioKey[];
-  audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
   _selectedAudioKeys?: AudioKey[];
   _audioPlayStartPoint?: number;
@@ -231,10 +226,6 @@ export type AudioStoreTypes = {
   SET_AUDIO_PLAY_START_POINT: {
     mutation: { startPoint?: number };
     action(payload: { startPoint?: number }): void;
-  };
-
-  SET_AUDIO_NOW_GENERATING: {
-    mutation: { audioKey: AudioKey; nowGenerating: boolean };
   };
 
   SET_NOW_PLAYING_CONTINUOUSLY: {
@@ -740,6 +731,9 @@ export type AudioCommandStoreTypes = {
  */
 
 export type CurrentPlayState =
+  | {
+      type: "preparing";
+    }
   | {
       type: "stopped";
     }
