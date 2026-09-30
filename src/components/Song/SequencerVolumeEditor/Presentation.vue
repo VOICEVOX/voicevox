@@ -32,6 +32,7 @@
     <div
       class="volume-editor-area"
       @pointerdown="onSurfacePointerDown"
+      @pointerup="onSurfacePointerUp"
       @pointermove="onSurfacePointerMove"
       @pointerleave="onSurfacePointerLeave"
     ></div>
@@ -197,6 +198,7 @@ const {
   canvasContainer,
   updateViewportRectCache,
   onSurfacePointerDown,
+  onSurfacePointerUp,
   onSurfacePointerMove,
   onSurfacePointerLeave,
 } = useVolumeEditorPointerInput({

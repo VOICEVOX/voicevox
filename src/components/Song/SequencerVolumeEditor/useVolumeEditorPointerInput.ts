@@ -144,6 +144,15 @@ export const useVolumeEditorPointerInput = (options: {
     }
   };
 
+  const onSurfacePointerUp = (event: PointerEvent) => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    onWindowPointerUp(event);
+    dispatchPointerEvent(event, "VolumeEditorArea");
+  };
+
   const onWindowPointerCancel = (event: PointerEvent) => {
     if (options.previewMode.value !== "IDLE") {
       dispatchPointerEvent(event, "Window");
@@ -166,6 +175,7 @@ export const useVolumeEditorPointerInput = (options: {
     canvasContainer,
     updateViewportRectCache,
     onSurfacePointerDown,
+    onSurfacePointerUp,
     onSurfacePointerMove,
     onSurfacePointerLeave,
   };
