@@ -145,7 +145,6 @@ const resolveVolumeLineColors = createThemeColorResolver({
   hovered: "--scheme-color-song-volume-line-hover",
   editing: "--scheme-color-song-volume-line-editing",
   areaContainer: "--scheme-color-song-volume-area-container",
-  endpointContainer: "--scheme-color-song-volume-endpoint-container",
   erasePreviewOverlay: "--scheme-color-song-volume-erase-preview",
   zeroLine: "--scheme-color-song-volume-zero-line",
   hoverPoint: "--scheme-color-song-volume-indicator",
@@ -316,7 +315,6 @@ const getVolumeEditorLineColors = (element: HTMLElement) => {
     feedback:
       props.previewMode === "VOLUME_DRAW" ? colors.editing : colors.hovered,
     areaContainer: colors.areaContainer,
-    endpointContainer: colors.endpointContainer,
     erasePreviewOverlay: colors.erasePreviewOverlay,
     zeroLine: colors.zeroLine,
     hoverPoint: colors.hoverPoint,
