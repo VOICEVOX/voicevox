@@ -53,7 +53,7 @@ export class EraseVolumeIdleState implements State<
       context.getEditableFrameRanges(),
     );
     const isEditable = editableRange != undefined;
-    context.cursorState.value = isEditable ? "ERASE" : "NOT_ALLOWED";
+    context.cursorState.value = "ERASE";
     context.highlightedFrame.value = isEditable ? position.frame : undefined;
     context.hoverPointer.value = isEditable
       ? { x: pointerInfo.x, y: pointerInfo.y }
