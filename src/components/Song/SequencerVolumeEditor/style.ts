@@ -4,7 +4,7 @@ export const VOLUME_EDITOR_LAYOUT = {
   tooltipClampWidthPx: 80,
   tooltipHeightPx: 28,
   tooltipOffsetPx: 16,
-  endpointRadiusPx: 4.5,
+  endpointRadiusPx: 4,
   hoverPointRadiusPx: 3.5,
   endpointMergeDistancePx: 8,
   lyricMinWidthPx: 16,
@@ -16,7 +16,6 @@ export const VOLUME_EDITOR_LAYOUT = {
 export const VOLUME_EDITOR_LINE_WIDTH = {
   volume: 2,
   hoveredVolume: 2,
-  endpoint: 2,
   zeroLine: 1,
   guide: 1,
 } as const;

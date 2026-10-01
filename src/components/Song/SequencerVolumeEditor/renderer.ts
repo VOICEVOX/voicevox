@@ -21,12 +21,10 @@ export type VolumeEditorBaseXRange = {
 
 export type VolumeEditorLineColors = {
   readonly line: Color;
-  /** ホバー中・描画中の区間に使う線色。端点の枠線も同じ色にする。 */
+  /** ホバー中・描画中の区間に使う線色。端点も同じ色にする。 */
   readonly feedback: Color;
   /** 0dB基準線とカーブの間の塗り。 */
   readonly areaContainer: Color;
-  /** 区間端に置く丸の塗り。枠線は線色を使う。 */
-  readonly endpointContainer: Color;
   readonly erasePreviewOverlay: Color;
   readonly zeroLine: Color;
   readonly hoverPoint: Color;
@@ -464,11 +462,6 @@ export class VolumeEditorRenderer {
       this.pointGraphics
         .circle(node.x, node.y, VOLUME_EDITOR_LAYOUT.endpointRadiusPx)
         .fill({
-          color: colors.endpointContainer.toRgbNumber(),
-          alpha: colors.endpointContainer.toAlphaFloat(),
-        })
-        .stroke({
-          width: VOLUME_EDITOR_LINE_WIDTH.endpoint,
           color: color.toRgbNumber(),
           alpha: color.toAlphaFloat(),
         });
