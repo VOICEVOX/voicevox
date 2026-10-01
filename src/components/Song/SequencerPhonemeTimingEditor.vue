@@ -4,6 +4,7 @@
     <div
       ref="parameterArea"
       class="parameter-area"
+      :class="cursorClass"
       @pointerdown="onPointerDown"
       @dblclick="onDoubleClick"
       @pointermove="onPointerMove"
@@ -110,16 +111,14 @@ const {
 
 const parameterArea = ref<HTMLElement | null>(null);
 
-const cursorStyle = computed(() => {
+const cursorClass = computed(() => {
   switch (cursorState.value) {
     case "EW_RESIZE":
-      return "ew-resize";
+      return "cursor-ew-resize";
     case "ERASE":
-      // TODO: 消しゴム用のカーソル・画像を用意して差し替える。
-      // 境界を選んで編集を消す操作に合わせ、暫定的にcellを使う。
-      return "cell";
+      return "cursor-erase";
     default:
-      return "default";
+      return "cursor-default";
   }
 });
 
@@ -253,7 +252,6 @@ onUnmountedOrDeactivated(() => {
 
   display: grid;
   grid-template-rows: 1fr;
-  cursor: v-bind(cursorStyle);
 }
 
 .parameter-grid,
