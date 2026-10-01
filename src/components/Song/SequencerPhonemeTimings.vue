@@ -127,8 +127,9 @@ let isUnmounted = false;
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 
-// 線描画用のGraphicsプール
+// 音素境界ごとに、境界線・ドラッグ中のガイド線・ハンドルを描くGraphicsのプール
 const graphics: PIXI.Graphics[] = [];
+// 音素帯・区切り線・ノートとの対応線・破線など、境界線より後ろに描く図形をまとめたGraphics
 let bandGraphic: PIXI.Graphics | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
@@ -165,12 +166,16 @@ const render = () => {
   );
 
   bandGraphic.clear();
+
+  // ノート行と音素帯の間の区切り線
   bandGraphic
     .moveTo(0, bandTop)
     .lineTo(canvasWidth, bandTop)
     .stroke({ width: 1, ...toFillStyle(colors.rowLine) });
 
-  // 帯は境界線の後ろに置き、画面外から続く帯も描く。
+  // 音素帯
+  // ノートに対応する音素をあらわす帯
+  // 操作対象エリアであることも表現する
   for (const group of groups) {
     const startX = toScreenX(group.startTime);
     const endX = toScreenX(group.endTime);
@@ -205,9 +210,12 @@ const render = () => {
     }
   }
 
+  // ノートとの対応線
+  // ノートの開始位置から、そのノートの最初の音素境界へ折れ線を引く
+  // 子音がノートより前に始まっても、どのノートの音素かを追えるようにする
+  // ずれが小さいと折れ線が潰れて見えないため、まっすぐ下ろし、帯の中にノートの位置を破線で示す
   for (const group of groups) {
     const startX = toScreenX(group.startTime);
-    // 合成待ちやノート削除直後は、対応するノートが存在しない場合がある。
     const notePosition = notePositions.get(group.noteId);
     if (notePosition == undefined) continue;
     const noteX =
@@ -216,7 +224,7 @@ const render = () => {
     if (Math.max(noteX, startX) < 0 || Math.min(noteX, startX) > canvasWidth)
       continue;
     const dx = Math.abs(noteX - startX);
-    // 同じ時刻のグリッド線と中心を揃える。
+    // 同じ時刻のグリッド線と中心を揃える
     const noteLineX = Math.round(noteX) - 0.5;
     const startLineX = Math.round(startX) - 0.5;
     const bridgeColor =
@@ -262,6 +270,8 @@ const render = () => {
     }
   }
 
+  // 元位置
+  // 操作対象の境界が編集で動いているとき、編集前の位置を破線で示す
   for (const info of displayInfos) {
     const isTarget =
       target?.noteId === info.noteId &&
@@ -291,6 +301,9 @@ const render = () => {
     }
   }
 
+  // ラベルの位置
+  // 子音の直後の母音は、子音名と重ならないよう子音名の幅だけ右にずらす
+  // ノートの帯が短くずらすと収まらないときは、その母音のラベルを出さない
   const visiblePhonemes = groups
     .flatMap((group) => {
       const startX = toScreenX(group.startTime);
@@ -306,7 +319,7 @@ const render = () => {
         const labelX = vowelAfterConsonant
           ? Math.max(
               x,
-              // kyなど複数文字の子音名が、後続の母音で欠けない幅を確保する。
+              // kyなど複数文字の子音名が、後続の母音で欠けない幅を確保する
               toScreenX(previous.startTime) +
                 getLabelWidth(previous.phoneme) +
                 PHONEME_TIMING_LAYOUT.labelSpacingPx,
@@ -322,6 +335,7 @@ const render = () => {
         };
       });
     })
+    // 画面端から入ってくるラベルの分だけ余裕を持たせておく
     .filter(({ x }) => x >= -80 && x <= viewportWidth + 80);
 
   while (graphics.length < visiblePhonemes.length) {
@@ -333,6 +347,8 @@ const render = () => {
   const visibleLabels: typeof labels.value = [];
   let visibleChip: typeof chip.value;
 
+  // 音素境界
+  // 境界線と操作用のハンドルを置き、操作中はラベルの代わりにツールチップを出す
   for (const [i, { info, x, labelX, showLabel }] of visiblePhonemes.entries()) {
     const isTarget =
       target?.noteId === info.noteId &&
@@ -340,6 +356,8 @@ const render = () => {
     const inTargetNote = target?.noteId === info.noteId;
     const moving = info.displayState === "movePreview";
     const edited = info.displayState === "edited";
+    // 境界線の色は、ドラッグ中・編集済み・操作対象のノート内・ノートの先頭・それ以外の順に決める
+    // ノートの先頭の境界はノートの切れ目を見分けやすくするため、後続の境界より濃くする
     const color = moving
       ? colors.editing
       : edited
@@ -359,6 +377,7 @@ const render = () => {
       .moveTo(lineX, bandTop)
       .lineTo(lineX, bandBottom)
       .stroke({ width: lineWidth, ...toFillStyle(color) });
+    // ドラッグ中は上端まで線を伸ばし、ノートやグリッドとの位置関係を見比べられるようにする
     if (moving) {
       graphic
         .moveTo(lineX, 0)
@@ -366,6 +385,7 @@ const render = () => {
         .stroke({ width: 1, ...toFillStyle(colors.guide) });
     }
 
+    // 操作対象のノートの境界にハンドルを付けてつかめる位置を示す
     if (inTargetNote) {
       const width = isTarget
         ? PHONEME_TIMING_LAYOUT.activeHandleWidthPx
@@ -387,6 +407,7 @@ const render = () => {
     const deltaMs = Math.round(
       (info.startTime - info.originalStartTimeSeconds) * 1000,
     );
+    // ラベルは次のラベルの手前までとし、隣と重ならないようにする
     if (info.phoneme !== "pau" && showLabel && !isTarget) {
       visibleLabels.push({
         key: `${info.noteId}:${info.phonemeIndexInNote}`,
@@ -400,6 +421,7 @@ const render = () => {
         ),
       });
     }
+    // チップ内の音素名を、ラベルと同じ位置に重ね、ラベルからチップに切り替わっても文字が動いて把握しづらくなるのを避ける
     if (isTarget) {
       visibleChip = {
         x: labelX - PHONEME_TIMING_LAYOUT.chipPaddingPx,

@@ -118,7 +118,7 @@ const render = () => {
       props.activeNoteId === note.id ? tickColors.active : tickColors.normal;
     graphic.renderable = true;
     graphic.clear();
-    // グリッド線の中心はround(x) - 0.5なので、幅1pxの左端を1px戻す。
+    // ノートの目盛りと-1px左にあるグリッド線位置を揃えるため、目盛りを-1pxして調整
     graphic
       .rect(
         Math.round(screenStartX) - 1,
@@ -131,7 +131,7 @@ const render = () => {
         alpha: tickColor.toAlphaFloat(),
       });
 
-    // 短いノートでも開始位置は残し、歌詞の重なりだけを避ける。
+    // 短いノートの場合は目盛りは表示するが、歌詞は無理に表示しない
     if (screenWidth < PHONEME_TIMING_LAYOUT.lyricMinWidthPx) continue;
 
     visibleLyrics.push({

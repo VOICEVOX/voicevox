@@ -1,3 +1,9 @@
+/**
+ * 音素タイミング編集の各部の高さと間隔、および帯・境界線・ラベルなど各所の寸法
+ * SequencerNoteTimingsとSequencerPhonemeTimingsは同じ領域に重ねて描画し、縦位置を一致させる必要があるため、
+ * どちらのコンポーネントにも置かず、このファイルで共有する
+ * 見た目を一か所で確認・調整できるよう、片方でしか使わない寸法もここにまとめる
+ */
 export const PHONEME_TIMING_LAYOUT = {
   noteHeightPx: 24,
   rowGapPx: 16,
@@ -31,9 +37,18 @@ export const PHONEME_TIMING_LAYOUT = {
   chipHeightPx: 20,
 } as const;
 
+/**
+ * 音素ラベルのフォント指定
+ * 子音と母音が近いと、特にkyなど複数文字の子音名が後続の母音ラベルに隠れるため、
+ * 子音ラベルの幅を測り、母音ラベルをその右に置いている
+ * 測った幅と表示される幅が一致するよう、同じ指定を使う
+ */
 export const PHONEME_LABEL_FONT = `500 ${PHONEME_TIMING_LAYOUT.labelFontSizePx}px "Unhinted Rounded M+ 1p Medium", sans-serif`;
 
-/** 固定した行の寸法から、ノート行と音素帯の配置を求める。 */
+/**
+ * レーンの高さからノート行・音素帯・ラベル行の位置を求める
+ * SequencerNoteTimingsとSequencerPhonemeTimingsで共通の位置を使う
+ */
 export function getPhonemeTimingLayout(height: number) {
   const noteHeight = PHONEME_TIMING_LAYOUT.noteHeightPx;
   const rowGap = PHONEME_TIMING_LAYOUT.rowGapPx;
