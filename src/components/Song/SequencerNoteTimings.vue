@@ -43,7 +43,7 @@ const isDark = computed(() => store.state.currentTheme === "Dark");
 const defaultLyricMode = computed(() => store.state.defaultLyricMode);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 
-const resolveNoteColors = createThemeColorResolver({
+const resolveNoteTickColors = createThemeColorResolver({
   normal: "--scheme-color-song-parameter-note-tick",
   active: "--scheme-color-song-parameter-note-tick-active",
 });
@@ -79,7 +79,7 @@ const render = () => {
   const notes = selectedTrackNotes.value;
   const scaleX = props.viewportInfo.scaleX;
   const offsetXValue = props.viewportInfo.offsetX;
-  const colors = resolveNoteColors(canvasContainer.value, isDark.value);
+  const tickColors = resolveNoteTickColors(canvasContainer.value, isDark.value);
   const { noteTop, noteHeight } = getPhonemeTimingLayout(canvasHeight);
 
   let graphicsIndex = 0;
@@ -114,8 +114,8 @@ const render = () => {
     const graphic = graphics[graphicsIndex];
     graphicsIndex++;
 
-    const color =
-      props.activeNoteId === note.id ? colors.active : colors.normal;
+    const tickColor =
+      props.activeNoteId === note.id ? tickColors.active : tickColors.normal;
     graphic.renderable = true;
     graphic.clear();
     // グリッド線の中心はround(x) - 0.5なので、幅1pxの左端を1px戻す。
@@ -127,8 +127,8 @@ const render = () => {
         PHONEME_TIMING_LAYOUT.noteTickHeightPx,
       )
       .fill({
-        color: color.toRgbNumber(),
-        alpha: color.toAlphaFloat(),
+        color: tickColor.toRgbNumber(),
+        alpha: tickColor.toAlphaFloat(),
       });
 
     // 短いノートでも開始位置は残し、歌詞の重なりだけを避ける。
