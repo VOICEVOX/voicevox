@@ -16,8 +16,10 @@ export class EraseVolumeIdleState implements State<
 
   onEnter(context: VolumeEditorContext) {
     context.cursorState.value = "UNSET";
+    context.showDrawFeedback.value = false;
     context.tooltipData.value = undefined;
     context.highlightedFrame.value = undefined;
+    context.hoverPointer.value = undefined;
   }
 
   process({
@@ -41,6 +43,7 @@ export class EraseVolumeIdleState implements State<
     if (pointerEvent.type === "pointerleave") {
       context.cursorState.value = "UNSET";
       context.highlightedFrame.value = undefined;
+      context.hoverPointer.value = undefined;
       return;
     }
 
@@ -50,13 +53,15 @@ export class EraseVolumeIdleState implements State<
       context.getEditableFrameRanges(),
     );
     const isEditable = editableRange != undefined;
-    context.cursorState.value = isEditable ? "ERASE" : "NOT_ALLOWED";
+    context.cursorState.value = "ERASE";
     context.highlightedFrame.value = isEditable ? position.frame : undefined;
+    context.hoverPointer.value = isEditable
+      ? { x: pointerInfo.x, y: pointerInfo.y }
+      : undefined;
 
     if (
       pointerEvent.type === "pointerdown" &&
-      getButton(pointerEvent) === "LEFT_BUTTON" &&
-      isEditable
+      getButton(pointerEvent) === "LEFT_BUTTON"
     ) {
       setNextState("eraseVolume", {
         startPosition: position,
@@ -68,7 +73,9 @@ export class EraseVolumeIdleState implements State<
 
   onExit(context: VolumeEditorContext) {
     context.cursorState.value = "UNSET";
+    context.showDrawFeedback.value = false;
     context.tooltipData.value = undefined;
     context.highlightedFrame.value = undefined;
+    context.hoverPointer.value = undefined;
   }
 }

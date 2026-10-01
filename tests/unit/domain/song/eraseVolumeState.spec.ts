@@ -13,7 +13,7 @@ describe("EraseVolumeState", () => {
     vi.unstubAllGlobals();
   });
 
-  it("idle中はポインタ位置の編集可能区間をハイライトする", () => {
+  it("idle中はポインタ位置の編集可能区間をハイライトし、ホバー座標を保持する", () => {
     const context = createContext();
     const state = new EraseVolumeIdleState();
 
@@ -30,7 +30,23 @@ describe("EraseVolumeState", () => {
     });
 
     expect(context.cursorState.value).toBe("ERASE");
+    expect(context.showDrawFeedback.value).toBe(false);
     expect(context.highlightedFrame.value).toBe(10);
+    expect(context.hoverPointer.value).toEqual({ x: 100, y: 50 });
+
+    state.process({
+      input: {
+        type: "pointerEvent",
+        targetArea: "VolumeEditorArea",
+        pointerEvent: { type: "pointerleave" } as PointerEvent,
+        pointerInfo: createPointerInfo(10),
+      },
+      context,
+      setNextState: vi.fn(),
+    });
+
+    expect(context.highlightedFrame.value).toBeUndefined();
+    expect(context.hoverPointer.value).toBeUndefined();
   });
 
   it("pointerup時にanimation frame待ちの確定位置を反映する", () => {
@@ -88,8 +104,10 @@ function createContext(): VolumeEditorContext {
     previewVolumeEdit: ref(undefined),
     previewMode: ref("IDLE"),
     cursorState: ref("UNSET"),
+    showDrawFeedback: ref(false),
     tooltipData: ref(undefined),
     highlightedFrame: ref(undefined),
+    hoverPointer: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     getEditableFrameRanges: () => [{ startFrame: 0, endFrame: 100 }],
     store: {
