@@ -8,7 +8,7 @@
       @pointerdown="onPointerDown"
       @dblclick="onDoubleClick"
       @pointermove="onPointerMove"
-      @pointerleave="onPointerMove"
+      @pointerleave="onPointerLeave"
       @wheel="onWheel"
     >
       <SequencerParameterGrid class="parameter-grid" :viewportInfo />
@@ -143,6 +143,15 @@ const onDoubleClick = (event: MouseEvent) => {
 };
 
 const onPointerMove = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "PhonemeTimingArea",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
+const onPointerLeave = (event: PointerEvent) => {
   stateMachineProcess({
     type: "pointerEvent",
     targetArea: "PhonemeTimingArea",
