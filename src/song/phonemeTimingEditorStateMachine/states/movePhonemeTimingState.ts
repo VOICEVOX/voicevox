@@ -55,8 +55,8 @@ export class MovePhonemeTimingState implements State<
   }
 
   onEnter(context: PhonemeTimingEditorContext) {
-    // 押下から解放後まで、操作中の境界のホバー表示を途切れさせない
-    context.hoveredPhoneme.value = {
+    // 押下から解放後まで、操作中の境界の強調表示を途切れさせない。
+    context.activePhoneme.value = {
       noteId: this.noteId,
       phonemeIndexInNote: this.phonemeIndexInNote,
     };

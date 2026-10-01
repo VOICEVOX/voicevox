@@ -17,7 +17,7 @@ export class MovePhonemeTimingToolIdleState implements State<
 
   onEnter(context: PhonemeTimingEditorContext) {
     context.cursorState.value =
-      context.hoveredPhoneme.value == undefined ? "UNSET" : "EW_RESIZE";
+      context.activePhoneme.value == undefined ? "UNSET" : "EW_RESIZE";
   }
 
   process({
@@ -38,7 +38,7 @@ export class MovePhonemeTimingToolIdleState implements State<
       event.type === "pointerleave" &&
       input.targetArea === "PhonemeTimingArea"
     ) {
-      context.hoveredPhoneme.value = undefined;
+      context.activePhoneme.value = undefined;
       context.cursorState.value = "UNSET";
       return;
     }
@@ -88,14 +88,14 @@ export class MovePhonemeTimingToolIdleState implements State<
     }
 
     if (isPointerMove) {
-      const hovered = context.hoveredPhoneme.value;
+      const active = context.activePhoneme.value;
       if (nearest?.noteId == undefined) {
-        context.hoveredPhoneme.value = undefined;
+        context.activePhoneme.value = undefined;
       } else if (
-        hovered?.noteId !== nearest.noteId ||
-        hovered.phonemeIndexInNote !== nearest.phonemeIndexInNote
+        active?.noteId !== nearest.noteId ||
+        active.phonemeIndexInNote !== nearest.phonemeIndexInNote
       ) {
-        context.hoveredPhoneme.value = {
+        context.activePhoneme.value = {
           noteId: nearest.noteId,
           phonemeIndexInNote: nearest.phonemeIndexInNote,
         };
@@ -133,6 +133,6 @@ export class MovePhonemeTimingToolIdleState implements State<
 
   onExit(context: PhonemeTimingEditorContext) {
     context.cursorState.value = "UNSET";
-    context.hoveredPhoneme.value = undefined;
+    context.activePhoneme.value = undefined;
   }
 }

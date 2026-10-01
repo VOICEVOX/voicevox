@@ -81,14 +81,15 @@ export type PhonemeTimingEditorPreviewMode =
   | "MOVE_PHONEME_TIMING"
   | "ERASE_PHONEME_TIMING";
 
-/** ホバーしている音素境界の識別情報。 */
+/** ノート内の位置で特定した音素境界。 */
 export type PhonemeTimingTarget = {
   noteId: NoteId;
   phonemeIndexInNote: number;
 };
 
 export type PhonemeTimingEditorRefs = {
-  readonly hoveredPhoneme: Ref<PhonemeTimingTarget | undefined>;
+  /** ホバー中またはドラッグ中の音素境界。 */
+  readonly activePhoneme: Ref<PhonemeTimingTarget | undefined>;
   readonly previewPhonemeTiming: Ref<PhonemeTimingPreview | undefined>;
   readonly previewMode: Ref<PhonemeTimingEditorPreviewMode>;
   readonly cursorState: Ref<CursorState>;

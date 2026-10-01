@@ -23,7 +23,7 @@ export const usePhonemeTimingEditorStateMachine = (
   phraseInfos: ComputedRef<Map<PhraseKey, PhraseInfo>>,
 ) => {
   const refs = {
-    hoveredPhoneme: ref<PhonemeTimingTarget>(),
+    activePhoneme: ref<PhonemeTimingTarget>(),
     previewPhonemeTiming: ref<PhonemeTimingPreview | undefined>(undefined),
     previewMode: ref<PhonemeTimingEditorPreviewMode>("IDLE"),
     cursorState: ref<CursorState>("UNSET"),
@@ -64,7 +64,7 @@ export const usePhonemeTimingEditorStateMachine = (
   });
 
   return {
-    hoveredPhoneme: computed(() => refs.hoveredPhoneme.value),
+    activePhoneme: computed(() => refs.activePhoneme.value),
     stateMachineProcess: (input: PhonemeTimingEditorInput) => {
       stateMachine.process(input);
     },

@@ -17,16 +17,12 @@
         :viewportInfo
         :previewPhonemeTiming
         :phonemeTimingInfos
-        :hoveredPhoneme
+        :activePhoneme
       />
       <SequencerNoteTimings
         class="note-timings"
         :viewportInfo
-        :activeNoteId="
-          previewPhonemeTiming?.type === 'move'
-            ? previewPhonemeTiming.noteId
-            : hoveredPhoneme?.noteId
-        "
+        :activeNoteId="activePhoneme?.noteId"
       />
       <SequencerPhonemeTimingToolPalette
         :sequencerPhonemeTimingTool
@@ -101,7 +97,7 @@ const {
   cursorState,
   previewMode,
   previewPhonemeTiming,
-  hoveredPhoneme,
+  activePhoneme,
 } = usePhonemeTimingEditorStateMachine(
   store,
   viewportInfo,

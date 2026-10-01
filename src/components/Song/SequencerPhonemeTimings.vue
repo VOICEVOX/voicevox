@@ -58,7 +58,7 @@ const props = defineProps<{
   viewportInfo: ViewportInfo;
   previewPhonemeTiming?: PhonemeTimingPreview;
   phonemeTimingInfos: PhonemeTimingInfo[];
-  hoveredPhoneme?: PhonemeTimingTarget;
+  activePhoneme?: PhonemeTimingTarget;
 }>();
 
 const store = useStore();
@@ -159,7 +159,7 @@ const render = () => {
     editorFrameRate.value,
   );
   const groups = groupPhonemeDisplayInfos(displayInfos);
-  const target = preview?.type === "move" ? preview : props.hoveredPhoneme;
+  const target = props.activePhoneme;
   const notePositions = new Map(
     store.getters.SELECTED_TRACK.notes.map((note) => [note.id, note.position]),
   );
@@ -431,7 +431,7 @@ watch(
     tpqn,
     editorFrameRate,
     isDark,
-    () => props.hoveredPhoneme,
+    () => props.activePhoneme,
     () => store.getters.SELECTED_TRACK.notes,
     () => props.viewportInfo.scaleX,
     () => props.viewportInfo.offsetX,
