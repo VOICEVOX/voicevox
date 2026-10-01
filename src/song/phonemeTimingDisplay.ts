@@ -5,30 +5,37 @@ import type {
 } from "@/song/phonemeTimingEditorStateMachine/common";
 import { getNext } from "@/song/utility";
 
-/** プレビューと表示上の順序制約を適用した音素境界。 */
-export type PhonemeDisplayInfo = PhonemeTimingInfo & {
+/** 画面に表示する音素境界の位置と状態 */
+export type PhonemeBoundaryDisplay = PhonemeTimingInfo & {
   noteId: NoteId;
-  startTime: number;
+  /** プレビューを反映し、前後の境界と順序が入れ替わらないよう制限した開始時刻 */
+  displayStartTimeSeconds: number;
   displayState: "default" | "edited" | "movePreview";
 };
 
-/** ノートに属する境界と、休符を含まない音素帯の範囲。 */
-export type PhonemeDisplayGroup = {
+/**
+ * 1つのノートに属する音素境界と、そのノートの音素帯の範囲
+ * 境界には末尾の休符も含むが、帯の範囲には含まない
+ */
+export type NotePhonemeBand = {
   noteId: NoteId;
-  phonemes: PhonemeDisplayInfo[];
-  startTime: number;
-  endTime: number;
+  boundaries: PhonemeBoundaryDisplay[];
+  startTimeSeconds: number;
+  endTimeSeconds: number;
 };
 
-/** 編集プレビューを適用し、隣接する境界の表示順を維持する。 */
-export function buildPhonemeDisplayInfos(
+/**
+ * 音素タイミング情報から、画面に表示する音素境界を求める
+ * ドラッグ中や消去中のプレビューを開始時刻と状態に反映する
+ */
+export function buildPhonemeBoundaryDisplays(
   infos: readonly PhonemeTimingInfo[],
   preview: PhonemeTimingPreview | undefined,
   editorFrameRate: number,
-): PhonemeDisplayInfo[] {
-  const result: PhonemeDisplayInfo[] = [];
+): PhonemeBoundaryDisplay[] {
+  const result: PhonemeBoundaryDisplay[] = [];
   for (const info of infos) {
-    // 先頭のpauには操作対象のノートがない。
+    // 先頭のpauには操作対象のノートがないため表示しない
     if (info.noteId == undefined) continue;
     const isMovePreview =
       preview?.type === "move" &&
@@ -44,7 +51,7 @@ export function buildPhonemeDisplayInfos(
     result.push({
       ...info,
       noteId: info.noteId,
-      startTime: isErasePreview
+      displayStartTimeSeconds: isErasePreview
         ? info.originalStartTimeSeconds
         : isMovePreview
           ? info.originalStartTimeSeconds + preview.offsetSeconds
@@ -56,43 +63,48 @@ export function buildPhonemeDisplayInfos(
           : "default",
     });
   }
-  // 復元プレビューで隣の編集済み境界を越えても、表示順は入れ替えない。
+  // 消去プレビューで編集前の位置に戻すと隣の境界を越えることがあるため、
+  // 表示上は次の境界の1フレーム手前に留めて順序を保つ
   for (let i = result.length - 1; i >= 0; i--) {
     const next = getNext(result, i);
     if (next != undefined) {
-      result[i].startTime = Math.min(
-        result[i].startTime,
-        next.startTime - 1 / editorFrameRate,
+      result[i].displayStartTimeSeconds = Math.min(
+        result[i].displayStartTimeSeconds,
+        next.displayStartTimeSeconds - 1 / editorFrameRate,
       );
     }
   }
   return result;
 }
 
-/** 隣のノートとの境界を共有し、末尾pauの開始で音素帯を閉じる。 */
-export function groupPhonemeDisplayInfos(
-  infos: readonly PhonemeDisplayInfo[],
-): PhonemeDisplayGroup[] {
-  const groups: PhonemeDisplayGroup[] = [];
-  for (const [i, info] of infos.entries()) {
-    let group = groups.at(-1);
-    if (group?.noteId !== info.noteId) {
-      group = {
-        noteId: info.noteId,
-        phonemes: [],
-        startTime: info.startTime,
-        endTime: info.editedEndTimeSeconds,
-      };
-      groups.push(group);
+/**
+ * 表示する音素境界をノートごとにまとめ、音素帯の範囲を求める
+ * 帯は、次のノートの最初の境界・末尾の休符の開始・フレーズの終わりのいずれかで閉じる
+ */
+export function buildNotePhonemeBands(
+  boundaries: readonly PhonemeBoundaryDisplay[],
+): NotePhonemeBand[] {
+  const bands: NotePhonemeBand[] = [];
+  for (const [i, boundary] of boundaries.entries()) {
+    const next = getNext(boundaries, i);
+    const endTimeSeconds =
+      boundary.phoneme === "pau"
+        ? boundary.displayStartTimeSeconds
+        : next?.phraseKey === boundary.phraseKey
+          ? next.displayStartTimeSeconds
+          : boundary.editedEndTimeSeconds;
+    const band = bands.at(-1);
+    if (band?.noteId === boundary.noteId) {
+      band.boundaries.push(boundary);
+      band.endTimeSeconds = endTimeSeconds;
+    } else {
+      bands.push({
+        noteId: boundary.noteId,
+        boundaries: [boundary],
+        startTimeSeconds: boundary.displayStartTimeSeconds,
+        endTimeSeconds,
+      });
     }
-    group.phonemes.push(info);
-    const next = getNext(infos, i);
-    group.endTime =
-      info.phoneme === "pau"
-        ? info.startTime
-        : next?.phraseKey === info.phraseKey
-          ? next.startTime
-          : info.editedEndTimeSeconds;
   }
-  return groups;
+  return bands;
 }

@@ -43,8 +43,8 @@ import type {
 } from "@/song/phonemeTimingEditorStateMachine/common";
 
 import {
-  buildPhonemeDisplayInfos,
-  groupPhonemeDisplayInfos,
+  buildPhonemeBoundaryDisplays,
+  buildNotePhonemeBands,
 } from "@/song/phonemeTimingDisplay";
 import { createThemeColorResolver } from "@/song/graphics/cssColor";
 import type { Color } from "@/song/graphics/lineStrip";
@@ -154,12 +154,12 @@ const render = () => {
   const layout = getPhonemeTimingLayout(canvasHeight);
   const { noteTop, noteHeight, bandTop, bandHeight, labelTop } = layout;
   const bandBottom = bandTop + bandHeight;
-  const displayInfos = buildPhonemeDisplayInfos(
+  const boundaries = buildPhonemeBoundaryDisplays(
     toRaw(phonemeTimingInfos.value),
     preview,
     editorFrameRate.value,
   );
-  const groups = groupPhonemeDisplayInfos(displayInfos);
+  const bands = buildNotePhonemeBands(boundaries);
   const target = props.activePhoneme;
   const notePositions = new Map(
     store.getters.SELECTED_TRACK.notes.map((note) => [note.id, note.position]),
@@ -176,22 +176,26 @@ const render = () => {
   // 音素帯
   // ノートに対応する音素をあらわす帯
   // 操作対象エリアであることも表現する
-  for (const group of groups) {
-    const startX = toScreenX(group.startTime);
-    const endX = toScreenX(group.endTime);
+  for (const band of bands) {
+    const startX = toScreenX(band.startTimeSeconds);
+    const endX = toScreenX(band.endTimeSeconds);
     if (endX < 0 || startX > canvasWidth) continue;
     const gap =
       endX - startX < PHONEME_TIMING_LAYOUT.narrowBandThresholdPx
         ? PHONEME_TIMING_LAYOUT.narrowBandGapPx
         : PHONEME_TIMING_LAYOUT.bandGapPx;
     const bandColor =
-      group.noteId === target?.noteId ? colors.bandHover : colors.band;
-    const phonemes = group.phonemes.filter((info) => info.phoneme !== "pau");
-    for (const [index, info] of phonemes.entries()) {
-      const cellX = toScreenX(info.startTime);
-      const next = phonemes[index + 1];
+      band.noteId === target?.noteId ? colors.bandHover : colors.band;
+    const nonPauBoundaries = band.boundaries.filter(
+      (info) => info.phoneme !== "pau",
+    );
+    for (const [index, info] of nonPauBoundaries.entries()) {
+      const cellX = toScreenX(info.displayStartTimeSeconds);
+      const next = nonPauBoundaries[index + 1];
       const cellEndX =
-        next == undefined ? endX - gap : toScreenX(next.startTime);
+        next == undefined
+          ? endX - gap
+          : toScreenX(next.displayStartTimeSeconds);
       const width = cellEndX - cellX;
       if (width <= 0) continue;
       const radius =
@@ -214,9 +218,9 @@ const render = () => {
   // ノートの開始位置から、そのノートの最初の音素境界へ折れ線を引く
   // 子音がノートより前に始まっても、どのノートの音素かを追えるようにする
   // ずれが小さいと折れ線が潰れて見えないため、まっすぐ下ろし、帯の中にノートの位置を破線で示す
-  for (const group of groups) {
-    const startX = toScreenX(group.startTime);
-    const notePosition = notePositions.get(group.noteId);
+  for (const band of bands) {
+    const startX = toScreenX(band.startTimeSeconds);
+    const notePosition = notePositions.get(band.noteId);
     if (notePosition == undefined) continue;
     const noteX =
       tickToBaseX(notePosition, tpqn.value) * viewport.scaleX -
@@ -228,7 +232,7 @@ const render = () => {
     const noteLineX = Math.round(noteX) - 0.5;
     const startLineX = Math.round(startX) - 0.5;
     const bridgeColor =
-      group.noteId === target?.noteId
+      band.noteId === target?.noteId
         ? preview?.type === "move"
           ? colors.editing
           : colors.bridgeHover
@@ -272,7 +276,7 @@ const render = () => {
 
   // 元位置
   // 操作対象の境界が編集で動いているとき、編集前の位置を破線で示す
-  for (const info of displayInfos) {
+  for (const info of boundaries) {
     const isTarget =
       target?.noteId === info.noteId &&
       target.phonemeIndexInNote === info.phonemeIndexInNote;
@@ -280,7 +284,7 @@ const render = () => {
     const originalX = toScreenX(info.originalStartTimeSeconds);
     if (
       info.displayState !== "default" &&
-      info.startTime !== info.originalStartTimeSeconds
+      info.displayStartTimeSeconds !== info.originalStartTimeSeconds
     ) {
       const ghostX = Math.round(originalX) - 0.5;
       for (
@@ -304,13 +308,13 @@ const render = () => {
   // ラベルの位置
   // 子音の直後の母音は、子音名と重ならないよう子音名の幅だけ右にずらす
   // ノートの帯が短くずらすと収まらないときは、その母音のラベルを出さない
-  const visiblePhonemes = groups
-    .flatMap((group) => {
-      const startX = toScreenX(group.startTime);
-      const endX = toScreenX(group.endTime);
-      return group.phonemes.map((info, index) => {
-        const x = toScreenX(info.startTime);
-        const previous = group.phonemes[index - 1];
+  const visiblePhonemes = bands
+    .flatMap((band) => {
+      const startX = toScreenX(band.startTimeSeconds);
+      const endX = toScreenX(band.endTimeSeconds);
+      return band.boundaries.map((info, index) => {
+        const x = toScreenX(info.displayStartTimeSeconds);
+        const previous = band.boundaries[index - 1];
         const vowelAfterConsonant =
           previous != undefined &&
           previous.phoneme !== "pau" &&
@@ -320,7 +324,7 @@ const render = () => {
           ? Math.max(
               x,
               // kyなど複数文字の子音名が、後続の母音で欠けない幅を確保する
-              toScreenX(previous.startTime) +
+              toScreenX(previous.displayStartTimeSeconds) +
                 getLabelWidth(previous.phoneme) +
                 PHONEME_TIMING_LAYOUT.labelSpacingPx,
             )
@@ -405,7 +409,7 @@ const render = () => {
     }
 
     const deltaMs = Math.round(
-      (info.startTime - info.originalStartTimeSeconds) * 1000,
+      (info.displayStartTimeSeconds - info.originalStartTimeSeconds) * 1000,
     );
     // ラベルは次のラベルの手前までとし、隣と重ならないようにする
     if (info.phoneme !== "pau" && showLabel && !isTarget) {

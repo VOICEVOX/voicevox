@@ -3,8 +3,8 @@ import { NoteId } from "@/type/preload";
 import { PhraseKey } from "@/store/type";
 import type { PhonemeTimingInfo } from "@/song/phonemeTimingEditorStateMachine/common";
 import {
-  buildPhonemeDisplayInfos,
-  groupPhonemeDisplayInfos,
+  buildPhonemeBoundaryDisplays,
+  buildNotePhonemeBands,
 } from "@/song/phonemeTimingDisplay";
 
 const a = NoteId("a");
@@ -39,7 +39,7 @@ const infos = [
   createInfo(b, "pau", 1, 3, 4),
 ];
 
-describe("buildPhonemeDisplayInfos", () => {
+describe("buildPhonemeBoundaryDisplays", () => {
   it("編集済みの境界の移動プレビューは、編集前の位置からのずれとして表示する", () => {
     const edited = infos.map((info) =>
       info.noteId === a && info.phonemeIndexInNote === 1
@@ -47,7 +47,7 @@ describe("buildPhonemeDisplayInfos", () => {
         : info,
     );
 
-    const displayed = buildPhonemeDisplayInfos(
+    const displayed = buildPhonemeBoundaryDisplays(
       edited,
       { type: "move", noteId: a, phonemeIndexInNote: 1, offsetSeconds: 0.05 },
       frameRate,
@@ -56,7 +56,7 @@ describe("buildPhonemeDisplayInfos", () => {
     const target = displayed.find(
       (info) => info.noteId === a && info.phonemeIndexInNote === 1,
     );
-    expect(target?.startTime).toBeCloseTo(1.15);
+    expect(target?.displayStartTimeSeconds).toBeCloseTo(1.15);
     expect(target?.displayState).toBe("movePreview");
   });
 
@@ -70,13 +70,15 @@ describe("buildPhonemeDisplayInfos", () => {
       createInfo(a, "a", 1, 1.2, 2),
     ];
 
-    const displayed = buildPhonemeDisplayInfos(
+    const displayed = buildPhonemeBoundaryDisplays(
       edited,
       { type: "erase", targets: [{ noteId: a, phonemeIndexInNote: 0 }] },
       frameRate,
     );
 
-    expect(displayed[0].startTime).toBeCloseTo(1.2 - 1 / frameRate);
+    expect(displayed[0].displayStartTimeSeconds).toBeCloseTo(
+      1.2 - 1 / frameRate,
+    );
   });
 
   it("表示順の制約を適用しても、元の音素タイミング情報を変更しない", () => {
@@ -90,7 +92,7 @@ describe("buildPhonemeDisplayInfos", () => {
     ];
     const before = structuredClone(edited);
 
-    buildPhonemeDisplayInfos(
+    buildPhonemeBoundaryDisplays(
       edited,
       { type: "erase", targets: [{ noteId: a, phonemeIndexInNote: 0 }] },
       frameRate,
@@ -100,36 +102,46 @@ describe("buildPhonemeDisplayInfos", () => {
   });
 });
 
-describe("groupPhonemeDisplayInfos", () => {
+describe("buildNotePhonemeBands", () => {
   it("ノートごとに音素をまとめ、最後のノートの帯は末尾の休符の開始で閉じる", () => {
-    const groups = groupPhonemeDisplayInfos(
-      buildPhonemeDisplayInfos(infos, undefined, frameRate),
+    const bands = buildNotePhonemeBands(
+      buildPhonemeBoundaryDisplays(infos, undefined, frameRate),
     );
 
     expect(
-      groups.map((group) => ({
-        noteId: group.noteId,
-        phonemes: group.phonemes.map((info) => info.phoneme),
-        startTime: group.startTime,
-        endTime: group.endTime,
+      bands.map((band) => ({
+        noteId: band.noteId,
+        phonemes: band.boundaries.map((boundary) => boundary.phoneme),
+        startTimeSeconds: band.startTimeSeconds,
+        endTimeSeconds: band.endTimeSeconds,
       })),
     ).toEqual([
-      { noteId: a, phonemes: ["k", "I", "a"], startTime: 1, endTime: 2 },
-      { noteId: b, phonemes: ["a", "pau"], startTime: 2, endTime: 3 },
+      {
+        noteId: a,
+        phonemes: ["k", "I", "a"],
+        startTimeSeconds: 1,
+        endTimeSeconds: 2,
+      },
+      {
+        noteId: b,
+        phonemes: ["a", "pau"],
+        startTimeSeconds: 2,
+        endTimeSeconds: 3,
+      },
     ]);
   });
 
   it("ノートの先頭の境界を動かすと、前のノートの帯の終わりも同じ位置に追従する", () => {
-    const groups = groupPhonemeDisplayInfos(
-      buildPhonemeDisplayInfos(
+    const bands = buildNotePhonemeBands(
+      buildPhonemeBoundaryDisplays(
         infos,
         { type: "move", noteId: b, phonemeIndexInNote: 0, offsetSeconds: -0.2 },
         frameRate,
       ),
     );
 
-    expect(groups[0].endTime).toBe(1.8);
-    expect(groups[1].startTime).toBe(1.8);
+    expect(bands[0].endTimeSeconds).toBe(1.8);
+    expect(bands[1].startTimeSeconds).toBe(1.8);
   });
 
   it("末尾の休符を動かすと帯が伸び、次のフレーズとの間は塗らない", () => {
@@ -138,16 +150,16 @@ describe("groupPhonemeDisplayInfos", () => {
       phraseKey: PhraseKey("next"),
     };
 
-    const groups = groupPhonemeDisplayInfos(
-      buildPhonemeDisplayInfos(
+    const bands = buildNotePhonemeBands(
+      buildPhonemeBoundaryDisplays(
         [...infos, nextPhrase],
         { type: "move", noteId: b, phonemeIndexInNote: 1, offsetSeconds: 0.25 },
         frameRate,
       ),
     );
 
-    expect(groups[1].endTime).toBe(3.25);
-    expect(groups[2].startTime).toBe(5);
+    expect(bands[1].endTimeSeconds).toBe(3.25);
+    expect(bands[2].startTimeSeconds).toBe(5);
   });
 
   it("消去プレビューでは、編集前の位置に戻した境界に前のノートの帯も追従する", () => {
@@ -157,16 +169,16 @@ describe("groupPhonemeDisplayInfos", () => {
         : info,
     );
 
-    const groups = groupPhonemeDisplayInfos(
-      buildPhonemeDisplayInfos(
+    const bands = buildNotePhonemeBands(
+      buildPhonemeBoundaryDisplays(
         edited,
         { type: "erase", targets: [{ noteId: b, phonemeIndexInNote: 0 }] },
         frameRate,
       ),
     );
 
-    expect(groups[0].endTime).toBe(2);
-    expect(groups[1].startTime).toBe(2);
-    expect(groups[1].phonemes[0].displayState).toBe("default");
+    expect(bands[0].endTimeSeconds).toBe(2);
+    expect(bands[1].startTimeSeconds).toBe(2);
+    expect(bands[1].boundaries[0].displayState).toBe("default");
   });
 });
