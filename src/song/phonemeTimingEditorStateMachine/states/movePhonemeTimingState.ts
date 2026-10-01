@@ -29,6 +29,7 @@ export class MovePhonemeTimingState implements State<
 
   private currentPositionX: number;
   private shouldApplyPreview: boolean;
+  private isPointerInArea: boolean;
 
   private animationContext:
     | {
@@ -52,6 +53,7 @@ export class MovePhonemeTimingState implements State<
 
     this.currentPositionX = args.startPositionX;
     this.shouldApplyPreview = false;
+    this.isPointerInArea = true;
   }
 
   onEnter(context: PhonemeTimingEditorContext) {
@@ -104,6 +106,14 @@ export class MovePhonemeTimingState implements State<
     if (input.type === "pointerEvent") {
       const mouseButton = getButton(input.pointerEvent);
 
+      if (input.targetArea === "PhonemeTimingArea") {
+        if (input.pointerEvent.type === "pointermove") {
+          this.isPointerInArea = true;
+        } else if (input.pointerEvent.type === "pointerleave") {
+          this.isPointerInArea = false;
+        }
+      }
+
       if (
         input.targetArea === "Window" ||
         input.targetArea === "PhonemeTimingArea"
@@ -148,6 +158,10 @@ export class MovePhonemeTimingState implements State<
       this.applyPreview(context);
     }
 
+    // 領域外で離すと、ポインタが戻るまでpointerleaveが届かず強調表示が残るため、ここで解除する。
+    if (!this.isPointerInArea) {
+      context.activePhoneme.value = undefined;
+    }
     context.previewPhonemeTiming.value = undefined;
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
