@@ -715,22 +715,22 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-90) var(--neutral-c) var(--neutral-h) / 50%
   );
   --scheme-color-song-phoneme-bound-hover: oklch(
-    var(--lr-95) var(--neutral-c) var(--neutral-h)
+    var(--lr-90) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-song-phoneme-bound-edited: oklch(
     var(--lr-85) 0.12 var(--primary-h)
   );
   --scheme-color-song-phoneme-bound-editing: oklch(
-    var(--lr-90) 0.16 var(--primary-h)
+    var(--lr-85) 0.136 var(--primary-h)
   );
   --scheme-color-song-phoneme-label: oklch(
     var(--lr-90) var(--neutral-c) var(--neutral-h) / 90%
   );
   --scheme-color-song-phoneme-label-hover: oklch(
-    var(--lr-95) var(--neutral-c) var(--neutral-h)
+    var(--lr-90) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-song-phoneme-bridge: oklch(
-    var(--lr-70) var(--secondary-c) var(--secondary-h)
+    var(--lr-58) var(--secondary-c) var(--secondary-h)
   );
   --scheme-color-song-phoneme-bridge-hover: oklch(
     var(--lr-88) var(--secondary-c) var(--secondary-h)
