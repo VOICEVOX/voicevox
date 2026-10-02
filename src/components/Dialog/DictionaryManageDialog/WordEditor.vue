@@ -341,7 +341,6 @@ const play = async () => {
 
         const { stream, startOffset } = await store.actions.FETCH_AUDIO_STREAM({
           audioItem,
-          mode: "preview",
           startOffset: 0,
           signal,
         });
