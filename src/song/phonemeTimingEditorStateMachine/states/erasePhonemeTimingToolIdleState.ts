@@ -4,6 +4,7 @@ import type {
   PhonemeTimingEditorInput,
   PhonemeTimingEditorStateDefinitions,
 } from "@/song/phonemeTimingEditorStateMachine/common";
+import { isInPhonemeBandHitArea } from "@/song/phonemeTimingEditorStateMachine/common";
 import { getButton, tickToBaseX } from "@/song/viewHelper";
 import { secondToTick } from "@/song/music";
 
@@ -44,6 +45,16 @@ export class ErasePhonemeTimingToolIdleState implements State<
         input.targetArea === "PhonemeTimingArea";
 
       if (!isPointerMove && !isPointerDown) {
+        return;
+      }
+
+      // 帯の外ではカーソルを変えず、消去も始めない
+      if (
+        !isInPhonemeBandHitArea(input.positionY, context.getPhonemeBandYRange())
+      ) {
+        if (isPointerMove) {
+          context.cursorState.value = "UNSET";
+        }
         return;
       }
 
