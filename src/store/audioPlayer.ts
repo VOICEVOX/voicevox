@@ -204,38 +204,43 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       async ({ state, getters, mutations, actions }, { audioKey }) =>
         audioPlayMutex.lock(async (signal) => {
           if (signal.aborted) return false;
+          using cancellables = new DisposableStack();
+
           const audioItem = cloneWithUnwrapProxy(state.audioItems[audioKey]);
           mutations.SET_CURRENT_PLAY_STATE({
             currentPlayState: { type: "preparing" },
           });
+
+          const startTime = ensureNotNullish(
+            (await actions.GET_AUDIO_PLAY_OFFSETS({ audioKey })).at(
+              getters.AUDIO_PLAY_START_POINT ?? 0,
+            ),
+          );
+
           void actions.START_PROGRESS();
-          try {
-            const startTime = ensureNotNullish(
-              (await actions.GET_AUDIO_PLAY_OFFSETS({ audioKey })).at(
-                getters.AUDIO_PLAY_START_POINT ?? 0,
-              ),
-            );
-            const { stream, startOffset } = await actions.FETCH_AUDIO_STREAM({
-              audioItem,
-              startOffset: startTime,
-              signal,
-            });
+          cancellables.defer(() => {
             void actions.RESET_PROGRESS();
-            return await actions.PLAY_AUDIO_STREAM({
-              stream: new WavStream(stream),
-              startOffset,
-              audioKey,
-              startTime,
-              signal,
-              notifyOnDelay:
-                getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem),
-            });
-          } finally {
-            void actions.RESET_PROGRESS();
-            mutations.SET_CURRENT_PLAY_STATE({
-              currentPlayState: { type: "stopped" },
-            });
-          }
+          });
+
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: { type: "preparing" },
+          });
+          const { stream, startOffset } = await actions.FETCH_AUDIO_STREAM({
+            audioItem,
+            startOffset: startTime,
+            signal,
+          });
+          return await actions.PLAY_AUDIO_STREAM({
+            stream: new WavStream(stream),
+            startOffset,
+            audioKey,
+            startTime,
+            signal,
+            notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem),
+            onStart() {
+              void actions.RESET_PROGRESS();
+            },
+          });
         }),
     ),
   },
@@ -280,7 +285,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               if (currentAudioKey !== audioKey) {
                 mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
               }
-              void actions.RESET_PROGRESS();
               return actions.PLAY_AUDIO_STREAM({
                 stream: new WavStream(stream),
                 startOffset,
@@ -290,6 +294,9 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
                 notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(
                   state.audioItems[audioKey],
                 ),
+                onStart() {
+                  void actions.RESET_PROGRESS();
+                },
               });
             },
             onWaitStart(audioKey) {
@@ -324,7 +331,15 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   PLAY_AUDIO_STREAM: {
     async action(
       { state, mutations, actions },
-      { stream, startOffset, audioKey, startTime, signal, notifyOnDelay },
+      {
+        stream,
+        startOffset,
+        audioKey,
+        startTime,
+        signal,
+        notifyOnDelay,
+        onStart,
+      },
     ) {
       if (signal.aborted) return false;
       using cancellables = new DisposableStack();
@@ -338,6 +353,9 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       let delayNotified = false;
       await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
       await playAudioStream(stream, startOffset, signal, {
+        onStart() {
+          onStart?.();
+        },
         onDelay() {
           if (
             notifyOnDelay &&

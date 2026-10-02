@@ -772,6 +772,7 @@ export type AudioPlayerStoreTypes = {
       audioKey: AudioKey;
       signal: AbortSignal;
       notifyOnDelay?: boolean;
+      onStart?: () => void;
     }): Promise<boolean>;
   };
 };
