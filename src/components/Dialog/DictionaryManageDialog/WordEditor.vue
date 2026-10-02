@@ -328,34 +328,30 @@ const play = async () => {
   try {
     await audioPlayMutex.lock(async (signal) => {
       let wavStream: WavStream | undefined;
-      try {
-        const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
-          text: yomi.value,
-          voice: voiceComputed.value,
-        });
+      const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
+        text: yomi.value,
+        voice: voiceComputed.value,
+      });
 
-        if (audioItem.query == undefined)
-          throw new Error(`assert audioItem.query !== undefined`);
+      if (audioItem.query == undefined)
+        throw new Error(`assert audioItem.query !== undefined`);
 
-        audioItem.query.accentPhrases = [phrase];
+      audioItem.query.accentPhrases = [phrase];
 
-        const { stream, startOffset } = await store.actions.FETCH_AUDIO_STREAM({
-          audioItem,
-          startOffset: 0,
-          signal,
-        });
-        nowGenerating.value = false;
-        nowPlaying.value = true;
-        wavStream = new WavStream(stream);
-        await setAudioContextSinkId(
-          store.state.savingSetting.audioOutputDevice,
-        );
-        await playAudioStream(wavStream, startOffset, signal);
-      } finally {
-        void wavStream?.cancel().catch((error: unknown) => {
-          if (!signal.aborted) window.backend.logError(error);
-        });
-      }
+      const { stream, startOffset } = await store.actions.FETCH_AUDIO_STREAM({
+        audioItem,
+        startOffset: 0,
+        signal,
+      });
+      using cancellable = new DisposableStack();
+      cancellable.defer(() => {
+        wavStream?.cancel();
+      });
+      nowGenerating.value = false;
+      nowPlaying.value = true;
+      wavStream = new WavStream(stream);
+      await setAudioContextSinkId(store.state.savingSetting.audioOutputDevice);
+      await playAudioStream(wavStream, startOffset, signal);
     });
   } catch (e) {
     window.backend.logError(e);
