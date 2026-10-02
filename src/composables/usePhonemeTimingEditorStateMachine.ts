@@ -3,6 +3,7 @@ import type { CursorState, ViewportInfo } from "@/song/viewHelper";
 import type {
   PhonemeTimingPreview,
   PhonemeTimingTarget,
+  PhonemeBandYRange,
   PhonemeTimingEditorPartialStore,
   PhonemeTimingEditorPreviewMode,
   PhonemeTimingEditorInput,
@@ -21,6 +22,7 @@ export const usePhonemeTimingEditorStateMachine = (
   viewportInfo: ComputedRef<ViewportInfo>,
   phonemeTimingInfos: ComputedRef<PhonemeTimingInfo[]>,
   phraseInfos: ComputedRef<Map<PhraseKey, PhraseInfo>>,
+  getPhonemeBandYRange: () => PhonemeBandYRange,
 ) => {
   const refs = {
     activePhoneme: ref<PhonemeTimingTarget>(),
@@ -52,6 +54,7 @@ export const usePhonemeTimingEditorStateMachine = (
     {
       ...refs,
       ...computedRefs,
+      getPhonemeBandYRange,
       store,
     },
     idleStateId.value,

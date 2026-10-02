@@ -34,7 +34,11 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { getXInBorderBox, type ViewportInfo } from "@/song/viewHelper";
+import {
+  getXInBorderBox,
+  getYInBorderBox,
+  type ViewportInfo,
+} from "@/song/viewHelper";
 import { useStore } from "@/store";
 import { usePhonemeTimingEditorStateMachine } from "@/composables/usePhonemeTimingEditorStateMachine";
 import {
@@ -45,6 +49,7 @@ import SequencerParameterGrid from "@/components/Song/SequencerParameterGrid.vue
 import SequencerPhonemeTimings from "@/components/Song/SequencerPhonemeTimings.vue";
 import SequencerNoteTimings from "@/components/Song/SequencerNoteTimings.vue";
 import SequencerPhonemeTimingToolPalette from "@/components/Song/SequencerPhonemeTimingToolPalette.vue";
+import { getPhonemeTimingLayout } from "@/components/Song/SequencerPhonemeTimingEditor/style";
 import { assertNonNullable } from "@/type/utility";
 import {
   computePhonemeTimingInfos,
@@ -92,6 +97,8 @@ const phonemeTimingInfos = computed(() => {
   );
 });
 
+const parameterArea = ref<HTMLElement | null>(null);
+
 const {
   stateMachineProcess,
   cursorState,
@@ -103,9 +110,15 @@ const {
   viewportInfo,
   phonemeTimingInfos,
   phraseInfos,
+  () => {
+    const parameterAreaElement = parameterArea.value;
+    assertNonNullable(parameterAreaElement);
+    const { bandTop, bandHeight } = getPhonemeTimingLayout(
+      parameterAreaElement.clientHeight,
+    );
+    return { top: bandTop, bottom: bandTop + bandHeight };
+  },
 );
-
-const parameterArea = ref<HTMLElement | null>(null);
 
 const cursorClass = computed(() => {
   switch (cursorState.value) {
@@ -124,12 +137,19 @@ const getLocalPositionX = (event: MouseEvent): number => {
   return getXInBorderBox(event.clientX, parameterAreaElement);
 };
 
+const getLocalPositionY = (event: MouseEvent): number => {
+  const parameterAreaElement = parameterArea.value;
+  assertNonNullable(parameterAreaElement);
+  return getYInBorderBox(event.clientY, parameterAreaElement);
+};
+
 const onPointerDown = (event: PointerEvent) => {
   stateMachineProcess({
     type: "pointerEvent",
     targetArea: "PhonemeTimingArea",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 
@@ -139,6 +159,7 @@ const onDoubleClick = (event: MouseEvent) => {
     targetArea: "PhonemeTimingArea",
     mouseEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 
@@ -148,6 +169,7 @@ const onPointerMove = (event: PointerEvent) => {
     targetArea: "PhonemeTimingArea",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 
@@ -157,6 +179,7 @@ const onPointerLeave = (event: PointerEvent) => {
     targetArea: "PhonemeTimingArea",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 
@@ -198,6 +221,7 @@ const onWindowPointerMove = (event: PointerEvent) => {
     targetArea: "Window",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 
@@ -207,6 +231,7 @@ const onWindowPointerUp = (event: PointerEvent) => {
     targetArea: "Window",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 
@@ -216,6 +241,7 @@ const onWindowPointerCancel = (event: PointerEvent) => {
     targetArea: "Window",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 

@@ -62,18 +62,21 @@ export type PhonemeTimingEditorInput =
       readonly targetArea: "PhonemeTimingArea";
       readonly mouseEvent: MouseEvent;
       readonly positionX: number;
+      readonly positionY: number;
     }
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "PhonemeTimingArea";
       readonly pointerEvent: PointerEvent;
       readonly positionX: number;
+      readonly positionY: number;
     }
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "Window";
       readonly pointerEvent: PointerEvent;
       readonly positionX: number;
+      readonly positionY: number;
     };
 
 export type PhonemeTimingEditorPreviewMode =
@@ -126,10 +129,32 @@ export type PhonemeTimingEditorPartialStore = {
   >;
 };
 
+/** 音素帯の上端と下端のY座標 */
+export type PhonemeBandYRange = {
+  readonly top: number;
+  readonly bottom: number;
+};
+
 export type PhonemeTimingEditorContext = PhonemeTimingEditorRefs &
   PhonemeTimingEditorComputedRefs & {
+    readonly getPhonemeBandYRange: () => PhonemeBandYRange;
     readonly store: PhonemeTimingEditorPartialStore;
   };
+
+/**
+ * 音素境界をつかめる高さにポインタがあるかを判定する
+ * ノート行やラベル行では境界をつかませず、帯の端を少し外れた位置は許容する
+ */
+export function isInPhonemeBandHitArea(
+  positionY: number,
+  bandYRange: PhonemeBandYRange,
+) {
+  const marginPx = 4;
+  return (
+    bandYRange.top - marginPx <= positionY &&
+    positionY <= bandYRange.bottom + marginPx
+  );
+}
 
 export type PhonemeTimingEditorIdleStateId =
   | "movePhonemeTimingToolIdle"

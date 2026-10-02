@@ -47,7 +47,7 @@ export const PHONEME_LABEL_FONT = `500 ${PHONEME_TIMING_LAYOUT.labelFontSizePx}p
 
 /**
  * レーンの高さからノート行・音素帯・ラベル行の位置を求める
- * SequencerNoteTimingsとSequencerPhonemeTimingsで共通の位置を使う
+ * SequencerNoteTimingsとSequencerPhonemeTimingsの描画と、音素境界をつかめる高さの判定で共通の位置を使う
  */
 export function getPhonemeTimingLayout(height: number) {
   const noteHeight = PHONEME_TIMING_LAYOUT.noteHeightPx;

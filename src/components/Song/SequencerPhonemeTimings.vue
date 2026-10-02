@@ -381,11 +381,13 @@ const render = () => {
       .moveTo(lineX, bandTop)
       .lineTo(lineX, bandBottom)
       .stroke({ width: lineWidth, ...toFillStyle(color) });
-    // ドラッグ中は上端まで線を伸ばし、ノートやグリッドとの位置関係を見比べられるようにする
+    // ドラッグ中は上下の端まで線を伸ばし、ノートやグリッドとの位置関係を見比べられるようにする
     if (moving) {
       graphic
         .moveTo(lineX, 0)
         .lineTo(lineX, bandTop)
+        .moveTo(lineX, bandBottom)
+        .lineTo(lineX, canvasHeight)
         .stroke({ width: 1, ...toFillStyle(colors.guide) });
     }
 

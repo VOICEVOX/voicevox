@@ -13,6 +13,7 @@ import { tickToSecond } from "@/song/music";
 import { clamp, getPrev } from "@/song/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { assertNonNullable } from "@/type/utility";
+import { isInPhonemeBandHitArea } from "@/song/phonemeTimingEditorStateMachine/common";
 
 export class MovePhonemeTimingState implements State<
   PhonemeTimingEditorStateDefinitions,
@@ -29,7 +30,7 @@ export class MovePhonemeTimingState implements State<
 
   private currentPositionX: number;
   private shouldApplyPreview: boolean;
-  private isPointerInArea: boolean;
+  private isPointerOnBand: boolean;
 
   private animationContext:
     | {
@@ -53,7 +54,7 @@ export class MovePhonemeTimingState implements State<
 
     this.currentPositionX = args.startPositionX;
     this.shouldApplyPreview = false;
-    this.isPointerInArea = true;
+    this.isPointerOnBand = true;
   }
 
   onEnter(context: PhonemeTimingEditorContext) {
@@ -108,9 +109,12 @@ export class MovePhonemeTimingState implements State<
 
       if (input.targetArea === "PhonemeTimingArea") {
         if (input.pointerEvent.type === "pointermove") {
-          this.isPointerInArea = true;
+          this.isPointerOnBand = isInPhonemeBandHitArea(
+            input.positionY,
+            context.getPhonemeBandYRange(),
+          );
         } else if (input.pointerEvent.type === "pointerleave") {
-          this.isPointerInArea = false;
+          this.isPointerOnBand = false;
         }
       }
 
@@ -158,8 +162,8 @@ export class MovePhonemeTimingState implements State<
       this.applyPreview(context);
     }
 
-    // 領域外で離すと、ポインタが戻るまでpointerleaveが届かず強調表示が残るため、ここで解除する。
-    if (!this.isPointerInArea) {
+    // 帯の外で離すと、ポインタを動かすまで強調表示が残るため、ここで解除する。
+    if (!this.isPointerOnBand) {
       context.activePhoneme.value = undefined;
     }
     context.previewPhonemeTiming.value = undefined;

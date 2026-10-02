@@ -5,6 +5,7 @@ import type {
   PhonemeTimingEditorStateDefinitions,
   PhonemeTimingInfo,
 } from "@/song/phonemeTimingEditorStateMachine/common";
+import { isInPhonemeBandHitArea } from "@/song/phonemeTimingEditorStateMachine/common";
 import { getButton, tickToBaseX } from "@/song/viewHelper";
 import { secondToTick } from "@/song/music";
 
@@ -63,27 +64,31 @@ export class MovePhonemeTimingToolIdleState implements State<
     const threshold = 4;
     let nearest: PhonemeTimingInfo | undefined;
     let minDistance: number | undefined = undefined;
-    for (const phonemeTimingInfo of phonemeTimingInfos) {
-      const phonemeStartTicks = secondToTick(
-        phonemeTimingInfo.editedStartTimeSeconds,
-        context.tempos.value,
-        context.tpqn.value,
-      );
-      const phonemeStartBaseX = tickToBaseX(
-        phonemeStartTicks,
-        context.tpqn.value,
-      );
-      const phonemeStartX = Math.round(
-        phonemeStartBaseX * viewportInfo.scaleX - viewportInfo.offsetX,
-      );
+    if (
+      isInPhonemeBandHitArea(input.positionY, context.getPhonemeBandYRange())
+    ) {
+      for (const phonemeTimingInfo of phonemeTimingInfos) {
+        const phonemeStartTicks = secondToTick(
+          phonemeTimingInfo.editedStartTimeSeconds,
+          context.tempos.value,
+          context.tpqn.value,
+        );
+        const phonemeStartBaseX = tickToBaseX(
+          phonemeStartTicks,
+          context.tpqn.value,
+        );
+        const phonemeStartX = Math.round(
+          phonemeStartBaseX * viewportInfo.scaleX - viewportInfo.offsetX,
+        );
 
-      const distance = Math.abs(phonemeStartX - input.positionX);
-      if (
-        distance <= threshold &&
-        (minDistance == undefined || distance < minDistance)
-      ) {
-        minDistance = distance;
-        nearest = phonemeTimingInfo;
+        const distance = Math.abs(phonemeStartX - input.positionX);
+        if (
+          distance <= threshold &&
+          (minDistance == undefined || distance < minDistance)
+        ) {
+          minDistance = distance;
+          nearest = phonemeTimingInfo;
+        }
       }
     }
 
