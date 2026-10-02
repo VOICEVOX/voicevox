@@ -65,7 +65,7 @@ export class MovePhonemeTimingToolIdleState implements State<
     let nearest: PhonemeTimingInfo | undefined;
     let minDistance: number | undefined = undefined;
     if (
-      isInPhonemeBandHitArea(input.positionY, context.getPhonemeBandYRange())
+      isInPhonemeBandHitArea(input.positionY, context.phonemeBandYRange.value)
     ) {
       for (const phonemeTimingInfo of phonemeTimingInfos) {
         const phonemeStartTicks = secondToTick(

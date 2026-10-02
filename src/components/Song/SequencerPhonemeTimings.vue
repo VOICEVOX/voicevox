@@ -49,13 +49,14 @@ import {
 import { createThemeColorResolver } from "@/song/graphics/cssColor";
 import type { Color } from "@/song/graphics/lineStrip";
 import {
-  getPhonemeTimingLayout,
   PHONEME_TIMING_LAYOUT,
   PHONEME_LABEL_FONT,
+  type PhonemeTimingLayout,
 } from "@/components/Song/SequencerPhonemeTimingEditor/style";
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
+  layout: PhonemeTimingLayout;
   previewPhonemeTiming?: PhonemeTimingPreview;
   phonemeTimingInfos: PhonemeTimingInfo[];
   activePhoneme?: PhonemeTimingTarget;
@@ -157,7 +158,7 @@ const render = () => {
     tickToBaseX(secondToTick(seconds, rawTempos, tpqn.value), tpqn.value) *
       viewport.scaleX -
     viewport.offsetX;
-  const layout = getPhonemeTimingLayout(canvasHeight);
+  const layout = props.layout;
   const { noteTop, noteHeight, bandTop, bandHeight, labelTop } = layout;
   const bandBottom = bandTop + bandHeight;
   const boundaries = buildPhonemeBoundaryDisplays(
@@ -471,6 +472,7 @@ watch(
     isDark,
     () => props.activePhoneme,
     () => store.getters.SELECTED_TRACK.notes,
+    () => props.layout,
     () => props.viewportInfo.scaleX,
     () => props.viewportInfo.offsetX,
   ],

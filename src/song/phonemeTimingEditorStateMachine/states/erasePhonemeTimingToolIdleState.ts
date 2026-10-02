@@ -60,7 +60,10 @@ export class ErasePhonemeTimingToolIdleState implements State<
 
       // 帯の外では強調表示もカーソルも変えず、消去も始めない
       if (
-        !isInPhonemeBandHitArea(input.positionY, context.getPhonemeBandYRange())
+        !isInPhonemeBandHitArea(
+          input.positionY,
+          context.phonemeBandYRange.value,
+        )
       ) {
         if (isPointerMove) {
           context.activePhoneme.value = undefined;

@@ -107,6 +107,7 @@ export type PhonemeTimingEditorComputedRefs = {
   readonly editorFrameRate: ComputedRef<number>;
   readonly phonemeTimingInfos: ComputedRef<PhonemeTimingInfo[]>;
   readonly phraseInfos: ComputedRef<Map<PhraseKey, PhraseInfo>>;
+  readonly phonemeBandYRange: ComputedRef<PhonemeBandYRange>;
 };
 
 export type PhonemeTimingEditorPartialStore = {
@@ -137,7 +138,6 @@ export type PhonemeBandYRange = {
 
 export type PhonemeTimingEditorContext = PhonemeTimingEditorRefs &
   PhonemeTimingEditorComputedRefs & {
-    readonly getPhonemeBandYRange: () => PhonemeBandYRange;
     readonly store: PhonemeTimingEditorPartialStore;
   };
 

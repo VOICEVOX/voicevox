@@ -28,12 +28,13 @@ import { assertNonNullable } from "@/type/utility";
 import type { NoteId } from "@/type/preload";
 import { createThemeColorResolver } from "@/song/graphics/cssColor";
 import {
-  getPhonemeTimingLayout,
   PHONEME_TIMING_LAYOUT,
+  type PhonemeTimingLayout,
 } from "@/components/Song/SequencerPhonemeTimingEditor/style";
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
+  layout: PhonemeTimingLayout;
   activeNoteId?: NoteId;
 }>();
 
@@ -80,7 +81,7 @@ const render = () => {
   const scaleX = props.viewportInfo.scaleX;
   const offsetXValue = props.viewportInfo.offsetX;
   const tickColors = resolveNoteTickColors(canvasContainer.value, isDark.value);
-  const { noteTop, noteHeight } = getPhonemeTimingLayout(canvasHeight);
+  const { noteTop, noteHeight } = props.layout;
 
   let graphicsIndex = 0;
   const visibleLyrics: typeof lyrics.value = [];
@@ -166,6 +167,7 @@ watch(
     defaultLyricMode,
     isDark,
     () => props.activeNoteId,
+    () => props.layout,
     () => props.viewportInfo.scaleX,
     () => props.viewportInfo.offsetX,
   ],

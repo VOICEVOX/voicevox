@@ -111,7 +111,7 @@ export class MovePhonemeTimingState implements State<
         if (input.pointerEvent.type === "pointermove") {
           this.isPointerOnBand = isInPhonemeBandHitArea(
             input.positionY,
-            context.getPhonemeBandYRange(),
+            context.phonemeBandYRange.value,
           );
         } else if (input.pointerEvent.type === "pointerleave") {
           this.isPointerOnBand = false;

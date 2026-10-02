@@ -22,7 +22,7 @@ export const usePhonemeTimingEditorStateMachine = (
   viewportInfo: ComputedRef<ViewportInfo>,
   phonemeTimingInfos: ComputedRef<PhonemeTimingInfo[]>,
   phraseInfos: ComputedRef<Map<PhraseKey, PhraseInfo>>,
-  getPhonemeBandYRange: () => PhonemeBandYRange,
+  phonemeBandYRange: ComputedRef<PhonemeBandYRange>,
 ) => {
   const refs = {
     activePhoneme: ref<PhonemeTimingTarget>(),
@@ -42,6 +42,7 @@ export const usePhonemeTimingEditorStateMachine = (
     editorFrameRate: computed<number>(() => store.state.editorFrameRate),
     phonemeTimingInfos,
     phraseInfos,
+    phonemeBandYRange,
   };
 
   const idleStateId = computed<PhonemeTimingEditorIdleStateId>(() =>
@@ -54,7 +55,6 @@ export const usePhonemeTimingEditorStateMachine = (
     {
       ...refs,
       ...computedRefs,
-      getPhonemeBandYRange,
       store,
     },
     idleStateId.value,

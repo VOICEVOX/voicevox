@@ -12,18 +12,22 @@
       @wheel="onWheel"
     >
       <SequencerParameterGrid class="parameter-grid" :viewportInfo />
-      <SequencerPhonemeTimings
-        class="phoneme-timings"
-        :viewportInfo
-        :previewPhonemeTiming
-        :phonemeTimingInfos
-        :activePhoneme
-      />
-      <SequencerNoteTimings
-        class="note-timings"
-        :viewportInfo
-        :activeNoteId="activePhoneme?.noteId"
-      />
+      <template v-if="layout != undefined">
+        <SequencerPhonemeTimings
+          class="phoneme-timings"
+          :viewportInfo
+          :layout
+          :previewPhonemeTiming
+          :phonemeTimingInfos
+          :activePhoneme
+        />
+        <SequencerNoteTimings
+          class="note-timings"
+          :viewportInfo
+          :layout
+          :activeNoteId="activePhoneme?.noteId"
+        />
+      </template>
       <SequencerPhonemeTimingToolPalette
         :sequencerPhonemeTimingTool
         @update:sequencerPhonemeTimingTool="setSequencerPhonemeTimingTool"
@@ -33,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import {
   getXInBorderBox,
   getYInBorderBox,
@@ -98,6 +102,21 @@ const phonemeTimingInfos = computed(() => {
 });
 
 const parameterArea = ref<HTMLElement | null>(null);
+const parameterAreaHeight = ref<number>();
+
+// ノート行・音素帯・ラベル行の縦位置は、描画と当たり判定で食い違わないようここで1回だけ求めて配る
+const layout = computed(() =>
+  parameterAreaHeight.value == undefined
+    ? undefined
+    : getPhonemeTimingLayout(parameterAreaHeight.value),
+);
+const phonemeBandYRange = computed(() => {
+  assertNonNullable(layout.value);
+  return {
+    top: layout.value.bandTop,
+    bottom: layout.value.bandTop + layout.value.bandHeight,
+  };
+});
 
 const {
   stateMachineProcess,
@@ -110,14 +129,7 @@ const {
   viewportInfo,
   phonemeTimingInfos,
   phraseInfos,
-  () => {
-    const parameterAreaElement = parameterArea.value;
-    assertNonNullable(parameterAreaElement);
-    const { bandTop, bandHeight } = getPhonemeTimingLayout(
-      parameterAreaElement.clientHeight,
-    );
-    return { top: bandTop, bottom: bandTop + bandHeight };
-  },
+  phonemeBandYRange,
 );
 
 const cursorClass = computed(() => {
@@ -244,6 +256,22 @@ const onWindowPointerCancel = (event: PointerEvent) => {
     positionY: getLocalPositionY(event),
   });
 };
+
+let resizeObserver: ResizeObserver | undefined;
+
+onMounted(() => {
+  const parameterAreaElement = parameterArea.value;
+  assertNonNullable(parameterAreaElement);
+  parameterAreaHeight.value = parameterAreaElement.clientHeight;
+  resizeObserver = new ResizeObserver(() => {
+    parameterAreaHeight.value = parameterAreaElement.clientHeight;
+  });
+  resizeObserver.observe(parameterAreaElement);
+});
+
+onUnmounted(() => {
+  resizeObserver?.disconnect();
+});
 
 onMountedOrActivated(() => {
   window.addEventListener("pointermove", onWindowPointerMove);
