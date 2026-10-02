@@ -34,6 +34,7 @@ import {
   generateLabFromAudioQuery,
   handlePossiblyNotMorphableError,
   isMorphable,
+  type AudioUniqueId,
 } from "./audioGenerate";
 import { convertAudioQueryFromEngineToEditor } from "./proxy";
 import { LruCache } from "@/helpers/lruCache";
@@ -68,7 +69,9 @@ import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
 
-const audioCache = new LruCache<string, { wav: Blob; startsAt: number }>(64);
+const audioCache = new LruCache<AudioUniqueId, { wav: Blob; startsAt: number }>(
+  64,
+);
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -1319,23 +1322,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   FETCH_AUDIO_STREAM: {
     async action(
       { state, getters, actions },
-      { signal, startOffset, audioItem },
+      { signal, startOffset: requestedStartOffset, audioItem },
     ) {
       // # キャッシュについて
       //
       // - AudioQueryやstyleIdなどの音声を生成するためのパラメーターから生成されるIDをキャッシュのキーにする。
       // - 音声をすべて取得しきったあとにキャッシュにいれる。
       //   - そのため、キャッシュには`(キャッシュのキー) -> (開始時刻, 開始時刻から終端までの音声)`、しか入らない。
-      //   - 開始時刻は、ストリーミングAPIでは`startOffset`、それ以外のAPIでは0になる。
+      //   - 開始時刻は、ストリーミングAPIでは呼び出し側から要求された開始時刻、それ以外のAPIでは0になる。
       // - もしキャッシュが存在していて、再生しようとしている時刻からの音声を含んでいる場合は、キャッシュから再生する。
-      //   - ここで、「再生しようとしている時刻からの音声を含んでいる場合」はキャッシュの開始時刻が再生しようとしている時刻よりも前かどうかで判定する。
+      //   - ここで、「再生しようとしている時刻からの音声を含んでいる場合」はキャッシュの開始時刻が呼び出し側から要求された開始時刻よりも前かどうかで判定する。
       const { id: cacheKey, engineAudioQuery: audioQuery } =
         await generateUniqueIdAndQuery(state, audioItem);
       const cached = audioCache.get(cacheKey);
-      if (cached && cached.startsAt <= startOffset) {
+      if (cached && cached.startsAt <= requestedStartOffset) {
         return {
           stream: cached.wav.stream(),
-          startOffset: startOffset - cached.startsAt,
+          startOffset: requestedStartOffset - cached.startsAt,
         };
       }
 
@@ -1366,7 +1369,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         // ストリーミング対応の場合：ストリーミングAPIを呼ぶ
         getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem)
       ) {
-        audioStartOffset = startOffset;
+        audioStartOffset = requestedStartOffset;
         const segmentLength = {
           LOW_LATENCY: 0.3,
           BALANCED: 1.0,
@@ -1377,7 +1380,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             audioQuery,
             speaker,
             enableInterrogativeUpspeak,
-            startOffset,
+            startOffset: requestedStartOffset,
             segmentLength,
           },
           { signal },
@@ -1398,7 +1401,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioCache.set(cacheKey, { wav, startsAt: audioStartOffset });
       });
 
-      return { stream, startOffset: startOffset - audioStartOffset };
+      return { stream, startOffset: requestedStartOffset - audioStartOffset };
     },
   },
 
