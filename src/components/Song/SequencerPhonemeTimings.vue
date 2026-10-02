@@ -95,6 +95,12 @@ const labels = ref<
   }[]
 >([]);
 const chip = ref<{ x: number; y: number; phoneme: string; deltaMs: number }>();
+// チップは箱をラベルの行の中央に置き、中の音素名だけをラベルと同じ高さまで上げる
+const chipPaddingTopPx =
+  (PHONEME_TIMING_LAYOUT.chipHeightPx - PHONEME_TIMING_LAYOUT.labelHeightPx) /
+    2 -
+  PHONEME_TIMING_LAYOUT.chipBorderPx -
+  PHONEME_TIMING_LAYOUT.labelOpticalOffsetPx;
 
 const toFillStyle = (color: Color) => ({
   color: color.toRgbNumber(),
@@ -418,7 +424,8 @@ const render = () => {
       visibleLabels.push({
         key: `${info.noteId}:${info.phonemeIndexInNote}`,
         x: labelX,
-        y: labelTop,
+        // 音素名は小文字が多く、字面の中心が行の中心より下に見えるため、少し上げる
+        y: labelTop - PHONEME_TIMING_LAYOUT.labelOpticalOffsetPx,
         text: info.phoneme,
         active: inTargetNote,
         maxWidth: Math.max(
@@ -427,10 +434,13 @@ const render = () => {
         ),
       });
     }
-    // チップ内の音素名を、ラベルと同じ位置に重ね、ラベルからチップに切り替わっても文字が動いて把握しづらくなるのを避ける
+    // チップ内の音素名を、ラベルと同じ位置・大きさで重ね、ラベルからチップに切り替わっても文字が動いて把握しづらくなるのを避ける
     if (isTarget) {
       visibleChip = {
-        x: labelX - PHONEME_TIMING_LAYOUT.chipPaddingPx,
+        x:
+          labelX -
+          PHONEME_TIMING_LAYOUT.chipPaddingPx -
+          PHONEME_TIMING_LAYOUT.chipBorderPx,
         y:
           labelTop -
           (PHONEME_TIMING_LAYOUT.chipHeightPx -
@@ -589,23 +599,25 @@ onUnmounted(() => {
 .phoneme-chip {
   position: absolute;
   display: flex;
-  align-items: center;
+  // ms表示は音素名とベースラインで揃える
+  align-items: baseline;
   gap: 6px;
+  box-sizing: border-box;
   height: v-bind("`${PHONEME_TIMING_LAYOUT.chipHeightPx}px`");
-  padding: 0 v-bind("`${PHONEME_TIMING_LAYOUT.chipPaddingPx}px`");
-  border: 1px solid var(--scheme-color-song-parameter-tooltip-border);
-  border-radius: 6px;
+  padding: v-bind("`${chipPaddingTopPx}px`")
+    v-bind("`${PHONEME_TIMING_LAYOUT.chipPaddingPx}px`") 0;
+  border: v-bind("`${PHONEME_TIMING_LAYOUT.chipBorderPx}px`") solid
+    var(--scheme-color-song-parameter-tooltip-border);
+  border-radius: var(--radius-basis);
   box-shadow: 0 2px 4px var(--scheme-color-song-parameter-tooltip-shadow);
   background: var(--scheme-color-song-parameter-tooltip-container);
   color: var(--scheme-color-song-on-parameter-tooltip-container);
-  font-size: v-bind("`${PHONEME_TIMING_LAYOUT.labelFontSizePx}px`");
+  font-size: v-bind("`${PHONEME_TIMING_LAYOUT.chipFontSizePx}px`");
   line-height: v-bind("`${PHONEME_TIMING_LAYOUT.labelHeightPx}px`");
-  font-weight: 400;
   white-space: nowrap;
 }
 
 .phoneme-chip-delta {
-  font-size: 10px;
   color: var(--scheme-color-song-phoneme-chip-delta);
   font-variant-numeric: tabular-nums;
 }

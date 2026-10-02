@@ -10,6 +10,7 @@ export const PHONEME_TIMING_LAYOUT = {
   bandHeightPx: 32,
   labelGapPx: 8,
   labelHeightPx: 16,
+  labelOpticalOffsetPx: 1,
   topPaddingStepPx: 8,
   noteTickHeightPx: 6,
   lyricMinWidthPx: 16,
@@ -33,8 +34,10 @@ export const PHONEME_TIMING_LAYOUT = {
   labelMinWidthPx: 8,
   vowelLabelMinSpanPx: 22,
   labelFontSizePx: 13,
-  chipPaddingPx: 6,
-  chipHeightPx: 20,
+  chipPaddingPx: 10,
+  chipBorderPx: 1,
+  chipHeightPx: 28,
+  chipFontSizePx: 12,
 } as const;
 
 /**
