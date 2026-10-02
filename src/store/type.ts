@@ -12,7 +12,7 @@ import type {
   DotNotationActionContext,
 } from "./vuex";
 import { createCommandMutationTree, type PayloadRecipeTree } from "./command";
-import type { AudioUniqueId } from "./audioGenerate";
+import type { WavStream } from "@/domain/wavStream";
 import type {
   AccentPhrase,
   AudioQuery,
@@ -418,12 +418,26 @@ export type AudioStoreTypes = {
     action(payload: { audioKey: AudioKey }): number[];
   };
 
+  // TODO: 将来的にはFETCH_AUDIO_STREAMに統合する
   FETCH_AUDIO: {
     action(payload: { audioKey: AudioKey }): Promise<FetchAudioResult>;
   };
 
-  FETCH_AUDIO_FROM_AUDIO_ITEM: {
-    action(payload: { audioItem: AudioItem }): Promise<FetchAudioResult>;
+  FETCH_AUDIO_STREAM: {
+    action(payload: {
+      audioItem: AudioItem;
+      signal?: AbortSignal;
+      /** 元の音声上の再生開始位置（秒）。 */
+      startOffset: number;
+    }): Promise<{
+      stream: ReadableStream<Uint8Array>;
+      /** 返したWAVの先頭からの読み飛ばし量（秒）。 */
+      startOffset: number;
+    }>;
+  };
+
+  IS_STREAMING_SYNTHESIS_SUPPORTED: {
+    getter: (audioItem: AudioItem) => boolean;
   };
 
   CONNECT_AUDIO: {
@@ -456,23 +470,11 @@ export type AudioStoreTypes = {
     action(payload: { filePath?: string }): SaveResultObject | undefined;
   };
 
-  PLAY_AUDIO: {
-    action(payload: { audioKey: AudioKey }): boolean;
-  };
-
-  PLAY_AUDIO_BLOB: {
-    action(payload: { audioBlob: Blob; audioKey?: AudioKey }): boolean;
-  };
-
   SET_AUDIO_PRESET_KEY: {
     mutation: {
       audioKey: AudioKey;
       presetKey: PresetKey | undefined;
     };
-  };
-
-  PLAY_CONTINUOUSLY_AUDIO: {
-    action(): void;
   };
 };
 
@@ -725,14 +727,9 @@ export type CurrentPlayState =
       type: "stopped";
     }
   | {
-      type: "streaming";
-      audioKey: AudioKey;
-      currentTime: number;
-    }
-  // NOTE: 単体再生のルートを置き換えるときに消えるはず
-  | {
       type: "playing";
       audioKey: AudioKey;
+      currentTime: number;
     };
 
 export type AudioPlayerStoreState = {
@@ -740,6 +737,14 @@ export type AudioPlayerStoreState = {
 };
 
 export type AudioPlayerStoreTypes = {
+  PLAY_AUDIO: {
+    action(payload: { audioKey: AudioKey }): boolean;
+  };
+
+  PLAY_CONTINUOUSLY_AUDIO: {
+    action(): void;
+  };
+
   ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER: {
     getter: () => number | undefined;
   };
@@ -752,37 +757,21 @@ export type AudioPlayerStoreTypes = {
     mutation: { currentPlayState: CurrentPlayState };
   };
 
-  SET_AUDIO_SOURCE: {
-    mutation: { audioBlob: Blob };
-  };
-
-  PLAY_AUDIO_PLAYER: {
-    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<boolean>;
-  };
-
   STOP_AUDIO: {
     action(): void;
   };
 
-  PLAY_AUDIO_STREAMING: {
-    action(payload: { audioKey: AudioKey }): Promise<boolean>;
-  };
-
-  PLAY_AUDIO_STREAMING_FROM_CACHE: {
+  PLAY_AUDIO_STREAM: {
     action(payload: {
-      audioKey: AudioKey;
-      cache: { wav: Blob; startsAt: number };
+      stream: WavStream;
+      /** streamの先頭からの読み飛ばし量（秒）。 */
+      startOffset: number;
+      /** streamが元の音声の何秒目からかを示す。*/
       startTime: number;
-    }): Promise<boolean>;
-  };
 
-  GENERATE_AND_PLAY_AUDIO_STREAMING: {
-    action(payload: {
       audioKey: AudioKey;
-      audioItem: AudioItem;
-      audioQuery: AudioQuery;
-      cacheKey: AudioUniqueId;
-      startTime: number;
+      signal: AbortSignal;
+      notifyOnDelay?: boolean;
     }): Promise<boolean>;
   };
 };

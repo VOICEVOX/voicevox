@@ -35,6 +35,7 @@ import { useStore } from "@/store";
 const store = useStore();
 
 const progress = computed(() => store.getters.PROGRESS);
+const currentPlayState = computed(() => store.state.currentPlayState);
 const isShowProgress = ref<boolean>(false);
 const isDeterminate = ref<boolean>(false);
 
@@ -60,6 +61,17 @@ watch(progress, (newValue, oldValue) => {
     // 処理中 → 処理中(0%より大きな値)
     // 0 < value <= 1の間のみ進捗を%で表示する
     isDeterminate.value = true;
+  }
+});
+watch(currentPlayState, (newValue, oldValue) => {
+  if (newValue.type === "preparing" && oldValue.type !== "preparing") {
+    // 再生準備中 → 処理中
+    deferredProgressStart();
+    isDeterminate.value = false;
+  } else if (oldValue.type === "preparing" && newValue.type !== "preparing") {
+    // 処理中 → 再生準備中以外
+    clearTimeout(timeoutId);
+    isShowProgress.value = false;
   }
 });
 

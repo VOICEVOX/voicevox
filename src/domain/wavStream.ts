@@ -22,6 +22,10 @@ export class WavStream {
     this.bufferOffset = 0;
   }
 
+  cancel(): Promise<void> {
+    return this.reader.cancel();
+  }
+
   /**
    * 最初のWAVヘッダーを読み取る。
    */
