@@ -11,7 +11,7 @@ export const PHONEME_TIMING_LAYOUT = {
   labelGapPx: 8,
   labelHeightPx: 16,
   labelOpticalOffsetPx: 1,
-  topPaddingStepPx: 8,
+  minTopPaddingPx: 8,
   noteTickHeightPx: 6,
   lyricMinWidthPx: 16,
   bandGapPx: 4,
@@ -59,10 +59,10 @@ export function getPhonemeTimingLayout(height: number) {
   const labelGap = PHONEME_TIMING_LAYOUT.labelGapPx;
   const labelHeight = PHONEME_TIMING_LAYOUT.labelHeightPx;
   const blockHeight = noteHeight + rowGap + bandHeight + labelGap + labelHeight;
-  const step = PHONEME_TIMING_LAYOUT.topPaddingStepPx;
+  // 1pxの線が画素に乗るよう、上下中央に寄せた位置は整数に丸める
   const noteTop = Math.max(
-    step,
-    Math.round((height - blockHeight) / (2 * step)) * step,
+    PHONEME_TIMING_LAYOUT.minTopPaddingPx,
+    Math.round((height - blockHeight) / 2),
   );
   const bandTop = noteTop + noteHeight + rowGap;
   return {
