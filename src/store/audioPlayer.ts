@@ -360,9 +360,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         });
         return !signal.aborted;
       } finally {
-        void stream.cancel().catch((error: unknown) => {
-          if (!signal.aborted) log.error(error);
-        });
+        void stream.cancel();
         mutations.SET_CURRENT_PLAY_STATE({
           currentPlayState: { type: "stopped" },
         });
