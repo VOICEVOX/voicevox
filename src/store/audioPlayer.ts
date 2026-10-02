@@ -13,11 +13,9 @@ import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ensureNotNullish } from "@/type/utility";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { AbortableMutex } from "@/helpers/abortableMutex";
-import { createLogger } from "@/helpers/log";
 import { WavStream } from "@/domain/wavStream";
 import { DisposableTimeout } from "@/helpers/disposableTimeout";
 
-const log = createLogger("store/audioPlayer");
 let audioContext: AudioContext | null = null;
 if (window.AudioContext) {
   audioContext = new AudioContext();
@@ -328,43 +326,44 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       { state, mutations, actions },
       { stream, startOffset, audioKey, startTime, signal, notifyOnDelay },
     ) {
-      try {
-        if (signal.aborted) return false;
-        let delayNotified = false;
-        await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
-        await playAudioStream(stream, startOffset, signal, {
-          onDelay() {
-            if (
-              notifyOnDelay &&
-              !delayNotified &&
-              !state.confirmedTips.streamingUnrecommended
-            ) {
-              delayNotified = true;
-              void actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
-                message:
-                  "音声が途切れる場合は設定の「ストリーミング再生」を「安定」に変更してください",
-                icon: "warning",
-                tipName: "streamingUnrecommended",
-              });
-            }
-          },
-          onChunkStart(time) {
-            mutations.SET_CURRENT_PLAY_STATE({
-              currentPlayState: {
-                type: "playing",
-                audioKey,
-                currentTime: startTime + time,
-              },
-            });
-          },
-        });
-        return !signal.aborted;
-      } finally {
+      if (signal.aborted) return false;
+      using cancellables = new DisposableStack();
+      cancellables.defer(() => {
         void stream.cancel();
         mutations.SET_CURRENT_PLAY_STATE({
           currentPlayState: { type: "stopped" },
         });
-      }
+      });
+
+      let delayNotified = false;
+      await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
+      await playAudioStream(stream, startOffset, signal, {
+        onDelay() {
+          if (
+            notifyOnDelay &&
+            !delayNotified &&
+            !state.confirmedTips.streamingUnrecommended
+          ) {
+            delayNotified = true;
+            void actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
+              message:
+                "音声が途切れる場合は設定の「ストリーミング再生」を「安定」に変更してください",
+              icon: "warning",
+              tipName: "streamingUnrecommended",
+            });
+          }
+        },
+        onChunkStart(time) {
+          mutations.SET_CURRENT_PLAY_STATE({
+            currentPlayState: {
+              type: "playing",
+              audioKey,
+              currentTime: startTime + time,
+            },
+          });
+        },
+      });
+      return !signal.aborted;
     },
   },
 });
