@@ -217,11 +217,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             ),
           );
 
-          void actions.START_PROGRESS();
-          cancellables.defer(() => {
-            void actions.RESET_PROGRESS();
-          });
-
           mutations.SET_CURRENT_PLAY_STATE({
             currentPlayState: { type: "preparing" },
           });
@@ -237,9 +232,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             startTime,
             signal,
             notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem),
-            onStart() {
-              void actions.RESET_PROGRESS();
-            },
           });
         }),
     ),
@@ -294,13 +286,9 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
                 notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(
                   state.audioItems[audioKey],
                 ),
-                onStart() {
-                  void actions.RESET_PROGRESS();
-                },
               });
             },
             onWaitStart(audioKey) {
-              void actions.START_PROGRESS();
               mutations.SET_ACTIVE_AUDIO_KEY({ audioKey });
               mutations.SET_CURRENT_PLAY_STATE({
                 currentPlayState: { type: "preparing" },
@@ -331,15 +319,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   PLAY_AUDIO_STREAM: {
     async action(
       { state, mutations, actions },
-      {
-        stream,
-        startOffset,
-        audioKey,
-        startTime,
-        signal,
-        notifyOnDelay,
-        onStart,
-      },
+      { stream, startOffset, audioKey, startTime, signal, notifyOnDelay },
     ) {
       if (signal.aborted) return false;
       using cancellables = new DisposableStack();
@@ -353,9 +333,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       let delayNotified = false;
       await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
       await playAudioStream(stream, startOffset, signal, {
-        onStart() {
-          onStart?.();
-        },
         onDelay() {
           if (
             notifyOnDelay &&
