@@ -424,23 +424,12 @@ export type AudioStoreTypes = {
   };
 
   FETCH_AUDIO_STREAM: {
-    action(
-      payload: {
-        audioItem: AudioItem;
-        signal?: AbortSignal;
-      } & (
-        | {
-            /** エディタ内での再生する用の音声を生成する。 */
-            mode: "preview";
-            /** 元の音声上の再生開始位置（秒）。 */
-            startOffset: number;
-          }
-        | {
-            /** 出力用の音声を生成する。 */
-            mode: "export";
-          }
-      ),
-    ): Promise<{
+    action(payload: {
+      audioItem: AudioItem;
+      signal?: AbortSignal;
+      /** 元の音声上の再生開始位置（秒）。 */
+      startOffset: number;
+    }): Promise<{
       stream: ReadableStream<Uint8Array>;
       /** 返したWAVの先頭からの読み飛ばし量（秒）。 */
       startOffset: number;

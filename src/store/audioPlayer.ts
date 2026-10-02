@@ -219,7 +219,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             );
             const { stream, startOffset } = await actions.FETCH_AUDIO_STREAM({
               audioItem,
-              mode: "preview",
               startOffset: startTime,
               signal,
             });
@@ -270,7 +269,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             async fetchAudio({ audioKey, abortSignal }) {
               const result = await actions.FETCH_AUDIO_STREAM({
                 audioItem: state.audioItems[audioKey],
-                mode: "preview",
                 signal: AbortSignal.any([signal, abortSignal]),
                 startOffset: audioKey === currentAudioKey ? startTime : 0,
               });

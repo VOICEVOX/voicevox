@@ -37,7 +37,6 @@ import {
 } from "./audioGenerate";
 import { convertAudioQueryFromEngineToEditor } from "./proxy";
 import { LruCache } from "@/helpers/lruCache";
-import { createLogger } from "@/helpers/log";
 import {
   convertHiraToKana,
   convertLongVowel,
@@ -69,7 +68,6 @@ import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
 
-const log = createLogger("store/audio");
 const audioCache = new LruCache<string, { wav: Blob; startsAt: number }>(64);
 
 function generateAudioKey() {
@@ -1152,9 +1150,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         .catch((error) => {
           window.backend.logError(
             error,
-            `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(
-              accentPhrases,
-            )}".`,
+            `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(accentPhrases)}".`,
           );
           throw error;
         });
@@ -1288,7 +1284,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const audioQuery = ensureNotNullish(audioItem.query);
       const { stream } = await actions.FETCH_AUDIO_STREAM({
         audioItem,
-        mode: "export",
+        startOffset: 0,
       });
       const blob = await new Response(stream).blob();
       return { audioQuery, blob };
@@ -1321,11 +1317,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   FETCH_AUDIO_STREAM: {
-    async action({ state, getters, actions }, payload) {
-      const { mode, signal } = payload;
-      const audioItem = cloneWithUnwrapProxy(payload.audioItem);
-      const startOffset = mode === "preview" ? payload.startOffset : 0;
-
+    async action(
+      { state, getters, actions },
+      { signal, startOffset, audioItem },
+    ) {
       // # キャッシュについて
       //
       // - AudioQueryやstyleIdなどの音声を生成するためのパラメーターから生成されるIDをキャッシュのキーにする。
@@ -1334,11 +1329,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       //   - 開始時刻は、ストリーミングAPIでは`startOffset`、それ以外のAPIでは0になる。
       // - もしキャッシュが存在していて、再生しようとしている時刻からの音声を含んでいる場合は、キャッシュから再生する。
       //   - ここで、「再生しようとしている時刻からの音声を含んでいる場合」はキャッシュの開始時刻が再生しようとしている時刻よりも前かどうかで判定する。
-      // - 再生用と保存用でキャッシュを分ける。
-      //   - ストリーミング再生だと音声の質が微妙に悪化する可能性があるため。
-      const { id, engineAudioQuery: audioQuery } =
+      const { id: cacheKey, engineAudioQuery: audioQuery } =
         await generateUniqueIdAndQuery(state, audioItem);
-      const cacheKey = `${mode}:${id}`;
       const cached = audioCache.get(cacheKey);
       if (cached && cached.startsAt <= startOffset) {
         return {
@@ -1371,8 +1363,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           { signal },
         );
       } else if (
-        // 再生用、かつストリーミング対応の場合：ストリーミングAPIを呼ぶ
-        mode === "preview" &&
+        // ストリーミング対応の場合：ストリーミングAPIを呼ぶ
         getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem)
       ) {
         audioStartOffset = startOffset;
@@ -1402,17 +1393,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       // ストリームをキャッシュにいれる用と呼び出し元に帰す用の2つに分ける
       const [stream, cacheStream] = ensureNotNullish(response.raw.body).tee();
 
-      void new Response(cacheStream)
-        .blob()
-        .then((wav) => {
-          if (signal?.aborted) return;
-            audioCache.set(cacheKey, { wav, startsAt: audioStartOffset });
-        })
-        .catch((error: unknown) => {
-          if (!signal?.aborted) {
-            log.error(`Failed to cache audio for key "${cacheKey}".`, error);
-          }
-        });
+      void new Response(cacheStream).blob().then((wav) => {
+        if (signal?.aborted) return;
+        audioCache.set(cacheKey, { wav, startsAt: audioStartOffset });
+      });
 
       return { stream, startOffset: startOffset - audioStartOffset };
     },
