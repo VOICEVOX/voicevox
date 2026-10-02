@@ -155,16 +155,14 @@ export async function playAudioStream(
     lastBufferEndTime = baseTime + audioBuffer.duration;
   }
 
-  if (!cancel.aborted) {
-    // 最後のチャンクの再生が終了するか、中断されるまで待つ
-    const { promise: playbackEnded, resolve: resolvePlaybackEnd } =
-      Promise.withResolvers<void>();
-    using _playbackEndNotifier = new DisposableTimeout(
-      (lastBufferEndTime - audioContext.currentTime) * 1000,
-      resolvePlaybackEnd,
-    );
-    await Promise.race([playbackEnded, cancelledPromise]);
-  }
+  // 最後のチャンクの再生が終了するか、中断されるまで待つ
+  const { promise: playbackEnded, resolve: resolvePlaybackEnd } =
+    Promise.withResolvers<void>();
+  using _playbackEndNotifier = new DisposableTimeout(
+    (lastBufferEndTime - audioContext.currentTime) * 1000,
+    resolvePlaybackEnd,
+  );
+  await Promise.race([playbackEnded, cancelledPromise]);
 }
 
 const audioPlayMutex = new AbortableMutex();
