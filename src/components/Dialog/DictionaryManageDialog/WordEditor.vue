@@ -327,7 +327,6 @@ const play = async () => {
   nowGenerating.value = true;
   try {
     await audioPlayMutex.lock(async (signal) => {
-      let wavStream: WavStream | undefined;
       const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
         text: yomi.value,
         voice: voiceComputed.value,
@@ -344,12 +343,12 @@ const play = async () => {
         signal,
       });
       using cancellable = new DisposableStack();
-      cancellable.defer(() => {
-        wavStream?.cancel();
-      });
       nowGenerating.value = false;
       nowPlaying.value = true;
-      wavStream = new WavStream(stream);
+      const wavStream = new WavStream(stream);
+      cancellable.defer(() => {
+        void wavStream?.cancel();
+      });
       await setAudioContextSinkId(store.state.savingSetting.audioOutputDevice);
       await playAudioStream(wavStream, startOffset, signal);
     });
