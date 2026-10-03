@@ -45,16 +45,15 @@ test("エディタウィンドウを起動できる", async ({ launchElectronApp
   });
 
   if (process.platform === "win32") {
-    await test.step("ダウンロードが表示される", async () => {
+    await test.step("デフォルトエンジンがインストールされる", async () => {
       await welcomePage.waitForSelector("text=エンジンのセットアップ", {
         timeout: 60000,
       });
+
       await expect(
         welcomePage.getByText("ダウンロード", { exact: true }),
       ).toBeVisible({ timeout: 60000 });
-    });
 
-    await test.step("インストールが表示される", async () => {
       await expect(
         welcomePage.getByText("インストール", { exact: true }),
       ).toBeVisible({ timeout: 60000 });
