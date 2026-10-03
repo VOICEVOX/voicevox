@@ -83,7 +83,7 @@
       <template #after>
         <div
           v-if="showAudioLength && audioDuration != undefined"
-          class="q-mr-sm audio-length"
+          class="audio-length"
         >
           {{ audioDuration.toFixed(2) }}s
         </div>
@@ -733,9 +733,31 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
       padding-left: 5px;
     }
 
+    :deep(.q-field__after:has(> .audio-length)) {
+      display: grid;
+      grid-template-columns: max-content;
+      align-items: center;
+      align-content: center;
+    }
+
+    :deep(.q-field__after:has(> .audio-length) > .audio-length),
+    :deep(.q-field__after:has(> .audio-length) > .q-btn) {
+      grid-area: 1 / 1;
+      justify-self: end;
+    }
+
+    :deep(.q-field__after:has(> .audio-length) > .q-btn) {
+      margin-left: 0;
+    }
+
     &.q-field--filled.q-field--highlighted :deep(.q-field__control)::before {
       background-color: rgba(colors.$display-rgb, 0.08);
     }
+  }
+
+  &:hover .audio-length:has(+ .q-btn),
+  .audio-length:has(+ .q-btn:focus) {
+    visibility: hidden;
   }
 
   &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
@@ -764,6 +786,8 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   opacity: 0.6;
   white-space: nowrap;
   font-size: 0.85rem;
+  min-width: 2.78rem;
+  text-align: right;
   user-select: none;
 }
 </style>
