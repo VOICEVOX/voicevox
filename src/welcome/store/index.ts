@@ -360,7 +360,7 @@ function createWelcomeStore() {
     void applyThemeFromConfig();
     await fetchEngineInfos();
 
-    // Windows版インストーラーで、インストール開始後に追加操作無しでエディターを起動するためのワークアラウンド
+    // Windows版インストーラーでインストール開始したあと、追加操作無しでエディターを起動するためのワークアラウンド
     if (isWindows) {
       await autoInstallEngineAndLaunchMainWindow();
     }
