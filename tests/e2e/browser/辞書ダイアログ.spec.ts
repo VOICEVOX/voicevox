@@ -1,6 +1,6 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 import { gotoHome, navigateToMain } from "../navigators";
-import { getNewestQuasarDialog } from "../locators";
+import { getNewestQuasarDialog, getQuasarMenu } from "../locators";
 
 test.beforeEach(gotoHome);
 
@@ -195,6 +195,44 @@ async function expectWarningDialog(
 test("辞書ダイアログを表示できる", async ({ page }) => {
   await navigateToMain(page);
   await openDictDialog(page);
+});
+
+test("台本で選択した単語を右クリックから辞書に登録できる", async ({ page }) => {
+  const surface = createSurface("右クリック登録");
+  const yomi = "テスト";
+
+  await navigateToMain(page);
+
+  const audioCellInput = page.getByRole("textbox", { name: "行目" }).last();
+  await audioCellInput.fill(surface);
+  await audioCellInput.press("Enter");
+  await audioCellInput.evaluate(
+    (element: HTMLInputElement, selectionLength: number) => {
+      element.setSelectionRange(0, selectionLength);
+    },
+    surface.length,
+  );
+  await audioCellInput.click({ button: "right" });
+
+  await test.step("選択した単語を辞書に登録する", async () => {
+    const dictionaryRegistrationMenu = getQuasarMenu(page, "辞書に登録");
+    await expect(dictionaryRegistrationMenu).toBeVisible();
+    await dictionaryRegistrationMenu.click();
+
+    const dialog = getNewestQuasarDialog(page);
+    await expect(dialog.getByText("新しい単語の追加")).toBeVisible();
+    await expect(getWordField(page, "単語")).toHaveText(surface);
+    await fillTextField(getWordField(page, "読み"), yomi);
+    await dialog
+      .locator("footer")
+      .getByRole("button", { name: "追加" })
+      .click();
+    await expect(dialog).toBeHidden();
+  });
+
+  await test.step("登録した単語が台本の読みに反映される", async () => {
+    expect(await getYomi(page, surface)).toBe(yomi);
+  });
 });
 
 test("単語を追加できる", async ({ page }) => {
