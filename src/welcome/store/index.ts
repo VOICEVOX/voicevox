@@ -8,6 +8,7 @@ import type {
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
+import { isWindows } from "@/helpers/platform";
 import type { EngineId } from "@/type/preload";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
@@ -358,7 +359,10 @@ function createWelcomeStore() {
     });
     void applyThemeFromConfig();
     await fetchEngineInfos();
-    await autoInstallEngineAndLaunchMainWindow();
+    // Windows以外では初回起動時に意図しないダウンロードが始まるため
+    if (isWindows) {
+      await autoInstallEngineAndLaunchMainWindow();
+    }
   };
 
   return {
