@@ -359,7 +359,7 @@ function createWelcomeStore() {
     });
     void applyThemeFromConfig();
     await fetchEngineInfos();
-    // Windows以外では初回起動時に意図しないダウンロードが始まるため
+    // Windows版インストーラーで、インストール開始後に追加操作無しでエディターを起動するためのワークアラウンド
     if (isWindows) {
       await autoInstallEngineAndLaunchMainWindow();
     }
