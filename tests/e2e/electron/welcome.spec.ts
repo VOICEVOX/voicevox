@@ -36,6 +36,7 @@ test.beforeEach(async () => {
 
 test("エディタウィンドウを起動できる", async ({ launchElectronApp }) => {
   const app = await launchElectronApp();
+
   const welcomePage = await app.firstWindow({
     timeout: process.env.CI ? 90000 : 60000,
   });
