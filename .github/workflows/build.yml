@@ -333,6 +333,7 @@ jobs:
           MACOS_AD_HOC_CODE_SIGNING: ${{ startsWith(matrix.os, 'macos-') && github.event.inputs.code_signing != 'true' && 'true' || 'false' }}
           VOICEVOX_ENGINE_DIR: ${{ matrix.voicevox_engine_asset_name != null && format('{0}/voicevox_engine', github.workspace) || '' }}
           VOICEVOX_ENGINE_PLACEMENT_MODE: ${{ matrix.voicevox_engine_asset_name != null && 'move' || 'none' }}
+          VOICEVOX_ENGINE_MODE: ${{ matrix.voicevox_engine_asset_name != null && 'embed' || 'download' }}
 
           # https://github.com/electron-userland/electron-builder/issues/3179
           USE_HARD_LINKS: false
@@ -451,6 +452,7 @@ jobs:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
+          VOICEVOX_ENGINE_MODE: ${{ matrix.voicevox_engine_asset_name != null && 'embed' || 'download' }}
         run: |
           pnpm run electron:build:pack --prepackaged prepackage/
 
@@ -458,6 +460,7 @@ jobs:
         if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+          VOICEVOX_ENGINE_MODE: ${{ matrix.voicevox_engine_asset_name != null && 'embed' || 'download' }}
         run: |
           pnpm run electron:build:pack --prepackaged prepackage/VOICEVOX.app
 
@@ -543,7 +546,7 @@ jobs:
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
-            dist_electron/nsis-web/out/*.7z.*
+            dist_electron/nsis-web/${{ matrix.voicevox_engine_asset_name != null && 'out/*.7z.*' || '*.nsis.7z' }}
             dist_electron/nsis-web/*.exe
 
       - name: Upload Windows NSIS Web to Release Assets
@@ -553,6 +556,6 @@ jobs:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
           files: |-
-            dist_electron/nsis-web/out/*.7z.*
+            dist_electron/nsis-web/${{ matrix.voicevox_engine_asset_name != null && 'out/*.7z.*' || '*.nsis.7z' }}
             dist_electron/nsis-web/*.exe
           target_commitish: ${{ github.sha }}

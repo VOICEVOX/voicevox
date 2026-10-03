@@ -37,11 +37,29 @@ test.beforeEach(async () => {
 test("エディタウィンドウを起動できる", async ({ launchElectronApp }) => {
   const app = await launchElectronApp();
 
-  const welcomePage =
-    await test.step("デフォルトエンジンをインストールする", async () => {
-      const welcomePage = await app.firstWindow({
-        timeout: process.env.CI ? 90000 : 60000,
+  const welcomePage = await app.firstWindow({
+    timeout: process.env.CI ? 90000 : 60000,
+  });
+  const editorPagePromise = app.waitForEvent("window", {
+    timeout: 0,
+  });
+
+  if (process.platform === "win32") {
+    await test.step("デフォルトエンジンがインストールされる", async () => {
+      await welcomePage.waitForSelector("text=エンジンのセットアップ", {
+        timeout: 60000,
       });
+
+      await expect(
+        welcomePage.getByText("ダウンロード", { exact: true }),
+      ).toBeVisible({ timeout: 60000 });
+
+      await expect(
+        welcomePage.getByText("インストール", { exact: true }),
+      ).toBeVisible({ timeout: 60000 });
+    });
+  } else {
+    await test.step("デフォルトエンジンをインストールする", async () => {
       await welcomePage.waitForSelector("text=エンジンのセットアップ", {
         timeout: 60000,
       });
@@ -56,22 +74,19 @@ test("エディタウィンドウを起動できる", async ({ launchElectronApp
       await reinstall.waitFor({
         timeout: 60000,
       });
-
-      return welcomePage;
     });
 
-  await test.step("エディタを起動する", async () => {
-    const launchEditor = welcomePage.getByText(/エディタを起動/);
-    await expect(launchEditor).toBeEnabled({
-      timeout: 60000,
+    await test.step("エディタを起動する", async () => {
+      const launchEditor = welcomePage.getByText(/エディタを起動/);
+      await expect(launchEditor).toBeEnabled({
+        timeout: 60000,
+      });
+      await launchEditor.click();
     });
-    await launchEditor.click();
-  });
+  }
 
   await test.step("エディタウィンドウが開く", async () => {
-    const editorPage = await app.waitForEvent("window", {
-      timeout: process.env.CI ? 90000 : 60000,
-    });
+    const editorPage = await editorPagePromise;
     await editorPage.waitForSelector("text=利用規約に関するお知らせ", {
       timeout: 60000,
     });
