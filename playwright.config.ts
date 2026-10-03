@@ -50,6 +50,7 @@ const parallel = !isElectron && !process.env.CI;
  */
 const config: PlaywrightTestConfig = {
   testDir: "./tests/e2e",
+  updateSnapshots: process.env.VRT === "1" ? "none" : undefined,
   // NOTE: Linux環境ではCIでGPU版をダウンロードしてしまい、かなりの時間がかかってしまうため、タイムアウトを長めに設定する。
   // TODO: CIでCPU版をダウンロードするように修正し、タイムアウトを元に戻す。
   timeout: isElectron ? 5 * 60 * 1000 : 60 * 1000,
