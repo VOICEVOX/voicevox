@@ -53,6 +53,12 @@ test("エディタウィンドウを起動できる", async ({ launchElectronApp
         welcomePage.getByText("ダウンロード", { exact: true }),
       ).toBeVisible({ timeout: 60000 });
     });
+
+    await test.step("インストールが表示される", async () => {
+      await expect(
+        welcomePage.getByText("インストール", { exact: true }),
+      ).toBeVisible({ timeout: 60000 });
+    });
   } else {
     await test.step("デフォルトエンジンをインストールする", async () => {
       await welcomePage.waitForSelector("text=エンジンのセットアップ", {
