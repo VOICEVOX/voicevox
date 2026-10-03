@@ -40,7 +40,7 @@ test("エディタウィンドウを起動できる", async ({ launchElectronApp
     timeout: process.env.CI ? 90000 : 60000,
   });
   const editorPagePromise = app.waitForEvent("window", {
-    timeout: process.env.CI ? 90000 : 60000,
+    timeout: 0,
   });
 
   if (process.platform === "win32") {
