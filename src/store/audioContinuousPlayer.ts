@@ -9,6 +9,7 @@ const log = createLogger("store/audioContinuousPlayer");
 type GenerateAudioResult = {
   stream: ReadableStream<Uint8Array>;
   startOffset: number;
+  isStreaming: boolean;
 };
 
 /** 音声を再生しながら後続の音声を順番に取得する。 */

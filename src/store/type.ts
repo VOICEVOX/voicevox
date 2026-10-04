@@ -433,6 +433,8 @@ export type AudioStoreTypes = {
       stream: ReadableStream<Uint8Array>;
       /** 返したWAVの先頭からの読み飛ばし量（秒）。 */
       startOffset: number;
+      /** 今回ストリーミング合成APIで取得した音声か。キャッシュの場合はfalse。 */
+      isStreaming: boolean;
     }>;
   };
 
@@ -771,7 +773,7 @@ export type AudioPlayerStoreTypes = {
 
       audioKey: AudioKey;
       signal: AbortSignal;
-      notifyOnDelay?: boolean;
+      isStreaming: boolean;
     }): Promise<boolean>;
   };
 };

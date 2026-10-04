@@ -1339,6 +1339,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         return {
           stream: cached.wav.stream(),
           startOffset: requestedStartOffset - cached.startsAt,
+          isStreaming: false,
         };
       }
 
@@ -1351,6 +1352,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       // AudioItemの何秒目からの音声が取得されているか。
       let audioStartOffset = 0;
+      let isStreaming = false;
       let response;
 
       // モーフィングがある場合：常にモーフィング用のAPIを呼ぶ（ストリーミング非対応）
@@ -1370,6 +1372,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem)
       ) {
         audioStartOffset = requestedStartOffset;
+        isStreaming = true;
         const segmentLength = {
           LOW_LATENCY: 0.3,
           BALANCED: 1.0,
@@ -1401,7 +1404,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioCache.set(cacheKey, { wav, startsAt: audioStartOffset });
       });
 
-      return { stream, startOffset: requestedStartOffset - audioStartOffset };
+      return {
+        stream,
+        startOffset: requestedStartOffset - audioStartOffset,
+        isStreaming,
+      };
     },
   },
 

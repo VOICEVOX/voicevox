@@ -218,18 +218,19 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
           mutations.SET_CURRENT_PLAY_STATE({
             currentPlayState: { type: "preparing" },
           });
-          const { stream, startOffset } = await actions.FETCH_AUDIO_STREAM({
-            audioItem,
-            startOffset: startTime,
-            signal,
-          });
+          const { stream, startOffset, isStreaming } =
+            await actions.FETCH_AUDIO_STREAM({
+              audioItem,
+              startOffset: startTime,
+              signal,
+            });
           return await actions.PLAY_AUDIO_STREAM({
             stream: new WavStream(stream),
             startOffset,
             audioKey,
             startTime,
             signal,
-            notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem),
+            isStreaming,
           });
         }),
     ),
@@ -260,17 +261,16 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         try {
           await playContinuously(audioKeys, {
             async fetchAudio({ audioKey, abortSignal }) {
-              const result = await actions.FETCH_AUDIO_STREAM({
+              return actions.FETCH_AUDIO_STREAM({
                 audioItem: state.audioItems[audioKey],
                 signal: AbortSignal.any([signal, abortSignal]),
                 startOffset: audioKey === currentAudioKey ? startTime : 0,
               });
-              return {
-                stream: result.stream,
-                startOffset: result.startOffset,
-              };
             },
-            playAudioStream({ audioKey, audio: { startOffset, stream } }) {
+            playAudioStream({
+              audioKey,
+              audio: { startOffset, stream, isStreaming },
+            }) {
               mutations.SET_ACTIVE_AUDIO_KEY({ audioKey });
               if (currentAudioKey !== audioKey) {
                 mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
@@ -281,9 +281,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
                 audioKey,
                 signal,
                 startTime: audioKey === currentAudioKey ? startTime : 0,
-                notifyOnDelay: getters.IS_STREAMING_SYNTHESIS_SUPPORTED(
-                  state.audioItems[audioKey],
-                ),
+                isStreaming,
               });
             },
             onWaitStart(audioKey) {
@@ -317,7 +315,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   PLAY_AUDIO_STREAM: {
     async action(
       { state, mutations, actions },
-      { stream, startOffset, audioKey, startTime, signal, notifyOnDelay },
+      { stream, startOffset, audioKey, startTime, signal, isStreaming },
     ) {
       if (signal.aborted) return false;
       using cancellables = new DisposableStack();
@@ -333,7 +331,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       await playAudioStream(stream, startOffset, signal, {
         onDelay() {
           if (
-            notifyOnDelay &&
+            isStreaming &&
             !delayNotified &&
             !state.confirmedTips.streamingUnrecommended
           ) {
