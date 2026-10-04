@@ -203,6 +203,11 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         audioPlayMutex.lock(async (signal) => {
           if (signal.aborted) return false;
           using cancellables = new DisposableStack();
+          cancellables.defer(() => {
+            mutations.SET_CURRENT_PLAY_STATE({
+              currentPlayState: { type: "stopped" },
+            });
+          });
 
           const audioItem = cloneWithUnwrapProxy(state.audioItems[audioKey]);
           mutations.SET_CURRENT_PLAY_STATE({
@@ -215,9 +220,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             ),
           );
 
-          mutations.SET_CURRENT_PLAY_STATE({
-            currentPlayState: { type: "preparing" },
-          });
           const { stream, streamOffset, isStreaming } =
             await actions.FETCH_AUDIO_STREAM({
               audioItem,
