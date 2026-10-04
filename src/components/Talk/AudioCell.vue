@@ -786,7 +786,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   opacity: 0.6;
   white-space: nowrap;
   font-size: 0.85rem;
-  min-width: 2.78rem;
+  min-width: 2.8rem;
   text-align: right;
   user-select: none;
 }
