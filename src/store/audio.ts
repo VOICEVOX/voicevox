@@ -70,7 +70,7 @@ import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
 
 const audioCache = new LruCache<AudioUniqueId, { wav: Blob; startsAt: number }>(
-  64,
+  256,
 );
 
 function generateAudioKey() {
