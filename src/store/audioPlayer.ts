@@ -48,7 +48,7 @@ export async function setAudioContextSinkId(device: string) {
  */
 export async function playAudioStream(
   stream: WavStream,
-  offsetSeconds: number,
+  streamOffset: number,
   cancel: AbortSignal,
   callbacks: {
     onStart?: () => void;
@@ -83,7 +83,7 @@ export async function playAudioStream(
 
   const samplesIterator = stream.readSamples(
     samplesPerChunk,
-    Math.floor(offsetSeconds * sampleRate),
+    Math.floor(streamOffset * sampleRate),
   );
   let numTotalSamples = 0;
   while (true) {
@@ -209,7 +209,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             currentPlayState: { type: "preparing" },
           });
 
-          const startTime = ensureNotNullish(
+          const playbackStartPosition = ensureNotNullish(
             (await actions.GET_AUDIO_PLAY_OFFSETS({ audioKey })).at(
               getters.AUDIO_PLAY_START_POINT ?? 0,
             ),
@@ -218,17 +218,17 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
           mutations.SET_CURRENT_PLAY_STATE({
             currentPlayState: { type: "preparing" },
           });
-          const { stream, startOffset, isStreaming } =
+          const { stream, streamOffset, isStreaming } =
             await actions.FETCH_AUDIO_STREAM({
               audioItem,
-              startOffset: startTime,
+              playbackStartPosition,
               signal,
             });
           return await actions.PLAY_AUDIO_STREAM({
             stream: new WavStream(stream),
-            startOffset,
+            streamOffset,
             audioKey,
-            startTime,
+            playbackStartPosition,
             signal,
             isStreaming,
           });
@@ -246,7 +246,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
           currentAudioKey == undefined
             ? 0
             : state.audioKeys.indexOf(currentAudioKey);
-        const startTime =
+        const playbackStartPosition =
           currentAudioKey == undefined
             ? 0
             : ensureNotNullish(
@@ -264,12 +264,13 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               return actions.FETCH_AUDIO_STREAM({
                 audioItem: state.audioItems[audioKey],
                 signal: AbortSignal.any([signal, abortSignal]),
-                startOffset: audioKey === currentAudioKey ? startTime : 0,
+                playbackStartPosition:
+                  audioKey === currentAudioKey ? playbackStartPosition : 0,
               });
             },
             playAudioStream({
               audioKey,
-              audio: { startOffset, stream, isStreaming },
+              audio: { streamOffset, stream, isStreaming },
             }) {
               mutations.SET_ACTIVE_AUDIO_KEY({ audioKey });
               if (currentAudioKey !== audioKey) {
@@ -277,10 +278,11 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               }
               return actions.PLAY_AUDIO_STREAM({
                 stream: new WavStream(stream),
-                startOffset,
+                streamOffset,
                 audioKey,
                 signal,
-                startTime: audioKey === currentAudioKey ? startTime : 0,
+                playbackStartPosition:
+                  audioKey === currentAudioKey ? playbackStartPosition : 0,
                 isStreaming,
               });
             },
@@ -315,7 +317,14 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
   PLAY_AUDIO_STREAM: {
     async action(
       { state, mutations, actions },
-      { stream, startOffset, audioKey, startTime, signal, isStreaming },
+      {
+        stream,
+        streamOffset,
+        audioKey,
+        playbackStartPosition,
+        signal,
+        isStreaming,
+      },
     ) {
       if (signal.aborted) return false;
       using cancellables = new DisposableStack();
@@ -328,7 +337,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
 
       let delayNotified = false;
       await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
-      await playAudioStream(stream, startOffset, signal, {
+      await playAudioStream(stream, streamOffset, signal, {
         onDelay() {
           if (
             isStreaming &&
@@ -349,7 +358,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             currentPlayState: {
               type: "playing",
               audioKey,
-              currentTime: startTime + time,
+              currentTime: playbackStartPosition + time,
             },
           });
         },

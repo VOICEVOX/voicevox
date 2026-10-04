@@ -428,11 +428,11 @@ export type AudioStoreTypes = {
       audioItem: AudioItem;
       signal?: AbortSignal;
       /** 元の音声上の再生開始位置（秒）。 */
-      startOffset: number;
+      playbackStartPosition: number;
     }): Promise<{
       stream: ReadableStream<Uint8Array>;
       /** 返したWAVの先頭からの読み飛ばし量（秒）。 */
-      startOffset: number;
+      streamOffset: number;
       /** 今回ストリーミング合成APIで取得した音声か。キャッシュの場合はfalse。 */
       isStreaming: boolean;
     }>;
@@ -767,9 +767,9 @@ export type AudioPlayerStoreTypes = {
     action(payload: {
       stream: WavStream;
       /** streamの先頭からの読み飛ばし量（秒）。 */
-      startOffset: number;
-      /** streamが元の音声の何秒目からかを示す。*/
-      startTime: number;
+      streamOffset: number;
+      /** 元の音声上の再生開始位置（秒）。 */
+      playbackStartPosition: number;
 
       audioKey: AudioKey;
       signal: AbortSignal;

@@ -337,9 +337,9 @@ const play = async () => {
 
       audioItem.query.accentPhrases = [phrase];
 
-      const { stream, startOffset } = await store.actions.FETCH_AUDIO_STREAM({
+      const { stream, streamOffset } = await store.actions.FETCH_AUDIO_STREAM({
         audioItem,
-        startOffset: 0,
+        playbackStartPosition: 0,
         signal,
       });
       using cancellable = new DisposableStack();
@@ -350,7 +350,7 @@ const play = async () => {
         void wavStream?.cancel();
       });
       await setAudioContextSinkId(store.state.savingSetting.audioOutputDevice);
-      await playAudioStream(wavStream, startOffset, signal);
+      await playAudioStream(wavStream, streamOffset, signal);
     });
   } catch (e) {
     window.backend.logError(e);

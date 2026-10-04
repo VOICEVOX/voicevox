@@ -1287,7 +1287,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const audioQuery = ensureNotNullish(audioItem.query);
       const { stream } = await actions.FETCH_AUDIO_STREAM({
         audioItem,
-        startOffset: 0,
+        playbackStartPosition: 0,
       });
       const blob = await new Response(stream).blob();
       return { audioQuery, blob };
@@ -1322,7 +1322,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   FETCH_AUDIO_STREAM: {
     async action(
       { state, getters, actions },
-      { signal, startOffset: requestedStartOffset, audioItem },
+      { signal, playbackStartPosition, audioItem },
     ) {
       // # キャッシュについて
       //
@@ -1335,10 +1335,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const { id: cacheKey, engineAudioQuery: audioQuery } =
         await generateUniqueIdAndQuery(state, audioItem);
       const cached = audioCache.get(cacheKey);
-      if (cached && cached.startsAt <= requestedStartOffset) {
+      if (cached && cached.startsAt <= playbackStartPosition) {
         return {
           stream: cached.wav.stream(),
-          startOffset: requestedStartOffset - cached.startsAt,
+          streamOffset: playbackStartPosition - cached.startsAt,
           isStreaming: false,
         };
       }
@@ -1371,7 +1371,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         // ストリーミング対応の場合：ストリーミングAPIを呼ぶ
         getters.IS_STREAMING_SYNTHESIS_SUPPORTED(audioItem)
       ) {
-        audioStartOffset = requestedStartOffset;
+        audioStartOffset = playbackStartPosition;
         isStreaming = true;
         const segmentLength = {
           LOW_LATENCY: 0.3,
@@ -1383,7 +1383,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             audioQuery,
             speaker,
             enableInterrogativeUpspeak,
-            startOffset: requestedStartOffset,
+            startOffset: playbackStartPosition,
             segmentLength,
           },
           { signal },
@@ -1406,7 +1406,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       return {
         stream,
-        startOffset: requestedStartOffset - audioStartOffset,
+        streamOffset: playbackStartPosition - audioStartOffset,
         isStreaming,
       };
     },

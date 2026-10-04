@@ -8,7 +8,7 @@ const log = createLogger("store/audioContinuousPlayer");
 
 type GenerateAudioResult = {
   stream: ReadableStream<Uint8Array>;
-  startOffset: number;
+  streamOffset: number;
   isStreaming: boolean;
 };
 
