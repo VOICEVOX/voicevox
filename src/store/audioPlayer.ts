@@ -294,7 +294,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             },
           });
         } finally {
-          void actions.RESET_PROGRESS();
           mutations.SET_CURRENT_PLAY_STATE({
             currentPlayState: { type: "stopped" },
           });
