@@ -4,7 +4,8 @@
 
     <QPageContainer>
       <QPage class="main-row-panes">
-        <ProgressView />
+        <ProgressView :progress="store.getters.PROGRESS" />
+        <ProgressView :progress="playbackProgress" />
         <EngineStartupOverlay :isCompletedInitialStartup />
 
         <QSplitter
@@ -170,6 +171,10 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
+
+const playbackProgress = computed(() =>
+  store.state.currentPlayState.type === "preparing" ? 0 : -1,
+);
 
 const audioKeys = computed(() => store.state.audioKeys);
 const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
