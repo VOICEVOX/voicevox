@@ -220,7 +220,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             ),
           );
 
-          const { stream, streamOffset, isStreaming } =
+          const { stream, streamOffset, isStreamingSynthesis } =
             await actions.FETCH_AUDIO_STREAM({
               audioItem,
               playbackStartPosition,
@@ -232,7 +232,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             audioKey,
             playbackStartPosition,
             signal,
-            isStreaming,
+            isStreamingSynthesis,
           });
         }),
     ),
@@ -272,7 +272,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             },
             playAudioStream({
               audioKey,
-              audio: { streamOffset, stream, isStreaming },
+              audio: { streamOffset, stream, isStreamingSynthesis },
             }) {
               mutations.SET_ACTIVE_AUDIO_KEY({ audioKey });
               if (currentAudioKey !== audioKey) {
@@ -285,7 +285,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
                 signal,
                 playbackStartPosition:
                   audioKey === currentAudioKey ? playbackStartPosition : 0,
-                isStreaming,
+                isStreamingSynthesis,
               });
             },
             onWaitStart(audioKey) {
@@ -324,7 +324,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         audioKey,
         playbackStartPosition,
         signal,
-        isStreaming,
+        isStreamingSynthesis,
       },
     ) {
       if (signal.aborted) return false;
@@ -341,7 +341,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       await playAudioStream(stream, streamOffset, signal, {
         onDelay() {
           if (
-            isStreaming &&
+            isStreamingSynthesis &&
             !delayNotified &&
             !state.confirmedTips.streamingUnrecommended
           ) {

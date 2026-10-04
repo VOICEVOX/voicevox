@@ -434,7 +434,7 @@ export type AudioStoreTypes = {
       /** 返したWAVの先頭からの読み飛ばし量（秒）。 */
       streamOffset: number;
       /** 今回ストリーミング合成APIで取得した音声か。キャッシュの場合はfalse。 */
-      isStreaming: boolean;
+      isStreamingSynthesis: boolean;
     }>;
   };
 
@@ -773,7 +773,7 @@ export type AudioPlayerStoreTypes = {
 
       audioKey: AudioKey;
       signal: AbortSignal;
-      isStreaming: boolean;
+      isStreamingSynthesis: boolean;
     }): Promise<boolean>;
   };
 };
