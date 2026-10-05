@@ -4,6 +4,7 @@
     :playheadX
     :offset="currentOffset"
     @click="handleClick"
+    @contextmenu="handleContextMenu"
   >
     <template #grid>
       <GridLaneContainer />
@@ -12,7 +13,7 @@
       <ValueChangesLaneContainer />
     </template>
     <template #loop>
-      <LoopLaneContainer />
+      <LoopLaneContainer ref="loopLane" />
     </template>
   </Presentation>
 </template>
@@ -26,7 +27,7 @@ export const offsetInjectionKey: InjectionKey<Ref<number>> =
 </script>
 
 <script setup lang="ts">
-import { computed, provide, readonly, toRef } from "vue";
+import { computed, provide, readonly, toRef, useTemplateRef } from "vue";
 import Presentation from "./Presentation.vue";
 import GridLaneContainer from "./GridLane/Container.vue";
 import ValueChangesLaneContainer from "./ValueChangesLane/Container.vue";
@@ -94,5 +95,12 @@ const handleClick = (event: MouseEvent) => {
   const baseXTick = baseXToTick(baseX, tpqn.value);
   const nextTicks = snapTickToBeat(baseXTick, timeSignatures.value, tpqn.value);
   setPlayheadPosition(nextTicks);
+};
+
+const loopLane = useTemplateRef("loopLane");
+
+// ループと拍子・テンポのレーンの間の右クリックは、ループのメニューを出す
+const handleContextMenu = (event: MouseEvent) => {
+  loopLane.value?.showContextMenu(event);
 };
 </script>

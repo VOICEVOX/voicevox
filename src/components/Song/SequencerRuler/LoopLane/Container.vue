@@ -1,5 +1,6 @@
 <template>
   <Presentation
+    ref="presentation"
     :width="rulerWidth"
     :offset="injectedOffset"
     :loopStartX
@@ -26,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onUnmounted, inject } from "vue";
+import { computed, ref, onUnmounted, inject, useTemplateRef } from "vue";
 import { offsetInjectionKey } from "../Container.vue";
 import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
@@ -398,6 +399,16 @@ const handleContextMenu = (event: MouseEvent) => {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
   clickX.value = event.clientX - rect.left;
 };
+
+const presentation = useTemplateRef("presentation");
+
+defineExpose({
+  // レーンの外（ルーラーの空き部分）で右クリックされたときもメニューを出す
+  showContextMenu: (event: MouseEvent) => {
+    handleContextMenu(event);
+    presentation.value?.showContextMenu(event);
+  },
+});
 
 // コンテキストメニューのデータ
 const contextMenuData = computed<ContextMenuItemData[]>(() => [

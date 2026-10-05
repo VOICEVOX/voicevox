@@ -98,12 +98,12 @@
         />
       </g>
     </svg>
-    <ContextMenu :menudata="contextMenuData" />
+    <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, useTemplateRef } from "vue";
 import ContextMenu, {
   type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
@@ -192,6 +192,14 @@ const handleLoopEndMouseDown = (event: MouseEvent) => {
 const handleContextMenu = (event: MouseEvent) => {
   emit("contextMenu", event);
 };
+
+const contextMenu = useTemplateRef("contextMenu");
+
+defineExpose({
+  showContextMenu: (event: MouseEvent) => {
+    contextMenu.value?.show(event);
+  },
+});
 
 const handleLoopRangeMouseEnter = () => {
   emit("loopRangeMouseEnter");
