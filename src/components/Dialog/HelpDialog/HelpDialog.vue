@@ -230,7 +230,7 @@ const pagedata = computed(() => {
       },
       {
         type: "item",
-        name: "利用規約",
+        name: "エンジンの利用規約",
         parent: manifest.name,
         component: MarkdownView,
         props: {
