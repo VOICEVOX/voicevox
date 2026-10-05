@@ -1153,7 +1153,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         .catch((error) => {
           window.backend.logError(
             error,
-            `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(accentPhrases)}".`,
+            `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(
+              accentPhrases,
+            )}".`,
           );
           throw error;
         });
