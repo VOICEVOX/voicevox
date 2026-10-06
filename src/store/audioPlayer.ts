@@ -274,7 +274,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               audioKey,
               audio: { streamOffset, stream, isStreamingSynthesis },
             }) {
-              mutations.SET_ACTIVE_AUDIO_KEY({ audioKey });
               if (currentAudioKey !== audioKey) {
                 mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
               }
