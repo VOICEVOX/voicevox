@@ -431,7 +431,7 @@ export type AudioStoreTypes = {
       playbackStartPosition: number;
     }): Promise<{
       stream: ReadableStream<Uint8Array>;
-      /** 返したWAVの先頭からの読み飛ばし量（秒）。 */
+      /** streamを先頭から読み飛ばすべき量（秒）。 */
       streamOffset: number;
       /** 今回ストリーミング合成APIで取得した音声か。キャッシュの場合はfalse。 */
       isStreamingSynthesis: boolean;
