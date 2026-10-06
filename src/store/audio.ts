@@ -1353,13 +1353,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         state.experimentalSetting.enableInterrogativeUpspeak;
 
       // AudioItemの何秒目からの音声が取得されているか。
-      let audioStartOffset = 0;
-      let isStreamingSynthesis = false;
+      let audioStartOffset;
+      let isStreamingSynthesis;
       let response;
 
       // モーフィングがある場合：常にモーフィング用のAPIを呼ぶ（ストリーミング非対応）
       if (audioItem.morphingInfo != undefined) {
         if (!isMorphable(state, { audioItem })) throw new NotMorphableError();
+        audioStartOffset = 0;
+        isStreamingSynthesis = false;
         response = await instance.invoke("synthesisMorphingRaw")(
           {
             audioQuery,
@@ -1392,6 +1394,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         );
       } else {
         // その他の場合：通常のAPIを呼ぶ
+        audioStartOffset = 0;
+        isStreamingSynthesis = false;
         response = await instance.invoke("synthesisRaw")(
           { audioQuery, speaker, enableInterrogativeUpspeak },
           { signal },
