@@ -320,6 +320,24 @@ const setYomi = async (text: string) => {
   accentPhrase.value = undefined;
 };
 
+const fetchAudioStream = async (phrase: AccentPhrase) => {
+  const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
+    text: yomi.value,
+    voice: voiceComputed.value,
+  });
+
+  if (audioItem.query == undefined)
+    throw new Error(`assert audioItem.query !== undefined`);
+
+  audioItem.query.accentPhrases = [phrase];
+
+  const { stream, streamOffset } = await store.actions.FETCH_AUDIO_STREAM({
+    audioItem,
+    playbackStartPosition: 0,
+  });
+  return { stream, streamOffset };
+};
+
 const play = async () => {
   const phrase = accentPhrase.value;
   if (phrase == undefined) return;
@@ -327,35 +345,23 @@ const play = async () => {
   nowGenerating.value = true;
   try {
     await audioPlayMutex.lock(async (signal) => {
-      const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
-        text: yomi.value,
-        voice: voiceComputed.value,
-      });
-
-      if (audioItem.query == undefined)
-        throw new Error(`assert audioItem.query !== undefined`);
-
-      audioItem.query.accentPhrases = [phrase];
-
-      const { stream, streamOffset } = await store.actions.FETCH_AUDIO_STREAM({
-        audioItem,
-        playbackStartPosition: 0,
-        signal,
-      });
+      const { stream, streamOffset } = await fetchAudioStream(phrase);
       using cancellable = new DisposableStack();
       nowGenerating.value = false;
       nowPlaying.value = true;
+
       const wavStream = new WavStream(stream);
       cancellable.defer(() => {
         void wavStream?.cancel();
       });
+
       await setAudioContextSinkId(store.state.savingSetting.audioOutputDevice);
       await playAudioStream(wavStream, streamOffset, signal);
     });
   } catch (e) {
     window.backend.logError(e);
     void store.actions.SHOW_ALERT_DIALOG({
-      title: "生成に失敗しました",
+      title: "プレビューに失敗しました",
       message: "エンジンの再起動をお試しください。",
     });
   } finally {
