@@ -4,20 +4,30 @@
     <div
       ref="parameterArea"
       class="parameter-area"
+      :class="cursorClass"
       @pointerdown="onPointerDown"
+      @dblclick="onDoubleClick"
       @pointermove="onPointerMove"
+      @pointerleave="onPointerLeave"
       @wheel="onWheel"
     >
       <SequencerParameterGrid class="parameter-grid" :viewportInfo />
-      <SequencerWaveform class="waveform" :viewportInfo />
-      <SequencerNoteTimings class="note-timings" :viewportInfo />
-      <SequencerPhonemeTimings
-        class="phoneme-timings"
-        :viewportInfo
-        :previewPhonemeTiming
-        :phonemeTimingInfos
-        :phonemeTextY
-      />
+      <template v-if="layout != undefined">
+        <SequencerPhonemeTimings
+          class="phoneme-timings"
+          :viewportInfo
+          :layout
+          :previewPhonemeTiming
+          :phonemeTimingInfos
+          :activePhoneme
+        />
+        <SequencerNoteTimings
+          class="note-timings"
+          :viewportInfo
+          :layout
+          :activeNoteId="activePhoneme?.noteId"
+        />
+      </template>
       <SequencerPhonemeTimingToolPalette
         :sequencerPhonemeTimingTool
         @update:sequencerPhonemeTimingTool="setSequencerPhonemeTimingTool"
@@ -27,8 +37,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { getXInBorderBox, type ViewportInfo } from "@/song/viewHelper";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import {
+  getXInBorderBox,
+  getYInBorderBox,
+  type ViewportInfo,
+} from "@/song/viewHelper";
 import { useStore } from "@/store";
 import { usePhonemeTimingEditorStateMachine } from "@/composables/usePhonemeTimingEditorStateMachine";
 import {
@@ -36,10 +50,10 @@ import {
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
 import SequencerParameterGrid from "@/components/Song/SequencerParameterGrid.vue";
-import SequencerWaveform from "@/components/Song/SequencerWaveform.vue";
 import SequencerPhonemeTimings from "@/components/Song/SequencerPhonemeTimings.vue";
 import SequencerNoteTimings from "@/components/Song/SequencerNoteTimings.vue";
 import SequencerPhonemeTimingToolPalette from "@/components/Song/SequencerPhonemeTimingToolPalette.vue";
+import { getPhonemeTimingLayout } from "@/components/Song/SequencerPhonemeTimingEditor/style";
 import { assertNonNullable } from "@/type/utility";
 import {
   computePhonemeTimingInfos,
@@ -87,33 +101,58 @@ const phonemeTimingInfos = computed(() => {
   );
 });
 
-const { stateMachineProcess, cursorState, previewMode, previewPhonemeTiming } =
-  usePhonemeTimingEditorStateMachine(
-    store,
-    viewportInfo,
-    phonemeTimingInfos,
-    phraseInfos,
-  );
-
 const parameterArea = ref<HTMLElement | null>(null);
+const parameterAreaHeight = ref<number>();
 
-const cursorStyle = computed(() => {
+// ノート行・音素帯・ラベル行の縦位置は、描画と当たり判定で食い違わないようここで1回だけ求めて配る
+const layout = computed(() =>
+  parameterAreaHeight.value == undefined
+    ? undefined
+    : getPhonemeTimingLayout(parameterAreaHeight.value),
+);
+const phonemeBandYRange = computed(() => {
+  assertNonNullable(layout.value);
+  return {
+    top: layout.value.bandTop,
+    bottom: layout.value.bandTop + layout.value.bandHeight,
+  };
+});
+
+const {
+  stateMachineProcess,
+  cursorState,
+  previewMode,
+  previewPhonemeTiming,
+  activePhoneme,
+} = usePhonemeTimingEditorStateMachine(
+  store,
+  viewportInfo,
+  phonemeTimingInfos,
+  phraseInfos,
+  phonemeBandYRange,
+);
+
+const cursorClass = computed(() => {
   switch (cursorState.value) {
     case "EW_RESIZE":
-      return "ew-resize";
+      return "cursor-ew-resize";
     case "ERASE":
-      // NOTE: 消しゴム用のカーソル・画像がないため、一旦defaultにしている
-      // TODO: 消しゴム用のカーソル・画像を用意して差し替える
-      return "default";
+      return "cursor-erase";
     default:
-      return "default";
+      return "cursor-default";
   }
 });
 
-const getLocalPositionX = (event: PointerEvent): number => {
+const getLocalPositionX = (event: MouseEvent): number => {
   const parameterAreaElement = parameterArea.value;
   assertNonNullable(parameterAreaElement);
   return getXInBorderBox(event.clientX, parameterAreaElement);
+};
+
+const getLocalPositionY = (event: MouseEvent): number => {
+  const parameterAreaElement = parameterArea.value;
+  assertNonNullable(parameterAreaElement);
+  return getYInBorderBox(event.clientY, parameterAreaElement);
 };
 
 const onPointerDown = (event: PointerEvent) => {
@@ -122,6 +161,17 @@ const onPointerDown = (event: PointerEvent) => {
     targetArea: "PhonemeTimingArea",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
+  });
+};
+
+const onDoubleClick = (event: MouseEvent) => {
+  stateMachineProcess({
+    type: "mouseEvent",
+    targetArea: "PhonemeTimingArea",
+    mouseEvent: event,
+    positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 
@@ -131,6 +181,17 @@ const onPointerMove = (event: PointerEvent) => {
     targetArea: "PhonemeTimingArea",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
+  });
+};
+
+const onPointerLeave = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "PhonemeTimingArea",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 
@@ -172,6 +233,7 @@ const onWindowPointerMove = (event: PointerEvent) => {
     targetArea: "Window",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 
@@ -181,6 +243,7 @@ const onWindowPointerUp = (event: PointerEvent) => {
     targetArea: "Window",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
 
@@ -190,8 +253,25 @@ const onWindowPointerCancel = (event: PointerEvent) => {
     targetArea: "Window",
     pointerEvent: event,
     positionX: getLocalPositionX(event),
+    positionY: getLocalPositionY(event),
   });
 };
+
+let resizeObserver: ResizeObserver | undefined;
+
+onMounted(() => {
+  const parameterAreaElement = parameterArea.value;
+  assertNonNullable(parameterAreaElement);
+  parameterAreaHeight.value = parameterAreaElement.clientHeight;
+  resizeObserver = new ResizeObserver(() => {
+    parameterAreaHeight.value = parameterAreaElement.clientHeight;
+  });
+  resizeObserver.observe(parameterAreaElement);
+});
+
+onUnmounted(() => {
+  resizeObserver?.disconnect();
+});
 
 onMountedOrActivated(() => {
   window.addEventListener("pointermove", onWindowPointerMove);
@@ -204,18 +284,6 @@ onUnmountedOrDeactivated(() => {
   window.removeEventListener("pointerup", onWindowPointerUp);
   window.removeEventListener("pointercancel", onWindowPointerCancel);
 });
-
-// parameter-areaの各行の高さ
-const TOP_ROW_HEIGHT = 12;
-const NOTES_ROW_HEIGHT = 26;
-const PHONEME_TEXTS_ROW_HEIGHT = 28;
-
-// 音素文字行内での音素文字の上端オフセット
-const PHONEME_TEXT_TOP_OFFSET_IN_ROW = 12;
-
-// SequencerPhonemeTimingsの音素文字のY座標
-const phonemeTextY =
-  TOP_ROW_HEIGHT + NOTES_ROW_HEIGHT + PHONEME_TEXT_TOP_OFFSET_IN_ROW;
 </script>
 
 <style scoped lang="scss">
@@ -235,37 +303,21 @@ const phonemeTextY =
 }
 
 .parameter-area {
+  background: var(--scheme-color-song-grid-cell-white);
   grid-column: 2;
   grid-row: 1;
   overflow: hidden;
   position: relative;
 
   display: grid;
-  grid-template-rows:
-    v-bind("`${TOP_ROW_HEIGHT}px`")
-    v-bind("`${NOTES_ROW_HEIGHT}px`")
-    v-bind("`${PHONEME_TEXTS_ROW_HEIGHT}px`")
-    1fr;
-  cursor: v-bind(cursorStyle);
+  grid-template-rows: 1fr;
 }
 
-.parameter-grid {
-  grid-column: 1;
-  grid-row: 1 / 5;
-}
-
-.waveform {
-  grid-column: 1;
-  grid-row: 4 / 5;
-}
-
-.note-timings {
-  grid-column: 1;
-  grid-row: 2 / 3;
-}
-
+.parameter-grid,
+.note-timings,
 .phoneme-timings {
   grid-column: 1;
-  grid-row: 1 / 5;
+  grid-row: 1;
+  min-height: 0;
 }
 </style>
