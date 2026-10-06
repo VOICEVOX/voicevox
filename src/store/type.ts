@@ -423,6 +423,9 @@ export type AudioStoreTypes = {
     action(payload: { audioKey: AudioKey }): Promise<FetchAudioResult>;
   };
 
+  /**
+   * audioItemの音声を適切なAPIから、あるいはキャッシュから取得する。
+   */
   FETCH_AUDIO_STREAM: {
     action(payload: {
       audioItem: AudioItem;

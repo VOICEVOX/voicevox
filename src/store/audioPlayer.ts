@@ -260,41 +260,39 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               );
         const audioKeys = state.audioKeys.slice(index);
         mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: true });
-        try {
-          await playContinuously(audioKeys, {
-            async fetchAudio({ audioKey, abortSignal }) {
-              return actions.FETCH_AUDIO_STREAM({
-                audioItem: state.audioItems[audioKey],
-                signal: AbortSignal.any([signal, abortSignal]),
-                playbackStartPosition:
-                  audioKey === currentAudioKey ? playbackStartPosition : 0,
-              });
-            },
-            playAudioStream({
+        await playContinuously(audioKeys, {
+          async fetchAudio({ audioKey, abortSignal }) {
+            return actions.FETCH_AUDIO_STREAM({
+              audioItem: state.audioItems[audioKey],
+              signal: AbortSignal.any([signal, abortSignal]),
+              playbackStartPosition:
+                audioKey === currentAudioKey ? playbackStartPosition : 0,
+            });
+          },
+          playAudioStream({
+            audioKey,
+            audio: { streamOffset, stream, isStreamingSynthesis },
+          }) {
+            if (currentAudioKey !== audioKey) {
+              mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
+            }
+            return actions.PLAY_AUDIO_STREAM({
+              stream: new WavStream(stream),
+              streamOffset,
               audioKey,
-              audio: { streamOffset, stream, isStreamingSynthesis },
-            }) {
-              if (currentAudioKey !== audioKey) {
-                mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
-              }
-              return actions.PLAY_AUDIO_STREAM({
-                stream: new WavStream(stream),
-                streamOffset,
-                audioKey,
-                signal,
-                playbackStartPosition:
-                  audioKey === currentAudioKey ? playbackStartPosition : 0,
-                isStreamingSynthesis,
-              });
-            },
-            onWaitStart(audioKey) {
-              mutations.SET_ACTIVE_AUDIO_KEY({ audioKey });
-              mutations.SET_CURRENT_PLAY_STATE({
-                currentPlayState: { type: "preparing" },
-              });
-            },
-          });
-        } finally {
+              signal,
+              playbackStartPosition:
+                audioKey === currentAudioKey ? playbackStartPosition : 0,
+              isStreamingSynthesis,
+            });
+          },
+          onWaitStart(audioKey) {
+            mutations.SET_ACTIVE_AUDIO_KEY({ audioKey });
+            mutations.SET_CURRENT_PLAY_STATE({
+              currentPlayState: { type: "preparing" },
+            });
+          },
+        }).finally(() => {
           mutations.SET_CURRENT_PLAY_STATE({
             currentPlayState: { type: "stopped" },
           });
@@ -303,7 +301,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
             startPoint: currentAudioPlayStartPoint,
           });
           mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: false });
-        }
+        });
       }),
     ),
   },
