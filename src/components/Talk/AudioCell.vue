@@ -83,7 +83,7 @@
       <template #after>
         <div
           v-if="showAudioLength && audioDuration != undefined"
-          class="q-mr-sm audio-length"
+          class="audio-length"
         >
           {{ audioDuration.toFixed(2) }}s
         </div>
@@ -91,6 +91,7 @@
           v-if="enableDeleteButton"
           round
           flat
+          class="delete-button"
           icon="delete_outline"
           size="0.8rem"
           :disable="uiLocked"
@@ -733,12 +734,24 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
       padding-left: 5px;
     }
 
+    :deep(.q-field__after:not(:empty)) {
+      display: grid;
+      grid-template-columns: max-content;
+      align-items: center;
+      align-content: center;
+    }
+
     &.q-field--filled.q-field--highlighted :deep(.q-field__control)::before {
       background-color: rgba(colors.$display-rgb, 0.08);
     }
   }
 
-  &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
+  &:hover .q-input:has(.delete-button) .audio-length,
+  .q-input:has(.delete-button:focus) .audio-length {
+    visibility: hidden;
+  }
+
+  &:not(:hover) .delete-button:not(:focus):not(:active) {
     @include visually-hidden.visually-hidden;
   }
 
@@ -764,6 +777,16 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   opacity: 0.6;
   white-space: nowrap;
   font-size: 0.85rem;
+  grid-area: 1 / 1;
+  justify-self: end;
+  min-width: 2.8rem;
+  text-align: right;
   user-select: none;
+}
+
+.delete-button {
+  grid-area: 1 / 1;
+  justify-self: end;
+  margin-left: 0;
 }
 </style>
