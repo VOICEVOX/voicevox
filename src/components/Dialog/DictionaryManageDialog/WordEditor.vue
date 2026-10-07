@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { uiLocked } from "./common";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSlider from "@/components/Base/BaseSlider.vue";
@@ -144,7 +144,9 @@ import {
 } from "@/domain/japanese";
 import type { AccentPhrase } from "@/openapi";
 import { useStore } from "@/store";
-import type { FetchAudioResult } from "@/store/type";
+import { playAudioStream, setAudioContextSinkId } from "@/store/audioPlayer";
+import { AbortableMutex } from "@/helpers/abortableMutex";
+import { WavStream } from "@/domain/wavStream";
 import { UnreachableError } from "@/type/utility";
 
 const store = useStore();
@@ -253,6 +255,7 @@ const kanaRegex = createKanaRegex();
 const accentPhrase = ref<AccentPhrase | undefined>();
 const nowGenerating = ref(false);
 const nowPlaying = ref(false);
+const audioPlayMutex = new AbortableMutex();
 const surfaceInput = ref<typeof BaseTextField>();
 const yomiInput = ref<typeof BaseTextField>();
 let latestSetYomiRequest = 0;
@@ -317,10 +320,7 @@ const setYomi = async (text: string) => {
   accentPhrase.value = undefined;
 };
 
-const play = async () => {
-  if (accentPhrase.value == undefined) return;
-
-  nowGenerating.value = true;
+const fetchAudioStream = async (phrase: AccentPhrase) => {
   const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
     text: yomi.value,
     voice: voiceComputed.value,
@@ -329,33 +329,52 @@ const play = async () => {
   if (audioItem.query == undefined)
     throw new Error(`assert audioItem.query !== undefined`);
 
-  audioItem.query.accentPhrases = [accentPhrase.value];
+  audioItem.query.accentPhrases = [phrase];
 
-  let fetchAudioResult: FetchAudioResult;
+  const { stream, streamOffset } = await store.actions.FETCH_AUDIO_STREAM({
+    audioItem,
+    playbackStartPosition: 0,
+  });
+  return { stream, streamOffset };
+};
+
+const play = async () => {
+  const phrase = accentPhrase.value;
+  if (phrase == undefined) return;
+
+  nowGenerating.value = true;
   try {
-    fetchAudioResult = await store.actions.FETCH_AUDIO_FROM_AUDIO_ITEM({
-      audioItem,
+    await audioPlayMutex.lock(async (signal) => {
+      const { stream, streamOffset } = await fetchAudioStream(phrase);
+      using cancellable = new DisposableStack();
+      nowGenerating.value = false;
+      nowPlaying.value = true;
+
+      const wavStream = new WavStream(stream);
+      cancellable.defer(() => {
+        void wavStream?.cancel();
+      });
+
+      await setAudioContextSinkId(store.state.savingSetting.audioOutputDevice);
+      await playAudioStream(wavStream, streamOffset, signal);
     });
   } catch (e) {
     window.backend.logError(e);
-    nowGenerating.value = false;
     void store.actions.SHOW_ALERT_DIALOG({
-      title: "生成に失敗しました",
+      title: "プレビューに失敗しました",
       message: "エンジンの再起動をお試しください。",
     });
-    return;
+  } finally {
+    nowGenerating.value = false;
+    nowPlaying.value = false;
   }
-
-  const { blob } = fetchAudioResult;
-  nowGenerating.value = false;
-  nowPlaying.value = true;
-  await store.actions.PLAY_AUDIO_BLOB({ audioBlob: blob });
-  nowPlaying.value = false;
 };
 
 const stop = () => {
-  void store.actions.STOP_AUDIO();
+  void audioPlayMutex.abort();
 };
+
+onUnmounted(stop);
 
 const changeAccent = async (_: number, accent: number) => {
   const { engineId, styleId } = voiceComputed.value;

@@ -23,6 +23,16 @@ export class WavStream {
   }
 
   /**
+   * ストリームの読み取りをキャンセルする。
+   *
+   * このメソッドを呼び出すと、現在進行中の`readSamples`や`readHeader`はエラーをthrowする可能性があります。
+   * TODO: readSamplesはキャンセル時点ですでに受け取ったサンプルを返すようにする？
+   */
+  cancel(): Promise<void> {
+    return this.reader.cancel();
+  }
+
+  /**
    * 最初のWAVヘッダーを読み取る。
    */
   async readHeader(): Promise<WavHeader> {

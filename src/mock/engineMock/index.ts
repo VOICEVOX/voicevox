@@ -20,6 +20,8 @@ import {
 
 import { DictMock } from "./dictMock";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { BlobApiResponse } from "@/openapi";
+import { ensureNotNullish } from "@/type/utility";
 import type {
   AccentPhrase,
   AccentPhrasesRequest,
@@ -147,6 +149,11 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
         payload.speaker,
       );
       return new Blob([new Uint8Array(buffer)], { type: "audio/wav" });
+    },
+
+    async synthesisRaw(payload: SynthesisRequest) {
+      const blob = await ensureNotNullish(mockApi.synthesis)(payload);
+      return new BlobApiResponse(new Response(blob));
     },
 
     // ソング系
