@@ -1,10 +1,5 @@
 <template>
-  <div
-    ref="sequencerRuler"
-    class="sequencer-ruler"
-    @click="onClick"
-    @contextmenu="onContextMenu"
-  >
+  <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
     <div class="sequencer-ruler-content" :style="{ width: `${props.width}px` }">
       <div class="sequencer-ruler-grid">
         <slot name="grid" />
@@ -40,18 +35,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   click: [MouseEvent];
-  contextmenu: [MouseEvent];
 }>();
 
 const sequencerRuler = ref<HTMLDivElement | null>(null);
 
 const onClick = (event: MouseEvent) => {
   emit("click", event);
-};
-
-// 各レーンが拾わなかった右クリック（ループと拍子・テンポのレーンの間）
-const onContextMenu = (event: MouseEvent) => {
-  emit("contextmenu", event);
 };
 </script>
 
