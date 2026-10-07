@@ -62,7 +62,6 @@
       dense
       hideBottomSpace
       class="full-width"
-      :class="{ 'with-audio-length': audioDurationToShow != undefined }"
       color="primary"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
@@ -82,13 +81,17 @@
         句読点の位置で文章を分割してください。
       </template>
       <template #after>
-        <div v-if="audioDurationToShow != undefined" class="audio-length">
-          {{ audioDurationToShow.toFixed(2) }}s
+        <div
+          v-if="showAudioLength && audioDuration != undefined"
+          class="audio-length"
+        >
+          {{ audioDuration.toFixed(2) }}s
         </div>
         <QBtn
           v-if="enableDeleteButton"
           round
           flat
+          class="delete-button"
           icon="delete_outline"
           size="0.8rem"
           :disable="uiLocked"
@@ -315,10 +318,6 @@ const audioDuration = computed(() => {
 
   return calculateAudioLength(audioItem.value.query);
 });
-
-const audioDurationToShow = computed(() =>
-  showAudioLength.value ? audioDuration.value : undefined,
-);
 
 const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
@@ -735,7 +734,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
       padding-left: 5px;
     }
 
-    &.with-audio-length :deep(.q-field__after) {
+    :deep(.q-field__after:not(:empty)) {
       display: grid;
       grid-template-columns: max-content;
       align-items: center;
@@ -747,12 +746,12 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     }
   }
 
-  &:hover .audio-length:has(+ .q-btn),
-  .audio-length:has(+ .q-btn:focus) {
+  &:hover .q-input:has(.delete-button) .audio-length,
+  .q-input:has(.delete-button:focus) .audio-length {
     visibility: hidden;
   }
 
-  &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
+  &:not(:hover) .delete-button:not(:focus):not(:active) {
     @include visually-hidden.visually-hidden;
   }
 
@@ -785,7 +784,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   user-select: none;
 }
 
-.audio-length + .q-btn {
+.delete-button {
   grid-area: 1 / 1;
   justify-self: end;
   margin-left: 0;
