@@ -15,6 +15,7 @@ export class WavStream {
   private buffer: Uint8Array;
   private bufferOffset: number;
   private header?: WavHeader;
+  private cancelled = false;
 
   constructor(stream: ReadableStream<Uint8Array>) {
     this.reader = stream.getReader();
@@ -25,10 +26,12 @@ export class WavStream {
   /**
    * ストリームの読み取りをキャンセルする。
    *
-   * このメソッドを呼び出すと、現在進行中の`readSamples`や`readHeader`はエラーをthrowする可能性があります。
-   * TODO: readSamplesはキャンセル時点ですでに受け取ったサンプルを返すようにする？
+   * この関数が呼ばれたとき、
+   * - `readSamples`は受信済みの完全なサンプルを返して終了します。
+   * - `readHeader`はエラーをthrowする可能性があります。
    */
   cancel(): Promise<void> {
+    this.cancelled = true;
     return this.reader.cancel();
   }
 
@@ -97,14 +100,19 @@ export class WavStream {
       throw new Error("WAV header not read yet");
     }
     let dataChunkSize;
-    while (true) {
-      const { id, size } = await this.readChunkHeader();
-      if (id === "data") {
-        dataChunkSize = size;
-        break;
-      } else {
-        await this.readBytes(size + (size % 2));
+    try {
+      while (true) {
+        const { id, size } = await this.readChunkHeader();
+        if (id === "data") {
+          dataChunkSize = size;
+          break;
+        } else {
+          await this.readBytes(size + (size % 2));
+        }
       }
+    } catch (error) {
+      if (!this.cancelled) throw error;
+      return;
     }
 
     let bytesRead = 0;
@@ -116,12 +124,18 @@ export class WavStream {
         samplesPerChunk * bytesPerSample,
         bytesToSkip - bytesRead,
       );
-      await this.readBytes(size);
+      try {
+        await this.readBytes(size);
+      } catch (error) {
+        if (!this.cancelled) throw error;
+        return;
+      }
       bytesRead += size;
     }
     while (bytesRead < dataChunkSize) {
       const chunk = await this.readBytes(
         Math.min(samplesPerChunk * bytesPerSample, dataChunkSize - bytesRead),
+        true,
       );
       bytesRead += chunk.length;
       const view = new DataView(
@@ -130,10 +144,11 @@ export class WavStream {
         chunk.byteLength,
       );
 
-      const nextChunkSize = chunk.length / bytesPerSample;
+      const nextChunkSize = Math.floor(chunk.length / bytesPerSample);
+      if (nextChunkSize === 0) return;
       const leftSamples = new Float32Array(nextChunkSize);
       const rightSamples = new Float32Array(nextChunkSize);
-      for (let i = 0; i < chunk.length; i += bytesPerSample) {
+      for (let i = 0; i < nextChunkSize * bytesPerSample; i += bytesPerSample) {
         let left: number, right: number;
         if (this.header.audioFormat === "pcm16le") {
           left = view.getInt16(i, true) / 32768;
@@ -164,7 +179,10 @@ export class WavStream {
     return { id, size };
   }
 
-  private async readBytes(size: number): Promise<Uint8Array> {
+  private async readBytes(
+    size: number,
+    allowPartialOnCancel = false,
+  ): Promise<Uint8Array> {
     if (this.buffer.length - this.bufferOffset >= size) {
       const result = this.buffer.subarray(
         this.bufferOffset,
@@ -181,6 +199,9 @@ export class WavStream {
       if (this.bufferOffset === this.buffer.length) {
         const { value, done } = await this.reader.read();
         if (done) {
+          if (this.cancelled && allowPartialOnCancel) {
+            return result.subarray(0, offset);
+          }
           throw new Error("Stream ended before reading enough bytes");
         }
         this.buffer = value;
