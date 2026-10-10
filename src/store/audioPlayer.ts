@@ -4,6 +4,7 @@
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import { playContinuously } from "./audioContinuousPlayer";
+import { audioContext } from "./audioContext";
 import type {
   AudioPlayerStoreState,
   AudioPlayerStoreTypes,
@@ -11,29 +12,9 @@ import type {
 } from "./type";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ensureNotNullish } from "@/type/utility";
-import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { AbortableMutex } from "@/helpers/abortableMutex";
 import { WavStream } from "@/domain/wavStream";
 import { DisposableTimeout } from "@/helpers/disposableTimeout";
-
-let audioContext: AudioContext | null = null;
-if (window.AudioContext) {
-  audioContext = new AudioContext();
-}
-
-// TODO: AudioContextをアプリケーション内で一つ持つようにして、エラーハンドリングや再生デバイスの切り替えを統一する
-export async function setAudioContextSinkId(device: string) {
-  if (!audioContext?.setSinkId) return;
-  await audioContext
-    .setSinkId(device === "default" ? "" : device)
-    .catch((err: unknown) => {
-      void showAlertDialog({
-        title: "エラー",
-        message: "再生デバイスが見つかりません",
-      });
-      throw err;
-    });
-}
 
 /**
  * WavStreamを再生する。
@@ -58,15 +39,8 @@ export async function playAudioStream(
 ) {
   const samplesPerChunk = 256;
 
-  if (!audioContext) {
-    throw new Error("AudioContext is not supported in this browser.");
-  }
-  // TODO: interruptedも考慮する
-  if (audioContext.state === "suspended") {
-    // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
-    await audioContext.resume();
-  }
   if (cancel.aborted) return;
+  const context = audioContext();
 
   const { promise: cancelledPromise, resolve: resolveCancel } =
     Promise.withResolvers<typeof cancelledMarker>();
@@ -75,7 +49,7 @@ export async function playAudioStream(
   const onAbort = () => resolveCancel(cancelledMarker);
   cancel.addEventListener("abort", onAbort, { once: true });
 
-  let lastBufferEndTime = audioContext.currentTime;
+  let lastBufferEndTime = context.currentTime;
 
   const header = await Promise.race([cancelledPromise, stream.readHeader()]);
   if (header === cancelledMarker) return;
@@ -92,7 +66,7 @@ export async function playAudioStream(
     using delayNotifier =
       numTotalSamples > 0
         ? new DisposableTimeout(
-            (lastBufferEndTime - audioContext.currentTime) * 1000,
+            (lastBufferEndTime - context.currentTime) * 1000,
             () => callbacks.onDelay?.(),
           )
         : undefined;
@@ -119,19 +93,15 @@ export async function playAudioStream(
     }
 
     // AudioBufferを作ってチャンクのサンプルをコピーする
-    const audioBuffer = audioContext.createBuffer(
-      2,
-      leftSamples.length,
-      sampleRate,
-    );
+    const audioBuffer = context.createBuffer(2, leftSamples.length, sampleRate);
     const leftChannel = audioBuffer.getChannelData(0);
     const rightChannel = audioBuffer.getChannelData(1);
     leftChannel.set(leftSamples);
     rightChannel.set(rightSamples);
 
-    const source = audioContext.createBufferSource();
+    const source = context.createBufferSource();
     source.buffer = audioBuffer;
-    source.connect(audioContext.destination);
+    source.connect(context.destination);
     cancelables.use({
       [Symbol.dispose]() {
         source.disconnect();
@@ -141,13 +111,13 @@ export async function playAudioStream(
 
     // 現在のバッファの終了時刻に合わせて再生を予約する
     // ただし現在のバッファがすでに終了している場合は現在時刻で再生を予約する（=今すぐ再生する）
-    const baseTime = Math.max(lastBufferEndTime, audioContext.currentTime);
+    const baseTime = Math.max(lastBufferEndTime, context.currentTime);
     source.start(baseTime);
 
     // 予約した再生時刻に合わせてonChunkStartを呼ぶ
     const currentSampleTime = numTotalSamples / sampleRate;
     cancelables.use(
-      new DisposableTimeout((baseTime - audioContext.currentTime) * 1000, () =>
+      new DisposableTimeout((baseTime - context.currentTime) * 1000, () =>
         callbacks.onChunkStart?.(currentSampleTime),
       ),
     );
@@ -159,7 +129,7 @@ export async function playAudioStream(
   const { promise: playbackEnded, resolve: resolvePlaybackEnd } =
     Promise.withResolvers<void>();
   using _playbackEndNotifier = new DisposableTimeout(
-    (lastBufferEndTime - audioContext.currentTime) * 1000,
+    (lastBufferEndTime - context.currentTime) * 1000,
     resolvePlaybackEnd,
   );
   await Promise.race([playbackEnded, cancelledPromise]);
@@ -334,7 +304,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       });
 
       let delayNotified = false;
-      await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
       await playAudioStream(stream, streamOffset, signal, {
         onDelay() {
           if (

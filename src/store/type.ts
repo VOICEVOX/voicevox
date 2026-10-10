@@ -1546,10 +1546,6 @@ export type SongStoreTypes = {
     action(): void;
   };
 
-  APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
-    action(payload: { device: string }): void;
-  };
-
   SET_LOOP_ENABLED: {
     mutation: { isLoopEnabled: boolean };
     action(payload: { isLoopEnabled: boolean }): void;
