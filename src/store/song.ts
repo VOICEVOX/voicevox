@@ -1,4 +1,5 @@
 import { ref } from "vue";
+import { audioContext, isAudioContextAvailable } from "./audioContext";
 import { createPartialStore, type StorePlugins } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -107,7 +108,6 @@ import { uuid4 } from "@/helpers/random";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
-import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { ufProjectFromVoicevox } from "@/song/utaformatixProject/fromVoicevox";
 import {
   isMultiFileProjectFormat,
@@ -273,7 +273,6 @@ type PhraseSequenceInfo =
       readonly singingVoiceKey: SingingVoiceKey;
     };
 
-let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let previewSynth: PolySynth | undefined;
 let mainChannelStrip: ChannelStrip | undefined;
@@ -282,21 +281,21 @@ let limiter: Limiter | undefined;
 let clipper: Clipper | undefined;
 
 // NOTE: テスト時はAudioContextが存在しない
-if (window.AudioContext) {
-  audioContext = new AudioContext();
-  transport = new Transport(audioContext);
-  previewSynth = new PolySynth(audioContext);
-  mainChannelStrip = new ChannelStrip(audioContext);
-  limiter = new Limiter(audioContext);
-  clipper = new Clipper(audioContext);
+if (isAudioContextAvailable()) {
+  const context = audioContext();
+  transport = new Transport(context);
+  previewSynth = new PolySynth(context);
+  mainChannelStrip = new ChannelStrip(context);
+  limiter = new Limiter(context);
+  clipper = new Clipper(context);
 
   previewSynth.output.connect(mainChannelStrip.input);
   mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
-  clipper.output.connect(audioContext.destination);
+  clipper.output.connect(context.destination);
 
-  audioContext.addEventListener("statechange", () => {
-    logger.info(`AudioContext state changed: ${audioContext?.state}`);
+  context.addEventListener("statechange", () => {
+    logger.info(`AudioContext state changed: ${context.state}`);
   });
 }
 
@@ -405,11 +404,9 @@ const generateNoteSequence = (
   tpqn: number,
   trackId: TrackId,
 ): NoteSequence & { trackId: TrackId } => {
-  if (!audioContext) {
-    throw new Error("audioContext is undefined.");
-  }
+  const context = audioContext();
   const noteEvents = generateNoteEvents(notes, tempos, tpqn);
-  const polySynth = new PolySynth(audioContext);
+  const polySynth = new PolySynth(context);
   return {
     type: "note",
     instrument: polySynth,
@@ -426,11 +423,9 @@ const generateAudioSequence = async (
   blob: Blob,
   trackId: TrackId,
 ): Promise<AudioSequence & { trackId: TrackId }> => {
-  if (!audioContext) {
-    throw new Error("audioContext is undefined.");
-  }
-  const audioEvents = await generateAudioEvents(audioContext, startTime, blob);
-  const audioPlayer = new AudioPlayer(audioContext);
+  const context = audioContext();
+  const audioEvents = await generateAudioEvents(context, startTime, blob);
+  const audioPlayer = new AudioPlayer(context);
   return {
     type: "audio",
     audioPlayer,
@@ -456,7 +451,7 @@ const syncPhraseSequences = (
     onSequenceDeleted: (phraseKey: PhraseKey) => void;
   },
 ) => {
-  if (audioContext == undefined) {
+  if (!window.AudioContext) {
     logger.info(
       "AudioContext is undefined: skipping phrase-sequence synchronization.",
     );
@@ -660,7 +655,7 @@ const createNoteSequenceForPhrase = (
 const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
   // AudioContext はテスト環境では存在しないことがある。
   // その場合はトラックのオーディオ接続は行えないため早期に何もしない。
-  if (audioContext == undefined) {
+  if (!window.AudioContext) {
     // AudioContext が無い環境（テスト等）ではオーディオ接続処理は行えないため何もしない。
     logger.info(
       "AudioContext is undefined: skipping track-channel-strip synchronization.",
@@ -675,10 +670,11 @@ const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
     return;
   }
 
+  const context = audioContext();
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     if (!trackChannelStrips.has(trackId)) {
-      const channelStrip = new ChannelStrip(audioContext);
+      const channelStrip = new ChannelStrip(context);
       channelStrip.output.connect(mainChannelStrip.input);
       trackChannelStrips.set(trackId, channelStrip);
 
@@ -2054,18 +2050,11 @@ export const songStore = createPartialStore<SongStoreTypes>({
       if (state.nowPlaying) {
         return;
       }
-      if (audioContext == undefined) {
-        throw new Error("audioContext is undefined.");
-      }
       if (!transport) {
         throw new Error("transport is undefined.");
       }
 
-      // TODO: interruptedも考慮する
-      if (audioContext.state === "suspended") {
-        // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
-        await audioContext.resume();
-      }
+      audioContext();
 
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
 
@@ -2126,9 +2115,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
       _,
       { noteNumber, duration }: { noteNumber: number; duration?: number },
     ) {
-      if (!audioContext) {
-        throw new Error("audioContext is undefined.");
-      }
+      audioContext();
       if (!previewSynth) {
         throw new Error("previewSynth is undefined.");
       }
@@ -2138,9 +2125,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
 
   STOP_PREVIEW_SOUND: {
     async action(_, { noteNumber }: { noteNumber: number }) {
-      if (!audioContext) {
-        throw new Error("audioContext is undefined.");
-      }
+      audioContext();
       if (!previewSynth) {
         throw new Error("previewSynth is undefined.");
       }
@@ -2291,22 +2276,6 @@ export const songStore = createPartialStore<SongStoreTypes>({
         return;
       }
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
-    },
-  },
-
-  APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
-    action(_, { device }) {
-      if (!audioContext) {
-        throw new Error("audioContext is undefined.");
-      }
-      const sinkId = device === "default" ? "" : device;
-      audioContext.setSinkId(sinkId).catch((err: unknown) => {
-        void showAlertDialog({
-          title: "エラー",
-          message: "再生デバイスが見つかりません",
-        });
-        throw err;
-      });
     },
   },
 
