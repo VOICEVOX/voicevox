@@ -732,6 +732,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     :deep(.q-field__after) {
       height: 2rem;
       padding-left: 5px;
+
       // NOTE: Quasarは`after(:empty)`の場合に`display: none`で非表示にしているため、
       // `display`の変更を`after:not(:empty)`の場合のみにしてレイアウト崩れを抑えている
       &:not(:empty) {
@@ -775,6 +776,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   min-width: 2.8rem;
   text-align: right;
   user-select: none;
+
   // 削除ボタンがある行のホバー中、または削除ボタンのフォーカス中は音声長を隠す
   .audio-cell:hover .q-input:has(.delete-button) &,
   .audio-cell .q-input:has(.delete-button:focus) & {
