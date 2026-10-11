@@ -40,7 +40,7 @@ export type WelcomeIpcIHData = {
     args: [];
     return: string;
   };
-  ON_THEME_APPLIED: {
+  ON_DISPLAY_READY: {
     args: [];
     return: void;
   };
