@@ -11,7 +11,7 @@ export function isAudioContextAvailable(): boolean {
   return context != undefined;
 }
 
-export function audioContext(): AudioContext {
+export function getAudioContext(): AudioContext {
   if (context == undefined) {
     throw new Error("AudioContext is not supported in this browser.");
   }

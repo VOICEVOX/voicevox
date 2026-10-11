@@ -4,7 +4,7 @@
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import { playContinuously } from "./audioContinuousPlayer";
-import { audioContext } from "./audioContext";
+import { getAudioContext } from "./audioContext";
 import type {
   AudioPlayerStoreState,
   AudioPlayerStoreTypes,
@@ -40,7 +40,7 @@ export async function playAudioStream(
   const samplesPerChunk = 256;
 
   if (cancel.aborted) return;
-  const context = audioContext();
+  const context = getAudioContext();
 
   const { promise: cancelledPromise, resolve: resolveCancel } =
     Promise.withResolvers<typeof cancelledMarker>();

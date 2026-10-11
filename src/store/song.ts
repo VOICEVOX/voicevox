@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { audioContext, isAudioContextAvailable } from "./audioContext";
+import { getAudioContext, isAudioContextAvailable } from "./audioContext";
 import { createPartialStore, type StorePlugins } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -293,7 +293,7 @@ const getSongAudioGraph = () =>
 
 // NOTE: テスト時はAudioContextが存在しない
 if (isAudioContextAvailable()) {
-  const context = audioContext();
+  const context = getAudioContext();
   const transport = new Transport(context);
   const previewSynth = new PolySynth(context);
   const mainChannelStrip = new ChannelStrip(context);
@@ -420,7 +420,7 @@ const generateNoteSequence = (
   tpqn: number,
   trackId: TrackId,
 ): NoteSequence & { trackId: TrackId } => {
-  const context = audioContext();
+  const context = getAudioContext();
   const noteEvents = generateNoteEvents(notes, tempos, tpqn);
   const polySynth = new PolySynth(context);
   return {
@@ -439,7 +439,7 @@ const generateAudioSequence = async (
   blob: Blob,
   trackId: TrackId,
 ): Promise<AudioSequence & { trackId: TrackId }> => {
-  const context = audioContext();
+  const context = getAudioContext();
   const audioEvents = await generateAudioEvents(context, startTime, blob);
   const audioPlayer = new AudioPlayer(context);
   return {
@@ -680,7 +680,7 @@ const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
   }
   const { mainChannelStrip, trackChannelStrips } = getSongAudioGraph();
 
-  const context = audioContext();
+  const context = getAudioContext();
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     if (!trackChannelStrips.has(trackId)) {
