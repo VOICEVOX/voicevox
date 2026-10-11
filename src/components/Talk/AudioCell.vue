@@ -738,8 +738,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     // このscoped CSSで空にもGridを適用するとdisplay: noneを上書きし、padding-leftの5px分の幅を取るため、空でない場合にだけ適用する。
     :deep(.q-field__after:not(:empty)) {
       display: grid;
-      grid-template-columns: max-content;
-      align-items: center;
       align-content: center;
     }
 
@@ -780,7 +778,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   white-space: nowrap;
   font-size: 0.85rem;
   grid-area: 1 / 1;
-  justify-self: end;
   min-width: 2.8rem;
   text-align: right;
   user-select: none;
@@ -789,6 +786,5 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 .delete-button {
   grid-area: 1 / 1;
   justify-self: end;
-  margin-left: 0;
 }
 </style>
