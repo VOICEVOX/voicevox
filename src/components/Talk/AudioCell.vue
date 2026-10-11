@@ -734,6 +734,8 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
       padding-left: 5px;
     }
 
+    // NOTE: 空のafterはQuasarのdisplay: noneでレイアウトから外れ、paddingも幅を取らない。
+    // このscoped CSSで空にもGridを適用するとdisplay: noneを上書きし、padding-leftの5px分の幅を取るため、空でない場合にだけ適用する。
     :deep(.q-field__after:not(:empty)) {
       display: grid;
       grid-template-columns: max-content;
