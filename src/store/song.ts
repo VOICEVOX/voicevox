@@ -2238,7 +2238,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
     async action({ state }) {
       if (!isAudioContextAvailable()) {
         logger.info(
-          "transport is undefined: skipping loop range synchronization.",
+          "AudioContext is not available: skipping loop range synchronization to transport.",
         );
         return;
       }
@@ -2260,7 +2260,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
     async action({ getters }) {
       if (!isAudioContextAvailable()) {
         logger.info(
-          "transport is undefined: skipping playhead position synchronization.",
+          "AudioContext is not available: skipping playhead position synchronization to transport.",
         );
         return;
       }
