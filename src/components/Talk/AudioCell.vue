@@ -732,23 +732,17 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     :deep(.q-field__after) {
       height: 2rem;
       padding-left: 5px;
-    }
-
-    // NOTE: 空のafterはQuasarのdisplay: noneでレイアウトから外れ、paddingも幅を取らない。
-    // このscoped CSSで空にもGridを適用するとdisplay: noneを上書きし、padding-leftの5px分の幅を取るため、空でない場合にだけ適用する。
-    :deep(.q-field__after:not(:empty)) {
-      display: grid;
-      align-content: center;
+      // NOTE: Quasarは`after(:empty)`の場合に`display: none`で非表示にしているため、
+      // `display`の変更を`after:not(:empty)`の場合のみにしてレイアウト崩れを抑えている
+      &:not(:empty) {
+        display: grid;
+        align-content: center;
+      }
     }
 
     &.q-field--filled.q-field--highlighted :deep(.q-field__control)::before {
       background-color: rgba(colors.$display-rgb, 0.08);
     }
-  }
-
-  &:hover .q-input:has(.delete-button) .audio-length,
-  .q-input:has(.delete-button:focus) .audio-length {
-    visibility: hidden;
   }
 
   &:not(:hover) .delete-button:not(:focus):not(:active) {
@@ -781,6 +775,11 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   min-width: 2.8rem;
   text-align: right;
   user-select: none;
+  // 削除ボタンがある行のホバー中、または削除ボタンのフォーカス中は音声長を隠す
+  .audio-cell:hover .q-input:has(.delete-button) &,
+  .audio-cell .q-input:has(.delete-button:focus) & {
+    visibility: hidden;
+  }
 }
 
 .delete-button {
