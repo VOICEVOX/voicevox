@@ -9,10 +9,10 @@
           <QPage class="welcome-page">
             <BaseScrollArea>
               <div class="inner">
-                <p class="welcome-intro">
+                <BaseDocumentView class="welcome-intro">
                   VOICEVOXエディタを使用するには、音声合成エンジンのインストールが必要です。
                   以下のエンジン一覧から、インストールまたは更新を行ってください。
-                </p>
+                </BaseDocumentView>
 
                 <EngineList />
               </div>
@@ -32,6 +32,7 @@ import WelcomeHeader from "./WelcomeHeader.vue";
 import EngineList from "./EngineList.vue";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { provideWelcomeStore } from "@/welcome/store";
 
 const store = provideWelcomeStore();
