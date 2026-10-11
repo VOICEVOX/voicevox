@@ -78,6 +78,9 @@ class WelcomeIpcMainHandleManager {
       GET_CURRENT_THEME: async () => {
         return configManager.get("currentTheme");
       },
+      ON_THEME_APPLIED: () => {
+        getWelcomeWindowManager().show();
+      },
       SWITCH_TO_MAIN_WINDOW: async () => {
         await appStateController.switchToMainWindow();
       },

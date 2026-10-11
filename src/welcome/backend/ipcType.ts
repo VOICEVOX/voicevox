@@ -40,6 +40,10 @@ export type WelcomeIpcIHData = {
     args: [];
     return: string;
   };
+  ON_THEME_APPLIED: {
+    args: [];
+    return: void;
+  };
 
   SWITCH_TO_MAIN_WINDOW: {
     args: [];

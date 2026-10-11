@@ -56,6 +56,9 @@ const api: WelcomeSandbox = {
   getCurrentTheme: () => {
     return ipcRendererInvokeProxy.GET_CURRENT_THEME();
   },
+  onThemeApplied: () => {
+    return ipcRendererInvokeProxy.ON_THEME_APPLIED();
+  },
   registerIpcHandler: (listeners) => {
     const {
       updateEngineDownloadProgress,

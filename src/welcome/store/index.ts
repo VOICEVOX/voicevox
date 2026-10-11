@@ -258,11 +258,12 @@ function createWelcomeStore() {
     }
   };
 
-  const applyThemeFromConfig = async () => {
+  const applyThemeAndNotifyBackend = async () => {
     const currentTheme = await window.welcomeBackend.getCurrentTheme();
     const theme = themes.find((value) => value.name === currentTheme);
     assertNonNullable(theme, `Theme not found: ${currentTheme}`);
     setThemeToCss(theme);
+    void window.welcomeBackend.onThemeApplied();
   };
 
   const installEngine = async (engineId: EngineId) => {
@@ -302,7 +303,7 @@ function createWelcomeStore() {
       },
     });
     void loadEngineEmbeddedInfos();
-    void applyThemeFromConfig();
+    void applyThemeAndNotifyBackend();
   };
 
   return {
