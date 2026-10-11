@@ -116,7 +116,11 @@ import {
   ufProjectToMultiFile,
   ufProjectToSingleFile,
 } from "@/song/utaformatixProject/utils";
-import { ExhaustiveError, UnreachableError } from "@/type/utility";
+import {
+  ensureNotNullish,
+  ExhaustiveError,
+  UnreachableError,
+} from "@/type/utility";
 import {
   type CacheLoadedEvent,
   type PhraseRenderingCompleteEvent,
@@ -273,26 +277,42 @@ type PhraseSequenceInfo =
       readonly singingVoiceKey: SingingVoiceKey;
     };
 
-let transport: Transport | undefined;
-let previewSynth: PolySynth | undefined;
-let mainChannelStrip: ChannelStrip | undefined;
-const trackChannelStrips = new Map<TrackId, ChannelStrip>();
-let limiter: Limiter | undefined;
-let clipper: Clipper | undefined;
+let songAudioGraph:
+  | {
+      transport: Transport;
+      previewSynth: PolySynth;
+      mainChannelStrip: ChannelStrip;
+      trackChannelStrips: Map<TrackId, ChannelStrip>;
+      limiter: Limiter;
+      clipper: Clipper;
+    }
+  | undefined;
+
+const getSongAudioGraph = () =>
+  ensureNotNullish(songAudioGraph, "Song audio graph is unavailable.");
 
 // NOTE: テスト時はAudioContextが存在しない
 if (isAudioContextAvailable()) {
   const context = audioContext();
-  transport = new Transport(context);
-  previewSynth = new PolySynth(context);
-  mainChannelStrip = new ChannelStrip(context);
-  limiter = new Limiter(context);
-  clipper = new Clipper(context);
+  const transport = new Transport(context);
+  const previewSynth = new PolySynth(context);
+  const mainChannelStrip = new ChannelStrip(context);
+  const limiter = new Limiter(context);
+  const clipper = new Clipper(context);
 
   previewSynth.output.connect(mainChannelStrip.input);
   mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(context.destination);
+
+  songAudioGraph = {
+    transport,
+    previewSynth,
+    mainChannelStrip,
+    trackChannelStrips: new Map<TrackId, ChannelStrip>(),
+    limiter,
+    clipper,
+  };
 
   context.addEventListener("statechange", () => {
     logger.info(`AudioContext state changed: ${context.state}`);
@@ -343,9 +363,7 @@ const registerSequence = (
   sequenceId: SequenceId,
   sequence: Sequence & { trackId: TrackId },
 ) => {
-  if (transport == undefined) {
-    throw new Error("transport is undefined.");
-  }
+  const { transport, trackChannelStrips } = getSongAudioGraph();
   if (sequences.has(sequenceId)) {
     throw new Error("Sequence already exists.");
   }
@@ -367,9 +385,7 @@ const registerSequence = (
  * @param sequenceId シーケンスID
  */
 const deleteSequence = (sequenceId: SequenceId) => {
-  if (transport == undefined) {
-    throw new Error("transport is undefined.");
-  }
+  const { transport, trackChannelStrips } = getSongAudioGraph();
   const sequence = sequences.get(sequenceId);
   if (sequence == undefined) {
     throw new Error("Sequence does not exist.");
@@ -451,7 +467,7 @@ const syncPhraseSequences = (
     onSequenceDeleted: (phraseKey: PhraseKey) => void;
   },
 ) => {
-  if (!window.AudioContext) {
+  if (!isAudioContextAvailable()) {
     logger.info(
       "AudioContext is undefined: skipping phrase-sequence synchronization.",
     );
@@ -655,20 +671,14 @@ const createNoteSequenceForPhrase = (
 const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
   // AudioContext はテスト環境では存在しないことがある。
   // その場合はトラックのオーディオ接続は行えないため早期に何もしない。
-  if (!window.AudioContext) {
+  if (!isAudioContextAvailable()) {
     // AudioContext が無い環境（テスト等）ではオーディオ接続処理は行えないため何もしない。
     logger.info(
       "AudioContext is undefined: skipping track-channel-strip synchronization.",
     );
     return;
   }
-  if (mainChannelStrip == undefined) {
-    // mainChannelStrip が未作成の場合は何もしない。
-    logger.info(
-      "mainChannelStrip is undefined: skipping track-channel-strip synchronization.",
-    );
-    return;
-  }
+  const { mainChannelStrip, trackChannelStrips } = getSongAudioGraph();
 
   const context = audioContext();
   const shouldPlays = shouldPlayTracks(tracks);
@@ -909,9 +919,6 @@ export const songStore = createPartialStore<SongStoreTypes>({
       if (!isValidTpqn(tpqn)) {
         throw new Error("The tpqn is invalid.");
       }
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
       if (state.nowPlaying) {
         await actions.SING_STOP_AUDIO();
       }
@@ -929,9 +936,6 @@ export const songStore = createPartialStore<SongStoreTypes>({
     ) {
       if (!isValidTempos(tempos)) {
         throw new Error("The tempos are invalid.");
-      }
-      if (transport == undefined) {
-        throw new Error("transport is undefined.");
       }
       if (state.nowPlaying) {
         await actions.SING_STOP_AUDIO();
@@ -2031,9 +2035,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
 
   SET_PLAYHEAD_POSITION: {
     async action({ getters }, { position }: { position: number }) {
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
+      const { transport } = getSongAudioGraph();
       playheadPosition.value = position;
       transport.time = getters.TICK_TO_SECOND(position);
     },
@@ -2050,11 +2052,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
       if (state.nowPlaying) {
         return;
       }
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
-
-      audioContext();
+      const { transport } = getSongAudioGraph();
 
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
 
@@ -2085,9 +2083,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
       if (!state.nowPlaying) {
         return;
       }
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
+      const { transport } = getSongAudioGraph();
       mutations.SET_PLAYBACK_STATE({ nowPlaying: false });
 
       transport.stop();
@@ -2101,9 +2097,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
       state.volume = volume;
     },
     async action({ mutations }, { volume }) {
-      if (!mainChannelStrip) {
-        throw new Error("channelStrip is undefined.");
-      }
+      const { mainChannelStrip } = getSongAudioGraph();
       mutations.SET_VOLUME({ volume });
 
       mainChannelStrip.volume = volume;
@@ -2115,20 +2109,14 @@ export const songStore = createPartialStore<SongStoreTypes>({
       _,
       { noteNumber, duration }: { noteNumber: number; duration?: number },
     ) {
-      audioContext();
-      if (!previewSynth) {
-        throw new Error("previewSynth is undefined.");
-      }
+      const { previewSynth } = getSongAudioGraph();
       previewSynth.noteOn("immediately", noteNumber, duration);
     },
   },
 
   STOP_PREVIEW_SOUND: {
     async action(_, { noteNumber }: { noteNumber: number }) {
-      audioContext();
-      if (!previewSynth) {
-        throw new Error("previewSynth is undefined.");
-      }
+      const { previewSynth } = getSongAudioGraph();
       previewSynth.noteOff("immediately", noteNumber);
     },
   },
@@ -2248,12 +2236,13 @@ export const songStore = createPartialStore<SongStoreTypes>({
 
   SYNC_LOOP_RANGE_TO_TRANSPORT: {
     async action({ state }) {
-      if (transport == undefined) {
+      if (!isAudioContextAvailable()) {
         logger.info(
           "transport is undefined: skipping loop range synchronization.",
         );
         return;
       }
+      const { transport } = getSongAudioGraph();
       transport.loopStartTime = tickToSecond(
         state.loopStartTick,
         state.tempos,
@@ -2269,12 +2258,13 @@ export const songStore = createPartialStore<SongStoreTypes>({
 
   SYNC_PLAYHEAD_POSITION_TO_TRANSPORT: {
     async action({ getters }) {
-      if (transport == undefined) {
+      if (!isAudioContextAvailable()) {
         logger.info(
           "transport is undefined: skipping playhead position synchronization.",
         );
         return;
       }
+      const { transport } = getSongAudioGraph();
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
     },
   },
@@ -3318,9 +3308,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
       state.isLoopEnabled = isLoopEnabled;
     },
     async action({ mutations }, { isLoopEnabled }) {
-      if (!transport) {
-        throw new Error("transport is undefined");
-      }
+      const { transport } = getSongAudioGraph();
       mutations.SET_LOOP_ENABLED({ isLoopEnabled });
       transport.loop = isLoopEnabled;
     },
@@ -3332,9 +3320,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
       state.loopEndTick = loopEndTick;
     },
     async action({ state, mutations }, { loopStartTick, loopEndTick }) {
-      if (!transport) {
-        throw new Error("transport is undefined");
-      }
+      const { transport } = getSongAudioGraph();
 
       if (!isValidLoopRange(loopStartTick, loopEndTick)) {
         throw new Error("The loop range is invalid.");
@@ -3579,9 +3565,7 @@ export const songCommandStore = transformCommandStore(
       },
       // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
       action({ state, getters, mutations }, { tempo }: { tempo: Tempo }) {
-        if (!transport) {
-          throw new Error("transport is undefined.");
-        }
+        const { transport } = getSongAudioGraph();
         if (!isValidTempo(tempo)) {
           throw new Error("The tempo is invalid.");
         }
@@ -3607,9 +3591,7 @@ export const songCommandStore = transformCommandStore(
         if (!exists) {
           throw new Error("The tempo does not exist.");
         }
-        if (!transport) {
-          throw new Error("transport is undefined.");
-        }
+        const { transport } = getSongAudioGraph();
         if (state.nowPlaying) {
           playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
         }
@@ -4042,9 +4024,6 @@ export const songCommandStore = transformCommandStore(
         }
         if (!isValidTimeSignatures(timeSignatures)) {
           throw new Error("The time signatures are invalid.");
-        }
-        if (transport == undefined) {
-          throw new Error("transport is undefined.");
         }
         const payload: ({ track: Track; trackId: TrackId } & (
           | { overwrite: true; prevTrackId?: undefined }
