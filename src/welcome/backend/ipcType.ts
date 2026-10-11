@@ -35,7 +35,6 @@ export type WelcomeIpcIHData = {
     args: [obj: { engineId: EngineId }];
     return: EnginePackageLatestInfo;
   };
-
   GET_CURRENT_THEME: {
     args: [];
     return: string;
@@ -44,7 +43,6 @@ export type WelcomeIpcIHData = {
     args: [];
     return: void;
   };
-
   SWITCH_TO_MAIN_WINDOW: {
     args: [];
     return: void;
