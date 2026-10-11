@@ -11,9 +11,7 @@
       <QPageContainer>
         <QHeader class="q-pa-sm">
           <QToolbar>
-            <QToolbarTitle class="text-display"
-              >マルチエンジンの管理</QToolbarTitle
-            >
+            <QToolbarTitle class="text-display">エンジンの管理</QToolbarTitle>
             <QSpace />
             <!-- close button -->
             <QBtn

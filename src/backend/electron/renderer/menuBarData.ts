@@ -83,6 +83,18 @@ export const useElectronMenuBarData = (
         },
         disableWhenUiLocked: false,
       },
+      hasDownloadableDefaultEngine.value && {
+        type: "button",
+        label: enableMultiEngine.value
+          ? "デフォルトエンジンの更新"
+          : "エンジンの更新",
+        onClick: () => {
+          void store.actions.CHECK_EDITED_AND_NOT_SAVE({
+            nextAction: "switchToWelcome",
+          });
+        },
+        disableWhenUiLocked: false,
+      },
       enableMultiEngine.value && {
         type: "button",
         label: "マルチエンジンの管理",
@@ -105,18 +117,6 @@ export const useElectronMenuBarData = (
           disableWhenUiLocked: false,
           disableWhileReloadingLock: true,
         },
-      hasDownloadableDefaultEngine.value && {
-        type: "button",
-        label: enableMultiEngine.value
-          ? "デフォルトエンジンの更新"
-          : "エンジンの更新",
-        onClick: () => {
-          void store.actions.CHECK_EDITED_AND_NOT_SAVE({
-            nextAction: "switchToWelcome",
-          });
-        },
-        disableWhenUiLocked: false,
-      },
     ]);
 
     return {
