@@ -113,7 +113,7 @@ test("Welcome画面でエンジンをアップデートできる", async ({
     });
     await engineMenu.click();
 
-    const moveToWelcomePage = mainPage.getByText(/エンジンのセットアップ/);
+    const moveToWelcomePage = mainPage.getByText(/エンジンの更新/);
     await moveToWelcomePage.waitFor({
       timeout: 60000,
     });

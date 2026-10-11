@@ -21,7 +21,7 @@
     - メニューの項目リスト ･･･ [MenuItem](../src/components/MenuItem.vue)
     - メニューのボタン ･･･ [MenuButton](../src/components/MenuButton.vue)
     - エンジン
-      - エンジンの管理 ･･･ [EngineManageDialog](../src/components/Dialog/EngineManageDialog.vue)
+      - マルチエンジンの管理 ･･･ [EngineManageDialog](../src/components/Dialog/EngineManageDialog.vue)
     - 設定
       - キー割り当て ･･･ [HotkeySettingDialog](../src/components/Dialog/HotkeySettingDialog.vue)
       - ツールバーのカスタマイズ ･･･ [ToolBarCustomDialog](../src/components/Dialog/ToolBarCustomDialog.vue)
