@@ -151,6 +151,7 @@ const resolveVolumeLineColors = createThemeColorResolver({
   guide: "--scheme-color-song-volume-value-guide-line",
 });
 
+const canvasContainer = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const viewportWidth = ref<number>();
 const viewportHeight = ref<number>();
@@ -194,13 +195,13 @@ const tooltipState = computed(() => {
 });
 
 const {
-  canvasContainer,
   updateViewportRectCache,
   onSurfacePointerDown,
   onSurfacePointerUp,
   onSurfacePointerMove,
   onSurfacePointerLeave,
 } = useVolumeEditorPointerInput({
+  canvasContainer,
   previewMode: toRef(() => props.previewMode),
   viewportInfo: toRef(() => props.viewportInfo),
   tempos: toRef(() => props.tempos),

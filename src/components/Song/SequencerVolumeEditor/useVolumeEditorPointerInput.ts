@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted } from "vue";
 import type { Ref } from "vue";
 import { VOLUME_EDITOR_LAYOUT } from "./style";
 import type { Tempo } from "@/domain/project/type";
@@ -20,6 +20,7 @@ export type VolumeEditorPointerEvent = {
 };
 
 export const useVolumeEditorPointerInput = (options: {
+  canvasContainer: ReadonlyRef<HTMLElement | null>;
   previewMode: ReadonlyRef<VolumeEditorPreviewMode>;
   viewportInfo: ReadonlyRef<ViewportInfo>;
   tempos: ReadonlyRef<readonly Tempo[]>;
@@ -28,7 +29,7 @@ export const useVolumeEditorPointerInput = (options: {
   volumeEditMode: ReadonlyRef<VolumeEditMode>;
   onPointerEvent: (event: VolumeEditorPointerEvent) => void;
 }) => {
-  const canvasContainer = ref<HTMLElement | null>(null);
+  const { canvasContainer } = options;
 
   // getBoundingClientRectは呼ぶたびにブラウザのレイアウト再計算を発生させることがあり、
   // pointermoveの頻度で呼ぶとドラッグ中の描画がカクつくため、取得済みの矩形を使い回す
@@ -165,7 +166,6 @@ export const useVolumeEditorPointerInput = (options: {
   });
 
   return {
-    canvasContainer,
     updateViewportRectCache,
     onSurfacePointerDown,
     onSurfacePointerUp,
