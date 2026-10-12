@@ -86,8 +86,8 @@ export const useElectronMenuBarData = (
       hasDownloadableDefaultEngine.value && {
         type: "button",
         label: enableMultiEngine.value
-          ? "デフォルトエンジンの更新"
-          : "エンジンの更新",
+          ? "デフォルトエンジンの管理"
+          : "エンジンの管理",
         onClick: () => {
           void store.actions.CHECK_EDITED_AND_NOT_SAVE({
             nextAction: "switchToWelcome",
