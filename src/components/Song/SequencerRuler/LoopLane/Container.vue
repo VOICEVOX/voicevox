@@ -1,5 +1,6 @@
 <template>
   <Presentation
+    ref="presentation"
     :width="rulerWidth"
     :offset="injectedOffset"
     :loopStartX
@@ -26,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onUnmounted, inject } from "vue";
+import { computed, ref, onUnmounted, inject, useTemplateRef } from "vue";
 import { offsetInjectionKey } from "../Container.vue";
 import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
@@ -56,6 +57,14 @@ const DRAG_THRESHOLD_PX = 4;
 
 // 依存注入
 const store = useStore();
+const presentation =
+  useTemplateRef<InstanceType<typeof Presentation>>("presentation");
+
+defineExpose({
+  showContextMenu: (event: MouseEvent) => {
+    presentation.value?.showContextMenu(event);
+  },
+});
 
 const injectedOffset = inject(offsetInjectionKey);
 if (injectedOffset == undefined) {

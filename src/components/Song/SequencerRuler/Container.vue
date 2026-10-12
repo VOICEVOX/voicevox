@@ -4,6 +4,7 @@
     :playheadX
     :offset="currentOffset"
     @click="handleClick"
+    @contextmenu.capture="handleContextMenu"
   >
     <template #grid>
       <GridLaneContainer />
@@ -12,7 +13,7 @@
       <ValueChangesLaneContainer />
     </template>
     <template #loop>
-      <LoopLaneContainer />
+      <LoopLaneContainer ref="loopLane" />
     </template>
   </Presentation>
 </template>
@@ -26,7 +27,7 @@ export const offsetInjectionKey: InjectionKey<Ref<number>> =
 </script>
 
 <script setup lang="ts">
-import { computed, provide, readonly, toRef } from "vue";
+import { computed, provide, readonly, toRef, useTemplateRef } from "vue";
 import Presentation from "./Presentation.vue";
 import GridLaneContainer from "./GridLane/Container.vue";
 import ValueChangesLaneContainer from "./ValueChangesLane/Container.vue";
@@ -52,6 +53,17 @@ const props = withDefaults(
 );
 
 const store = useStore();
+const loopLane =
+  useTemplateRef<InstanceType<typeof LoopLaneContainer>>("loopLane");
+
+const handleContextMenu = (event: MouseEvent) => {
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  if (event.clientY - rect.top >= 20) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  loopLane.value?.showContextMenu(event);
+};
 
 // provideするoffsetとnumMeasures
 // toRefでリアクティブ性を維持する
