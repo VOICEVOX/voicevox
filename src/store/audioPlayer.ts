@@ -40,9 +40,9 @@ export async function playAudioStream(
   const samplesPerChunk = 256;
 
   if (cancel.aborted) return;
+
   await resumeAudioContext();
-  if (cancel.aborted) return;
-  const context = getAudioContext();
+  const audioContext = getAudioContext();
 
   const { promise: cancelledPromise, resolve: resolveCancel } =
     Promise.withResolvers<typeof cancelledMarker>();
@@ -51,7 +51,7 @@ export async function playAudioStream(
   const onAbort = () => resolveCancel(cancelledMarker);
   cancel.addEventListener("abort", onAbort, { once: true });
 
-  let lastBufferEndTime = context.currentTime;
+  let lastBufferEndTime = audioContext.currentTime;
 
   const header = await Promise.race([cancelledPromise, stream.readHeader()]);
   if (header === cancelledMarker) return;
@@ -68,7 +68,7 @@ export async function playAudioStream(
     using delayNotifier =
       numTotalSamples > 0
         ? new DisposableTimeout(
-            (lastBufferEndTime - context.currentTime) * 1000,
+            (lastBufferEndTime - audioContext.currentTime) * 1000,
             () => callbacks.onDelay?.(),
           )
         : undefined;
@@ -95,15 +95,19 @@ export async function playAudioStream(
     }
 
     // AudioBufferを作ってチャンクのサンプルをコピーする
-    const audioBuffer = context.createBuffer(2, leftSamples.length, sampleRate);
+    const audioBuffer = audioContext.createBuffer(
+      2,
+      leftSamples.length,
+      sampleRate,
+    );
     const leftChannel = audioBuffer.getChannelData(0);
     const rightChannel = audioBuffer.getChannelData(1);
     leftChannel.set(leftSamples);
     rightChannel.set(rightSamples);
 
-    const source = context.createBufferSource();
+    const source = audioContext.createBufferSource();
     source.buffer = audioBuffer;
-    source.connect(context.destination);
+    source.connect(audioContext.destination);
     cancelables.use({
       [Symbol.dispose]() {
         source.disconnect();
@@ -113,13 +117,13 @@ export async function playAudioStream(
 
     // 現在のバッファの終了時刻に合わせて再生を予約する
     // ただし現在のバッファがすでに終了している場合は現在時刻で再生を予約する（=今すぐ再生する）
-    const baseTime = Math.max(lastBufferEndTime, context.currentTime);
+    const baseTime = Math.max(lastBufferEndTime, audioContext.currentTime);
     source.start(baseTime);
 
     // 予約した再生時刻に合わせてonChunkStartを呼ぶ
     const currentSampleTime = numTotalSamples / sampleRate;
     cancelables.use(
-      new DisposableTimeout((baseTime - context.currentTime) * 1000, () =>
+      new DisposableTimeout((baseTime - audioContext.currentTime) * 1000, () =>
         callbacks.onChunkStart?.(currentSampleTime),
       ),
     );
@@ -131,7 +135,7 @@ export async function playAudioStream(
   const { promise: playbackEnded, resolve: resolvePlaybackEnd } =
     Promise.withResolvers<void>();
   using _playbackEndNotifier = new DisposableTimeout(
-    (lastBufferEndTime - context.currentTime) * 1000,
+    (lastBufferEndTime - audioContext.currentTime) * 1000,
     resolvePlaybackEnd,
   );
   await Promise.race([playbackEnded, cancelledPromise]);

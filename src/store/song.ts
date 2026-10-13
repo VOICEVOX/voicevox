@@ -292,22 +292,26 @@ let songAudioGraph:
     }
   | undefined;
 
+/**
+ * AudioContextと、それを使うすべての音声ノードの初期化が完了したグラフを返す。
+ * @throws AudioContextが利用できず、グラフが初期化されていない場合。
+ */
 const getSongAudioGraph = () =>
   ensureNotNullish(songAudioGraph, "Song audio graph is unavailable.");
 
 // NOTE: テスト時はAudioContextが存在しない
 if (isAudioContextAvailable()) {
-  const context = getAudioContext();
-  const transport = new Transport(context);
-  const previewSynth = new PolySynth(context);
-  const mainChannelStrip = new ChannelStrip(context);
-  const limiter = new Limiter(context);
-  const clipper = new Clipper(context);
+  const audioContext = getAudioContext();
+  const transport = new Transport(audioContext);
+  const previewSynth = new PolySynth(audioContext);
+  const mainChannelStrip = new ChannelStrip(audioContext);
+  const limiter = new Limiter(audioContext);
+  const clipper = new Clipper(audioContext);
 
   previewSynth.output.connect(mainChannelStrip.input);
   mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
-  clipper.output.connect(context.destination);
+  clipper.output.connect(audioContext.destination);
 
   songAudioGraph = {
     transport,
@@ -318,8 +322,8 @@ if (isAudioContextAvailable()) {
     clipper,
   };
 
-  context.addEventListener("statechange", () => {
-    logger.info(`AudioContext state changed: ${context.state}`);
+  audioContext.addEventListener("statechange", () => {
+    logger.info(`AudioContext state changed: ${audioContext.state}`);
   });
 }
 
@@ -424,9 +428,9 @@ const generateNoteSequence = (
   tpqn: number,
   trackId: TrackId,
 ): NoteSequence & { trackId: TrackId } => {
-  const context = getAudioContext();
+  const audioContext = getAudioContext();
   const noteEvents = generateNoteEvents(notes, tempos, tpqn);
-  const polySynth = new PolySynth(context);
+  const polySynth = new PolySynth(audioContext);
   return {
     type: "note",
     instrument: polySynth,
@@ -443,9 +447,9 @@ const generateAudioSequence = async (
   blob: Blob,
   trackId: TrackId,
 ): Promise<AudioSequence & { trackId: TrackId }> => {
-  const context = getAudioContext();
-  const audioEvents = await generateAudioEvents(context, startTime, blob);
-  const audioPlayer = new AudioPlayer(context);
+  const audioContext = getAudioContext();
+  const audioEvents = await generateAudioEvents(audioContext, startTime, blob);
+  const audioPlayer = new AudioPlayer(audioContext);
   return {
     type: "audio",
     audioPlayer,
@@ -684,11 +688,11 @@ const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
   }
   const { mainChannelStrip, trackChannelStrips } = getSongAudioGraph();
 
-  const context = getAudioContext();
+  const audioContext = getAudioContext();
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     if (!trackChannelStrips.has(trackId)) {
-      const channelStrip = new ChannelStrip(context);
+      const channelStrip = new ChannelStrip(audioContext);
       channelStrip.output.connect(mainChannelStrip.input);
       trackChannelStrips.set(trackId, channelStrip);
 
