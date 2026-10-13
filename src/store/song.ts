@@ -1,5 +1,9 @@
 import { ref } from "vue";
-import { getAudioContext, isAudioContextAvailable } from "./audioContext";
+import {
+  getAudioContext,
+  isAudioContextAvailable,
+  resumeAudioContext,
+} from "./audioContext";
 import { createPartialStore, type StorePlugins } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -2052,6 +2056,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
       if (state.nowPlaying) {
         return;
       }
+      await resumeAudioContext();
       const { transport } = getSongAudioGraph();
 
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
@@ -2109,6 +2114,7 @@ export const songStore = createPartialStore<SongStoreTypes>({
       _,
       { noteNumber, duration }: { noteNumber: number; duration?: number },
     ) {
+      await resumeAudioContext();
       const { previewSynth } = getSongAudioGraph();
       previewSynth.noteOn("immediately", noteNumber, duration);
     },

@@ -15,9 +15,14 @@ export function getAudioContext(): AudioContext {
   if (context == undefined) {
     throw new Error("AudioContext is not supported in this browser.");
   }
+  return context;
+}
+
+export async function resumeAudioContext(): Promise<void> {
+  const context = getAudioContext();
   // TODO: interruptedも考慮する
   if (context.state === "suspended") {
-    void context.resume().catch((error: unknown) => {
+    await context.resume().catch((error: unknown) => {
       logger.error("Failed to resume AudioContext.", error);
       void showAlertDialog({
         title: "エラー",
@@ -25,7 +30,6 @@ export function getAudioContext(): AudioContext {
       });
     });
   }
-  return context;
 }
 
 async function setAudioContextSinkId(device: string): Promise<void> {
