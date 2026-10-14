@@ -256,6 +256,7 @@ test("ソングの入力欄内ではSpaceで再生しない", async ({ page }) =
   await navigateToSong(page);
 
   const sequencer = page.getByLabel("シーケンサ");
+  const lyricInput = sequencer.locator(".lyric-input");
   const stopButton = page.getByRole("button").filter({ hasText: "stop" });
 
   await test.step("テンポの入力欄内でSpaceを押しても再生しない", async () => {
@@ -271,11 +272,10 @@ test("ソングの入力欄内ではSpaceで再生しない", async ({ page }) =
     await sequencer.click({ position: { x: 100, y: 171 } });
     await expect(sequencer.locator(".note")).toHaveCount(1);
     await sequencer.locator(".note").dblclick();
-    await sequencer.locator(".lyric-input").fill("あ");
+    await lyricInput.fill("あ");
   });
 
   await test.step("歌詞の入力欄内でSpaceを押すと空白が入り再生しない", async () => {
-    const lyricInput = sequencer.locator(".lyric-input");
     await expect(lyricInput).toBeFocused();
     await lyricInput.press("End");
     await lyricInput.press("Space");
@@ -284,10 +284,9 @@ test("ソングの入力欄内ではSpaceで再生しない", async ({ page }) =
   });
 
   await test.step("歌詞の入力を終えるとSpaceで再生できる", async () => {
-    const lyricInput = sequencer.locator(".lyric-input");
     await lyricInput.fill("あ");
     await lyricInput.press("Enter");
-    await expect(sequencer.locator(".lyric-input")).not.toBeVisible();
+    await expect(lyricInput).not.toBeVisible();
     await page.keyboard.press("Space");
     await expect(stopButton).toBeVisible();
     await page.keyboard.press("Space");
@@ -383,7 +382,7 @@ test("再生・停止のキー割り当てを変更すると両エディタで�
   const songStopButton = page.getByRole("button").filter({ hasText: "stop" });
   const sequencer = page.getByLabel("シーケンサ");
 
-  await test.step("両エディタに再生するデータを用意する", async () => {
+  await test.step("トークに再生するテキストを用意する", async () => {
     await fillAudioCell(
       page,
       0,
