@@ -3536,6 +3536,27 @@ export const songStorePlugins: StorePlugins = [
         void store.actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       },
     );
+
+    // ソングの再生デバイスを同期
+    store.watch(
+      (state) => state.savingSetting.audioOutputDevice,
+      (device) => {
+        // audioContextはブラウザ環境でのみ作られる
+        if (audioContext == undefined) return;
+        void store.actions.APPLY_DEVICE_ID_TO_AUDIO_CONTEXT({ device });
+      },
+      { immediate: true },
+    );
+
+    // トラック数が1から増えたら、サイドバーを開く
+    store.watch(
+      (state) => state.tracks.size,
+      (tracksSize, oldTracksSize) => {
+        if (oldTracksSize <= 1 && tracksSize > 1) {
+          void store.actions.SET_SONG_SIDEBAR_OPEN({ isSongSidebarOpen: true });
+        }
+      },
+    );
   },
 ];
 
