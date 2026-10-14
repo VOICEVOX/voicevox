@@ -22,13 +22,7 @@ export async function resumeAudioContext(): Promise<void> {
   const context = getAudioContext();
   // TODO: interruptedも考慮する
   if (context.state === "suspended") {
-    await context.resume().catch((error: unknown) => {
-      logger.error("Failed to resume AudioContext.", error);
-      void showAlertDialog({
-        title: "エラー",
-        message: "音声の再生を開始できませんでした",
-      });
-    });
+    await context.resume();
   }
 }
 

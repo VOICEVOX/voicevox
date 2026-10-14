@@ -105,6 +105,7 @@ import {
 } from "@/song/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/song/workaroundKeyRangeAdjustment";
 import { createLogger } from "@/helpers/log";
+import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/song/utaformatixProject/toVoicevox";
@@ -2118,7 +2119,16 @@ export const songStore = createPartialStore<SongStoreTypes>({
       _,
       { noteNumber, duration }: { noteNumber: number; duration?: number },
     ) {
-      await resumeAudioContext();
+      try {
+        await resumeAudioContext();
+      } catch (error) {
+        logger.error("Failed to resume AudioContext.", error);
+        void showAlertDialog({
+          title: "エラー",
+          message: "音声の再生を開始できませんでした",
+        });
+        return;
+      }
       const { previewSynth } = getSongAudioGraph();
       previewSynth.noteOn("immediately", noteNumber, duration);
     },
