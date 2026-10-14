@@ -1287,7 +1287,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action: createUILockAction(async ({ actions, state }, { audioKey }) => {
       const audioItem = cloneWithUnwrapProxy(state.audioItems[audioKey]);
       const audioQuery = ensureNotNullish(audioItem.query);
-      const { stream } = await actions.FETCH_AUDIO_STREAM({
+      const { stream } = await actions.PREPARE_AUDIO_FOR_PLAYBACK({
         audioItem,
         playbackStartPosition: 0,
       });
@@ -1321,7 +1321,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  FETCH_AUDIO_STREAM: {
+  PREPARE_AUDIO_FOR_PLAYBACK: {
     async action(
       { state, getters, actions },
       { signal, playbackStartPosition, audioItem },

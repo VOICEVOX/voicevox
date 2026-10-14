@@ -221,7 +221,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
           );
 
           const { stream, streamOffset, isStreamingSynthesis } =
-            await actions.FETCH_AUDIO_STREAM({
+            await actions.PREPARE_AUDIO_FOR_PLAYBACK({
               audioItem,
               playbackStartPosition,
               signal,
@@ -262,7 +262,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
 
         await playContinuously(audioKeys, {
           async fetchAudio({ audioKey, abortSignal }) {
-            return actions.FETCH_AUDIO_STREAM({
+            return actions.PREPARE_AUDIO_FOR_PLAYBACK({
               audioItem: state.audioItems[audioKey],
               signal: AbortSignal.any([signal, abortSignal]),
               playbackStartPosition:

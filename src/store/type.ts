@@ -424,9 +424,10 @@ export type AudioStoreTypes = {
   };
 
   /**
-   * audioItemの音声を適切なAPIから、あるいはキャッシュから取得する。
+   * audioItemと再生開始位置を元に、音声とそれを何秒から再生すべきかを、適切なAPIからあるいはキャッシュから取得・計算する。
    */
-  FETCH_AUDIO_STREAM: {
+  // NOTE: この関数が返すのは音声だけではなく再生開始位置も含まれるため、FETCHとは呼ばずPREPAREとした。
+  PREPARE_AUDIO_FOR_PLAYBACK: {
     action(payload: {
       audioItem: AudioItem;
       signal?: AbortSignal;
@@ -436,7 +437,7 @@ export type AudioStoreTypes = {
       stream: ReadableStream<Uint8Array>;
       /** streamを先頭から読み飛ばすべき量（秒）。 */
       streamOffset: number;
-      /** 今回ストリーミング合成APIで取得した音声か。キャッシュの場合はfalse。 */
+      /** 今回ストリーミング合成APIで取得した音声か。キャッシュの場合は常にfalse。 */
       isStreamingSynthesis: boolean;
     }>;
   };
