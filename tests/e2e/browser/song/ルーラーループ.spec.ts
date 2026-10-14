@@ -95,6 +95,13 @@ test("中央の高さで両方のループハンドルをドラッグできる",
       await expect(getQuasarMenu(page, "ループ範囲を削除")).toBeVisible();
       await expect(getQuasarMenu(page, "コピー")).toBeHidden();
       await page.keyboard.press("Escape");
+      await ruler.click({
+        button: "right",
+        position: { x: before.x + 6 - rulerBox.x, y: 20 },
+      });
+      await expect(getQuasarMenu(page, "テンポ変化を挿入")).toBeVisible();
+      await expect(getQuasarMenu(page, "ループ範囲を削除")).toBeHidden();
+      await page.keyboard.press("Escape");
       await page.mouse.move(before.x + 6, rulerBox.y + 16);
       await page.mouse.down();
       await page.mouse.move(before.x + 6 + 40, rulerBox.y + 16, { steps: 5 });
@@ -107,7 +114,7 @@ test("中央の高さで両方のループハンドルをドラッグできる",
         .poll(async () => ensureNotNullish(await handle.boundingBox()).x)
         .toBe(preview.x);
       expect(ensureNotNullish(await other.boundingBox()).x).toBe(otherBefore.x);
-      await expect(ruler.locator(".loop-lane")).not.toHaveClass(/is-dragging/);
+      await expect(ruler.locator(".loop-bar")).not.toHaveClass(/is-dragging/);
     });
   }
 });
@@ -149,7 +156,7 @@ test("ルーラーの左クリックの既存動作を維持する", async ({ pa
   await test.step("ループ範囲の左クリックで有効・無効を切り替える", async () => {
     await ruler.click({ button: "right", position: { x: 100, y: 5 } });
     await getQuasarMenu(page, "ループ範囲を作成").click();
-    const lane = ruler.locator(".loop-lane");
+    const lane = ruler.locator(".loop-bar");
     await expect(lane).not.toHaveClass(/is-enabled/);
     await ruler.locator(".loop-range-drag-area").click();
     await expect(lane).toHaveClass(/is-enabled/);
