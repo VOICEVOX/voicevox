@@ -26,27 +26,23 @@ export async function resumeAudioContext(): Promise<void> {
   }
 }
 
-async function setAudioContextSinkId(device: string): Promise<void> {
-  if (!context?.setSinkId) return;
-  await using _lock = await sinkIdMutex.acquire();
-  const sinkId = device === "default" ? "" : device;
-  try {
-    await context.setSinkId(sinkId);
-  } catch (error) {
-    logger.error("Failed to set AudioContext sinkId.", error);
-    void showAlertDialog({
-      title: "エラー",
-      message: "再生デバイスが見つかりません",
-    });
-  }
-}
-
 export const audioContextStorePlugins: StorePlugins = [
   (store) => {
     store.watch(
       (state) => state.savingSetting.audioOutputDevice,
-      (device) => {
-        void setAudioContextSinkId(device);
+      async (device) => {
+        if (!context?.setSinkId) return;
+        await using _lock = await sinkIdMutex.acquire();
+        const sinkId = device === "default" ? "" : device;
+        try {
+          await context.setSinkId(sinkId);
+        } catch (error) {
+          logger.error("Failed to set AudioContext sinkId.", error);
+          void showAlertDialog({
+            title: "エラー",
+            message: "再生デバイスが見つかりません",
+          });
+        }
       },
       { immediate: true },
     );
