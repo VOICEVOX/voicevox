@@ -71,6 +71,8 @@ VOICEVOXには、下記のような貢献の仕方があります。
 
 ここからはWindowsをお使いの方が、VOICEVOX（エディタ）の環境を作るケースを想定し、話を進めます。まず、テスト版VOICEVOXの環境を構築しましょう。
 
+macOS・Linuxをお使いの方は、[READMEの環境構築](README.md#環境構築)と[エンジンの準備](README.md#エンジンの準備)も参照してください。
+
 ### 1. 製品版VOICEVOXを導入する
 
 - まず[VOICEVOXの製品版](https://voicevox.hiroshiba.jp/)を導入します。これによりすぐ使えるVOIECVOXエンジンを手に入れることができます。
@@ -130,6 +132,12 @@ pnpm i
 - ツールの組み合わせや実装に関する警告が表示されますが、開発環境を作るうえでは無視して差し支えありません。
 
 ### 6. エンジンを指定する
+
+macOSで製品版の`VOICEVOX.app`を利用する場合は、`.env.example`をコピーして`.env`を作成し、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`/path/to/VOICEVOX.app/Contents/Resources/vv-engine/run`を指定してください。
+`/path/to/VOICEVOX.app`は、実際にアプリを配置したパスに置き換えてください。
+たとえば、`/Applications`に配置した場合は`/Applications/VOICEVOX.app/Contents/Resources/vv-engine/run`です。
+
+以下はWindowsでの設定例です。
 
 - `.env.example`というファイルがありますので、コピーして、名前を`.env`にします。
 - ファイルをエディタでひらいて、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に手順１のフォルダ名をいれます。たとえば製品版をインストーラで導入し、インストール先を変更していない場合は、下記のように書き換えて保存します。
