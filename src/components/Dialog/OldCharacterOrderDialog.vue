@@ -20,10 +20,19 @@
           <QSpace />
 
           <div class="row items-center no-wrap">
-            <BaseToggleGroup v-model="styleType" type="single" class="q-mr-sm">
-              <BaseToggleGroupItem label="トーク" value="talk" />
-              <BaseToggleGroupItem label="ソング" value="singerLike" />
-            </BaseToggleGroup>
+            <QBtnToggle
+              v-model="styleType"
+              unelevated
+              color="toolbar-button"
+              textColor="toolbar-button-display"
+              toggleColor="primary"
+              toggleTextColor="display-on-primary"
+              class="q-mr-sm"
+              :options="[
+                { label: 'トーク', value: 'talk' },
+                { label: 'ソング', value: 'singerLike' },
+              ]"
+            />
             <QBtn
               unelevated
               label="完了"
@@ -111,8 +120,6 @@ import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
 import { useQuasar } from "quasar";
 import CharacterTryListenCard from "./OldCharacterTryListenCard.vue";
-import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
-import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
 import { useStore } from "@/store";
 import type {
   CharacterInfo,
