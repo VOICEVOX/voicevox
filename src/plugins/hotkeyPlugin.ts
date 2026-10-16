@@ -88,6 +88,20 @@ const isNotSameHotkeyTarget = (a: HotkeyTarget) => (b: HotkeyTarget) => {
 };
 
 /**
+ * テキストボックスなど、キー入力を受け付ける要素かどうか。
+ */
+export const isTextbox = (element: EventTarget | null) => {
+  return (
+    element instanceof HTMLElement &&
+    (element.tagName === "INPUT" ||
+      element.tagName === "SELECT" ||
+      element.tagName === "TEXTAREA" ||
+      element.contentEditable === "true" ||
+      element.contentEditable === "plaintext-only")
+  );
+};
+
+/**
  * ショートカットキーの管理を行うクラス。
  */
 export class HotkeyManager {
@@ -201,17 +215,8 @@ export class HotkeyManager {
           ) {
             return;
           }
-          if (!action.enableInTextbox) {
-            if (
-              element instanceof HTMLElement &&
-              (element.tagName === "INPUT" ||
-                element.tagName === "SELECT" ||
-                element.tagName === "TEXTAREA" ||
-                element.contentEditable === "true" ||
-                element.contentEditable === "plaintext-only")
-            ) {
-              return;
-            }
+          if (!action.enableInTextbox && isTextbox(element)) {
+            return;
           }
           e.preventDefault();
           action.callback(e);
