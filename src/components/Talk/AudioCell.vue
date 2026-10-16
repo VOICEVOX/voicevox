@@ -322,7 +322,7 @@ const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
   if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
     isChangeFlag.value = false;
-    await store.actions.COMMAND_CHANGE_AUDIO_TEXT({
+    await store.actions.COMMAND_CHANGE_AUDIO_ITEM_TEXT({
       audioKey: props.audioKey,
       text: audioTextBuffer.value,
     });

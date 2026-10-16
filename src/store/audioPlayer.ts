@@ -197,7 +197,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     },
   },
 
-  PLAY_AUDIO: {
+  START_PLAYBACK: {
     action: createUILockAction(
       async ({ state, getters, mutations, actions }, { audioKey }) =>
         audioPlayMutex.lock(async (signal) => {
@@ -215,8 +215,8 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
           });
 
           const playbackStartPosition = ensureNotNullish(
-            (await actions.GET_AUDIO_PLAY_OFFSETS({ audioKey })).at(
-              getters.AUDIO_PLAY_START_POINT ?? 0,
+            (await actions.GET_ACCENT_PHRASE_START_TIME({ audioKey })).at(
+              getters.PLAYBACK_START_ACCENT_PHRASE_INDEX ?? 0,
             ),
           );
 
@@ -238,18 +238,19 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     ),
   },
 
-  PLAY_CONTINUOUSLY_AUDIO: {
+  START_CONTINUOUS_PLAYBACK: {
     action: createUILockAction(async ({ state, getters, mutations, actions }) =>
       audioPlayMutex.lock(async (signal) => {
         if (signal.aborted) return;
 
         const currentAudioKey = getters.ACTIVE_AUDIO_KEY;
-        const currentAudioPlayStartPoint = getters.AUDIO_PLAY_START_POINT;
+        const currentAudioPlayStartPoint =
+          getters.PLAYBACK_START_ACCENT_PHRASE_INDEX;
 
         const startAudioKey = currentAudioKey ?? state.audioKeys[0];
         const playbackStartPosition = ensureNotNullish(
           (
-            await actions.GET_AUDIO_PLAY_OFFSETS({
+            await actions.GET_ACCENT_PHRASE_START_TIME({
               audioKey: startAudioKey,
             })
           ).at(currentAudioPlayStartPoint ?? 0),
@@ -276,7 +277,9 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               currentPlayState: { type: "preparing" },
             });
             if (currentAudioKey !== audioKey) {
-              mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
+              mutations.SET_PLAYBACK_START_ACCENT_PHRASE_INDEX({
+                startPoint: undefined,
+              });
             }
           },
 
@@ -296,7 +299,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
           },
         }).finally(() => {
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: currentAudioKey });
-          mutations.SET_AUDIO_PLAY_START_POINT({
+          mutations.SET_PLAYBACK_START_ACCENT_PHRASE_INDEX({
             startPoint: currentAudioPlayStartPoint,
           });
           mutations.SET_NOW_PLAYING_CONTINUOUSLY({ nowPlaying: false });
@@ -305,7 +308,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
     ),
   },
 
-  STOP_AUDIO: {
+  STOP_PLAYBACK: {
     action() {
       return audioPlayMutex.abort();
     },
