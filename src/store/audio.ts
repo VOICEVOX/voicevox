@@ -1322,8 +1322,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       //   - 開始時刻は、ストリーミングAPIでは呼び出し側から要求された開始時刻、それ以外のAPIでは0になる。
       // - もしキャッシュが存在していて、再生しようとしている時刻からの音声を含んでいる場合は、キャッシュから再生する。
       //   - ここで、「再生しようとしている時刻からの音声を含んでいる場合」はキャッシュの開始時刻が呼び出し側から要求された開始時刻よりも前かどうかで判定する。
-      const { id: cacheKey, engineAudioQuery: audioQuery } =
-        await generateUniqueIdAndQuery(state, audioItem);
+      const { id: cacheKey, audioQuery } = await generateUniqueIdAndQuery(
+        state,
+        audioItem,
+      );
       const cached = audioCache.get(cacheKey);
       if (cached && cached.startsAt <= playbackStartPosition) {
         return {
