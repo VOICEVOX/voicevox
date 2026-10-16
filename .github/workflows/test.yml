@@ -240,15 +240,8 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run markdownlint
       - run: pnpm run typos
-
       # ubuntu-latestにはShellCheckが入っているので、run:のシェルスクリプトも検査される
-      - name: Check workflow files
-        run: |
-          curl -fLO --retry 3 --retry-delay 5 \
-            "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz"
-          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint_1.7.12_linux_amd64.tar.gz" | sha256sum --check
-          tar -xzf actionlint_1.7.12_linux_amd64.tar.gz actionlint
-          ./actionlint
+      - run: pnpm run jactionlint
 
       - name: Check pinact
         uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
