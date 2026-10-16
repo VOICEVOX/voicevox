@@ -9,7 +9,6 @@ import {
   type AudioStoreTypes,
   type AudioCommandStoreTypes,
   transformCommandStore,
-  type FetchAudioResult,
   type EditorAudioQuery,
 } from "./type";
 import {
@@ -1285,19 +1284,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  FETCH_AUDIO: {
-    action: createUILockAction(async ({ actions, state }, { audioKey }) => {
-      const audioItem = cloneWithUnwrapProxy(state.audioItems[audioKey]);
-      const audioQuery = ensureNotNullish(audioItem.query);
-      const { stream } = await actions.PREPARE_AUDIO_FOR_PLAYBACK({
-        audioItem,
-        playbackStartPosition: 0,
-      });
-      const blob = await new Response(stream).blob();
-      return { audioQuery, blob };
-    }),
-  },
-
   IS_STREAMING_SYNTHESIS_SUPPORTED: {
     getter: (state, getters) => (audioItem: AudioItem) => {
       // # ストリーミング対応の条件
@@ -1455,9 +1441,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           filePath = await generateUniqueFilePath(filePath);
         }
 
-        let fetchAudioResult: FetchAudioResult;
+        let blob: Blob;
+        let audioQuery: EditorAudioQuery;
         try {
-          fetchAudioResult = await actions.FETCH_AUDIO({ audioKey });
+          const { stream } = await actions.PREPARE_AUDIO_FOR_PLAYBACK({
+            audioItem: state.audioItems[audioKey],
+            playbackStartPosition: 0,
+          });
+          blob = await new Response(stream).blob();
+          audioQuery = ensureNotNullish(state.audioItems[audioKey].query);
         } catch (e) {
           const errorMessage = handlePossiblyNotMorphableError(e);
           return {
@@ -1467,7 +1459,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           };
         }
 
-        const { blob, audioQuery } = fetchAudioResult;
         try {
           await window.backend
             .writeFile({
@@ -1609,19 +1600,20 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const labs: string[] = [];
         const texts: string[] = [];
 
-        const base64Encoder = async (blob: Blob): Promise<string> => {
-          const arrayBuffer = await blob.arrayBuffer();
-          return toBase64(new Uint8Array(arrayBuffer));
-        };
-
         const totalCount = state.audioKeys.length;
         let finishedCount = 0;
 
         let labOffset = 0;
         for (const audioKey of state.audioKeys) {
-          let fetchAudioResult: FetchAudioResult;
+          let arrayBuffer: ArrayBuffer;
+          let audioQuery: EditorAudioQuery;
           try {
-            fetchAudioResult = await actions.FETCH_AUDIO({ audioKey });
+            const { stream } = await actions.PREPARE_AUDIO_FOR_PLAYBACK({
+              audioItem: state.audioItems[audioKey],
+              playbackStartPosition: 0,
+            });
+            arrayBuffer = await new Response(stream).arrayBuffer();
+            audioQuery = ensureNotNullish(state.audioItems[audioKey].query);
           } catch (e) {
             const errorMessage = handlePossiblyNotMorphableError(e);
             return {
@@ -1633,8 +1625,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             callback?.(++finishedCount, totalCount);
           }
 
-          const { blob, audioQuery } = fetchAudioResult;
-          const encodedBlob = await base64Encoder(blob);
+          const encodedBlob = await toBase64(new Uint8Array(arrayBuffer));
           if (encodedBlob == undefined) {
             return { result: "WRITE_ERROR", path: filePath };
           }

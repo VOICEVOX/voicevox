@@ -102,11 +102,6 @@ export type AudioItem = {
   morphingInfo?: MorphingInfo;
 };
 
-export type FetchAudioResult = {
-  audioQuery: EditorAudioQuery;
-  blob: Blob;
-};
-
 export type Command = {
   id: CommandId;
   undoPatches: Patch[];
@@ -416,11 +411,6 @@ export type AudioStoreTypes = {
 
   GET_ACCENT_PHRASE_START_TIME: {
     action(payload: { audioKey: AudioKey }): number[];
-  };
-
-  // TODO: 将来的にはFETCH_AUDIO_STREAMに統合する
-  FETCH_AUDIO: {
-    action(payload: { audioKey: AudioKey }): Promise<FetchAudioResult>;
   };
 
   /**
