@@ -331,10 +331,11 @@ const fetchAudioStream = async (phrase: AccentPhrase) => {
 
   audioItem.query.accentPhrases = [phrase];
 
-  const { stream, streamOffset } = await store.actions.FETCH_AUDIO_STREAM({
-    audioItem,
-    playbackStartPosition: 0,
-  });
+  const { stream, streamOffset } =
+    await store.actions.PREPARE_AUDIO_FOR_PLAYBACK({
+      audioItem,
+      playbackStartPosition: 0,
+    });
   return { stream, streamOffset };
 };
 
