@@ -446,10 +446,6 @@ export type AudioStoreTypes = {
     getter: (audioItem: AudioItem) => boolean;
   };
 
-  CONNECT_AUDIO: {
-    action(payload: { encodedBlobs: string[] }): Blob | null;
-  };
-
   GENERATE_AND_SAVE_AUDIO_FILE: {
     action(payload: {
       audioKey: AudioKey;

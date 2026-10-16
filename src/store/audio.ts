@@ -1420,31 +1420,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  CONNECT_AUDIO: {
-    action: createUILockAction(
-      async (
-        { actions, state },
-        { encodedBlobs }: { encodedBlobs: string[] },
-      ) => {
-        const engineId: EngineId | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
-        if (engineId == undefined)
-          throw new Error(`No such engine registered: index == 0`);
-
-        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-          engineId,
-        });
-        try {
-          return instance.invoke("connectWaves")({
-            requestBody: encodedBlobs,
-          });
-        } catch (e) {
-          window.backend.logError(e);
-          return null;
-        }
-      },
-    ),
-  },
-
   GENERATE_AND_SAVE_AUDIO_FILE: {
     action: createUILockAction(
       async (
@@ -1681,10 +1656,20 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           );
         }
 
-        const connectedWav = await actions.CONNECT_AUDIO({
-          encodedBlobs,
+        const engineId: EngineId | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
+        if (engineId == undefined)
+          throw new Error(`No such engine registered: index == 0`);
+
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
         });
-        if (!connectedWav) {
+        let connectedWav: Blob;
+        try {
+          connectedWav = await instance.invoke("connectWaves")({
+            requestBody: encodedBlobs,
+          });
+        } catch (e) {
+          window.backend.logError(e);
           return { result: "ENGINE_ERROR", path: filePath };
         }
 
