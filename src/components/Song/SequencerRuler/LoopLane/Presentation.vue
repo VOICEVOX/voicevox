@@ -1,103 +1,108 @@
 <template>
   <div
     class="loop-lane"
-    :class="{
-      'is-enabled': isLoopEnabled,
-      'is-dragging': isDragging,
-      'is-range-zero': isLoopRangeZero,
-      [cursorClass]: true,
-    }"
     :style="{ width: `${width}px` }"
-    @click.stop
-    @mouseup.stop
-    @mousemove="handleLaneMouseMove"
-    @mouseenter="handleLaneMouseEnter"
-    @mouseleave="handleLaneMouseLeave"
     @contextmenu.prevent="handleContextMenu"
   >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      :width
-      :height="24"
-      shape-rendering="crispEdges"
-      style="pointer-events: none"
+    <div
+      class="loop-bar"
+      :class="{
+        'is-enabled': isLoopEnabled,
+        'is-dragging': isDragging,
+        'is-range-zero': isLoopRangeZero,
+        [cursorClass]: true,
+      }"
+      :style="{ width: `${width}px` }"
+      @click.stop
+      @mouseup.stop
+      @mousemove="handleLaneMouseMove"
+      @mouseenter="handleLaneMouseEnter"
+      @mouseleave="handleLaneMouseLeave"
     >
-      <!-- 背景クリックエリア（12px高） -->
-      <rect
-        x="0"
-        y="0"
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
         :width
-        height="12"
-        fill="transparent"
-        style="pointer-events: auto"
-        @mousedown.stop="handleLoopAreaMouseDown"
-      />
-      <!-- ループ範囲 -->
-      <g v-if="!isLoopRangeZero" class="loop-range-group">
+        :height="24"
+        shape-rendering="crispEdges"
+        style="pointer-events: none"
+      >
+        <!-- 背景クリックエリア（12px高） -->
         <rect
-          :x="loopStartX - offset + 2"
+          x="0"
           y="0"
-          :width="Math.max(loopEndX - loopStartX - 6, 0)"
-          height="5"
-          rx="2"
-          ry="2"
-          class="loop-range"
-        />
-        <!-- ループ範囲のドラッグエリア(クリックしやすくするためループ範囲よりも大きい) -->
-        <rect
-          :x="loopStartX - offset + 4"
-          y="0"
-          :width="Math.max(loopEndX - loopStartX - 8, 0)"
+          :width
           height="12"
-          class="loop-range-drag-area"
+          fill="transparent"
           style="pointer-events: auto"
-          @click.stop="handleLoopRangeClick"
-          @mousedown.stop
-          @mouseenter="handleLoopRangeMouseEnter"
-          @mouseleave="handleLoopRangeMouseLeave"
+          @mousedown.stop="handleLoopAreaMouseDown"
         />
-      </g>
-      <!-- ループ開始ハンドル -->
-      <g class="loop-handle-group">
-        <path
-          :d="handlePath(loopStartX - offset - 2)"
-          class="loop-handle loop-handle-start"
-          :class="{ 'is-range-zero': isLoopRangeZero }"
-          style="pointer-events: auto"
-          @mousedown.stop="handleLoopStartMouseDown"
-        />
-        <!-- 開始ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
-        <rect
-          :x="loopStartX - offset - 5"
-          y="0"
-          width="12"
-          height="24"
-          class="loop-handle-drag-area"
-          style="pointer-events: auto"
-          @mousedown.stop="handleLoopStartMouseDown"
-        />
-      </g>
-      <!-- ループ終了ハンドル -->
-      <g class="loop-handle-group">
-        <path
-          :d="handlePath(loopEndX - offset - 2)"
-          class="loop-handle loop-handle-end"
-          :class="{ 'is-range-zero': isLoopRangeZero }"
-          style="pointer-events: auto"
-          @mousedown.stop="handleLoopEndMouseDown"
-        />
-        <!-- 終了ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
-        <rect
-          :x="loopEndX - offset - 5"
-          y="0"
-          width="12"
-          height="24"
-          class="loop-handle-drag-area"
-          style="pointer-events: auto"
-          @mousedown.stop="handleLoopEndMouseDown"
-        />
-      </g>
-    </svg>
+        <!-- ループ範囲 -->
+        <g v-if="!isLoopRangeZero" class="loop-range-group">
+          <rect
+            :x="loopStartX - offset + 2"
+            y="0"
+            :width="Math.max(loopEndX - loopStartX - 6, 0)"
+            height="5"
+            rx="2"
+            ry="2"
+            class="loop-range"
+          />
+          <!-- ループ範囲のドラッグエリア(クリックしやすくするためループ範囲よりも大きい) -->
+          <rect
+            :x="loopStartX - offset + 4"
+            y="0"
+            :width="Math.max(loopEndX - loopStartX - 8, 0)"
+            height="12"
+            class="loop-range-drag-area"
+            style="pointer-events: auto"
+            @click.stop="handleLoopRangeClick"
+            @mousedown.stop
+            @mouseenter="handleLoopRangeMouseEnter"
+            @mouseleave="handleLoopRangeMouseLeave"
+          />
+        </g>
+        <!-- ループ開始ハンドル -->
+        <g class="loop-handle-group">
+          <path
+            :d="handlePath(loopStartX - offset - 2)"
+            class="loop-handle loop-handle-start"
+            :class="{ 'is-range-zero': isLoopRangeZero }"
+            style="pointer-events: auto"
+            @mousedown.stop="handleLoopStartMouseDown"
+          />
+          <!-- 開始ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
+          <rect
+            :x="loopStartX - offset - 5"
+            y="0"
+            width="12"
+            height="24"
+            class="loop-handle-drag-area"
+            style="pointer-events: auto"
+            @mousedown.stop="handleLoopStartMouseDown"
+          />
+        </g>
+        <!-- ループ終了ハンドル -->
+        <g class="loop-handle-group">
+          <path
+            :d="handlePath(loopEndX - offset - 2)"
+            class="loop-handle loop-handle-end"
+            :class="{ 'is-range-zero': isLoopRangeZero }"
+            style="pointer-events: auto"
+            @mousedown.stop="handleLoopEndMouseDown"
+          />
+          <!-- 終了ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
+          <rect
+            :x="loopEndX - offset - 5"
+            y="0"
+            width="12"
+            height="24"
+            class="loop-handle-drag-area"
+            style="pointer-events: auto"
+            @mousedown.stop="handleLoopEndMouseDown"
+          />
+        </g>
+      </svg>
+    </div>
     <ContextMenu :menudata="contextMenuData" />
   </div>
 </template>
@@ -205,8 +210,17 @@ const handleLoopRangeMouseLeave = () => {
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
 
-// ループ背景
+// ループのレーン（上端20px、右クリックでループのメニューを出す範囲）
 .loop-lane {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  pointer-events: auto;
+}
+
+// ループ背景
+.loop-bar {
   border-radius: 0;
   height: 6px;
   position: absolute;
@@ -280,7 +294,7 @@ const handleLoopRangeMouseLeave = () => {
 }
 
 // ホバー時のハンドル強調（ドラッグ中以外）
-.loop-lane:not(.is-dragging) {
+.loop-bar:not(.is-dragging) {
   .loop-handle-group:hover {
     .loop-handle {
       opacity: 1;
@@ -289,7 +303,7 @@ const handleLoopRangeMouseLeave = () => {
 }
 
 // ループ有効時
-.loop-lane.is-enabled {
+.loop-bar.is-enabled {
   .loop-range {
     fill: var(--scheme-color-primary);
     opacity: 0.5; // TODO: 透明度はSASSまたはCSS変数で一括管理する
@@ -313,7 +327,7 @@ const handleLoopRangeMouseLeave = () => {
 }
 
 // ループ無効時
-.loop-lane:not(.is-enabled):not(.is-dragging) {
+.loop-bar:not(.is-enabled):not(.is-dragging) {
   .loop-range {
     fill: var(--scheme-color-outline);
     opacity: 0.38;
@@ -339,7 +353,7 @@ const handleLoopRangeMouseLeave = () => {
 }
 
 // ドラッグ中
-.loop-lane.is-dragging {
+.loop-bar.is-dragging {
   // ドラッグ中かつ有効
   &.is-enabled {
     .loop-handle {
@@ -364,7 +378,7 @@ const handleLoopRangeMouseLeave = () => {
 }
 
 // 空の状態のスタイル
-.loop-lane.is-range-zero {
+.loop-bar.is-range-zero {
   // 空かつドラッグ中でない
   &:not(.is-dragging) {
     .loop-range,
