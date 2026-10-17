@@ -1,6 +1,7 @@
 import path from "node:path";
 import {
   BrowserWindow,
+  nativeTheme,
   dialog,
   type MessageBoxOptions,
   type MessageBoxSyncOptions,
@@ -15,7 +16,12 @@ import { createIpcSendProxy, type IpcSendProxy } from "../../ipc";
 import type { IpcSOData } from "../../ipcType";
 import { getAppStateController } from "../../appStateController";
 import { getIpcMainHandleManager } from "../ipcMainHandleManager";
-import { themes } from "@/domain/theme";
+import {
+  getThemeByIsDark,
+  getThemeByName,
+  resolveNativeTheme,
+  themes,
+} from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("MainWindowManager");
@@ -81,8 +87,12 @@ class MainWindowManager {
 
     const configManager = getConfigManager();
     const currentTheme = configManager.get("currentTheme");
-    const backgroundColor = themes.find((value) => value.name == currentTheme)
-      ?.colors.background;
+    nativeTheme.themeSource = resolveNativeTheme(currentTheme, themes);
+    const backgroundColor =
+      currentTheme === "System"
+        ? getThemeByIsDark(nativeTheme.shouldUseDarkColors, themes).colors
+            .background
+        : getThemeByName(currentTheme, themes).colors.background;
 
     const win = new BrowserWindow({
       x: mainWindowState.x,

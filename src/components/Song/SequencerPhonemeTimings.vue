@@ -31,6 +31,7 @@
 import { ref, watch, computed, onUnmounted, onMounted, toRaw } from "vue";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
+import { useTheme } from "@/plugins/themePlugin";
 import { useMounted } from "@/composables/useMounted";
 import { secondToTick } from "@/song/music";
 import { isVowel } from "@/song/domain";
@@ -64,7 +65,7 @@ const props = defineProps<{
 
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
-const isDark = computed(() => store.state.currentTheme === "Dark");
+const { isDark } = useTheme();
 const tempos = computed(() => store.state.tempos);
 const previewPhonemeTiming = computed(() => props.previewPhonemeTiming);
 const phonemeTimingInfos = computed(() => props.phonemeTimingInfos);

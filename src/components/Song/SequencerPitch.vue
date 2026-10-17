@@ -9,6 +9,7 @@ import { ref, watch, computed, onUnmounted, onMounted } from "vue";
 import "pixi.js/unsafe-eval";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
+import { useTheme } from "@/plugins/themePlugin";
 import { frequencyToNoteNumber, secondToTick } from "@/song/music";
 import {
   UNVOICED_PHONEMES,
@@ -42,7 +43,7 @@ const props = defineProps<{
 const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
-const isDark = computed(() => store.state.currentTheme === "Dark");
+const { isDark } = useTheme();
 const tempos = computed(() => store.state.tempos);
 const pitchEditData = computed(() => {
   return store.getters.SELECTED_TRACK.pitchEditData;

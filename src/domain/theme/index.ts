@@ -1,4 +1,5 @@
-import type { ThemeConf } from "@/type/preload";
+import { assertNonNullable } from "@/type/utility";
+import type { NativeThemeType, ThemeConf } from "@/type/preload";
 
 const light = {
   name: "Default",
@@ -39,3 +40,37 @@ const dark = {
 } as const satisfies ThemeConf;
 
 export const themes = [light, dark];
+
+/** テーマ名からテーマを取得する */
+export const getThemeByName = (
+  themeName: ThemeConf["name"],
+  availableThemes: readonly ThemeConf[],
+): ThemeConf => {
+  const theme = availableThemes.find((value) => value.name === themeName);
+  assertNonNullable(theme, `テーマが見つかりません: ${themeName}`);
+  return theme;
+};
+
+/** 明暗状態からテーマを取得する */
+export const getThemeByIsDark = (
+  isDark: boolean,
+  availableThemes: readonly ThemeConf[],
+): ThemeConf => {
+  const theme = availableThemes.find((value) => value.isDark === isDark);
+  assertNonNullable(theme, `テーマが見つかりません: 明暗=${isDark}`);
+  return theme;
+};
+
+/** テーマ設定からNativeのテーマを解決する */
+export const resolveNativeTheme = (
+  themeSetting: string,
+  availableThemes: readonly ThemeConf[],
+): NativeThemeType => {
+  if (themeSetting === "System") {
+    return "system";
+  }
+
+  return getThemeByName(themeSetting, availableThemes).isDark
+    ? "dark"
+    : "light";
+};

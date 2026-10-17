@@ -5,13 +5,13 @@ import { withThemeByDataAttribute } from "@storybook/addon-themes";
 import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { store, storeKey } from "@/store";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { themePlugin, useTheme } from "@/plugins/themePlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "@/styles/_index.scss";
-import { UnreachableError } from "@/type/utility";
-import { setThemeToCss, setFontToCss } from "@/domain/dom";
-import { themes } from "@/domain/theme";
+import { setFontToCss } from "@/domain/dom";
+import { getThemeByIsDark } from "@/domain/theme";
 
 setup((app) => {
   app.use(Quasar, {
@@ -31,6 +31,7 @@ setup((app) => {
   });
   app.use(markdownItPlugin);
   app.use(store, storeKey);
+  app.use(themePlugin);
 });
 
 const preview: Preview = {
@@ -75,8 +76,13 @@ const preview: Preview = {
     // テーマの設定をCSSへ反映する
     () => {
       let observer: MutationObserver | undefined = undefined;
+      let themeManager: ReturnType<typeof useTheme>;
       return {
-        async mounted() {
+        setup() {
+          themeManager = useTheme();
+          themeManager.setCurrentTheme("Default");
+        },
+        mounted() {
           setFontToCss("default");
 
           const root = document.documentElement;
@@ -86,11 +92,12 @@ const preview: Preview = {
             if (lastIsDark === isDark) return;
             lastIsDark = isDark;
 
-            const theme = themes.find((theme) => theme.isDark === isDark);
-            if (!theme)
-              throw new UnreachableError("assert: theme !== undefined");
+            const theme = getThemeByIsDark(
+              isDark,
+              themeManager.availableThemes.value,
+            );
 
-            setThemeToCss(theme);
+            themeManager.setCurrentTheme(theme.name);
           });
 
           observer.observe(root, {

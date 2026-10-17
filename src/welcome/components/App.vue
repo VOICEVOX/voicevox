@@ -34,11 +34,17 @@ import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { provideWelcomeStore } from "@/welcome/store";
+import { useTheme } from "@/plugins/themePlugin";
 
 const store = provideWelcomeStore();
+const { setCurrentTheme } = useTheme();
+setCurrentTheme("Default");
 
 onMounted(() => {
   store.initialize();
+  void window.welcomeBackend
+    .getCurrentTheme()
+    .then((themeSetting) => setCurrentTheme(themeSetting));
 });
 </script>
 
