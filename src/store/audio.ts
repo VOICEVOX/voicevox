@@ -1443,15 +1443,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           filePath = await generateUniqueFilePath(filePath);
         }
 
-        let blob: Blob;
-        let audioQuery: EditorAudioQuery;
+        let arrayBuffer: ArrayBuffer;
         try {
           const { stream } = await actions.PREPARE_AUDIO_FOR_PLAYBACK({
             audioItem: state.audioItems[audioKey],
             playbackStartPosition: 0,
           });
-          blob = await new Response(stream).blob();
-          audioQuery = ensureNotNullish(state.audioItems[audioKey].query);
+          arrayBuffer = await new Response(stream).arrayBuffer();
         } catch (e) {
           const errorMessage = handlePossiblyNotMorphableError(e);
           return {
@@ -1461,11 +1459,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           };
         }
 
+        const audioQuery = ensureNotNullish(state.audioItems[audioKey].query);
+
         try {
           await window.backend
             .writeFile({
               filePath,
-              buffer: await blob.arrayBuffer(),
+              buffer: arrayBuffer,
             })
             .then(getValueOrThrow);
 
@@ -1608,14 +1608,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         let labOffset = 0;
         for (const audioKey of state.audioKeys) {
           let arrayBuffer: ArrayBuffer;
-          let audioQuery: EditorAudioQuery;
           try {
             const { stream } = await actions.PREPARE_AUDIO_FOR_PLAYBACK({
               audioItem: state.audioItems[audioKey],
               playbackStartPosition: 0,
             });
             arrayBuffer = await new Response(stream).arrayBuffer();
-            audioQuery = ensureNotNullish(state.audioItems[audioKey].query);
           } catch (e) {
             const errorMessage = handlePossiblyNotMorphableError(e);
             return {
@@ -1626,6 +1624,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           } finally {
             callback?.(++finishedCount, totalCount);
           }
+
+          const audioQuery = ensureNotNullish(state.audioItems[audioKey].query);
 
           const encodedBlob = await toBase64(new Uint8Array(arrayBuffer));
           if (encodedBlob == undefined) {
