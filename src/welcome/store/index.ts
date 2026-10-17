@@ -360,6 +360,7 @@ function createWelcomeStore() {
     void applyThemeFromConfig().then(() => {
       void window.welcomeBackend.displayReady();
     });
+
     await fetchEngineInfos();
 
     // Windows版インストーラーでインストール開始したあと、追加操作無しでエディターを起動するためのワークアラウンド
