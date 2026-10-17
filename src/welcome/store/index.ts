@@ -302,7 +302,9 @@ function createWelcomeStore() {
       },
     });
     void loadEngineEmbeddedInfos();
-    void applyThemeFromConfig();
+    void applyThemeFromConfig().then(() => {
+      void window.welcomeBackend.displayReady();
+    });
   };
 
   return {
