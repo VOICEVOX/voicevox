@@ -357,7 +357,9 @@ function createWelcomeStore() {
         setEngineProgress(engineId, { progress, type });
       },
     });
-    void applyThemeFromConfig();
+    void applyThemeFromConfig().then(() => {
+      void window.welcomeBackend.displayReady();
+    });
     await fetchEngineInfos();
 
     // Windows版インストーラーでインストール開始したあと、追加操作無しでエディターを起動するためのワークアラウンド

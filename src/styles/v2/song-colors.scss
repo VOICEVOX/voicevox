@@ -361,6 +361,44 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-10) var(--neutral-c) var(--neutral-h) / 20%
   );
 
+  /* 音素タイミング編集: ノートの基準位置と、操作する音素境界を分けて示す */
+  --scheme-color-song-phoneme-band-container: oklch(
+    var(--lr-90) var(--secondary-c) var(--secondary-h) / 60%
+  );
+  --scheme-color-song-phoneme-band-container-hover: oklch(
+    var(--lr-90) var(--secondary-c) var(--secondary-h) / 90%
+  );
+  --scheme-color-song-phoneme-bound-head: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h) / 55%
+  );
+  --scheme-color-song-phoneme-bound-follow: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h) / 40%
+  );
+  --scheme-color-song-phoneme-bound-hover: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h) / 85%
+  );
+  --scheme-color-song-phoneme-bound-edited: oklch(
+    var(--lr-45) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-song-phoneme-bound-editing: oklch(
+    var(--lr-40) 0.186 var(--primary-h)
+  );
+  --scheme-color-song-phoneme-label: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h) / 85%
+  );
+  --scheme-color-song-phoneme-label-hover: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-song-phoneme-bridge: oklch(
+    var(--lr-70) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-song-phoneme-bridge-hover: oklch(
+    var(--lr-45) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-song-phoneme-ghost: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h) / 25%
+  );
+
   /* ボリューム編集: 編集履歴によらず、現在の実効線と端点を同じ色で示す。
      減衰はエラーではないため、増幅と同じ緑の面を0dBの上下で読み分ける。 */
   --scheme-color-song-volume-zero-line: oklch(
@@ -663,6 +701,44 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-90) var(--neutral-c) var(--neutral-h) / 20%
   );
 
+  /* 音素タイミング編集: ノートの基準位置と、操作する音素境界を分けて示す */
+  --scheme-color-song-phoneme-band-container: oklch(
+    var(--lr-45) var(--secondary-c) var(--secondary-h) / 55%
+  );
+  --scheme-color-song-phoneme-band-container-hover: oklch(
+    var(--lr-50) var(--secondary-c) var(--secondary-h) / 80%
+  );
+  --scheme-color-song-phoneme-bound-head: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h) / 70%
+  );
+  --scheme-color-song-phoneme-bound-follow: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h) / 50%
+  );
+  --scheme-color-song-phoneme-bound-hover: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-song-phoneme-bound-edited: oklch(
+    var(--lr-85) 0.12 var(--primary-h)
+  );
+  --scheme-color-song-phoneme-bound-editing: oklch(
+    var(--lr-85) 0.136 var(--primary-h)
+  );
+  --scheme-color-song-phoneme-label: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h) / 90%
+  );
+  --scheme-color-song-phoneme-label-hover: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-song-phoneme-bridge: oklch(
+    var(--lr-58) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-song-phoneme-bridge-hover: oklch(
+    var(--lr-88) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-song-phoneme-ghost: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h) / 35%
+  );
+
   /* ボリューム編集: 編集履歴によらず、現在の実効線と端点を同じ色で示す。
      減衰はエラーではないため、増幅と同じ緑の面を0dBの上下で読み分ける。 */
   --scheme-color-song-volume-zero-line: oklch(
@@ -783,4 +859,20 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     --scheme-color-on-surface
   );
   --scheme-color-song-parameter-tooltip-shadow: oklch(var(--lr-0) 0 0 / 5%);
+}
+
+/* 音素タイミング編集: テーマ色から派生する値なので、テーマ別ではなく共通で定義する。 */
+:root {
+  --scheme-color-song-phoneme-row-line: oklch(
+    from var(--scheme-color-on-surface) l c h / 8%
+  );
+  --scheme-color-song-phoneme-note-position: oklch(
+    from var(--scheme-color-on-surface) l c h / 30%
+  );
+  --scheme-color-song-phoneme-chip-delta: oklch(
+    from var(--scheme-color-on-surface) l c h / 55%
+  );
+  --scheme-color-song-phoneme-guide: oklch(
+    from var(--scheme-color-song-phoneme-bound-editing) l c h / 35%
+  );
 }
