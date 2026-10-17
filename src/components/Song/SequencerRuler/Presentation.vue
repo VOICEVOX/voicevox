@@ -4,11 +4,11 @@
       <div class="sequencer-ruler-grid">
         <slot name="grid" />
       </div>
-      <div class="sequencer-ruler-value-changes">
-        <slot name="changes" />
-      </div>
       <div class="sequencer-ruler-loop">
         <slot name="loop" />
+      </div>
+      <div class="sequencer-ruler-value-changes">
+        <slot name="changes" />
       </div>
       <div
         class="sequencer-ruler-playhead"
@@ -68,15 +68,10 @@ const onClick = (event: MouseEvent) => {
   pointer-events: none; // クリック無効
 }
 
-.sequencer-ruler-loop {
-  position: absolute;
-  z-index: 1; // ルーラー内でグリッド線が重なりの影響を受けないようにするため一番上に
-  pointer-events: none; // クリック無効
-}
-
+.sequencer-ruler-loop,
 .sequencer-ruler-value-changes {
-  position: absolute;
-  z-index: 2; // ルーラー内において一番上
+  position: relative;
+  height: 20px;
 }
 
 .sequencer-ruler-playhead {
