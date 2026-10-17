@@ -24,6 +24,7 @@
     "generate-openapi": "tsx tools/generateOpenapi.ts",
     "setup-agents": "rulesync generate",
     "// --- test ---": "",
+    "test:vrt": "node tools/runVrt.ts",
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
     "test-ui:unit": "vitest --ui",

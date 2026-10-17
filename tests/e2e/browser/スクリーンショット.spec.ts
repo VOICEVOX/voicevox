@@ -3,8 +3,11 @@ import { gotoHome, navigateToMain } from "../navigators";
 
 test.beforeEach(gotoHome);
 
-test("メイン画面の表示", async ({ page }) => {
-  test.skip(process.platform !== "win32", "Windows以外のためスキップします");
+test("メイン画面の表示", { tag: "@vrt" }, async ({ page }) => {
+  test.skip(
+    process.env.VRT !== "1",
+    "DockerのVRTランナー以外ではスキップします",
+  );
   await navigateToMain(page);
 
   // トーク画面の表示

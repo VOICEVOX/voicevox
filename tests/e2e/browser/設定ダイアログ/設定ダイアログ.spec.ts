@@ -3,8 +3,11 @@ import { gotoHome, navigateToSettingDialog } from "../../navigators";
 
 test.beforeEach(gotoHome);
 
-test("スクリーンショット", async ({ page }) => {
-  test.skip(process.platform !== "win32", "Windows以外のためスキップします");
+test("スクリーンショット", { tag: "@vrt" }, async ({ page }) => {
+  test.skip(
+    process.env.VRT !== "1",
+    "DockerのVRTランナー以外ではスキップします",
+  );
 
   await navigateToSettingDialog(page);
   await page.waitForTimeout(500);

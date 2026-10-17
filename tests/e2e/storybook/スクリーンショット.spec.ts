@@ -82,7 +82,7 @@ for (const story of currentStories) {
 }
 
 for (const [story, stories] of Object.entries(allStories)) {
-  test.describe(story, () => {
+  test.describe(story, { tag: "@vrt" }, () => {
     for (const story of stories) {
       test.describe(story.name, () => {
         for (const [theme, name] of [
@@ -91,8 +91,8 @@ for (const [story, stories] of Object.entries(allStories)) {
         ] as const) {
           test(`テーマ：${name}`, async ({ page }) => {
             test.skip(
-              process.platform !== "win32",
-              "Windows以外のためスキップします",
+              process.env.VRT !== "1",
+              "DockerのVRTランナー以外ではスキップします",
             );
 
             const params = new URLSearchParams();
@@ -137,8 +137,11 @@ for (const [story, stories] of Object.entries(allStories)) {
   });
 }
 
-test("スクリーンショットの一覧に過不足が無い", async () => {
-  test.skip(process.platform !== "win32", "Windows以外のためスキップします");
+test("スクリーンショットの一覧に過不足が無い", { tag: "@vrt" }, async () => {
+  test.skip(
+    process.env.VRT !== "1",
+    "DockerのVRTランナー以外ではスキップします",
+  );
   const screenshotFiles = await fs.readdir(test.info().snapshotDir);
   const screenshotPaths = screenshotFiles.map((file) =>
     path.join(test.info().snapshotDir, file),
@@ -155,7 +158,7 @@ test("スクリーンショットの一覧に過不足が無い", async () => {
 
   // update-snapshotsが指定されていたら、余分なスクリーンショットを削除する。
   // 指定されていなかったら、スクリーンショットの一覧が一致していることを確認する。
-  if (test.info().config.updateSnapshots === "all") {
+  if (["all", "changed"].includes(test.info().config.updateSnapshots)) {
     for (const screenshot of screenshotPaths) {
       if (!expectedScreenshots.includes(screenshot)) {
         await fs.unlink(screenshot);

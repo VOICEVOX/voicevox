@@ -125,17 +125,6 @@ jobs:
 
           rm .env
 
-      - name: Run pnpm run test:storybook-vrt
-        run: |
-          if [ -n "${{ runner.debug }}" ]; then
-            export DEBUG="pw:browser*"
-          fi
-          ARGS=""
-          if [[ ${{ needs.config.outputs.shouldUpdateSnapshots }} == 'true' ]]; then
-            ARGS="--update-snapshots"
-          fi
-          pnpm run test:storybook-vrt $ARGS
-
       - name: Upload playwright report to artifact
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -160,11 +149,50 @@ jobs:
           name: updated-snapshots-${{ matrix.os }}
           path: patch-${{ matrix.os }}.diff
 
+  vrt-test:
+    runs-on: ubuntu-latest
+    needs: [config]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: ".node-version"
+
+      - name: Run VRT in Docker
+        run: |
+          ARGS=""
+          if [[ ${{ needs.config.outputs.shouldUpdateSnapshots }} == 'true' ]]; then
+            ARGS="--update-snapshots"
+          fi
+          node tools/runVrt.ts $ARGS
+
+      - name: Upload VRT reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report-vrt
+          path: |
+            playwright-report
+            test-results
+
+      - name: Collect patch for snapshots
+        if: needs.config.outputs.shouldUpdateSnapshots == 'true'
+        run: |
+          git add --intent-to-add --all tests/
+          git diff --binary HEAD tests/ > patch-vrt.diff
+
+      - name: Upload patch to artifact
+        if: needs.config.outputs.shouldUpdateSnapshots == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: updated-snapshots-vrt
+          path: patch-vrt.diff
+
   commit-snapshots:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    needs: [config, e2e-test]
+    needs: [config, e2e-test, vrt-test]
     if: needs.config.outputs.shouldUpdateSnapshots == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

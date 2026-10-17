@@ -1,0 +1,8 @@
+**
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!.npmrc
+!.pnpmfile.cjs
+!eslint-plugin
+!eslint-plugin/**
