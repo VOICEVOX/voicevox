@@ -72,6 +72,18 @@ const config: PlaywrightTestConfig = {
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   use: {
+    browserName: "chromium",
+    launchOptions: {
+      // 細かく描画に差異が出る機能を無効化する
+      // https://github.com/microsoft/playwright/issues/8161#issuecomment-3643962063
+      args: [
+        "--disable-gpu",
+        "--disable-font-subpixel-positioning",
+        "--disable-lcd-text",
+        "--disable-checker-imaging",
+        "--force-color-profile=srgb",
+      ],
+    },
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
