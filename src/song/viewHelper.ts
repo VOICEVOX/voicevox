@@ -109,7 +109,7 @@ export const getNumKeys = () => {
 
 export const getStyleDescription = (style: StyleInfo) => {
   const description: string[] = [];
-  if (style.styleType === "talk") {
+  if (style.styleType === "talk" || style.styleType === "streaming_talk") {
     description.push("トーク");
   } else if (style.styleType === "frame_decode") {
     description.push("ハミング");
