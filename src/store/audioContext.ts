@@ -18,14 +18,6 @@ export function getAudioContext(): AudioContext {
   return context;
 }
 
-export async function resumeAudioContext(): Promise<void> {
-  const context = getAudioContext();
-  // TODO: interruptedも考慮する
-  if (context.state === "suspended") {
-    await context.resume();
-  }
-}
-
 export const audioContextStorePlugins: StorePlugins = [
   (store) => {
     store.watch(

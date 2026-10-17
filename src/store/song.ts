@@ -1,9 +1,5 @@
 import { ref } from "vue";
-import {
-  getAudioContext,
-  isAudioContextAvailable,
-  resumeAudioContext,
-} from "./audioContext";
+import { getAudioContext, isAudioContextAvailable } from "./audioContext";
 import { createPartialStore, type StorePlugins } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -2061,7 +2057,19 @@ export const songStore = createPartialStore<SongStoreTypes>({
       if (state.nowPlaying) {
         return;
       }
-      await resumeAudioContext();
+      const audioContext = getAudioContext();
+      try {
+        if (audioContext.state !== "running") {
+          await audioContext.resume();
+        }
+      } catch (error) {
+        logger.error("Failed to resume AudioContext.", error);
+        void showAlertDialog({
+          title: "エラー",
+          message: "音声の再生を開始できませんでした",
+        });
+        return;
+      }
       const { transport } = getSongAudioGraph();
 
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
@@ -2119,8 +2127,11 @@ export const songStore = createPartialStore<SongStoreTypes>({
       _,
       { noteNumber, duration }: { noteNumber: number; duration?: number },
     ) {
+      const audioContext = getAudioContext();
       try {
-        await resumeAudioContext();
+        if (audioContext.state !== "running") {
+          await audioContext.resume();
+        }
       } catch (error) {
         logger.error("Failed to resume AudioContext.", error);
         void showAlertDialog({
