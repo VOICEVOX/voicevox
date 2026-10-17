@@ -33,22 +33,15 @@
         {{ Math.floor(progressInfo.progress) }}%
       </div>
     </div>
+    <EngineRuntimeTargetSelect
+      v-if="latestInfo.type === 'fetched'"
+      :engineId="props.engineId"
+      :availableRuntimeTargets="latestInfo.info.availableRuntimeTargets"
+      :modelValue="selectedRuntimeTarget"
+      :disabled="isControlDisabled"
+      @update:modelValue="handleRuntimeTargetChange"
+    />
     <div class="engine-actions">
-      <div class="engine-target-select">
-        <BaseSelect
-          v-if="latestInfo.type === 'fetched'"
-          :disabled="isControlDisabled"
-          :modelValue="selectedRuntimeTarget"
-          @update:modelValue="handleRuntimeTargetChange"
-        >
-          <BaseSelectItem
-            v-for="targetInfo in latestInfo.info.availableRuntimeTargets"
-            :key="targetInfo.target"
-            :value="targetInfo.target"
-            :label="targetInfo.packageInfo.displayInfo.label"
-          />
-        </BaseSelect>
-      </div>
       <div v-if="latestInfo.type === 'fetchError'" class="engine-fetch-error">
         最新情報の取得に失敗しました。
       </div>
@@ -79,9 +72,8 @@
 <script setup lang="ts">
 import semver from "semver";
 import { computed } from "vue";
+import EngineRuntimeTargetSelect from "./EngineRuntimeTargetSelect.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
-import BaseSelect from "@/components/Base/BaseSelect.vue";
-import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
 import { assertNonNullable, ExhaustiveError } from "@/type/utility";
@@ -188,8 +180,7 @@ const isControlDisabled = computed(() => {
   return progressInfo.value.type !== "idle";
 });
 
-const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {
-  assertNonNullable(value);
+const handleRuntimeTargetChange = (value: RuntimeTarget): void => {
   store.setSelectedRuntimeTarget(props.engineId, value);
 };
 </script>
