@@ -102,7 +102,7 @@ export class SongTrackRendererTestUtility {
           });
           return await mock.singFrameF0({
             speaker: 0,
-            bodySingFrameF0SingFrameF0Post: {
+            bodySingFrameF0: {
               score: { notes: args.notes },
               frameAudioQuery: args.query,
             },
@@ -115,7 +115,7 @@ export class SongTrackRendererTestUtility {
           });
           return await mock.singFrameVolume({
             speaker: 0,
-            bodySingFrameVolumeSingFrameVolumePost: {
+            bodySingFrameVolume: {
               score: { notes: args.notes },
               frameAudioQuery: args.query,
             },
