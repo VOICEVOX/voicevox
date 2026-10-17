@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";
@@ -55,16 +55,6 @@ const setSidebarWidth = (width: number) => {
     sidebarWidth.value = width;
   }
 };
-
-// トラック数が1から増えたら、サイドバーを開く
-watch(
-  () => store.state.tracks.size,
-  (tracksSize, oldTracksSize) => {
-    if (oldTracksSize <= 1 && tracksSize > 1) {
-      void store.actions.SET_SONG_SIDEBAR_OPEN({ isSongSidebarOpen: true });
-    }
-  },
-);
 
 const isCompletedInitialStartup = ref(false);
 // TODO: Vueっぽくないので解体する
