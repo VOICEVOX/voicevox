@@ -83,8 +83,7 @@ export async function generateUniqueIdAndQuery(
     audioQuery,
     state.engineManifests[engineId].defaultSamplingRate,
   );
-  // TODO: audioQuery（EditorAudioQuery）とengineAudioQuery（EngineAudioQuery）の両方を返すのは冗長なので、EngineAudioQueryだけ返すようにする
-  return { id: id as AudioUniqueId, audioQuery, engineAudioQuery };
+  return { id: id as AudioUniqueId, audioQuery: engineAudioQuery };
 }
 
 export function isMorphable(

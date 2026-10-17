@@ -187,7 +187,7 @@ registerHotkeyWithCleanup({
   name: "音声書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.actions.SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG();
+      void store.actions.SHOW_GENERATE_AND_SAVE_ALL_AUDIO_FILE_DIALOG();
     }
   },
 });
@@ -196,7 +196,7 @@ registerHotkeyWithCleanup({
   name: "選択音声を書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.actions.SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG();
+      void store.actions.SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_FILE_DIALOG();
     }
   },
 });
@@ -205,7 +205,7 @@ registerHotkeyWithCleanup({
   name: "音声を繋げて書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.actions.SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG();
+      void store.actions.SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_FILE_DIALOG();
     }
   },
 });

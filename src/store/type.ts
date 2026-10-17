@@ -102,11 +102,6 @@ export type AudioItem = {
   morphingInfo?: MorphingInfo;
 };
 
-export type FetchAudioResult = {
-  audioQuery: EditorAudioQuery;
-  blob: Blob;
-};
-
 export type Command = {
   id: CommandId;
   undoPatches: Patch[];
@@ -177,7 +172,7 @@ export type AudioStoreTypes = {
     getter: AudioKey[];
   };
 
-  AUDIO_PLAY_START_POINT: {
+  PLAYBACK_START_ACCENT_PHRASE_INDEX: {
     getter: number | undefined;
   };
 
@@ -223,7 +218,7 @@ export type AudioStoreTypes = {
     action(payload: { audioKeys?: AudioKey[] }): void;
   };
 
-  SET_AUDIO_PLAY_START_POINT: {
+  SET_PLAYBACK_START_ACCENT_PHRASE_INDEX: {
     mutation: { startPoint?: number };
     action(payload: { startPoint?: number }): void;
   };
@@ -275,35 +270,35 @@ export type AudioStoreTypes = {
     action(): void;
   };
 
-  SET_AUDIO_TEXT: {
+  SET_AUDIO_ITEM_TEXT: {
     mutation: { audioKey: AudioKey; text: string };
   };
 
-  SET_AUDIO_SPEED_SCALE: {
+  SET_AUDIO_ITEM_SPEED_SCALE: {
     mutation: { audioKey: AudioKey; speedScale: number };
   };
 
-  SET_AUDIO_PITCH_SCALE: {
+  SET_AUDIO_ITEM_PITCH_SCALE: {
     mutation: { audioKey: AudioKey; pitchScale: number };
   };
 
-  SET_AUDIO_INTONATION_SCALE: {
+  SET_AUDIO_ITEM_INTONATION_SCALE: {
     mutation: { audioKey: AudioKey; intonationScale: number };
   };
 
-  SET_AUDIO_VOLUME_SCALE: {
+  SET_AUDIO_ITEM_VOLUME_SCALE: {
     mutation: { audioKey: AudioKey; volumeScale: number };
   };
 
-  SET_AUDIO_PAUSE_LENGTH_SCALE: {
+  SET_AUDIO_ITEM_PAUSE_LENGTH_SCALE: {
     mutation: { audioKey: AudioKey; pauseLengthScale: number };
   };
 
-  SET_AUDIO_PRE_PHONEME_LENGTH: {
+  SET_AUDIO_ITEM_PRE_PHONEME_LENGTH: {
     mutation: { audioKey: AudioKey; prePhonemeLength: number };
   };
 
-  SET_AUDIO_POST_PHONEME_LENGTH: {
+  SET_AUDIO_ITEM_POST_PHONEME_LENGTH: {
     mutation: { audioKey: AudioKey; postPhonemeLength: number };
   };
 
@@ -350,7 +345,7 @@ export type AudioStoreTypes = {
     }): Promise<EditorAudioQuery>;
   };
 
-  SET_AUDIO_VOICE: {
+  SET_AUDIO_ITEM_VOICE: {
     mutation: { audioKey: AudioKey; voice: Voice };
   };
 
@@ -375,7 +370,7 @@ export type AudioStoreTypes = {
     };
   };
 
-  SET_AUDIO_MORA_DATA: {
+  SET_AUDIO_ITEM_MORA_DATA: {
     mutation: {
       audioKey: AudioKey;
       accentPhraseIndex: number;
@@ -385,7 +380,7 @@ export type AudioStoreTypes = {
     };
   };
 
-  APPLY_AUDIO_PRESET: {
+  APPLY_AUDIO_ITEM_PRESET: {
     mutation: { audioKey: AudioKey };
   };
 
@@ -414,13 +409,8 @@ export type AudioStoreTypes = {
     getter(audioKey: AudioKey): string;
   };
 
-  GET_AUDIO_PLAY_OFFSETS: {
+  GET_ACCENT_PHRASE_START_TIME: {
     action(payload: { audioKey: AudioKey }): number[];
-  };
-
-  // TODO: 将来的にはFETCH_AUDIO_STREAMに統合する
-  FETCH_AUDIO: {
-    action(payload: { audioKey: AudioKey }): Promise<FetchAudioResult>;
   };
 
   /**
@@ -446,18 +436,14 @@ export type AudioStoreTypes = {
     getter: (audioItem: AudioItem) => boolean;
   };
 
-  CONNECT_AUDIO: {
-    action(payload: { encodedBlobs: string[] }): Blob | null;
-  };
-
-  GENERATE_AND_SAVE_AUDIO: {
+  GENERATE_AND_SAVE_AUDIO_FILE: {
     action(payload: {
       audioKey: AudioKey;
       filePath?: string;
     }): SaveResultObject;
   };
 
-  MULTI_GENERATE_AND_SAVE_AUDIO: {
+  MULTI_GENERATE_AND_SAVE_AUDIO_FILE: {
     action(payload: {
       audioKeys: AudioKey[];
       dirPath?: string;
@@ -465,7 +451,7 @@ export type AudioStoreTypes = {
     }): SaveResultObject[] | "canceled";
   };
 
-  GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
+  GENERATE_AND_CONNECT_AND_SAVE_AUDIO_FILE: {
     action(payload: {
       filePath?: string;
       callback?: (finishedCount: number, totalCount: number) => void;
@@ -476,7 +462,7 @@ export type AudioStoreTypes = {
     action(payload: { filePath?: string }): SaveResultObject | undefined;
   };
 
-  SET_AUDIO_PRESET_KEY: {
+  SET_AUDIO_ITEM_PRESET_KEY: {
     mutation: {
       audioKey: AudioKey;
       presetKey: PresetKey | undefined;
@@ -520,7 +506,7 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: AudioKey; text: string }): void;
   };
 
-  COMMAND_CHANGE_AUDIO_TEXT: {
+  COMMAND_CHANGE_AUDIO_ITEM_TEXT: {
     mutation: { audioKey: AudioKey; text: string } & (
       | { update: "Text" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
@@ -595,7 +581,7 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_SET_AUDIO_MORA_DATA: {
+  COMMAND_SET_AUDIO_ITEM_MORA_DATA: {
     mutation: {
       audioKey: AudioKey;
       accentPhraseIndex: number;
@@ -612,7 +598,7 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE: {
+  COMMAND_SET_AUDIO_ITEM_MORA_DATA_ACCENT_PHRASE: {
     mutation: {
       audioKey: AudioKey;
       accentPhraseIndex: number;
@@ -629,37 +615,37 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_SPEED_SCALE: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_SPEED_SCALE: {
     mutation: { audioKeys: AudioKey[]; speedScale: number };
     action(payload: { audioKeys: AudioKey[]; speedScale: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_PITCH_SCALE: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_PITCH_SCALE: {
     mutation: { audioKeys: AudioKey[]; pitchScale: number };
     action(payload: { audioKeys: AudioKey[]; pitchScale: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_INTONATION_SCALE: {
     mutation: { audioKeys: AudioKey[]; intonationScale: number };
     action(payload: { audioKeys: AudioKey[]; intonationScale: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_VOLUME_SCALE: {
     mutation: { audioKeys: AudioKey[]; volumeScale: number };
     action(payload: { audioKeys: AudioKey[]; volumeScale: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_PAUSE_LENGTH_SCALE: {
     mutation: { audioKeys: AudioKey[]; pauseLengthScale: number };
     action(payload: { audioKeys: AudioKey[]; pauseLengthScale: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_PRE_PHONEME_LENGTH: {
     mutation: { audioKeys: AudioKey[]; prePhonemeLength: number };
     action(payload: { audioKeys: AudioKey[]; prePhonemeLength: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_POST_PHONEME_LENGTH: {
     mutation: { audioKeys: AudioKey[]; postPhonemeLength: number };
     action(payload: { audioKeys: AudioKey[]; postPhonemeLength: number }): void;
   };
@@ -675,7 +661,7 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_PRESET: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_PRESET: {
     mutation: {
       audioKeys: AudioKey[];
       presetKey: PresetKey | undefined;
@@ -686,12 +672,12 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_MULTI_APPLY_AUDIO_PRESET: {
+  COMMAND_MULTI_APPLY_AUDIO_ITEM_PRESET: {
     mutation: { audioKeys: AudioKey[] };
     action(payload: { audioKeys: AudioKey[] }): void;
   };
 
-  COMMAND_FULLY_APPLY_AUDIO_PRESET: {
+  COMMAND_FULLY_APPLY_AUDIO_ITEM_PRESET: {
     mutation: { presetKey: PresetKey };
     action(payload: { presetKey: PresetKey }): void;
   };
@@ -743,11 +729,11 @@ export type AudioPlayerStoreState = {
 };
 
 export type AudioPlayerStoreTypes = {
-  PLAY_AUDIO: {
+  START_PLAYBACK: {
     action(payload: { audioKey: AudioKey }): boolean;
   };
 
-  PLAY_CONTINUOUSLY_AUDIO: {
+  START_CONTINUOUS_PLAYBACK: {
     action(): void;
   };
 
@@ -763,7 +749,7 @@ export type AudioPlayerStoreTypes = {
     mutation: { currentPlayState: CurrentPlayState };
   };
 
-  STOP_AUDIO: {
+  STOP_PLAYBACK: {
     action(): void;
   };
 
@@ -2457,15 +2443,15 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
+  SHOW_GENERATE_AND_SAVE_ALL_AUDIO_FILE_DIALOG: {
     action(): void;
   };
 
-  SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
+  SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_FILE_DIALOG: {
     action(): void;
   };
 
-  SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG: {
+  SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_FILE_DIALOG: {
     action(): void;
   };
 
