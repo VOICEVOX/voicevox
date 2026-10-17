@@ -4,6 +4,7 @@
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import { playContinuously } from "./audioContinuousPlayer";
+import { getAudioContext } from "./audioContext";
 import type {
   AudioPlayerStoreState,
   AudioPlayerStoreTypes,
@@ -11,29 +12,9 @@ import type {
 } from "./type";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ensureNotNullish } from "@/type/utility";
-import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { AbortableMutex } from "@/helpers/abortableMutex";
 import { WavStream } from "@/domain/wavStream";
 import { DisposableTimeout } from "@/helpers/disposableTimeout";
-
-let audioContext: AudioContext | null = null;
-if (window.AudioContext) {
-  audioContext = new AudioContext();
-}
-
-// TODO: AudioContextをアプリケーション内で一つ持つようにして、エラーハンドリングや再生デバイスの切り替えを統一する
-export async function setAudioContextSinkId(device: string) {
-  if (!audioContext?.setSinkId) return;
-  await audioContext
-    .setSinkId(device === "default" ? "" : device)
-    .catch((err: unknown) => {
-      void showAlertDialog({
-        title: "エラー",
-        message: "再生デバイスが見つかりません",
-      });
-      throw err;
-    });
-}
 
 /**
  * WavStreamを再生する。
@@ -58,15 +39,11 @@ export async function playAudioStream(
 ) {
   const samplesPerChunk = 256;
 
-  if (!audioContext) {
-    throw new Error("AudioContext is not supported in this browser.");
-  }
-  // TODO: interruptedも考慮する
-  if (audioContext.state === "suspended") {
-    // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
+  if (cancel.aborted) return;
+  const audioContext = getAudioContext();
+  if (audioContext.state !== "running") {
     await audioContext.resume();
   }
-  if (cancel.aborted) return;
 
   const { promise: cancelledPromise, resolve: resolveCancel } =
     Promise.withResolvers<typeof cancelledMarker>();
@@ -333,7 +310,6 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       });
 
       let delayNotified = false;
-      await setAudioContextSinkId(state.savingSetting.audioOutputDevice);
       await playAudioStream(stream, streamOffset, signal, {
         onDelay() {
           if (
