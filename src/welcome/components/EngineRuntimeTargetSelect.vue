@@ -78,13 +78,14 @@ const emit = defineEmits<{
 
 legend {
   padding: 0;
-  font-weight: 600;
+  font-weight: bold;
 }
 
 .engine-runtime-target-options {
   display: flex;
   flex-wrap: wrap;
   gap: vars.$gap-1;
+  margin-top: vars.$gap-1;
 }
 
 .engine-runtime-target-option {

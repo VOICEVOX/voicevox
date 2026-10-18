@@ -2,19 +2,25 @@
   <section class="engine-card">
     <div class="engine-card-head">
       <div class="engine-name">{{ engineState.embeddedInfo.engineName }}</div>
-      <span class="status-pill">
-        {{
-          engineState.currentInfo.status === "notInstalled"
-            ? "未インストール"
-            : "インストール済み"
-        }}</span
-      >
+      <div class="engine-card-status">
+        <span
+          v-if="engineState.currentInfo.status === 'installed'"
+          class="status-pill"
+        >
+          バージョン {{ engineState.currentInfo.installedVersion }}
+        </span>
+        <span class="status-pill">
+          {{
+            engineState.currentInfo.status === "notInstalled"
+              ? "未インストール"
+              : "インストール済み"
+          }}
+        </span>
+      </div>
     </div>
     <div class="engine-meta">
-      <div>最新バージョン：{{ latestVersionText }}</div>
-      <div v-if="engineState.currentInfo.status === 'installed'">
-        インストール済み：{{ engineState.currentInfo.installedVersion }}
-      </div>
+      <div v-if="latestIdleMessage != undefined">{{ latestIdleMessage }}</div>
+      <div v-else>最新バージョン：{{ latestVersionText }}</div>
     </div>
     <div
       v-if="progressInfo.type === 'download' || progressInfo.type === 'install'"
@@ -97,6 +103,17 @@ const progressInfo = computed<EngineProgressInfo>(() =>
   store.getEngineProgress(props.engineId),
 );
 
+const selectedPackageInfo = computed(() => {
+  if (latestInfo.value.type !== "fetched") {
+    return undefined;
+  }
+
+  return findSelectedPackageInfo(
+    latestInfo.value.info.availableRuntimeTargets,
+    selectedRuntimeTarget.value,
+  );
+});
+
 function findSelectedPackageInfo(
   availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"],
   selected: RuntimeTarget,
@@ -115,10 +132,9 @@ function showErrorDetailDialog(error: unknown) {
 const latestVersionText = computed(() => {
   switch (latestInfo.value.type) {
     case "fetched": {
-      return findSelectedPackageInfo(
-        latestInfo.value.info.availableRuntimeTargets,
-        selectedRuntimeTarget.value,
-      ).version;
+      const packageInfo = selectedPackageInfo.value;
+      assertNonNullable(packageInfo);
+      return packageInfo.version;
     }
     case "fetchError":
       return "（取得失敗）";
@@ -127,6 +143,46 @@ const latestVersionText = computed(() => {
     default:
       throw new ExhaustiveError(latestInfo.value);
   }
+});
+
+const isOutdated = computed(() => {
+  if (
+    latestInfo.value.type !== "fetched" ||
+    engineState.value.currentInfo.status === "notInstalled"
+  ) {
+    return undefined;
+  }
+
+  const packageInfo = selectedPackageInfo.value;
+  assertNonNullable(packageInfo);
+  return semver.lt(
+    engineState.value.currentInfo.installedVersion,
+    packageInfo.version,
+  );
+});
+
+const latestIdleMessage = computed(() => {
+  if (
+    latestInfo.value.type !== "fetched" ||
+    progressInfo.value.type !== "idle"
+  ) {
+    return undefined;
+  }
+
+  const packageInfo = selectedPackageInfo.value;
+  assertNonNullable(packageInfo);
+  const latestVersion = packageInfo.version;
+  if (engineState.value.currentInfo.status === "notInstalled") {
+    return `最新バージョン ${latestVersion} をインストールします。`;
+  }
+
+  const outdated = isOutdated.value;
+  assertNonNullable(outdated);
+  if (outdated) {
+    return `最新バージョン ${latestVersion} にアップデートできます。`;
+  }
+
+  return `最新バージョン ${latestVersion} がインストール済みです。`;
 });
 
 const currentEngineStatus = computed<{
@@ -147,12 +203,10 @@ const currentEngineStatus = computed<{
     };
   }
 
-  const selectedPackageInfo = findSelectedPackageInfo(
-    latestInfo.value.info.availableRuntimeTargets,
-    selectedRuntimeTarget.value,
-  );
+  const packageInfo = selectedPackageInfo.value;
+  assertNonNullable(packageInfo);
   const humanReadableSize = sizeToHumanReadable(
-    selectedPackageInfo.files.reduce((acc, file) => acc + file.size, 0),
+    packageInfo.files.reduce((acc, file) => acc + file.size, 0),
   );
   if (engineState.value.currentInfo.status === "notInstalled") {
     return {
@@ -160,11 +214,9 @@ const currentEngineStatus = computed<{
       color: "primary",
     };
   }
-  const isOutdated = semver.lt(
-    engineState.value.currentInfo.installedVersion,
-    selectedPackageInfo.version,
-  );
-  if (isOutdated) {
+  const outdated = isOutdated.value;
+  assertNonNullable(outdated);
+  if (outdated) {
     return {
       actionLabel: `アップデート（${humanReadableSize}）`,
       color: "primary",
@@ -187,6 +239,7 @@ const handleRuntimeTargetChange = (value: RuntimeTarget): void => {
 
 <style scoped lang="scss">
 @use "@/styles/v2/colors" as colors;
+@use "@/styles/v2/mixin" as mixin;
 @use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors_v1;
 
@@ -208,7 +261,12 @@ const handleRuntimeTargetChange = (value: RuntimeTarget): void => {
 }
 
 .engine-name {
-  font-weight: 700;
+  @include mixin.headline-3;
+}
+
+.engine-card-status {
+  display: flex;
+  gap: vars.$gap-1;
 }
 
 .status-pill {
