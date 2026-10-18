@@ -61,7 +61,9 @@ const isArm64 = process.arch === "arm64";
 // cf: https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
 const executableDirectory = isMac ? "MacOS/" : "";
 
-const sevenZipFile = readdirSync(path.join(rootDir, "vendored", "7z")).find(
+const sevenZipFile = readdirSync(
+  path.join(rootDir, ".mise", "installs", "7zip", "latest"),
+).find(
   // Windows: 7za.exe, Linux: 7zzs, macOS: 7zz
   (fileName) => ["7za.exe", "7zzs", "7zz"].includes(fileName),
 );
@@ -115,7 +117,14 @@ const builderOptions: ElectronBuilderConfiguration = {
       to: isMac ? "Resources/README.txt" : executableDirectory + "README.txt",
     },
     {
-      from: path.join(rootDir, "vendored", "7z", sevenZipFile),
+      from: path.join(
+        rootDir,
+        ".mise",
+        "installs",
+        "7zip",
+        "latest",
+        sevenZipFile,
+      ),
       to: executableDirectory + sevenZipFile,
     },
   ],

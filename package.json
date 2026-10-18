@@ -16,7 +16,7 @@
     "fmt": "cross-env ESLINT_FILE_PROGRESS=1 eslint --fix --cache",
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ --ignore dist_preview/ ./",
     "typecheck": "vue-tsc --noEmit",
-    "typos": "cross-env ./vendored/typos/typos",
+    "typos": "./tools/mise exec -- typos",
     "// --- tools ---": "",
     "license:generate": "tsx tools/generateLicenses.ts",
     "license:merge": "tsx tools/mergeLicenses.ts",
@@ -47,9 +47,9 @@
     "storybook:build": "storybook build",
     "// --- lifecycle ---": "",
     "preinstall": "npx -y only-allow pnpm",
-    "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
+    "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-tools",
     "postinstall:packages": "install-electron && electron-builder install-app-deps && playwright install chromium",
-    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts",
+    "postinstall:download-tools": "./tools/mise install",
     "postuninstall": "electron-builder install-app-deps"
   },
   "dependencies": {
