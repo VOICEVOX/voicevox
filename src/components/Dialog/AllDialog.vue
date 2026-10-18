@@ -176,8 +176,9 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
 });
 
 // エディタのアップデート確認ダイアログ
-// NOTE: getterで隠していても、フラグが立った時点でUIとメニューバーがロックされる。
-//       エンジン起動中に見えないままロックしないよう、isEnginesReadyはgetterに含めずcanOpenDialogで渡している。
+// NOTE: isEnginesReadyをここに入れると、エンジン起動中に開閉フラグが立ち、何も表示されないままLOCK_UIとLOCK_MENUBARされる。
+//       そのためisEnginesReadyはcanOpenDialogで渡している。
+// ref: https://github.com/VOICEVOX/voicevox/blob/933997fab22a9f25db89c0c055273dd639535d9f/src/store/ui.ts#L195-L197
 const isUpdateNotificationDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
