@@ -67,6 +67,7 @@ export type EngineProgressInfo =
 type EngineState = {
   embeddedInfo: EnginePackageEmbeddedInfo;
   currentInfo: EnginePackageCurrentInfo;
+  reinstallAllowed: boolean;
 
   latestInfo: MergeToTarget<
     LatestInfoState,
@@ -149,7 +150,7 @@ function createWelcomeStore() {
   const setSelectedRuntimeTarget = (
     engineId: EngineId,
     target: RuntimeTarget,
-  ) => {
+  ): void => {
     if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
@@ -157,7 +158,11 @@ function createWelcomeStore() {
     if (engineState.latestInfo.type !== "fetched") {
       throw new UnreachableError();
     }
+    if (engineState.latestInfo.selectedRuntimeTarget === target) {
+      return;
+    }
     engineState.latestInfo.selectedRuntimeTarget = target;
+    engineState.reinstallAllowed = true;
   };
 
   const getEngineState = (engineId: EngineId) => {
@@ -205,6 +210,7 @@ function createWelcomeStore() {
         engineStates[engineId] = {
           embeddedInfo: info,
           currentInfo: { status: "notInstalled" },
+          reinstallAllowed: false,
           latestInfo: { type: "loading" },
         };
       }),
@@ -228,7 +234,7 @@ function createWelcomeStore() {
       await window.welcomeBackend.getEnginePackageCurrentInfo(engineId);
     const engineState = allEngineState.value.engineStates[engineId];
     engineState.currentInfo = currentInfo;
-    void fetchEngineLatestInfo(engineId);
+    await fetchEngineLatestInfo(engineId);
   };
 
   const fetchEngineLatestInfo = async (engineId: EngineId) => {
@@ -236,17 +242,42 @@ function createWelcomeStore() {
       throw new UnreachableError();
     }
     const engineState = allEngineState.value.engineStates[engineId];
-    engineState.latestInfo = { type: "loading" };
+    const previousLatestInfo = engineState.latestInfo;
+    if (
+      previousLatestInfo.type !== "fetched" ||
+      previousLatestInfo.progress.type === "idle"
+    ) {
+      engineState.latestInfo = { type: "loading" };
+    }
     try {
       const info =
         await window.welcomeBackend.getEnginePackageLatestInfo(engineId);
+      let selectedRuntimeTarget = getDefaultRuntimeTarget(engineId, info);
+      if (previousLatestInfo.type === "fetched") {
+        if (
+          info.availableRuntimeTargets.some(
+            (targetInfo) =>
+              targetInfo.target === previousLatestInfo.selectedRuntimeTarget,
+          )
+        ) {
+          selectedRuntimeTarget = previousLatestInfo.selectedRuntimeTarget;
+        } else {
+          window.welcomeBackend.logWarn(
+            `Engine package ${engineId} selected runtime target is no longer available: ${previousLatestInfo.selectedRuntimeTarget}`,
+          );
+          engineState.reinstallAllowed = false;
+        }
+      } else {
+        engineState.reinstallAllowed = false;
+      }
       engineState.latestInfo = {
         type: "fetched",
         info,
         progress: { type: "idle" },
-        selectedRuntimeTarget: getDefaultRuntimeTarget(engineId, info),
+        selectedRuntimeTarget,
       };
     } catch (error) {
+      engineState.reinstallAllowed = false;
       window.welcomeBackend.logWarn(
         `Engine package ${engineId} remote info fetch failed`,
         error,
@@ -267,24 +298,26 @@ function createWelcomeStore() {
 
   const installEngine = async (engineId: EngineId) => {
     const target = getSelectedRuntimeTarget(engineId);
+    const engineState = getEngineState(engineId);
     setEngineProgress(engineId, { type: "download", progress: 0 });
     try {
       window.welcomeBackend.logInfo(
         `Engine package ${engineId} installation started.`,
       );
       await window.welcomeBackend.installEngine({ engineId, target });
+      engineState.reinstallAllowed = false;
       window.welcomeBackend.logInfo(
         `Engine package ${engineId} installation completed.`,
       );
     } catch (error) {
+      engineState.reinstallAllowed = true;
       window.welcomeBackend.logError(
         `Engine package ${engineId} installation failed`,
         error,
       );
       await showErrorDialog("エンジンのインストールに失敗しました", error);
     } finally {
-      setEngineProgress(engineId, { type: "idle" });
-      void fetchCurrentEngineInfo(engineId);
+      await fetchCurrentEngineInfo(engineId);
     }
   };
 

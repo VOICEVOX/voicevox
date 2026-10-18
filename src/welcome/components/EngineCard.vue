@@ -65,7 +65,7 @@
         />
         <BaseButton
           :label="currentEngineStatus.actionLabel"
-          :disabled="isControlDisabled"
+          :disabled="isControlDisabled || isAlreadyInstalled"
           :variant="currentEngineStatus.color"
           @click="store.installEngine(props.engineId)"
         />
@@ -148,6 +148,14 @@ const isOutdated = computed(() => {
   );
 });
 
+const isAlreadyInstalled = computed(
+  () =>
+    latestInfo.value.type === "fetched" &&
+    engineState.value.currentInfo.status === "installed" &&
+    isOutdated.value === false &&
+    !engineState.value.reinstallAllowed,
+);
+
 const latestInfoMessage = computed(() => {
   switch (latestInfo.value.type) {
     case "fetched": {
@@ -198,6 +206,13 @@ const currentEngineStatus = computed<{
       };
     }
 
+    return {
+      actionLabel: "インストール済み",
+      color: "default",
+    };
+  }
+
+  if (isAlreadyInstalled.value) {
     return {
       actionLabel: "インストール済み",
       color: "default",
