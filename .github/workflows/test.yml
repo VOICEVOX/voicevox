@@ -242,6 +242,8 @@ jobs:
       - run: pnpm run typos
       # ubuntu-latestにはShellCheckが入っているので、run:のシェルスクリプトも検査される
       - run: pnpm run jactionlint
+      - name: Check shell scripts
+        run: git ls-files -z '*.sh' '*.bash' | xargs -0 shellcheck
 
       - name: Check pinact
         uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0

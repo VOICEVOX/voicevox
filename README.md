@@ -306,8 +306,7 @@ ShellScript の文法チェックを行います。
 インストール方法は [こちら](https://github.com/koalaman/shellcheck#installing) を参照してください。
 
 ```bash
-shellcheck ./build/*.sh
-shellcheck ./tools/*.bash
+git ls-files -z '*.sh' '*.bash' | xargs -0 shellcheck
 ```
 
 ## GitHub Actions のリント
