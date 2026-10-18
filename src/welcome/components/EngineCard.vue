@@ -178,24 +178,6 @@ function createInstallationCardDisplay(
   isBusy: boolean,
 ): { installationButton: InstallationButton; latestInfoMessage: string } {
   const latestVersion = packageInfo.version;
-  const isUpdateAvailable =
-    currentInfo.status === "installed" &&
-    semver.lt(currentInfo.installedVersion, latestVersion);
-  if (
-    currentInfo.status === "installed" &&
-    !isUpdateAvailable &&
-    hasJustCompletedInstallation
-  ) {
-    return {
-      installationButton: {
-        label: "インストール済み",
-        variant: "default",
-        disabled: true,
-      },
-      latestInfoMessage: `最新バージョン ${latestVersion} がインストール済みです。`,
-    };
-  }
-
   const humanReadableSize = sizeToHumanReadable(
     packageInfo.files.reduce((acc, file) => acc + file.size, 0),
   );
@@ -209,7 +191,7 @@ function createInstallationCardDisplay(
       latestInfoMessage: `最新バージョン ${latestVersion} をインストールしてください。`,
     };
   }
-  if (isUpdateAvailable) {
+  if (semver.lt(currentInfo.installedVersion, latestVersion)) {
     return {
       installationButton: {
         label: `アップデート（${humanReadableSize}）`,
@@ -217,6 +199,16 @@ function createInstallationCardDisplay(
         disabled: isBusy,
       },
       latestInfoMessage: `最新バージョン ${latestVersion} にアップデートできます。`,
+    };
+  }
+  if (hasJustCompletedInstallation) {
+    return {
+      installationButton: {
+        label: "インストール済み",
+        variant: "default",
+        disabled: true,
+      },
+      latestInfoMessage: `最新バージョン ${latestVersion} がインストール済みです。`,
     };
   }
   return {
