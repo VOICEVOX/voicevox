@@ -43,7 +43,6 @@ type EngineProgressInfo = { type: "idle" } | EngineInstallationProgress;
 type EngineState = {
   embeddedInfo: EnginePackageEmbeddedInfo;
   currentInfo: EnginePackageCurrentInfo;
-  hasJustCompletedInstallation: boolean;
   latestInfo: LatestInfoState;
 };
 
@@ -115,11 +114,7 @@ function createWelcomeStore() {
     if (engineState.latestInfo.type !== "fetched") {
       throw new UnreachableError();
     }
-    if (engineState.latestInfo.selectedRuntimeTarget === target) {
-      return;
-    }
     engineState.latestInfo.selectedRuntimeTarget = target;
-    engineState.hasJustCompletedInstallation = false;
   };
 
   const getEngineState = (engineId: EngineId) => {
@@ -156,7 +151,6 @@ function createWelcomeStore() {
         engineStates[engineId] = {
           embeddedInfo: info,
           currentInfo: { status: "notInstalled" },
-          hasJustCompletedInstallation: false,
           latestInfo: { type: "loading" },
         };
       }),
@@ -238,7 +232,7 @@ function createWelcomeStore() {
     setThemeToCss(theme);
   };
 
-  const installEngine = async (engineId: EngineId) => {
+  const installEngine = async (engineId: EngineId): Promise<boolean> => {
     const engineState = getEngineState(engineId);
     if (engineState.latestInfo.type !== "fetched") {
       throw new UnreachableError();
@@ -250,17 +244,17 @@ function createWelcomeStore() {
         `Engine package ${engineId} installation started.`,
       );
       await window.welcomeBackend.installEngine({ engineId, target });
-      engineState.hasJustCompletedInstallation = true;
       window.welcomeBackend.logInfo(
         `Engine package ${engineId} installation completed.`,
       );
+      return true;
     } catch (error) {
-      engineState.hasJustCompletedInstallation = false;
       window.welcomeBackend.logError(
         `Engine package ${engineId} installation failed`,
         error,
       );
       await showErrorDialog("エンジンのインストールに失敗しました", error);
+      return false;
     } finally {
       await fetchCurrentEngineInfo(engineId);
     }

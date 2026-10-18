@@ -74,7 +74,7 @@
           :label="cardState.installationButton.label"
           :disabled="cardState.installationButton.disabled"
           :variant="cardState.installationButton.variant"
-          @click="store.installEngine(props.engineId)"
+          @click="handleInstallEngine"
         />
       </div>
     </div>
@@ -83,7 +83,7 @@
 
 <script setup lang="ts">
 import semver from "semver";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import EngineRuntimeTargetSelect from "./EngineRuntimeTargetSelect.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import type {
@@ -91,7 +91,7 @@ import type {
   RuntimeTarget,
 } from "@/domain/defaultEngine/latestDefaultEngine";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
-import { assertNonNullable } from "@/type/utility";
+import { assertNonNullable, UnreachableError } from "@/type/utility";
 import type { EngineId } from "@/type/preload";
 import { useStore } from "@/welcome/store";
 import type {
@@ -124,6 +124,7 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
+const hasJustCompletedInstallation = ref(false);
 
 const engineState = computed(() => store.getEngineState(props.engineId));
 const cardState = computed<EngineCardState>(() => {
@@ -145,7 +146,7 @@ const cardState = computed<EngineCardState>(() => {
   const display = createInstallationCardDisplay(
     engine.currentInfo,
     selected.packageInfo,
-    engine.hasJustCompletedInstallation,
+    hasJustCompletedInstallation.value,
     latestInfo.progress.type !== "idle",
   );
   const fetchedCardData = {
@@ -226,7 +227,21 @@ function showErrorDetailDialog(error: unknown): void {
 }
 
 const handleRuntimeTargetChange = (value: RuntimeTarget): void => {
+  const latestInfo = engineState.value.latestInfo;
+  if (latestInfo.type !== "fetched") {
+    throw new UnreachableError();
+  }
+  if (latestInfo.selectedRuntimeTarget === value) {
+    return;
+  }
   store.setSelectedRuntimeTarget(props.engineId, value);
+  hasJustCompletedInstallation.value = false;
+};
+
+const handleInstallEngine = async (): Promise<void> => {
+  hasJustCompletedInstallation.value = await store.installEngine(
+    props.engineId,
+  );
 };
 </script>
 
