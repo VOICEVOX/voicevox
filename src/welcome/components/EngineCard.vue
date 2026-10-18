@@ -52,7 +52,7 @@
       :disabled="cardState.status !== 'idle'"
       @update:modelValue="handleRuntimeTargetChange"
     />
-    <div class="engine-actions">
+    <div v-if="cardState.type !== 'loading'" class="engine-actions">
       <div v-if="cardState.type === 'fetchError'" class="engine-fetch-error">
         最新情報の取得に失敗しました。
       </div>
@@ -70,13 +70,10 @@
           @click="store.fetchEngineLatestInfo(props.engineId)"
         />
         <BaseButton
-          :label="cardState.action.label"
-          :disabled="
-            cardState.type !== 'fetched' ||
-            cardState.status !== 'idle' ||
-            cardState.action.type === 'completed'
-          "
-          :variant="cardState.action.variant"
+          v-if="cardState.type === 'fetched'"
+          :label="cardState.installationButton.label"
+          :disabled="cardState.installationButton.disabled"
+          :variant="cardState.installationButton.variant"
           @click="store.installEngine(props.engineId)"
         />
       </div>
@@ -94,7 +91,7 @@ import type {
   RuntimeTarget,
 } from "@/domain/defaultEngine/latestDefaultEngine";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
-import { assertNonNullable, ExhaustiveError } from "@/type/utility";
+import { assertNonNullable } from "@/type/utility";
 import type { EngineId } from "@/type/preload";
 import { useStore } from "@/welcome/store";
 import type {
@@ -103,30 +100,24 @@ import type {
 } from "@/domain/enginePackage";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 
-type EngineCardAction =
-  | { type: "install" | "update"; label: string; variant: "primary" }
-  | { type: "reinstall"; label: string; variant: "default" }
-  | { type: "completed"; label: "インストール済み"; variant: "default" };
-
-type UnavailableAction = {
-  type: "unavailable";
-  label: "未インストール" | "インストール済み";
-  variant: "default";
-};
-
-type AvailableCardData = {
-  availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"];
-  selected: EnginePackageLatestInfo["availableRuntimeTargets"][number];
-  action: EngineCardAction;
+type InstallationButton = {
+  label: string;
+  variant: "primary" | "default";
+  disabled: boolean;
 };
 
 type EngineCardState =
-  | { type: "loading"; action: UnavailableAction }
-  | { type: "fetchError"; error: unknown; action: UnavailableAction }
-  | (AvailableCardData & { type: "fetched" } & (
-        | { status: "idle"; latestInfoMessage: string }
-        | { status: "download" | "install"; progress: number }
-      ));
+  | { type: "loading" }
+  | { type: "fetchError"; error: unknown }
+  | ({
+      type: "fetched";
+      availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"];
+      selected: EnginePackageLatestInfo["availableRuntimeTargets"][number];
+      installationButton: InstallationButton;
+    } & (
+      | { status: "idle"; latestInfoMessage: string }
+      | { status: "download" | "install"; progress: number }
+    ));
 
 const props = defineProps<{
   engineId: EngineId;
@@ -138,19 +129,11 @@ const engineState = computed(() => store.getEngineState(props.engineId));
 const cardState = computed<EngineCardState>(() => {
   const engine = engineState.value;
   const latestInfo = engine.latestInfo;
-  if (latestInfo.type === "loading" || latestInfo.type === "fetchError") {
-    const action: UnavailableAction = {
-      type: "unavailable",
-      label:
-        engine.currentInfo.status === "notInstalled"
-          ? "未インストール"
-          : "インストール済み",
-      variant: "default",
-    };
-    if (latestInfo.type === "loading") {
-      return { type: "loading", action };
-    }
-    return { type: "fetchError", error: latestInfo.error, action };
+  if (latestInfo.type === "loading") {
+    return { type: "loading" };
+  }
+  if (latestInfo.type === "fetchError") {
+    return { type: "fetchError", error: latestInfo.error };
   }
 
   const availableRuntimeTargets = latestInfo.info.availableRuntimeTargets;
@@ -159,101 +142,91 @@ const cardState = computed<EngineCardState>(() => {
   );
   assertNonNullable(selected);
 
-  const actionType = getInstallationActionType(
+  const display = createInstallationCardDisplay(
     engine.currentInfo,
     selected.packageInfo,
     engine.hasJustCompletedInstallation,
+    latestInfo.progress.type !== "idle",
   );
-  const action = createEngineCardAction(actionType, selected.packageInfo);
-  const availableCardData: AvailableCardData = {
+  const fetchedCardData = {
     availableRuntimeTargets,
     selected,
-    action,
+    installationButton: display.installationButton,
   };
 
   if (latestInfo.progress.type === "idle") {
-    const latestVersion = selected.packageInfo.version;
-    let latestInfoMessage: string;
-    switch (action.type) {
-      case "install":
-        latestInfoMessage = `最新バージョン ${latestVersion} をインストールしてください。`;
-        break;
-      case "update":
-        latestInfoMessage = `最新バージョン ${latestVersion} にアップデートできます。`;
-        break;
-      case "reinstall":
-      case "completed":
-        latestInfoMessage = `最新バージョン ${latestVersion} がインストール済みです。`;
-        break;
-      default:
-        throw new ExhaustiveError(action);
-    }
     return {
-      ...availableCardData,
+      ...fetchedCardData,
       type: "fetched",
       status: "idle",
-      latestInfoMessage,
+      latestInfoMessage: display.latestInfoMessage,
     };
   }
 
   return {
-    ...availableCardData,
+    ...fetchedCardData,
     type: "fetched",
     status: latestInfo.progress.type,
     progress: latestInfo.progress.progress,
   };
 });
 
-function getInstallationActionType(
+function createInstallationCardDisplay(
   currentInfo: EnginePackageCurrentInfo,
   packageInfo: PackageInfo,
   hasJustCompletedInstallation: boolean,
-): EngineCardAction["type"] {
-  if (currentInfo.status === "notInstalled") {
-    return "install";
-  }
-  if (semver.lt(currentInfo.installedVersion, packageInfo.version)) {
-    return "update";
-  }
-  if (hasJustCompletedInstallation) {
-    return "completed";
-  }
-  return "reinstall";
-}
-
-function createEngineCardAction(
-  type: EngineCardAction["type"],
-  packageInfo: PackageInfo,
-): EngineCardAction {
-  if (type === "completed") {
-    return { type: "completed", label: "インストール済み", variant: "default" };
+  isBusy: boolean,
+): { installationButton: InstallationButton; latestInfoMessage: string } {
+  const latestVersion = packageInfo.version;
+  const isUpdateAvailable =
+    currentInfo.status === "installed" &&
+    semver.lt(currentInfo.installedVersion, latestVersion);
+  if (
+    currentInfo.status === "installed" &&
+    !isUpdateAvailable &&
+    hasJustCompletedInstallation
+  ) {
+    return {
+      installationButton: {
+        label: "インストール済み",
+        variant: "default",
+        disabled: true,
+      },
+      latestInfoMessage: `最新バージョン ${latestVersion} がインストール済みです。`,
+    };
   }
 
   const humanReadableSize = sizeToHumanReadable(
     packageInfo.files.reduce((acc, file) => acc + file.size, 0),
   );
-  switch (type) {
-    case "install":
-      return {
-        type: "install",
+  if (currentInfo.status === "notInstalled") {
+    return {
+      installationButton: {
         label: `インストール（${humanReadableSize}）`,
         variant: "primary",
-      };
-    case "update":
-      return {
-        type: "update",
+        disabled: isBusy,
+      },
+      latestInfoMessage: `最新バージョン ${latestVersion} をインストールしてください。`,
+    };
+  }
+  if (isUpdateAvailable) {
+    return {
+      installationButton: {
         label: `アップデート（${humanReadableSize}）`,
         variant: "primary",
-      };
-    case "reinstall":
-      return {
-        type: "reinstall",
-        label: `再インストール（${humanReadableSize}）`,
-        variant: "default",
-      };
-    default:
-      throw new ExhaustiveError(type);
+        disabled: isBusy,
+      },
+      latestInfoMessage: `最新バージョン ${latestVersion} にアップデートできます。`,
+    };
   }
+  return {
+    installationButton: {
+      label: `再インストール（${humanReadableSize}）`,
+      variant: "default",
+      disabled: isBusy,
+    },
+    latestInfoMessage: `最新バージョン ${latestVersion} がインストール済みです。`,
+  };
 }
 
 function showErrorDetailDialog(error: unknown): void {
