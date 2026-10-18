@@ -67,7 +67,7 @@ export type EngineProgressInfo =
 type EngineState = {
   embeddedInfo: EnginePackageEmbeddedInfo;
   currentInfo: EnginePackageCurrentInfo;
-  reinstallAllowed: boolean;
+  installationCompleted: boolean;
 
   latestInfo: MergeToTarget<
     LatestInfoState,
@@ -162,7 +162,7 @@ function createWelcomeStore() {
       return;
     }
     engineState.latestInfo.selectedRuntimeTarget = target;
-    engineState.reinstallAllowed = true;
+    engineState.installationCompleted = false;
   };
 
   const getEngineState = (engineId: EngineId) => {
@@ -210,7 +210,7 @@ function createWelcomeStore() {
         engineStates[engineId] = {
           embeddedInfo: info,
           currentInfo: { status: "notInstalled" },
-          reinstallAllowed: false,
+          installationCompleted: false,
           latestInfo: { type: "loading" },
         };
       }),
@@ -265,10 +265,7 @@ function createWelcomeStore() {
           window.welcomeBackend.logWarn(
             `Engine package ${engineId} selected runtime target is no longer available: ${previousLatestInfo.selectedRuntimeTarget}`,
           );
-          engineState.reinstallAllowed = false;
         }
-      } else {
-        engineState.reinstallAllowed = false;
       }
       engineState.latestInfo = {
         type: "fetched",
@@ -277,7 +274,6 @@ function createWelcomeStore() {
         selectedRuntimeTarget,
       };
     } catch (error) {
-      engineState.reinstallAllowed = false;
       window.welcomeBackend.logWarn(
         `Engine package ${engineId} remote info fetch failed`,
         error,
@@ -305,12 +301,12 @@ function createWelcomeStore() {
         `Engine package ${engineId} installation started.`,
       );
       await window.welcomeBackend.installEngine({ engineId, target });
-      engineState.reinstallAllowed = false;
+      engineState.installationCompleted = true;
       window.welcomeBackend.logInfo(
         `Engine package ${engineId} installation completed.`,
       );
     } catch (error) {
-      engineState.reinstallAllowed = true;
+      engineState.installationCompleted = false;
       window.welcomeBackend.logError(
         `Engine package ${engineId} installation failed`,
         error,
