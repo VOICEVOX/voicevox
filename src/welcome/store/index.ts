@@ -180,7 +180,7 @@ function createWelcomeStore() {
       await window.welcomeBackend.getEnginePackageCurrentInfo(engineId);
     const engineState = allEngineState.value.engineStates[engineId];
     engineState.currentInfo = currentInfo;
-    await fetchEngineLatestInfo(engineId);
+    void fetchEngineLatestInfo(engineId);
   };
 
   const fetchEngineLatestInfo = async (engineId: EngineId) => {
