@@ -180,7 +180,7 @@ const latestInfoMessage = computed(() => {
     case "fetchError":
       return undefined;
     case "loading":
-      return "最新バージョン：（読み込み中）";
+      return "（読み込み中）";
     default:
       throw new ExhaustiveError(latestInfo.value);
   }
