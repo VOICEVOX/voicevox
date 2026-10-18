@@ -1,19 +1,18 @@
 <template>
   <fieldset class="engine-runtime-target-select">
     <legend>インストールするエンジン</legend>
-    <div class="engine-runtime-target-options">
+    <div class="options">
       <label
         v-for="targetInfo in availableRuntimeTargets"
         :key="targetInfo.target"
-        class="engine-runtime-target-option"
+        class="option"
         :class="{
-          'engine-runtime-target-option-selected':
-            modelValue === targetInfo.target,
-          'engine-runtime-target-option-disabled': disabled,
+          'option-selected': modelValue === targetInfo.target,
+          'option-disabled': disabled,
         }"
       >
         <input
-          class="engine-runtime-target-radio"
+          class="option-radio"
           type="radio"
           :name="engineId"
           :value="targetInfo.target"
@@ -21,19 +20,19 @@
           :disabled="disabled"
           @change="emit('update:modelValue', targetInfo.target)"
         />
-        <span class="engine-runtime-target-content">
-          <span class="engine-runtime-target-indicator" aria-hidden="true">
+        <span class="option-content">
+          <span class="option-indicator" aria-hidden="true">
             <QIcon
               v-if="modelValue === targetInfo.target"
-              class="engine-runtime-target-check"
+              class="option-check"
               name="check"
             />
           </span>
-          <span class="engine-runtime-target-text">
-            <span class="engine-runtime-target-label">
+          <span class="option-text">
+            <span class="option-label">
               {{ targetInfo.packageInfo.displayInfo.label }}
             </span>
-            <span class="engine-runtime-target-hint">
+            <span class="option-hint">
               {{ targetInfo.packageInfo.displayInfo.hint }}
             </span>
           </span>
@@ -81,14 +80,14 @@ legend {
   font-weight: bold;
 }
 
-.engine-runtime-target-options {
+.options {
   display: flex;
   flex-wrap: wrap;
   gap: vars.$gap-1;
   margin-top: vars.$gap-1;
 }
 
-.engine-runtime-target-option {
+.option {
   position: relative;
   display: flex;
   flex: 1 1 12rem;
@@ -101,15 +100,11 @@ legend {
   text-align: start;
   cursor: pointer;
 
-  &:not(.engine-runtime-target-option-selected):hover:not(
-      .engine-runtime-target-option-disabled
-    ) {
+  &:not(.option-selected):hover:not(.option-disabled) {
     background-color: colors.$control-hovered;
   }
 
-  &:not(.engine-runtime-target-option-selected):active:not(
-      .engine-runtime-target-option-disabled
-    ) {
+  &:not(.option-selected):active:not(.option-disabled) {
     background-color: colors.$control-pressed;
   }
 
@@ -119,16 +114,16 @@ legend {
   }
 }
 
-.engine-runtime-target-option-selected {
+.option-selected {
   background-color: colors.$selected;
 }
 
-.engine-runtime-target-option-disabled {
+.option-disabled {
   opacity: 0.5;
   cursor: default;
 }
 
-.engine-runtime-target-radio {
+.option-radio {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -137,35 +132,35 @@ legend {
   white-space: nowrap;
 }
 
-.engine-runtime-target-content {
+.option-content {
   display: flex;
   min-width: 0;
   align-items: flex-start;
   gap: vars.$gap-1;
 }
 
-.engine-runtime-target-indicator {
+.option-indicator {
   display: grid;
   flex: 0 0 vars.$size-icon;
   min-height: vars.$size-icon;
   place-items: center;
 }
 
-.engine-runtime-target-check {
+.option-check {
   width: vars.$size-icon;
   height: vars.$size-icon;
 }
 
-.engine-runtime-target-text {
+.option-text {
   display: grid;
   min-width: 0;
 }
 
-.engine-runtime-target-label {
+.option-label {
   font-weight: 600;
 }
 
-.engine-runtime-target-hint {
+.option-hint {
   color: colors.$display-sub;
   font-size: 0.8rem;
 }
