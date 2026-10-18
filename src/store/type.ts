@@ -397,10 +397,6 @@ export type AudioStoreTypes = {
     }): Promise<AccentPhrase[]>;
   };
 
-  DEFAULT_PROJECT_FILE_BASE_NAME: {
-    getter: string;
-  };
-
   DEFAULT_AUDIO_FILE_NAME: {
     getter(audioKey: AudioKey): string;
   };
@@ -2052,6 +2048,10 @@ export type ProjectStoreTypes = {
 
   PROJECT_NAME: {
     getter: string | undefined;
+  };
+
+  DEFAULT_PROJECT_FILE_BASE_NAME: {
+    getter: string;
   };
 
   SET_PROJECT_FILEPATH: {
