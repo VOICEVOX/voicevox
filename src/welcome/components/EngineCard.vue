@@ -18,9 +18,8 @@
         </span>
       </div>
     </div>
-    <div class="engine-meta">
-      <div v-if="latestIdleMessage != undefined">{{ latestIdleMessage }}</div>
-      <div v-else>最新バージョン：{{ latestVersionText }}</div>
+    <div v-if="latestInfoMessage != undefined" class="engine-meta">
+      {{ latestInfoMessage }}
     </div>
     <div
       v-if="progressInfo.type === 'download' || progressInfo.type === 'install'"
@@ -82,7 +81,11 @@ import EngineRuntimeTargetSelect from "./EngineRuntimeTargetSelect.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
-import { assertNonNullable, ExhaustiveError } from "@/type/utility";
+import {
+  assertNonNullable,
+  ExhaustiveError,
+  UnreachableError,
+} from "@/type/utility";
 import type { EngineId } from "@/type/preload";
 import { useStore, type EngineProgressInfo } from "@/welcome/store";
 import type { EnginePackageLatestInfo } from "@/domain/enginePackage";
@@ -129,22 +132,6 @@ function showErrorDetailDialog(error: unknown) {
   void showErrorDialog("最新情報の取得に失敗しました", error);
 }
 
-const latestVersionText = computed(() => {
-  switch (latestInfo.value.type) {
-    case "fetched": {
-      const packageInfo = selectedPackageInfo.value;
-      assertNonNullable(packageInfo);
-      return packageInfo.version;
-    }
-    case "fetchError":
-      return "（取得失敗）";
-    case "loading":
-      return "（読み込み中）";
-    default:
-      throw new ExhaustiveError(latestInfo.value);
-  }
-});
-
 const isOutdated = computed(() => {
   if (
     latestInfo.value.type !== "fetched" ||
@@ -161,28 +148,42 @@ const isOutdated = computed(() => {
   );
 });
 
-const latestIdleMessage = computed(() => {
-  if (
-    latestInfo.value.type !== "fetched" ||
-    progressInfo.value.type !== "idle"
-  ) {
-    return undefined;
-  }
+const latestInfoMessage = computed(() => {
+  switch (latestInfo.value.type) {
+    case "fetched": {
+      if (
+        progressInfo.value.type === "download" ||
+        progressInfo.value.type === "install"
+      ) {
+        return undefined;
+      }
+      if (progressInfo.value.type === "unavailable") {
+        throw new UnreachableError();
+      }
 
-  const packageInfo = selectedPackageInfo.value;
-  assertNonNullable(packageInfo);
-  const latestVersion = packageInfo.version;
-  if (engineState.value.currentInfo.status === "notInstalled") {
-    return `最新バージョン ${latestVersion} をインストールしてください。`;
-  }
+      const packageInfo = selectedPackageInfo.value;
+      assertNonNullable(packageInfo);
+      const latestVersion = packageInfo.version;
 
-  const outdated = isOutdated.value;
-  assertNonNullable(outdated);
-  if (outdated) {
-    return `最新バージョン ${latestVersion} にアップデートできます。`;
-  }
+      if (engineState.value.currentInfo.status === "notInstalled") {
+        return `最新バージョン ${latestVersion} をインストールしてください。`;
+      }
 
-  return `最新バージョン ${latestVersion} がインストール済みです。`;
+      const outdated = isOutdated.value;
+      assertNonNullable(outdated);
+      if (outdated) {
+        return `最新バージョン ${latestVersion} にアップデートできます。`;
+      }
+
+      return `最新バージョン ${latestVersion} がインストール済みです。`;
+    }
+    case "fetchError":
+      return undefined;
+    case "loading":
+      return "最新バージョン：（読み込み中）";
+    default:
+      throw new ExhaustiveError(latestInfo.value);
+  }
 });
 
 const currentEngineStatus = computed<{
