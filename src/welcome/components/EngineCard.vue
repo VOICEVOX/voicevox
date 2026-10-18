@@ -173,7 +173,7 @@ const latestIdleMessage = computed(() => {
   assertNonNullable(packageInfo);
   const latestVersion = packageInfo.version;
   if (engineState.value.currentInfo.status === "notInstalled") {
-    return `最新バージョン ${latestVersion} をインストールします。`;
+    return `最新バージョン ${latestVersion} をインストールしてください。`;
   }
 
   const outdated = isOutdated.value;
