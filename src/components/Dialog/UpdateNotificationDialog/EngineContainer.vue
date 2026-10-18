@@ -8,7 +8,7 @@
     v-if="newUpdateResult.status == 'updateAvailable'"
     v-model:dialogOpened="dialogOpened"
     title="エンジンアップデートのお知らせ"
-    description="エンジンの管理から最新バージョンにアップデートできます。"
+    description="「エンジンの管理」から最新バージョンにアップデートできます。"
     updateButtonLabel="エンジンの管理を開く"
     :latestVersion="newUpdateResult.latestVersion"
     :newUpdateInfos="newUpdateResult.newUpdateInfos"
