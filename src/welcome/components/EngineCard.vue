@@ -21,15 +21,18 @@
     <div v-if="cardState.type === 'loading'" class="engine-meta">
       （読み込み中）
     </div>
-    <div v-if="cardState.type === 'idle'" class="engine-meta">
+    <div
+      v-if="cardState.type === 'fetched' && cardState.status === 'idle'"
+      class="engine-meta"
+    >
       {{ cardState.latestInfoMessage }}
     </div>
     <div
-      v-if="cardState.type === 'download' || cardState.type === 'install'"
+      v-if="cardState.type === 'fetched' && cardState.status !== 'idle'"
       class="engine-progress"
     >
       <div class="engine-progress-label">
-        {{ cardState.type === "download" ? "ダウンロード" : "インストール" }}
+        {{ cardState.status === "download" ? "ダウンロード" : "インストール" }}
       </div>
       <div class="engine-progress-bar">
         <div
@@ -42,15 +45,11 @@
       </div>
     </div>
     <EngineRuntimeTargetSelect
-      v-if="
-        cardState.type === 'idle' ||
-        cardState.type === 'download' ||
-        cardState.type === 'install'
-      "
+      v-if="cardState.type === 'fetched'"
       :engineId="props.engineId"
       :availableRuntimeTargets="cardState.availableRuntimeTargets"
       :modelValue="cardState.selected.target"
-      :disabled="cardState.type !== 'idle'"
+      :disabled="cardState.status !== 'idle'"
       @update:modelValue="handleRuntimeTargetChange"
     />
     <div class="engine-actions">
@@ -73,7 +72,9 @@
         <BaseButton
           :label="cardState.action.label"
           :disabled="
-            cardState.type !== 'idle' || cardState.action.type === 'completed'
+            cardState.type !== 'fetched' ||
+            cardState.status !== 'idle' ||
+            cardState.action.type === 'completed'
           "
           :variant="cardState.action.variant"
           @click="store.installEngine(props.engineId)"
@@ -122,11 +123,10 @@ type AvailableCardData = {
 type EngineCardState =
   | { type: "loading"; action: UnavailableAction }
   | { type: "fetchError"; error: unknown; action: UnavailableAction }
-  | (AvailableCardData & { type: "idle"; latestInfoMessage: string })
-  | (AvailableCardData & {
-      type: "download" | "install";
-      progress: number;
-    });
+  | (AvailableCardData & { type: "fetched" } & (
+        | { status: "idle"; latestInfoMessage: string }
+        | { status: "download" | "install"; progress: number }
+      ));
 
 const props = defineProps<{
   engineId: EngineId;
@@ -188,12 +188,18 @@ const cardState = computed<EngineCardState>(() => {
       default:
         throw new ExhaustiveError(action);
     }
-    return { ...availableCardData, type: "idle", latestInfoMessage };
+    return {
+      ...availableCardData,
+      type: "fetched",
+      status: "idle",
+      latestInfoMessage,
+    };
   }
 
   return {
     ...availableCardData,
-    type: latestInfo.progress.type,
+    type: "fetched",
+    status: latestInfo.progress.type,
     progress: latestInfo.progress.progress,
   };
 });
