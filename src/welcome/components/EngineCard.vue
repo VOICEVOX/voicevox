@@ -2,7 +2,7 @@
   <section class="engine-card">
     <div class="engine-card-head">
       <div class="engine-name">{{ engineState.embeddedInfo.engineName }}</div>
-      <div class="engine-card-status">
+      <div class="engine-status">
         <span
           v-if="engineState.currentInfo.status === 'installed'"
           class="status-pill"
@@ -48,7 +48,7 @@
       v-if="cardState.type === 'fetched'"
       :engineId="props.engineId"
       :availableRuntimeTargets="cardState.availableRuntimeTargets"
-      :modelValue="cardState.selected.target"
+      :modelValue="cardState.selectedRuntimeTarget"
       :disabled="cardState.status !== 'idle'"
       @update:modelValue="handleRuntimeTargetChange"
     />
@@ -108,16 +108,16 @@ type InstallationButton = {
 
 type EngineCardState =
   | { type: "loading" }
-  | { type: "fetchError"; error: unknown }
   | ({
       type: "fetched";
       availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"];
-      selected: EnginePackageLatestInfo["availableRuntimeTargets"][number];
+      selectedRuntimeTarget: RuntimeTarget;
       installationButton: InstallationButton;
     } & (
       | { status: "idle"; latestInfoMessage: string }
       | { status: "download" | "install"; progress: number }
-    ));
+    ))
+  | { type: "fetchError"; error: unknown };
 
 const props = defineProps<{
   engineId: EngineId;
@@ -138,20 +138,20 @@ const cardState = computed<EngineCardState>(() => {
   }
 
   const availableRuntimeTargets = latestInfo.info.availableRuntimeTargets;
-  const selected = availableRuntimeTargets.find(
+  const selectedRuntimeTargetInfo = availableRuntimeTargets.find(
     (info) => info.target === latestInfo.selectedRuntimeTarget,
   );
-  assertNonNullable(selected);
+  assertNonNullable(selectedRuntimeTargetInfo);
 
   const display = createInstallationCardDisplay(
     engine.currentInfo,
-    selected.packageInfo,
+    selectedRuntimeTargetInfo.packageInfo,
     hasJustCompletedInstallation.value,
     latestInfo.progress.type !== "idle",
   );
   const fetchedCardData = {
     availableRuntimeTargets,
-    selected,
+    selectedRuntimeTarget: latestInfo.selectedRuntimeTarget,
     installationButton: display.installationButton,
   };
 
@@ -265,7 +265,7 @@ const handleInstallEngine = async () => {
   @include mixin.headline-3;
 }
 
-.engine-card-status {
+.engine-status {
   display: flex;
   gap: vars.$gap-1;
 }

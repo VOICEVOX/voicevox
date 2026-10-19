@@ -14,13 +14,13 @@ import { showErrorDialog } from "@/components/Dialog/Dialog";
 
 type LatestInfoState =
   | { type: "loading" }
-  | { type: "fetchError"; error: unknown }
   | {
       type: "fetched";
       info: EnginePackageLatestInfo;
-      selectedRuntimeTarget: RuntimeTarget;
       progress: EngineProgressInfo;
-    };
+      selectedRuntimeTarget: RuntimeTarget;
+    }
+  | { type: "fetchError"; error: unknown };
 
 type AllEngineState =
   | {
