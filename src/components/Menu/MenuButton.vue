@@ -112,7 +112,7 @@ if (props.menudata.type === "root") {
   overflow: hidden;
   :deep(.q-btn__content) {
     display: inline;
-    line-height: var(--menubar-height);
+    line-height: vars.$menubar-height;
     overflow: hidden;
     text-overflow: ellipsis;
   }

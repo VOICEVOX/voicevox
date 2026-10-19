@@ -1,3 +1,4 @@
+@use "./variables" as vars;
 @use "./colors" as colors;
 @use "./v2/variables" as vars-v2;
 @use "./v2/colors" as colors-v2;
@@ -96,7 +97,7 @@ img {
   .q-dialog__inner,
   .q-loading,
   .q-loading__backdrop {
-    top: var(--menubar-height);
+    top: vars.$menubar-height;
     left: 0;
     right: 0;
     bottom: 0;

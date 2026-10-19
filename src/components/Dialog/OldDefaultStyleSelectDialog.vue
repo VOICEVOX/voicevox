@@ -249,7 +249,7 @@ const closeDialog = () => {
   }
 }
 .q-page {
-  height: calc(100vh - (var(--menubar-height) + #{vars.$toolbar-height}));
+  height: calc(100vh - (#{vars.$menubar-height} + #{vars.$toolbar-height}));
   overflow-y: scroll;
 
   > :deep(.scroll) {

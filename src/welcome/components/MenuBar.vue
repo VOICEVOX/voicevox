@@ -88,7 +88,7 @@ onMounted(async () => {
 @use "@/styles/colors" as colors;
 
 .q-bar {
-  height: var(--menubar-height);
+  height: vars.$menubar-height;
   -webkit-app-region: drag; // Electronのドラッグ領域
   :deep(.q-btn) {
     margin-left: 0;
@@ -97,11 +97,11 @@ onMounted(async () => {
 }
 
 .window-logo {
-  height: var(--menubar-height);
+  height: vars.$menubar-height;
 }
 
 .window-title {
-  height: var(--menubar-height);
+  height: vars.$menubar-height;
   text-overflow: ellipsis;
   overflow: hidden;
 }

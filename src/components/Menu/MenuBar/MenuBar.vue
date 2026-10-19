@@ -173,10 +173,11 @@ watch(uiLocked, () => {
 </style>
 
 <style scoped lang="scss">
+@use "@/styles/variables" as vars;
 @use "@/styles/colors" as colors;
 
 .q-bar {
-  min-height: var(--menubar-height);
+  min-height: vars.$menubar-height;
 
   -webkit-app-region: drag; // Electronのドラッグ領域
   :deep(.q-btn) {
@@ -186,12 +187,12 @@ watch(uiLocked, () => {
 }
 
 .window-logo {
-  height: var(--menubar-height);
+  height: vars.$menubar-height;
 }
 
 .window-title {
-  height: var(--menubar-height);
-  line-height: var(--menubar-height);
+  height: vars.$menubar-height;
+  line-height: vars.$menubar-height;
   margin-right: 10%;
   text-overflow: ellipsis;
   overflow: hidden;

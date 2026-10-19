@@ -1,5 +1,8 @@
 $toolbar-height: 66px;
 
+// OS ごとに変わる高さを CSS 変数から取得する。各ファイルではこの SCSS 変数を参照する。
+$menubar-height: var(--menubar-height);
+
 $detail-view-splitter-cell-z-index: 2;
 
 $character-item-size: 215px; // キャラクター並び替えダイアログなどでの１キャラ表示要素の横幅
