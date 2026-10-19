@@ -52,6 +52,8 @@
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-tools",
     "postinstall:packages": "install-electron && electron-builder install-app-deps && playwright install chromium",
     "postinstall:download-tools": "pnpm run mise install",
+    "jactionlint": "cross-env ./vendored/jactionlint/jactionlint",
+    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadJactionlint.ts",
     "postuninstall": "electron-builder install-app-deps"
   },
   "dependencies": {

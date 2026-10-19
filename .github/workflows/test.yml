@@ -33,9 +33,9 @@ jobs:
         id: check-whether-to-update-snapshots
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "shouldUpdateSnapshots=${{ inputs.update_snapshots }}" >> $GITHUB_OUTPUT
+            echo "shouldUpdateSnapshots=${{ inputs.update_snapshots }}" >> "$GITHUB_OUTPUT"
           else
-            echo "shouldUpdateSnapshots=false" >> $GITHUB_OUTPUT
+            echo "shouldUpdateSnapshots=false" >> "$GITHUB_OUTPUT"
           fi
 
   # ビルドのテスト
@@ -111,13 +111,13 @@ jobs:
           sed -i -e 's|"path/to/engine"|"${{ steps.download-engine.outputs.run_path }}"|' .env
           # GitHub Actions 環境だとたまに50021が封じられていることがあるので、ランダムなポートを使うようにする
           PORT=$(node -r net -e "server=net.createServer();server.listen(0,()=>{console.log(server.address().port);server.close()})")
-          sed -i -e 's|random_port|'$PORT'|' .env
+          sed -i -e "s|random_port|$PORT|" .env
           cat .env # ログ用
 
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
           fi
-          if [[ ${{ matrix.os }} == ubuntu-* ]]; then
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
             xvfb-run --auto-servernum pnpm run test:electron-e2e
           else
             pnpm run test:electron-e2e
@@ -186,8 +186,8 @@ jobs:
         run: |
           # パッチを適用
           for patch in ${{ runner.temp }}/patches/*.diff; do
-            git apply --allow-empty $patch
-            rm $patch
+            git apply --allow-empty "$patch"
+            rm "$patch"
           done
 
           # 変更があるかチェック
@@ -197,11 +197,11 @@ jobs:
             git add tests/
             git commit -m "（スナップショットを更新）"
 
-            echo "changes_exist=true" >> $GITHUB_OUTPUT
+            echo "changes_exist=true" >> "$GITHUB_OUTPUT"
           else
             echo "No changes to commit"
 
-            echo "changes_exist=false" >> $GITHUB_OUTPUT
+            echo "changes_exist=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Push changes
@@ -240,6 +240,8 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run markdownlint
       - run: pnpm run typos
+      # ubuntu-latestにはShellCheckが入っているので、run:のシェルスクリプトも検査される
+      - run: pnpm run jactionlint
 
       - name: Check pinact
         uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
