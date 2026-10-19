@@ -13,7 +13,7 @@ import {
  */
 export const useFetchNewUpdateInfos = (
   currentVersionGetter: () => string | Promise<string>,
-  newUpdateInfosUrl: UrlString,
+  newUpdateInfosUrlGetter: () => UrlString | Promise<UrlString>,
 ) => {
   const result = ref<
     | {
@@ -33,6 +33,7 @@ export const useFetchNewUpdateInfos = (
 
   void (async () => {
     const currentVersion = await currentVersionGetter();
+    const newUpdateInfosUrl = await newUpdateInfosUrlGetter();
 
     const updateInfos = await fetch(newUpdateInfosUrl).then(
       async (response) => {
