@@ -83,3 +83,33 @@ test("ドラッグで長いノートを追加できる", async ({ page }) => {
     expect(secondNoteBox.width).toBeGreaterThanOrEqual(firstNoteBox.width * 2);
   });
 });
+
+test("ボタンをクリックした後もSpaceキーで再生できる", async ({ page }) => {
+  await navigateToSong(page);
+
+  const sequencer = page.getByLabel("シーケンサ");
+  await sequencer.click({ position: { x: 100, y: 171 } }); // ノートを追加
+
+  for (const buttonText of ["skip_previous", "timeline"]) {
+    await test.step(`${buttonText}のボタンをクリックしてからSpaceキーを押す`, async () => {
+      await page.getByText(buttonText, { exact: true }).click();
+      await page.keyboard.press("Space");
+      await expect(page.getByText("stop", { exact: true })).toBeVisible();
+      await page.keyboard.press("Space"); // 停止
+      await expect(page.getByText("play_arrow", { exact: true })).toBeVisible();
+    });
+  }
+});
+
+test("キーボードでフォーカスしたボタンはSpaceキーで押せる", async ({
+  page,
+}) => {
+  await navigateToSong(page);
+
+  const loopButton = page.locator(".song-playback-loop");
+  await loopButton.focus();
+  await page.keyboard.press("Space");
+
+  await expect(loopButton).toHaveClass(/song-playback-loop-enabled/);
+  await expect(page.getByText("play_arrow", { exact: true })).toBeVisible();
+});
