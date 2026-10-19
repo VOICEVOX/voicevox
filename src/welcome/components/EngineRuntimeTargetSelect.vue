@@ -7,7 +7,7 @@
         :key="targetInfo.target"
         class="option"
         :class="{
-          'option-selected': modelValue === targetInfo.target,
+          'option-selected': model === targetInfo.target,
           'option-disabled': disabled,
         }"
       >
@@ -15,14 +15,14 @@
           class="option-radio"
           type="radio"
           :name="engineId"
-          :checked="modelValue === targetInfo.target"
+          :checked="model === targetInfo.target"
           :disabled
-          @change="emit('update:modelValue', targetInfo.target)"
+          @change="model = targetInfo.target"
         />
         <span class="option-content">
           <span class="option-indicator" aria-hidden="true">
             <QIcon
-              v-if="modelValue === targetInfo.target"
+              v-if="model === targetInfo.target"
               class="option-check"
               name="check"
             />
@@ -49,13 +49,10 @@ import type { EngineId } from "@/type/preload";
 defineProps<{
   engineId: EngineId;
   availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"];
-  modelValue: RuntimeTarget;
   disabled: boolean;
 }>();
 
-const emit = defineEmits<{
-  "update:modelValue": [target: RuntimeTarget];
-}>();
+const model = defineModel<RuntimeTarget>({ required: true });
 </script>
 
 <style scoped lang="scss">
