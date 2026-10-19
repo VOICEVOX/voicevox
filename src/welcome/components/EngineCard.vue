@@ -127,8 +127,9 @@ const props = defineProps<{
 const store = useStore();
 
 /**
- * このカードからのインストールが成功してから、エンジン選択を変えるまでの間は`true`。
+ * インストール直後かどうか。
  * インストール直後に再インストールを誤って押さないよう、ボタンを無効にするために使う。
+ * インストールが成功してからエンジン選択を変えるまでの間だけtrueになる。
  */
 const hasJustCompletedInstallation = ref(false);
 
