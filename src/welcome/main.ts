@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import App from "./components/App.vue";
+import { isMac } from "@/helpers/platform";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
@@ -13,6 +14,10 @@ import "./backend/apiLoader";
 // NOTE: 起動後、設定を読み込んでからvue-gtmを有効化する関係上、dataLayerの用意が間に合わず、値が欠落してしまう箇所が存在する
 //       ため、それを防止するため自前でdataLayerをあらかじめ用意する
 window.dataLayer = [];
+
+if (isMac) {
+  document.body.dataset.platform = "macos";
+}
 
 createApp(App)
   .use(Quasar, {
