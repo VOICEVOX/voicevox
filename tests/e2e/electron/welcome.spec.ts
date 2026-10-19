@@ -52,8 +52,10 @@ test("エディタウィンドウを起動できる", async ({ launchElectronApp
       });
       await install.click();
 
-      const reinstall = welcomePage.getByText(/再インストール（.+?）/);
-      await reinstall.waitFor({
+      const installed = welcomePage.getByRole("button", {
+        name: "インストール済み",
+      });
+      await installed.waitFor({
         timeout: 60000,
       });
 
@@ -139,8 +141,10 @@ test("Welcome画面でエンジンをアップデートできる", async ({
   });
 
   await test.step("アップデート後の状態に切り替わる", async () => {
-    const reinstallButton = welcomePage.getByText(/再インストール（.+?）/);
-    await reinstallButton.waitFor({
+    const installedButton = welcomePage.getByRole("button", {
+      name: "インストール済み",
+    });
+    await installedButton.waitFor({
       timeout: 60000,
     });
   });
