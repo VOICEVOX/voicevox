@@ -91,7 +91,7 @@ import type {
   RuntimeTarget,
 } from "@/domain/defaultEngine/latestDefaultEngine";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
-import { assertNonNullable, UnreachableError } from "@/type/utility";
+import { assertNonNullable } from "@/type/utility";
 import type { EngineId } from "@/type/preload";
 import { useStore } from "@/welcome/store";
 import type {
@@ -222,23 +222,16 @@ function createInstallationCardDisplay(
   };
 }
 
-function showErrorDetailDialog(error: unknown): void {
+function showErrorDetailDialog(error: unknown) {
   void showErrorDialog("最新情報の取得に失敗しました", error);
 }
 
-const handleRuntimeTargetChange = (value: RuntimeTarget): void => {
-  const latestInfo = engineState.value.latestInfo;
-  if (latestInfo.type !== "fetched") {
-    throw new UnreachableError();
-  }
-  if (latestInfo.selectedRuntimeTarget === value) {
-    return;
-  }
+const handleRuntimeTargetChange = (value: RuntimeTarget) => {
   store.setSelectedRuntimeTarget(props.engineId, value);
   hasJustCompletedInstallation.value = false;
 };
 
-const handleInstallEngine = async (): Promise<void> => {
+const handleInstallEngine = async () => {
   hasJustCompletedInstallation.value = await store.installEngine(
     props.engineId,
   );

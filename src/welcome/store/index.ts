@@ -103,10 +103,21 @@ function createWelcomeStore() {
     return defaultRuntimeTargetInfo.target;
   };
 
+  const getSelectedRuntimeTarget = (engineId: EngineId): RuntimeTarget => {
+    if (allEngineState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+    const engineState = allEngineState.value.engineStates[engineId];
+    if (engineState.latestInfo.type !== "fetched") {
+      throw new UnreachableError();
+    }
+    return engineState.latestInfo.selectedRuntimeTarget;
+  };
+
   const setSelectedRuntimeTarget = (
     engineId: EngineId,
     target: RuntimeTarget,
-  ): void => {
+  ) => {
     if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
@@ -183,12 +194,7 @@ function createWelcomeStore() {
     }
     const engineState = allEngineState.value.engineStates[engineId];
     const previousLatestInfo = engineState.latestInfo;
-    if (
-      previousLatestInfo.type !== "fetched" ||
-      previousLatestInfo.progress.type === "idle"
-    ) {
-      engineState.latestInfo = { type: "loading" };
-    }
+    engineState.latestInfo = { type: "loading" };
     try {
       const info =
         await window.welcomeBackend.getEnginePackageLatestInfo(engineId);
@@ -233,11 +239,7 @@ function createWelcomeStore() {
   };
 
   const installEngine = async (engineId: EngineId): Promise<boolean> => {
-    const engineState = getEngineState(engineId);
-    if (engineState.latestInfo.type !== "fetched") {
-      throw new UnreachableError();
-    }
-    const target = engineState.latestInfo.selectedRuntimeTarget;
+    const target = getSelectedRuntimeTarget(engineId);
     setEngineProgress(engineId, { type: "download", progress: 0 });
     try {
       window.welcomeBackend.logInfo(
@@ -256,7 +258,7 @@ function createWelcomeStore() {
       await showErrorDialog("エンジンのインストールに失敗しました", error);
       return false;
     } finally {
-      await fetchCurrentEngineInfo(engineId);
+      void fetchCurrentEngineInfo(engineId);
     }
   };
 
