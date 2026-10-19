@@ -21,7 +21,7 @@
       <svg
         xmlns="http://www.w3.org/2000/svg"
         :width
-        :height="24"
+        :height="20"
         shape-rendering="crispEdges"
         style="pointer-events: none"
       >
