@@ -32,7 +32,7 @@ export interface SpeakerStyle {
      */
     id: number;
     /**
-     * スタイルの種類。talk:音声合成クエリの作成と音声合成が可能。singing_teacher:歌唱音声合成用のクエリの作成が可能。frame_decode:歌唱音声合成が可能。sing:歌唱音声合成用のクエリの作成と歌唱音声合成が可能。
+     * スタイルの種類。talk:音声合成クエリの作成と音声合成が可能。singing_teacher:歌唱音声合成用のクエリの作成が可能。frame_decode:歌唱音声合成が可能。sing:歌唱音声合成用のクエリの作成と歌唱音声合成が可能。streaming_talk:音声合成クエリの作成と音声合成とストリーミング音声合成が可能。
      * @type {string}
      * @memberof SpeakerStyle
      */
@@ -47,7 +47,8 @@ export const SpeakerStyleTypeEnum = {
     Talk: 'talk',
     SingingTeacher: 'singing_teacher',
     FrameDecode: 'frame_decode',
-    Sing: 'sing'
+    Sing: 'sing',
+    StreamingTalk: 'streaming_talk'
 } as const;
 export type SpeakerStyleTypeEnum = typeof SpeakerStyleTypeEnum[keyof typeof SpeakerStyleTypeEnum];
 

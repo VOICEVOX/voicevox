@@ -232,9 +232,8 @@ const handleRuntimeTargetChange = (value: RuntimeTarget) => {
 };
 
 const handleInstallEngine = async () => {
-  hasJustCompletedInstallation.value = await store.installEngine(
-    props.engineId,
-  );
+  const result = await store.installEngine(props.engineId);
+  hasJustCompletedInstallation.value = result === "succeeded";
 };
 </script>
 
