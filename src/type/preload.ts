@@ -132,8 +132,8 @@ export interface Sandbox {
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): Promise<string>;
-  hasDownloadableDefaultEngine(): Promise<boolean>;
   getDownloadableDefaultEnginePackageIds(): Promise<EngineId[]>;
+  getEnginePackageUpdateInfosUrl(engineId: EngineId): Promise<UrlString>;
 }
 
 export type AppInfos = {
@@ -406,6 +406,7 @@ export const rootMiscSettingSchema = z.object({
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
+  skipEngineUpdateVersion: z.string().optional(), // エンジンのアップデートをスキップしたバージョン
   undoableTrackOperations: z // ソングエディタでどのトラック操作をUndo可能にするか
     .object({
       soloAndMute: z.boolean().default(true),

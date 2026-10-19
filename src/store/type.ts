@@ -1822,7 +1822,7 @@ export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
   altPortInfos: AltPortInfos;
-  hasDownloadableDefaultEngine: boolean;
+  downloadableDefaultEngineId?: EngineId;
 };
 
 export type EngineStoreTypes = {
@@ -1830,8 +1830,8 @@ export type EngineStoreTypes = {
     action(): void;
   };
 
-  SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
-    mutation: { hasDownloadableDefaultEngine: boolean };
+  SET_DOWNLOADABLE_DEFAULT_ENGINE_ID: {
+    mutation: { downloadableDefaultEngineId?: EngineId };
   };
 
   SET_ENGINE_INFO: {
@@ -2264,6 +2264,7 @@ export type DialogStates = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
+  isEngineUpdateNotificationDialogOpen: boolean;
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
   isPresetManageDialogOpen: boolean;
