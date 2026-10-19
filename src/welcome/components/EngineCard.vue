@@ -281,8 +281,6 @@ const handleInstallEngine = async () => {
 }
 
 .engine-meta {
-  display: grid;
-  gap: 4px;
   color: colors.$display;
 }
 

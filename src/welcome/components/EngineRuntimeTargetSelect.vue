@@ -15,9 +15,8 @@
           class="option-radio"
           type="radio"
           :name="engineId"
-          :value="targetInfo.target"
           :checked="modelValue === targetInfo.target"
-          :disabled="disabled"
+          :disabled
           @change="emit('update:modelValue', targetInfo.target)"
         />
         <span class="option-content">
@@ -63,12 +62,10 @@ const emit = defineEmits<{
 @use "@/styles/v2/variables" as vars;
 @use "@/styles/v2/mixin" as mixin;
 @use "@/styles/v2/colors" as colors;
+@use "@/styles/visually-hidden" as visually-hidden;
 
 .engine-runtime-target-select {
-  display: grid;
-  width: 100%;
   min-width: 0;
-  gap: vars.$gap-1;
   margin: 0;
   padding: 0;
   border: 0;
@@ -76,7 +73,6 @@ const emit = defineEmits<{
 }
 
 legend {
-  padding: 0;
   font-weight: bold;
 }
 
@@ -96,8 +92,6 @@ legend {
   border: 1px solid colors.$border;
   border-radius: vars.$radius-1;
   background-color: colors.$control;
-  color: colors.$display;
-  text-align: start;
   cursor: pointer;
 
   &:not(.option-selected):hover:not(.option-disabled) {
@@ -124,12 +118,7 @@ legend {
 }
 
 .option-radio {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
+  @include visually-hidden.visually-hidden;
 }
 
 .option-content {
