@@ -16,6 +16,10 @@ export type VolumeViewInfo = {
   readonly leftPadding: number;
 };
 
+/** baseXを、左端の余白を含む画面X座標へ変換する。 */
+export const volumeBaseXToScreenX = (baseX: number, viewInfo: VolumeViewInfo) =>
+  baseX * viewInfo.zoomX - viewInfo.offsetX + viewInfo.leftPadding;
+
 /** normalizedY(下端0・上端1)を、上端を0とする画面Y座標へ変換する。 */
 export const volumeNormalizedYToScreenY = (
   normalizedY: number,
@@ -125,26 +129,23 @@ export class VolumeLine {
 
     this.line.clear();
 
-    const strokeStyle = {
+    const strokeStyle: PIXI.StrokeStyle = {
       width: this.width,
       color: this.color.toRgbNumber(),
       alpha,
       alignment: 0.5,
+      cap: "round",
+      join: "round",
     };
 
     for (const segment of segments) {
       if (segment.length < 2) continue;
 
-      const firstPoint = segment[0];
-      const lastPoint = segment[segment.length - 1];
-      const firstX =
-        firstPoint.baseX * viewInfo.zoomX -
-        viewInfo.offsetX +
-        viewInfo.leftPadding;
-      const lastX =
-        lastPoint.baseX * viewInfo.zoomX -
-        viewInfo.offsetX +
-        viewInfo.leftPadding;
+      const firstX = volumeBaseXToScreenX(segment[0].baseX, viewInfo);
+      const lastX = volumeBaseXToScreenX(
+        segment[segment.length - 1].baseX,
+        viewInfo,
+      );
       if (firstX >= viewInfo.viewportWidth || lastX <= 0) {
         continue;
       }
@@ -156,10 +157,7 @@ export class VolumeLine {
 
       // 画面座標に変換
       const screenPoints = segment.slice(startIndex, endIndex).map((point) => ({
-        x:
-          point.baseX * viewInfo.zoomX -
-          viewInfo.offsetX +
-          viewInfo.leftPadding,
+        x: volumeBaseXToScreenX(point.baseX, viewInfo),
         y: volumeNormalizedYToScreenY(
           point.normalizedY,
           viewInfo.viewportHeight,

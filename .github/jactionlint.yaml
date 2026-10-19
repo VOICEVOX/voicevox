@@ -1,0 +1,3 @@
+# actionlintと同じ範囲（構文・型・ShellCheckなど）をチェックする
+# https://jactionlint.jdx.dev/actionlint
+profile: correctness

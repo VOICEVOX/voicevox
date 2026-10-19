@@ -58,16 +58,25 @@ export type PhonemeTimingInfo = {
 
 export type PhonemeTimingEditorInput =
   | {
+      readonly type: "mouseEvent";
+      readonly targetArea: "PhonemeTimingArea";
+      readonly mouseEvent: MouseEvent;
+      readonly positionX: number;
+      readonly positionY: number;
+    }
+  | {
       readonly type: "pointerEvent";
       readonly targetArea: "PhonemeTimingArea";
       readonly pointerEvent: PointerEvent;
       readonly positionX: number;
+      readonly positionY: number;
     }
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "Window";
       readonly pointerEvent: PointerEvent;
       readonly positionX: number;
+      readonly positionY: number;
     };
 
 export type PhonemeTimingEditorPreviewMode =
@@ -75,7 +84,15 @@ export type PhonemeTimingEditorPreviewMode =
   | "MOVE_PHONEME_TIMING"
   | "ERASE_PHONEME_TIMING";
 
+/** ノート内の位置で特定した音素境界。 */
+export type PhonemeTimingTarget = {
+  noteId: NoteId;
+  phonemeIndexInNote: number;
+};
+
 export type PhonemeTimingEditorRefs = {
+  /** ホバー中またはドラッグ中の音素境界。 */
+  readonly activePhoneme: Ref<PhonemeTimingTarget | undefined>;
   readonly previewPhonemeTiming: Ref<PhonemeTimingPreview | undefined>;
   readonly previewMode: Ref<PhonemeTimingEditorPreviewMode>;
   readonly cursorState: Ref<CursorState>;
@@ -90,6 +107,7 @@ export type PhonemeTimingEditorComputedRefs = {
   readonly editorFrameRate: ComputedRef<number>;
   readonly phonemeTimingInfos: ComputedRef<PhonemeTimingInfo[]>;
   readonly phraseInfos: ComputedRef<Map<PhraseKey, PhraseInfo>>;
+  readonly phonemeBandYRange: ComputedRef<PhonemeBandYRange>;
 };
 
 export type PhonemeTimingEditorPartialStore = {
@@ -112,10 +130,31 @@ export type PhonemeTimingEditorPartialStore = {
   >;
 };
 
+/** 音素帯の上端と下端のY座標 */
+export type PhonemeBandYRange = {
+  readonly top: number;
+  readonly bottom: number;
+};
+
 export type PhonemeTimingEditorContext = PhonemeTimingEditorRefs &
   PhonemeTimingEditorComputedRefs & {
     readonly store: PhonemeTimingEditorPartialStore;
   };
+
+/**
+ * 音素境界をつかめる高さにポインタがあるかを判定する
+ * ノート行やラベル行では境界をつかませず、帯の端を少し外れた位置は許容する
+ */
+export function isInPhonemeBandHitArea(
+  positionY: number,
+  bandYRange: PhonemeBandYRange,
+) {
+  const marginPx = 4;
+  return (
+    bandYRange.top - marginPx <= positionY &&
+    positionY <= bandYRange.bottom + marginPx
+  );
+}
 
 export type PhonemeTimingEditorIdleStateId =
   | "movePhonemeTimingToolIdle"

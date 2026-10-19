@@ -62,6 +62,7 @@ export class DrawVolumeState implements State<
       startFrame: this.cursorPosAtStart.frame,
     };
     context.cursorState.value = "DRAW";
+    context.showDrawFeedback.value = true;
     context.previewMode.value = "VOLUME_DRAW";
     context.tooltipData.value = this.tooltipDataAtStart;
     this.updateHighlightedFrame(context, this.cursorPosAtStart.frame);
@@ -184,6 +185,7 @@ export class DrawVolumeState implements State<
 
     context.previewVolumeEdit.value = undefined;
     context.cursorState.value = "UNSET";
+    context.showDrawFeedback.value = false;
     context.previewMode.value = "IDLE";
     context.tooltipData.value = undefined;
     context.highlightedFrame.value = undefined;

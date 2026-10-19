@@ -4,7 +4,8 @@
 
     <QPageContainer>
       <QPage class="main-row-panes">
-        <ProgressView />
+        <ProgressView :progress="store.getters.PROGRESS" />
+        <ProgressView :progress="playbackProgress" />
         <EngineStartupOverlay :isCompletedInitialStartup />
 
         <QSplitter
@@ -171,6 +172,10 @@ const props = defineProps<{
 
 const store = useStore();
 
+const playbackProgress = computed(() =>
+  store.state.currentPlayState.type === "preparing" ? 0 : -1,
+);
+
 const audioKeys = computed(() => store.state.audioKeys);
 const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -182,7 +187,7 @@ registerHotkeyWithCleanup({
   name: "音声書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.actions.SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG();
+      void store.actions.SHOW_GENERATE_AND_SAVE_ALL_AUDIO_FILE_DIALOG();
     }
   },
 });
@@ -191,7 +196,7 @@ registerHotkeyWithCleanup({
   name: "選択音声を書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.actions.SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG();
+      void store.actions.SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_FILE_DIALOG();
     }
   },
 });
@@ -200,7 +205,7 @@ registerHotkeyWithCleanup({
   name: "音声を繋げて書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.actions.SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG();
+      void store.actions.SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_FILE_DIALOG();
     }
   },
 });

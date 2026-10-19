@@ -13,6 +13,7 @@ import { tickToSecond } from "@/song/music";
 import { clamp, getPrev } from "@/song/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { assertNonNullable } from "@/type/utility";
+import { isInPhonemeBandHitArea } from "@/song/phonemeTimingEditorStateMachine/common";
 
 export class MovePhonemeTimingState implements State<
   PhonemeTimingEditorStateDefinitions,
@@ -29,6 +30,7 @@ export class MovePhonemeTimingState implements State<
 
   private currentPositionX: number;
   private shouldApplyPreview: boolean;
+  private isPointerOnBand: boolean;
 
   private animationContext:
     | {
@@ -52,27 +54,15 @@ export class MovePhonemeTimingState implements State<
 
     this.currentPositionX = args.startPositionX;
     this.shouldApplyPreview = false;
+    this.isPointerOnBand = true;
   }
 
   onEnter(context: PhonemeTimingEditorContext) {
-    const targetInfo = context.phonemeTimingInfos.value.find(
-      (info) =>
-        info.noteId === this.noteId &&
-        info.phonemeIndexInNote === this.phonemeIndexInNote,
-    );
-
-    if (targetInfo != undefined) {
-      const initialOffsetSeconds =
-        targetInfo.editedStartTimeSeconds - targetInfo.originalStartTimeSeconds;
-
-      context.previewPhonemeTiming.value = {
-        type: "move",
-        noteId: this.noteId,
-        phonemeIndexInNote: this.phonemeIndexInNote,
-        offsetSeconds: initialOffsetSeconds,
-      };
-    }
-
+    // 押下から解放後まで、操作中の境界の強調表示を途切れさせない。
+    context.activePhoneme.value = {
+      noteId: this.noteId,
+      phonemeIndexInNote: this.phonemeIndexInNote,
+    };
     context.previewMode.value = "MOVE_PHONEME_TIMING";
     context.cursorState.value = "EW_RESIZE";
 
@@ -81,7 +71,13 @@ export class MovePhonemeTimingState implements State<
         throw new Error("animationContext is undefined.");
       }
       if (this.animationContext.executePreviewProcess) {
-        this.updatePreview(context);
+        // クリックや1px未満の揺れではドラッグ表示に切り替えない。
+        if (
+          context.previewPhonemeTiming.value != undefined ||
+          Math.abs(this.currentPositionX - this.startPositionX) >= 1
+        ) {
+          this.updatePreview(context);
+        }
         this.animationContext.executePreviewProcess = false;
       }
       this.animationContext.previewRequestId =
@@ -97,6 +93,7 @@ export class MovePhonemeTimingState implements State<
 
   process({
     input,
+    context,
     setNextState,
   }: {
     input: PhonemeTimingEditorInput;
@@ -110,6 +107,17 @@ export class MovePhonemeTimingState implements State<
     if (input.type === "pointerEvent") {
       const mouseButton = getButton(input.pointerEvent);
 
+      if (input.targetArea === "PhonemeTimingArea") {
+        if (input.pointerEvent.type === "pointermove") {
+          this.isPointerOnBand = isInPhonemeBandHitArea(
+            input.positionY,
+            context.phonemeBandYRange.value,
+          );
+        } else if (input.pointerEvent.type === "pointerleave") {
+          this.isPointerOnBand = false;
+        }
+      }
+
       if (
         input.targetArea === "Window" ||
         input.targetArea === "PhonemeTimingArea"
@@ -121,10 +129,15 @@ export class MovePhonemeTimingState implements State<
           input.pointerEvent.type === "pointerup" &&
           mouseButton === "LEFT_BUTTON"
         ) {
+          this.currentPositionX = input.positionX;
           const pixelDelta = Math.abs(
             this.currentPositionX - this.startPositionX,
           );
           this.shouldApplyPreview = pixelDelta >= 1;
+          // 動かしてすぐ離すとプレビューが未作成のことがあるため、解放位置で作ってから確定する。
+          if (this.shouldApplyPreview) {
+            this.updatePreview(context);
+          }
           setNextState(this.returnStateId, undefined);
         } else if (input.pointerEvent.type === "pointercancel") {
           setNextState(this.returnStateId, undefined);
@@ -149,6 +162,10 @@ export class MovePhonemeTimingState implements State<
       this.applyPreview(context);
     }
 
+    // 帯の外で離すと、ポインタを動かすまで強調表示が残るため、ここで解除する。
+    if (!this.isPointerOnBand) {
+      context.activePhoneme.value = undefined;
+    }
     context.previewPhonemeTiming.value = undefined;
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";

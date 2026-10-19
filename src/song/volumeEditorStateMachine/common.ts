@@ -47,6 +47,11 @@ export type VolumeEditorRefs = {
   readonly previewVolumeEdit: Ref<VolumePreviewEdit | undefined>;
   readonly previewMode: Ref<VolumeEditorPreviewMode>;
   readonly cursorState: Ref<CursorState>;
+  /**
+   * 描画ツールの区間強調とホバー点を表示するか。
+   * cursorStateはカーソルの見た目専用なので、表示条件はこちらで持つ。
+   */
+  readonly showDrawFeedback: Ref<boolean>;
   readonly tooltipData: Ref<VolumeEditorTooltipData | undefined>;
   /**
    * ハイライトする編集可能区間を指し示すフレーム。
@@ -55,6 +60,14 @@ export type VolumeEditorRefs = {
    * 増減し、区間の値を保持すると既に消えた区間や動く前の境界を指し続けるため。
    */
   readonly highlightedFrame: Ref<number | undefined>;
+  /**
+   * ホバー中のポインタの画面座標。
+   * ツールチップの値はここでは持たず、highlightedFrameのその時点のカーブの値から導く。
+   * 値を保持すると、ポインタを動かさずにUndoなどでカーブが変わったときに古いままになるため。
+   */
+  readonly hoverPointer: Ref<
+    { readonly x: number; readonly y: number } | undefined
+  >;
 };
 
 export type VolumeEditorComputedRefs = {

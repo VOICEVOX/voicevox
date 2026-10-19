@@ -7,24 +7,38 @@
   >
     <div class="volume-time-grid" aria-hidden="true">
       <slot name="grid" />
+      <div class="volume-lane-notes">
+        <div
+          v-for="note in laneNotes"
+          :key="note.id"
+          class="volume-lane-note-tick"
+          :class="{ active: note.active }"
+          :style="{ left: `${Math.round(note.x) - 1}px` }"
+        />
+        <div
+          v-for="note in laneNotes"
+          :key="note.id"
+          class="volume-lane-note"
+          :class="{ active: note.active }"
+          :style="{ left: `${note.x}px`, width: `${note.width}px` }"
+        >
+          <span v-if="note.width >= VOLUME_EDITOR_LAYOUT.lyricMinWidthPx">{{
+            note.lyric
+          }}</span>
+        </div>
+      </div>
     </div>
     <canvas ref="canvas" class="volume-editor-canvas" />
     <div
       class="volume-editor-area"
       @pointerdown="onSurfacePointerDown"
+      @pointerup="onSurfacePointerUp"
       @pointermove="onSurfacePointerMove"
       @pointerleave="onSurfacePointerLeave"
     ></div>
     <Tooltip :state="tooltipState" :viewportWidth :viewportHeight />
     <div class="volume-grid-labels" aria-hidden="true">
-      <div
-        v-for="label in horizontalGridLabels"
-        :key="label.label"
-        class="volume-grid-label"
-        :style="{ top: `${label.y}px` }"
-      >
-        {{ label.label }}
-      </div>
+      <div class="volume-grid-label" :style="{ top: zeroLinePosition }">0</div>
     </div>
     <SequencerVolumeToolPalette
       class="volume-tool-palette"
@@ -58,15 +72,15 @@ import {
   buildVolumeSegments,
   VolumeEditorRenderer,
   type VolumeEditorBaseXRange,
+  type VolumeEditPosition,
 } from "./renderer";
 import { VOLUME_EDITOR_LAYOUT } from "./style";
 import ContextMenu, {
   type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
 import SequencerVolumeToolPalette from "@/components/Song/SequencerVolumeToolPalette.vue";
-import type { Tempo, VolumeEditValue } from "@/domain/project/type";
+import type { Note, Tempo, VolumeEditValue } from "@/domain/project/type";
 import { secondToTick } from "@/song/music";
-import { clamp } from "@/song/utility";
 import {
   getXInBorderBox,
   tickToBaseX,
@@ -74,6 +88,7 @@ import {
   type ViewportInfo,
 } from "@/song/viewHelper";
 import { createThemeColorResolver } from "@/song/graphics/cssColor";
+import type { VolumeViewInfo } from "@/song/graphics/volumeLine";
 import type { VolumeEditMode } from "@/song/volumeEditMode";
 import type {
   VolumeEditableFrameRange,
@@ -84,7 +99,7 @@ import type {
   VolumeEditorTooltipData,
 } from "@/song/volumeEditorStateMachine/common";
 import type { VolumeEditTool } from "@/store/type";
-import { assertNonNullable, UnreachableError } from "@/type/utility";
+import { assertNonNullable } from "@/type/utility";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 defineOptions({
@@ -94,13 +109,16 @@ defineOptions({
 const props = defineProps<{
   viewportInfo: ViewportInfo;
   effectiveFramewise: readonly VolumeEditValue[];
+  notes: readonly Note[];
   previewEraseRanges: readonly VolumeEditFrameRange[];
   tempos: Tempo[];
   tpqn: number;
   editorFrameRate: number;
   previewMode: VolumeEditorPreviewMode;
   cursorState: CursorState;
+  showDrawFeedback: boolean;
   tooltipData: VolumeEditorTooltipData | undefined;
+  highlightedFrame: number | undefined;
   highlightedEditableRange: VolumeEditableFrameRange | undefined;
   tool: VolumeEditTool;
   isDark: boolean;
@@ -118,19 +136,36 @@ const emit = defineEmits<{
 const volumeEditMode = toRef(() => props.volumeEditMode);
 const volumeValueScale = computed(() => volumeEditMode.value.valueScale);
 
+const zeroLinePosition = computed(
+  () => `${(1 - volumeValueScale.value.dbToNormalizedY(0)) * 100}%`,
+);
+
 const resolveVolumeLineColors = createThemeColorResolver({
-  edited: "--scheme-color-song-volume-edited-line",
-  hovered: "--scheme-color-song-volume-edited-line-hover",
-  editing: "--scheme-color-song-volume-edited-line-editing",
-  gridBaseline: "--scheme-color-song-parameter-grid-measure-line",
-  horizontalGrid: "--scheme-color-song-grid-horizontal-line",
-  erasePreviewOverlay: "--scheme-color-scrim",
+  line: "--scheme-color-song-volume-line",
+  hovered: "--scheme-color-song-volume-line-hover",
+  editing: "--scheme-color-song-volume-line-editing",
+  areaContainer: "--scheme-color-song-volume-area-container",
+  erasePreviewOverlay: "--scheme-color-song-volume-erase-preview",
+  zeroLine: "--scheme-color-song-volume-zero-line",
+  hoverPoint: "--scheme-color-song-volume-indicator",
+  guide: "--scheme-color-song-volume-value-guide-line",
 });
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 const viewportWidth = ref<number>();
 const viewportHeight = ref<number>();
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+const viewInfo = computed<VolumeViewInfo | undefined>(() => {
+  if (viewportWidth.value == undefined || viewportHeight.value == undefined)
+    return undefined;
+  return {
+    viewportWidth: viewportWidth.value,
+    viewportHeight: viewportHeight.value,
+    zoomX: props.viewportInfo.scaleX,
+    offsetX: props.viewportInfo.offsetX,
+    leftPadding: VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
+  };
+});
 
 let renderer: VolumeEditorRenderer | undefined;
 let resizeObserver: ResizeObserver | undefined;
@@ -148,7 +183,7 @@ const frameToBaseX = (frame: number) => {
 // 値が読み取れないため表示しない(例: +1.0 → +3.0 → -1.5...)
 const tooltipState = computed(() => {
   const data = props.tooltipData;
-  if (data == undefined) {
+  if (props.uiLocked || data == undefined) {
     return undefined;
   }
   return {
@@ -162,6 +197,7 @@ const {
   canvasContainer,
   updateViewportRectCache,
   onSurfacePointerDown,
+  onSurfacePointerUp,
   onSurfacePointerMove,
   onSurfacePointerLeave,
 } = useVolumeEditorPointerInput({
@@ -184,13 +220,85 @@ const volumeSegments = computed(() =>
 
 const feedbackBaseXRange = computed<VolumeEditorBaseXRange | undefined>(() => {
   const range = props.highlightedEditableRange;
-  if (range == undefined) {
+  // ステートマシンが描画できると判断した位置だけを強調する。
+  if (!props.showDrawFeedback || props.uiLocked || range == undefined) {
     return undefined;
   }
   return {
     startBaseX: frameToBaseX(range.startFrame),
     endBaseX: frameToBaseX(range.endFrame),
   };
+});
+
+// ポインタ位置ではなく編集するフレームと値に合わせ、ガイドと編集結果がずれないようにする
+const editPosition = computed<VolumeEditPosition | undefined>(() => {
+  const frame = props.highlightedFrame;
+  if (props.uiLocked || frame == undefined) {
+    return undefined;
+  }
+  if (props.previewMode === "VOLUME_DRAW") {
+    const data = props.tooltipData;
+    if (data == undefined) {
+      return undefined;
+    }
+    // 描画中は書き込む値を示す。ガイドは静止中だと拍の罫線と紛れるため、描画中だけ引く
+    return {
+      baseX: frameToBaseX(frame),
+      normalizedY: volumeValueScale.value.dbToNormalizedY(data.db),
+      showPoint: false,
+      showGuides: true,
+    };
+  }
+  if (
+    props.previewMode !== "IDLE" ||
+    !props.showDrawFeedback ||
+    props.highlightedEditableRange == undefined
+  ) {
+    return undefined;
+  }
+  const value = props.effectiveFramewise[frame];
+  if (value == null) {
+    return undefined;
+  }
+  // ホバー中は、そのフレームの今の値をカーブ上に示す
+  return {
+    baseX: frameToBaseX(frame),
+    normalizedY: volumeValueScale.value.dbToNormalizedY(value),
+    showPoint: true,
+    showGuides: false,
+  };
+});
+
+const laneNotes = computed(() => {
+  const view = viewInfo.value;
+  if (view == undefined) return [];
+  const frame = props.highlightedFrame;
+  const activeTick =
+    props.previewMode === "VOLUME_DRAW" && frame != undefined
+      ? secondToTick(
+          frame / props.editorFrameRate,
+          toRaw(props.tempos),
+          props.tpqn,
+        )
+      : undefined;
+  return props.notes
+    .map((note) => ({
+      id: note.id,
+      lyric: note.lyric,
+      x:
+        tickToBaseX(note.position, props.tpqn) * props.viewportInfo.scaleX -
+        props.viewportInfo.offsetX,
+      width: tickToBaseX(note.duration, props.tpqn) * props.viewportInfo.scaleX,
+      active:
+        activeTick != undefined &&
+        note.position <= activeTick &&
+        activeTick < note.position + note.duration,
+    }))
+    .filter(
+      (note) =>
+        note.x + note.width >= 0 &&
+        note.x < view.viewportWidth - view.leftPadding,
+    );
 });
 
 const erasePreviewBaseXRanges = computed<VolumeEditorBaseXRange[]>(() =>
@@ -203,51 +311,16 @@ const erasePreviewBaseXRanges = computed<VolumeEditorBaseXRange[]>(() =>
 const getVolumeEditorLineColors = (element: HTMLElement) => {
   const colors = resolveVolumeLineColors(element, props.isDark);
   return {
-    edited: colors.edited,
+    line: colors.line,
     feedback:
       props.previewMode === "VOLUME_DRAW" ? colors.editing : colors.hovered,
-    gridBaseline: colors.gridBaseline,
-    horizontalGrid: colors.horizontalGrid,
+    areaContainer: colors.areaContainer,
     erasePreviewOverlay: colors.erasePreviewOverlay,
+    zeroLine: colors.zeroLine,
+    hoverPoint: colors.hoverPoint,
+    guide: colors.guide,
   };
 };
-
-const visibleGridLines = computed(() => {
-  const height = viewportHeight.value;
-  if (
-    height != undefined &&
-    height >= VOLUME_EDITOR_LAYOUT.denseGridLabelMinHeightPx
-  ) {
-    return volumeValueScale.value.gridLines;
-  }
-  return volumeValueScale.value.gridLines.filter(
-    (line) => line.kind !== "minor",
-  );
-});
-
-const horizontalGridLabels = computed(() => {
-  const height = viewportHeight.value;
-  if (
-    height == undefined ||
-    height < VOLUME_EDITOR_LAYOUT.sparseGridLabelMinHeightPx
-  ) {
-    return [];
-  }
-  return visibleGridLines.value.map((line) => {
-    const y = (1 - volumeValueScale.value.dbToNormalizedY(line.db)) * height;
-    const min = VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx;
-    const max = height - VOLUME_EDITOR_LAYOUT.gridLabelEdgeMarginPx;
-    if (min > max) {
-      throw new UnreachableError(
-        "The grid label range is invalid. The viewport height must satisfy sparseGridLabelMinHeightPx.",
-      );
-    }
-    return {
-      label: line.label,
-      y: clamp(y, min, max),
-    };
-  });
-});
 
 const cursorClass = computed(() => {
   switch (props.cursorState) {
@@ -326,53 +399,35 @@ const onWheel = (event: WheelEvent) => {
   }
 };
 
-const updateRenderer = (renderImmediately = false) => {
-  const width = viewportWidth.value;
-  const height = viewportHeight.value;
+const rendererCurve = computed(() => ({
+  volumeSegments: volumeSegments.value,
+  feedbackRange: feedbackBaseXRange.value,
+  erasePreviewRanges: erasePreviewBaseXRanges.value,
+  valueScale: volumeValueScale.value,
+}));
+
+const updateRendererView = (renderImmediately = false) => {
+  const view = viewInfo.value;
   const containerElement = canvasContainer.value;
   if (
     renderer == undefined ||
-    width == undefined ||
-    height == undefined ||
+    view == undefined ||
     containerElement == undefined
   ) {
     return;
   }
-  renderer.update(
-    {
-      viewInfo: {
-        viewportWidth: width,
-        viewportHeight: height,
-        zoomX: props.viewportInfo.scaleX,
-        offsetX: props.viewportInfo.offsetX,
-        leftPadding: VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
-      },
-      volumeSegments: volumeSegments.value,
-      feedbackRange: feedbackBaseXRange.value,
-      erasePreviewRanges: erasePreviewBaseXRanges.value,
-      gridLines: visibleGridLines.value,
-      valueScale: volumeValueScale.value,
-      colors: getVolumeEditorLineColors(containerElement),
-    },
+  renderer.updateView(
+    { viewInfo: view, colors: getVolumeEditorLineColors(containerElement) },
     renderImmediately,
   );
 };
 
-watch(
-  [
-    () => props.viewportInfo.scaleX,
-    () => props.viewportInfo.offsetX,
-    () => props.previewMode,
-    () => props.isDark,
-    volumeSegments,
-    feedbackBaseXRange,
-    erasePreviewBaseXRanges,
-    visibleGridLines,
-    viewportWidth,
-    viewportHeight,
-  ],
-  () => updateRenderer(),
+// 強調線の色はpreviewModeで切り替わるため、表示の更新に含める
+watch([viewInfo, () => props.previewMode, () => props.isDark], () =>
+  updateRendererView(),
 );
+watch(rendererCurve, (curve) => renderer?.updateCurve(curve));
+watch(editPosition, (position) => renderer?.updateEditPosition(position));
 
 onMounted(async () => {
   const containerElement = canvasContainer.value;
@@ -396,7 +451,9 @@ onMounted(async () => {
     return;
   }
 
-  updateRenderer(true);
+  renderer.updateCurve(rendererCurve.value);
+  renderer.updateEditPosition(editPosition.value);
+  updateRendererView(true);
   resizeObserver = new ResizeObserver(() => {
     const width = containerElement.clientWidth;
     const height = containerElement.clientHeight;
@@ -411,7 +468,7 @@ onMounted(async () => {
     viewportWidth.value = width;
     viewportHeight.value = height;
     renderer?.resize(width, height);
-    updateRenderer(true);
+    updateRendererView(true);
   });
   resizeObserver.observe(containerElement);
 });
@@ -445,6 +502,47 @@ onUnmounted(() => {
   }
 }
 
+.volume-lane-notes {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.volume-lane-note {
+  position: absolute;
+  top: 0;
+  height: v-bind("`${VOLUME_EDITOR_LAYOUT.noteLaneHeightPx}px`");
+  overflow: hidden;
+  color: var(--scheme-color-song-parameter-note-tick);
+  font-family: "Unhinted Rounded M+ 1p Medium", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.active {
+    color: var(--scheme-color-song-parameter-note-tick-active);
+  }
+
+  > span {
+    display: block;
+    margin: 2px 0 0 5px;
+    line-height: 16px;
+  }
+}
+
+// グリッドの中心はround(x)-0.5px。幅1pxの矩形はround(x)-1pxから描く。
+.volume-lane-note-tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 6px;
+  background: var(--scheme-color-song-parameter-note-tick);
+
+  &.active {
+    background: var(--scheme-color-song-parameter-note-tick-active);
+  }
+}
+
 .volume-editor-canvas {
   position: absolute;
   inset: 0;
@@ -475,13 +573,13 @@ onUnmounted(() => {
 
 .volume-grid-label {
   position: absolute;
-  right: 6px;
+  right: 8px;
   transform: translateY(-50%);
-  color: var(--scheme-color-on-surface-variant);
-  font-size: 10px;
+  color: var(--scheme-color-song-volume-axis-label);
+  font-size: 12px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  opacity: 0.78;
   white-space: nowrap;
 }
 </style>

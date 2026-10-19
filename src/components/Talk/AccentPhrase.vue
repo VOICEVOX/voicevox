@@ -406,7 +406,7 @@ const changeMoraData = (
     if (type == "pitch") {
       lastPitches.value[moraIndex] = data;
     }
-    return store.actions.COMMAND_SET_AUDIO_MORA_DATA({
+    return store.actions.COMMAND_SET_AUDIO_ITEM_MORA_DATA({
       audioKey: props.audioKey,
       accentPhraseIndex,
       moraIndex,
@@ -414,7 +414,7 @@ const changeMoraData = (
       type,
     });
   } else {
-    return store.actions.COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE({
+    return store.actions.COMMAND_SET_AUDIO_ITEM_MORA_DATA_ACCENT_PHRASE({
       audioKey: props.audioKey,
       accentPhraseIndex,
       moraIndex,
