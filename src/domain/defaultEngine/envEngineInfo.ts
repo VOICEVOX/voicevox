@@ -28,6 +28,7 @@ const envEngineInfoSchema = z
       z.object({
         type: z.literal("downloadVvpp"),
         latestUrl: z.string(),
+        latestUpdateInfosUrl: z.string(),
       }),
     ]),
   );
