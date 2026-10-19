@@ -381,12 +381,12 @@ class IpcMainHandleManager {
         }
       },
 
-      HAS_DOWNLOADABLE_DEFAULT_ENGINE: () => {
-        return engineAndVvppController.hasDownloadableDefaultEngine();
-      },
-
       GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: () => {
         return engineAndVvppController.getDownloadableDefaultEnginePackageIds();
+      },
+
+      GET_ENGINE_PACKAGE_UPDATE_INFOS_URL: (_, { engineId }) => {
+        return engineAndVvppController.getEnginePackageUpdateInfosUrl(engineId);
       },
     };
   }
