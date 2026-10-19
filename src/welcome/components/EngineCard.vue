@@ -106,6 +106,7 @@ type InstallationButton = {
   disabled: boolean;
 };
 
+/** カードの表示状態。`type`は最新情報の取得状況、`status`はインストールの進捗を表す。 */
 type EngineCardState =
   | { type: "loading" }
   | ({
@@ -124,6 +125,11 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
+
+/**
+ * このカードからのインストールが成功してから、エンジン選択を変えるまでの間は`true`。
+ * インストール直後に再インストールを誤って押さないよう、ボタンを無効にするために使う。
+ */
 const hasJustCompletedInstallation = ref(false);
 
 const engineState = computed(() => store.getEngineState(props.engineId));
