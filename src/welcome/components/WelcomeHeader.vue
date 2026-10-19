@@ -8,9 +8,13 @@
         :label="launchEditorState.enabled ? '' : launchEditorState.reason"
         :disabled="launchEditorState.enabled"
       >
-        <BaseButton
+        <QBtn
+          unelevated
           label="エディタを起動"
-          :disabled="!launchEditorState.enabled"
+          color="toolbar-button"
+          textColor="toolbar-button-display"
+          class="text-no-wrap text-bold"
+          :disable="!launchEditorState.enabled"
           @click="store.switchToMainWindow"
         />
       </BaseTooltip>
@@ -19,7 +23,6 @@
 </template>
 
 <script setup lang="ts">
-import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { useStore } from "@/welcome/store";
 
