@@ -162,6 +162,7 @@ const onValueClick = (event: MouseEvent, valueChange: ValueChange) => {
 }
 
 .value-changes-lane-svg {
+  // テンポ・拍子の縦線をルーラー上端まで表示するため
   overflow: visible;
   pointer-events: none;
 }

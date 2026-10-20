@@ -68,12 +68,6 @@ const onClick = (event: MouseEvent) => {
   pointer-events: none; // クリック無効
 }
 
-.sequencer-ruler-loop,
-.sequencer-ruler-value-changes {
-  position: relative;
-  height: 20px;
-}
-
 .sequencer-ruler-playhead {
   position: absolute;
   top: 0;
