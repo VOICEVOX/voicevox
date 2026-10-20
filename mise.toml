@@ -1,5 +1,6 @@
 [tools]
 7zip = "latest"
 jactionlint = "latest"
+pinact = "latest"
 shellcheck = "latest"
 typos = "latest"

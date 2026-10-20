@@ -122,6 +122,53 @@ url = "https://nodejs.org/dist/v24.11.1/node-v24.11.1-darwin-x64.tar.gz"
 checksum = "sha256:5355ae6d7c49eddcfde7d34ac3486820600a831bf81dc3bdca5c8db6a9bb0e76"
 url = "https://nodejs.org/dist/v24.11.1/node-v24.11.1-win-x64.zip"
 
+[[tools.pinact]]
+version = "5.0.0"
+backend = "aqua:suzuki-shunsuke/pinact"
+specifiers = ["latest"]
+
+[tools.pinact."platforms.linux-arm64"]
+checksum = "sha256:d28ca5e9ddd7950da4a808288f8a83f84fc3ca40e86bab970f3adeef33578c0b"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.0/pinact_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/pinact/releases/assets/558638070"
+provenance = "github-attestations"
+
+[tools.pinact."platforms.linux-arm64-musl"]
+checksum = "sha256:d28ca5e9ddd7950da4a808288f8a83f84fc3ca40e86bab970f3adeef33578c0b"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.0/pinact_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/pinact/releases/assets/558638070"
+provenance = "github-attestations"
+
+[tools.pinact."platforms.linux-x64"]
+checksum = "sha256:d005bbb85da80dacdc07816f24a5da723a9f6d1e9f3d3e7e73df33f9caa1358f"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.0/pinact_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/pinact/releases/assets/558638065"
+provenance = "github-attestations"
+
+[tools.pinact."platforms.linux-x64-musl"]
+checksum = "sha256:d005bbb85da80dacdc07816f24a5da723a9f6d1e9f3d3e7e73df33f9caa1358f"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.0/pinact_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/pinact/releases/assets/558638065"
+provenance = "github-attestations"
+
+[tools.pinact."platforms.macos-arm64"]
+checksum = "sha256:3437ebfc9db720e431e86fd03ed19173b88dcb80b0f177d11a892126108661b5"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.0/pinact_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/pinact/releases/assets/558638064"
+provenance = "github-attestations"
+
+[tools.pinact."platforms.macos-x64"]
+checksum = "sha256:da5532bd185a9d3a16a1f93774f835574e0c50bc74c2085b9917b9df3e9fbbaa"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.0/pinact_darwin_amd64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/pinact/releases/assets/558638050"
+provenance = "github-attestations"
+
+[tools.pinact."platforms.windows-x64"]
+checksum = "sha256:df2f590f24c2bfe65a35010bffb4369ba0792c9afaf7fb324b2330895a37d19f"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.0/pinact_windows_amd64.zip"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/pinact/releases/assets/558638100"
+provenance = "github-attestations"
+
 [[tools.shellcheck]]
 version = "0.11.0"
 backend = "aqua:koalaman/shellcheck"
