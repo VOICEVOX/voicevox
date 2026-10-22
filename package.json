@@ -114,7 +114,7 @@
     "acorn-walk": "8.3.5",
     "cross-env": "10.1.0",
     "dotenv": "17.4.2",
-    "electron": "42.1.0",
+    "electron": "42.11.18",
     "electron-builder": "26.16.1",
     "eslint": "10.4.0",
     "eslint-config-flat-gitignore": "2.3.0",
