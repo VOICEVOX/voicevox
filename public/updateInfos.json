@@ -1,5 +1,42 @@
 [
   {
+    "version": "0.26.0",
+    "descriptions": [
+      "エンジンをエディタから分離してアップデートできるように",
+      "Mac版に署名を追加",
+      "トーク：ストリーミングトーク機能を追加",
+      "トーク：音声の長さを表示する機能を追加",
+      "トーク：複数選択機能を常時有効に",
+      "ソング：実験的機能としてボリューム編集機能・音素タイミング編集機能を追加",
+      "ソング：デフォルト歌詞の変更機能を追加",
+      "ソング：トラックの複製機能を追加",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "Hiroshiba",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "sabonerune",
+      "oech3",
+      "romot-co",
+      "Akikukeo1",
+      "akikukeo",
+      "namiyama814",
+      "WERTYUS11",
+      "mvanhorn",
+      "Gurrium",
+      "yotatameguchi-boop",
+      "b84330808",
+      "cursoragent",
+      "vuchvu",
+      "Tatsuya0330",
+      "takusea",
+      "Segu-g",
+      "kurehajime"
+    ]
+  },
+  {
     "version": "0.25.2",
     "descriptions": [
       "キャラクター「夜語トバリ」「暁記ミタマ」「里石ユカ」を追加"
