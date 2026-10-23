@@ -17,6 +17,7 @@
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ --ignore dist_preview/ ./",
     "typecheck": "vue-tsc --noEmit",
     "typos": "pnpm run mise:exec typos",
+    "jactionlint": "pnpm run mise:exec jactionlint",
     "// --- tools ---": "",
     "license:generate": "tsx tools/generateLicenses.ts",
     "license:merge": "tsx tools/mergeLicenses.ts",
@@ -53,7 +54,6 @@
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-tools",
     "postinstall:packages": "install-electron && electron-builder install-app-deps && playwright install chromium",
     "postinstall:download-tools": "pnpm run mise install",
-    "jactionlint": "pnpm run mise:exec jactionlint",
     "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadJactionlint.ts",
     "postuninstall": "electron-builder install-app-deps"
   },
