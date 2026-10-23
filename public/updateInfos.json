@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.26.1",
+    "descriptions": ["開発環境の向上"],
+    "contributors": ["sabonerune"]
+  },
+  {
     "version": "0.26.0",
     "descriptions": [
       "エンジンをエディタから分離してアップデートできるように",
