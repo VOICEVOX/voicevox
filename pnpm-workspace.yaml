@@ -2,6 +2,9 @@ managePackageManagerVersions: true
 
 minimumReleaseAge: 10080
 
+minimumReleaseAgeExclude:
+  - electron
+
 onlyBuiltDependencies:
   - '@nestjs/core'
   - '@openapitools/openapi-generator-cli'
