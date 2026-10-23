@@ -792,4 +792,16 @@ const onAudioCellPaneClick = () => {
 .q-splitter > :deep(.home-splitter) {
   background: colors.$splitter !important;
 }
+
+// Quasarのデフォルトではリサイズ判定が境界線の両側6pxずつまで広がり、
+// スクロールバー（幅12px）の半分がリサイズ判定になってしまうため、
+// VSCodeと同程度の判定幅（合計7px）になるよう両側2pxずつに狭める
+.q-splitter--vertical > :deep(.home-splitter) > .q-splitter__separator-area {
+  left: -2px;
+  right: -2px;
+}
+.q-splitter--horizontal > :deep(.home-splitter) > .q-splitter__separator-area {
+  top: -2px;
+  bottom: -2px;
+}
 </style>
