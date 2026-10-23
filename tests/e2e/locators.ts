@@ -13,7 +13,10 @@ export function getNewestQuasarDialog(page: Page) {
  * quasarのメニューのlocatorを取得する
  */
 export function getQuasarMenu(page: Page, menuName: string) {
-  return page.getByRole("listitem").filter({ hasText: menuName });
+  return page
+    .getByRole("list")
+    .getByRole("button")
+    .filter({ hasText: menuName });
 }
 
 /** Locator の配列を x 座標でソートする */

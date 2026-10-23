@@ -20,7 +20,12 @@
           :disable="previewAccentSlider.qSliderProps.disable.value"
           :modelValue="previewAccentSlider.qSliderProps.modelValue.value"
           @update:modelValue="
-            previewAccentSlider.qSliderProps['onUpdate:modelValue']
+            (value) => {
+              if (value == undefined) {
+                throw new Error('Undefined value received');
+              }
+              previewAccentSlider.qSliderProps['onUpdate:modelValue'](value);
+            }
           "
           @click.stop="stopPropagation"
           @change="previewAccentSlider.qSliderProps.onChange"

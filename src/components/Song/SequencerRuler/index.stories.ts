@@ -42,8 +42,7 @@ const meta: Meta<StoryProps> = {
 
         // setupStoryStateパラメータからデータを取得
         const setupState = context.parameters?.setupStoryState as
-          | SetupStoryState
-          | undefined;
+          SetupStoryState | undefined;
         if (setupState) {
           if (setupState.tempos) {
             store.mutations.SET_TEMPOS({

@@ -39,7 +39,14 @@
       :step="previewSlider.qSliderProps.step.value"
       :disable="previewSlider.qSliderProps.disable.value"
       :modelValue="previewSlider.qSliderProps.modelValue.value"
-      @update:modelValue="previewSlider.qSliderProps['onUpdate:modelValue']"
+      @update:modelValue="
+        (value) => {
+          if (value == undefined) {
+            throw new Error('Undefined value received');
+          }
+          previewSlider.qSliderProps['onUpdate:modelValue'](value);
+        }
+      "
       @click.stop="stopPropagation"
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"

@@ -345,11 +345,7 @@ test("isOnCommandOrCtrlKeyDown", () => {
 describe("filterCharacterInfosByStyleType", () => {
   const createCharacterInfo = (
     styleTypes: (
-      | undefined
-      | "talk"
-      | "frame_decode"
-      | "singing_teacher"
-      | "sing"
+      undefined | "talk" | "frame_decode" | "singing_teacher" | "sing"
     )[],
   ): CharacterInfo => {
     const engineId = EngineId(uuid4());
