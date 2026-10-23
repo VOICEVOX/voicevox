@@ -24,6 +24,7 @@
     "check-suspicious-imports": "tsx tools/checkSuspiciousImports.ts",
     "generate-openapi": "tsx tools/generateOpenapi.ts",
     "setup-agents": "rulesync generate",
+    "pinact": "pnpm run mise:exec pinact",
     "mise": "cross-env ./tools/mise",
     "mise:exec": "cross-env ./tools/mise exec --",
     "mise:update": "cross-env ./tools/mise self-update -y && cross-env ./tools/mise generate install-script -lw ./tools/mise --windows",
