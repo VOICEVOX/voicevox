@@ -12,8 +12,4 @@ function readPackage(pkg, context) {
   return pkg;
 }
 
-module.exports = {
-  hooks: {
-    readPackage,
-  },
-};
+export const hooks = { readPackage };

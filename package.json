@@ -6,9 +6,20 @@
   "main": "./dist/main.js",
   "type": "module",
   "engines": {
-    "node": ">=24.11.1 <25"
+    "node": ">=24.22.1 <25"
   },
-  "packageManager": "pnpm@10.28.2",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.22.1",
+      "onFail": "download"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.15.0",
+      "onFail": "download"
+    }
+  },
   "scripts": {
     "// --- lint ---": "",
     "lint": "cross-env ESLINT_FILE_PROGRESS=1 eslint --cache",
@@ -47,7 +58,6 @@
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build",
     "// --- lifecycle ---": "",
-    "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "install-electron && electron-builder install-app-deps && playwright install chromium",
     "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadJactionlint.ts",
