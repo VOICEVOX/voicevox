@@ -40,7 +40,6 @@
       </div>
 
       <div class="full-width row" @wheel="setPresetByScroll($event)">
-        <!-- TODO: 同じプリセットを選択したときにも複数選択中の他のAudioItemのプリセットを変更するようにする -->
         <QSelect
           v-model="presetSelectModel"
           :options="selectablePresetList"
@@ -57,6 +56,17 @@
             <div class="preset-select-label">
               {{ scope.opt.label }}
             </div>
+          </template>
+          <template #option="scope">
+            <!-- 選択中のプリセットを再度選んだときはv-modelが更新されないため、クリックで再適用する -->
+            <QItem
+              v-bind="scope.itemProps"
+              @click="scope.selected && reapplyPreset(scope.opt.key)"
+            >
+              <QItemSection>
+                <QItemLabel>{{ scope.opt.label }}</QItemLabel>
+              </QItemSection>
+            </QItem>
           </template>
           <template #no-option>
             <QItem>
@@ -720,6 +730,13 @@ const changePreset = (presetKey: PresetKey | undefined) =>
     audioKeys: selectedAudioKeys.value,
     presetKey,
   });
+
+// 選択中のプリセットを再適用する（パラメータをプリセット値に戻す）
+// 複数選択中の場合は選択中のすべてのAudioItemに適用する
+const reapplyPreset = (presetKey: PresetKey | undefined) => {
+  if (presetKey == undefined) return;
+  void changePreset(presetKey);
+};
 
 const presetList = computed<{ label: string; key: PresetKey }[]>(() =>
   presetKeys.value
