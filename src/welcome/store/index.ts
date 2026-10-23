@@ -15,7 +15,12 @@ import { showErrorDialog } from "@/components/Dialog/Dialog";
 
 type LatestInfoState =
   | { type: "loading" }
-  | { type: "fetched"; info: EnginePackageLatestInfo }
+  | {
+      type: "fetched";
+      info: EnginePackageLatestInfo;
+      progress: EngineProgressInfo;
+      selectedRuntimeTarget: RuntimeTarget;
+    }
   | { type: "fetchError"; error: unknown };
 
 type AllEngineState =
@@ -29,36 +34,9 @@ type AllEngineState =
       engineStates: Record<EngineId, EngineState>;
     };
 
-/**
- * TUnionの中のTTargetに当てはまるものにTAddedをマージした型を返す。
- *
- * これを他のファイルで使う場合は、この型を他のユーティリティ系のファイルに移動すること。
- *
- * @example
- * ```ts
- * type Hoge =
- *  | { type: "type1" }
- *  | { type: "type2"; field: string };
- *
- * type Result = MergeToTarget<
- *   Hoge,
- *   { type: "type2" },
- *   { newField: string }
- * >;
- *
- * // Resultは以下の型になる
- * type Result =
- *  | { type: "type1" }
- *  | { type: "type2"; field: string; newField: string }; // TAddedがマージされている
- * ```
- */
-type MergeToTarget<TUnion, TTarget, TAdded> = TUnion extends TTarget
-  ? TUnion & TAdded
-  : TUnion;
-
-export type EngineProgressInfo =
+type EngineProgressInfo =
   | {
-      type: "idle" | "unavailable";
+      type: "idle";
     }
   | {
       progress: number;
@@ -68,15 +46,7 @@ export type EngineProgressInfo =
 type EngineState = {
   embeddedInfo: EnginePackageEmbeddedInfo;
   currentInfo: EnginePackageCurrentInfo;
-
-  latestInfo: MergeToTarget<
-    LatestInfoState,
-    { type: "fetched" },
-    {
-      progress: EngineProgressInfo;
-      selectedRuntimeTarget: RuntimeTarget;
-    }
-  >;
+  latestInfo: LatestInfoState;
 };
 
 export type LaunchEditorState =
@@ -166,17 +136,6 @@ function createWelcomeStore() {
       throw new UnreachableError();
     }
     return allEngineState.value.engineStates[engineId];
-  };
-
-  const getEngineProgress = (engineId: EngineId): EngineProgressInfo => {
-    if (allEngineState.value.type !== "loaded") {
-      return { type: "unavailable" };
-    }
-    const engineState = allEngineState.value.engineStates[engineId];
-    if (engineState.latestInfo.type !== "fetched") {
-      return { type: "unavailable" };
-    }
-    return engineState.latestInfo.progress;
   };
 
   const setEngineProgress = (
@@ -372,10 +331,8 @@ function createWelcomeStore() {
   return {
     allEngineState,
     launchEditorState,
-    getSelectedRuntimeTarget,
     setSelectedRuntimeTarget,
     getEngineState,
-    getEngineProgress,
     fetchEngineLatestInfo,
     installEngine,
     switchToMainWindow,
