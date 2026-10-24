@@ -738,10 +738,7 @@ const onAudioCellPaneClick = () => {
   display: flex;
 
   .q-splitter--horizontal {
-    height: calc(
-      100vh - #{vars.$menubar-height + vars.$toolbar-height +
-        vars.$window-border-width}
-    );
+    height: calc(100vh - (#{vars.$menubar-height} + #{vars.$toolbar-height}));
   }
 }
 

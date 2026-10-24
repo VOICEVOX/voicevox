@@ -6,18 +6,19 @@
 @use "./v2/cursor"; // カーソル
 @use "fonts";
 
+body {
+  --menubar-height: 24px;
+
+  &[data-platform="macos"] {
+    --menubar-height: 32px;
+  }
+}
+
 // 優先度を強引に上げる
 body:not(#dummy) {
   user-select: none;
   color: colors.$display;
   background: colors.$background;
-
-  // Storybookでは枠線を付けない
-  &:not(.sb-show-main) {
-    border-left: solid #{vars.$window-border-width} #{colors.$splitter};
-    border-right: solid #{vars.$window-border-width} #{colors.$splitter};
-    border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
-  }
 }
 
 body[data-editor-font="default"] {
@@ -97,9 +98,9 @@ img {
   .q-loading,
   .q-loading__backdrop {
     top: vars.$menubar-height;
-    left: vars.$window-border-width;
-    right: vars.$window-border-width;
-    bottom: vars.$window-border-width;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
   .q-layout-container {
     box-shadow: none;
