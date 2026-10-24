@@ -314,6 +314,47 @@ test("buildAudioFileNameFromRawData", () => {
   );
 });
 
+describe("buildAudioFileNameFromRawData の文字数指定", () => {
+  const vars = {
+    index: 0,
+    characterName: "キャラ１",
+    text: "今日の天気は晴れのち曇りです",
+    styleName: "スタイル１",
+    date: "20210801",
+    projectName: "サンプルプロジェクト",
+  };
+
+  it("文字数指定がなければテキストを10文字に切り詰める", () => {
+    expect(buildAudioFileNameFromRawData("$連番$_$テキスト$", vars)).toBe(
+      "001_今日の天気は晴れの…",
+    );
+  });
+
+  it("文字数指定があればその文字数で切り詰める", () => {
+    expect(buildAudioFileNameFromRawData("$連番$_$テキスト[20]$", vars)).toBe(
+      "001_今日の天気は晴れのち曇りです",
+    );
+    expect(buildAudioFileNameFromRawData("$連番$_$テキスト[5]$", vars)).toBe(
+      "001_今日の天…",
+    );
+  });
+
+  it("切り詰めないタグにも文字数を指定できる", () => {
+    expect(
+      buildAudioFileNameFromRawData("$連番$_$プロジェクト名[4]$", vars),
+    ).toBe("001_サンプ…");
+  });
+
+  it("不正な文字数指定は置換しない", () => {
+    expect(buildAudioFileNameFromRawData("$連番$_$テキスト[0]$", vars)).toBe(
+      "001_$テキスト[0]$",
+    );
+    expect(buildAudioFileNameFromRawData("$連番$_$テキスト[100]$", vars)).toBe(
+      "001_$テキスト[100]$",
+    );
+  });
+});
+
 test("getToolbarButtonName", () => {
   expect(getToolbarButtonName("PLAY_CONTINUOUSLY")).toBe("連続再生");
   expect(getToolbarButtonName("STOP")).toBe("停止");
