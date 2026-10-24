@@ -187,6 +187,8 @@ pnpm run test-ui:storybook-vrt # Playwright の UI を表示
 
 #### スクリーンショットの更新
 
+更新の判断やレビュー時の確認点は、[スナップショットテストの運用ガイド](docs/スナップショットテスト.md)を参照してください。
+
 ブラウザ End to End テストと Storybook では Visual Regression Testing を行っています。
 現在 VRT テストは Windows のみで行っています。
 以下の手順でスクリーンショットを更新できます：
