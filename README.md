@@ -310,6 +310,17 @@ shellcheck ./build/*.sh
 shellcheck ./tools/*.bash
 ```
 
+## GitHub Actions のリント
+
+[jactionlint](https://github.com/jdx/jactionlint) を使って GitHub Actions のワークフローと composite action のチェックを行っています。
+
+```bash
+pnpm run jactionlint
+```
+
+[ShellCheck](https://github.com/koalaman/shellcheck) がインストールされていれば、`run:` のシェルスクリプトもチェックされます。
+チェックする内容は`.github/jactionlint.yaml`で設定しています。
+
 ## GitHub Actions のバージョン固定
 
 [pinact](https://github.com/suzuki-shunsuke/pinact) を使って GitHub Actions のバージョンを full-length commit SHA に固定しています。

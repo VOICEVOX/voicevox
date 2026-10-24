@@ -352,6 +352,21 @@
               <!-- Advanced Card -->
               <div class="setting-card">
                 <h5 class="headline">高度な設定</h5>
+                <ButtonToggleCell
+                  title="ストリーミング再生"
+                  description="対応エンジンで音声を生成しながら再生するときの動作を選べます。音声が途切れる場合は「バランス」や「安定」をお試しください。"
+                  :modelValue="streamingMode"
+                  :options="[
+                    { label: '低遅延', value: 'LOW_LATENCY' },
+                    { label: 'バランス', value: 'BALANCED' },
+                    { label: '安定', value: 'STABLE' },
+                  ]"
+                  @update:modelValue="
+                    changeStreamingMode(
+                      $event as RootMiscSettingType['streamingMode'],
+                    )
+                  "
+                />
                 <ToggleCell
                   title="マルチエンジン機能"
                   description="ONの場合、複数のVOICEVOX準拠エンジンを利用可能にします。"
@@ -652,6 +667,11 @@ const availableThemeNameComputed = computed(() => {
 });
 
 const [editorFont, changeEditorFont] = useRootMiscSetting(store, "editorFont");
+
+const [streamingMode, changeStreamingMode] = useRootMiscSetting(
+  store,
+  "streamingMode",
+);
 
 const [enableMultiEngine, setEnableMultiEngine] = useRootMiscSetting(
   store,

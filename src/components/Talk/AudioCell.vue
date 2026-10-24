@@ -83,7 +83,7 @@
       <template #after>
         <div
           v-if="showAudioLength && audioDuration != undefined"
-          class="q-mr-sm audio-length"
+          class="audio-length"
         >
           {{ audioDuration.toFixed(2) }}s
         </div>
@@ -91,6 +91,7 @@
           v-if="enableDeleteButton"
           round
           flat
+          class="delete-button"
           icon="delete_outline"
           size="0.8rem"
           :disable="uiLocked"
@@ -322,7 +323,7 @@ const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
   if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
     isChangeFlag.value = false;
-    await store.actions.COMMAND_CHANGE_AUDIO_TEXT({
+    await store.actions.COMMAND_CHANGE_AUDIO_ITEM_TEXT({
       audioKey: props.audioKey,
       text: audioTextBuffer.value,
     });
@@ -731,6 +732,13 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     :deep(.q-field__after) {
       height: 2rem;
       padding-left: 5px;
+
+      // NOTE: Quasarは`after(:empty)`の場合に`display: none`で非表示にしているため、
+      // `display`の変更を`after:not(:empty)`の場合のみにしてレイアウト崩れを抑えている
+      &:not(:empty) {
+        display: grid;
+        align-content: center;
+      }
     }
 
     &.q-field--filled.q-field--highlighted :deep(.q-field__control)::before {
@@ -738,7 +746,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     }
   }
 
-  &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
+  &:not(:hover) .delete-button:not(:focus):not(:active) {
     @include visually-hidden.visually-hidden;
   }
 
@@ -764,6 +772,20 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   opacity: 0.6;
   white-space: nowrap;
   font-size: 0.85rem;
+  grid-area: 1 / 1;
+  min-width: 2.8rem;
+  text-align: right;
   user-select: none;
+
+  // 削除ボタンがある行のホバー中、または削除ボタンのフォーカス中は音声長を隠す
+  .audio-cell:hover .q-input:has(.delete-button) &,
+  .audio-cell .q-input:has(.delete-button:focus) & {
+    visibility: hidden;
+  }
+}
+
+.delete-button {
+  grid-area: 1 / 1;
+  justify-self: end;
 }
 </style>

@@ -77,6 +77,7 @@ export const uiStoreState: UiStoreState = {
   isDictionaryManageDialogOpen: false,
   isEngineManageDialogOpen: false,
   isUpdateNotificationDialogOpen: false,
+  isEngineUpdateNotificationDialogOpen: false,
   isExportSongAudioDialogOpen: false,
   isImportSongProjectDialogOpen: false,
   isPresetManageDialogOpen: false,
@@ -481,7 +482,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   // TODO: この4つのアクションをVue側に移動したい
-  SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
+  SHOW_GENERATE_AND_SAVE_ALL_AUDIO_FILE_DIALOG: {
     async action({ state, actions }) {
       await multiGenerateAndSaveAudioWithDialog({
         audioKeys: state.audioKeys,
@@ -491,7 +492,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
+  SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_FILE_DIALOG: {
     async action({ actions, state }) {
       await generateAndConnectAndSaveAudioWithDialog({
         actions,
@@ -500,7 +501,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG: {
+  SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_FILE_DIALOG: {
     async action({ getters, actions, state }) {
       const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
       if (activeAudioKey == undefined) {

@@ -35,12 +35,14 @@ export type WelcomeIpcIHData = {
     args: [obj: { engineId: EngineId }];
     return: EnginePackageLatestInfo;
   };
-
   GET_CURRENT_THEME: {
     args: [];
     return: string;
   };
-
+  ON_DISPLAY_READY: {
+    args: [];
+    return: void;
+  };
   SWITCH_TO_MAIN_WINDOW: {
     args: [];
     return: void;
