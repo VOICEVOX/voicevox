@@ -30,11 +30,13 @@
 
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
-import { useStore } from "@/store";
 
-const store = useStore();
+const props = defineProps<{
+  /** -1で非表示、0で進捗不定、0より大きければ進捗率を表示する。 */
+  progress: number;
+}>();
 
-const progress = computed(() => store.getters.PROGRESS);
+const progress = computed(() => props.progress);
 const isShowProgress = ref<boolean>(false);
 const isDeterminate = ref<boolean>(false);
 
@@ -65,9 +67,7 @@ watch(progress, (newValue, oldValue) => {
 
 onUnmounted(() => clearTimeout(timeoutId));
 
-const formattedProgress = computed(() =>
-  (store.getters.PROGRESS * 100).toFixed(),
-);
+const formattedProgress = computed(() => (progress.value * 100).toFixed());
 </script>
 
 <style lang="scss" scoped>

@@ -544,10 +544,6 @@ const snapTypeSelectModel = computed({
     opacity: 0.9;
   }
 
-  :deep(.q-field__native) {
-    padding-top: 4px;
-  }
-
   :deep(.q-field__control:before) {
     border-color: var(--scheme-color-outline-variant);
   }

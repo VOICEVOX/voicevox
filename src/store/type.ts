@@ -12,6 +12,7 @@ import type {
   DotNotationActionContext,
 } from "./vuex";
 import { createCommandMutationTree, type PayloadRecipeTree } from "./command";
+import type { WavStream } from "@/domain/wavStream";
 import type {
   AccentPhrase,
   AudioQuery,
@@ -101,15 +102,6 @@ export type AudioItem = {
   morphingInfo?: MorphingInfo;
 };
 
-export type AudioState = {
-  nowGenerating: boolean;
-};
-
-export type FetchAudioResult = {
-  audioQuery: EditorAudioQuery;
-  blob: Blob;
-};
-
 export type Command = {
   id: CommandId;
   undoPatches: Patch[];
@@ -165,7 +157,6 @@ export type AudioStoreState = {
   audioKeysWithInitializingSpeaker: AudioKey[];
   audioItems: Record<AudioKey, AudioItem>;
   audioKeys: AudioKey[];
-  audioStates: Record<AudioKey, AudioState>;
   _activeAudioKey?: AudioKey;
   _selectedAudioKeys?: AudioKey[];
   _audioPlayStartPoint?: number;
@@ -181,7 +172,7 @@ export type AudioStoreTypes = {
     getter: AudioKey[];
   };
 
-  AUDIO_PLAY_START_POINT: {
+  PLAYBACK_START_ACCENT_PHRASE_INDEX: {
     getter: number | undefined;
   };
 
@@ -227,13 +218,9 @@ export type AudioStoreTypes = {
     action(payload: { audioKeys?: AudioKey[] }): void;
   };
 
-  SET_AUDIO_PLAY_START_POINT: {
+  SET_PLAYBACK_START_ACCENT_PHRASE_INDEX: {
     mutation: { startPoint?: number };
     action(payload: { startPoint?: number }): void;
-  };
-
-  SET_AUDIO_NOW_GENERATING: {
-    mutation: { audioKey: AudioKey; nowGenerating: boolean };
   };
 
   SET_NOW_PLAYING_CONTINUOUSLY: {
@@ -283,35 +270,35 @@ export type AudioStoreTypes = {
     action(): void;
   };
 
-  SET_AUDIO_TEXT: {
+  SET_AUDIO_ITEM_TEXT: {
     mutation: { audioKey: AudioKey; text: string };
   };
 
-  SET_AUDIO_SPEED_SCALE: {
+  SET_AUDIO_ITEM_SPEED_SCALE: {
     mutation: { audioKey: AudioKey; speedScale: number };
   };
 
-  SET_AUDIO_PITCH_SCALE: {
+  SET_AUDIO_ITEM_PITCH_SCALE: {
     mutation: { audioKey: AudioKey; pitchScale: number };
   };
 
-  SET_AUDIO_INTONATION_SCALE: {
+  SET_AUDIO_ITEM_INTONATION_SCALE: {
     mutation: { audioKey: AudioKey; intonationScale: number };
   };
 
-  SET_AUDIO_VOLUME_SCALE: {
+  SET_AUDIO_ITEM_VOLUME_SCALE: {
     mutation: { audioKey: AudioKey; volumeScale: number };
   };
 
-  SET_AUDIO_PAUSE_LENGTH_SCALE: {
+  SET_AUDIO_ITEM_PAUSE_LENGTH_SCALE: {
     mutation: { audioKey: AudioKey; pauseLengthScale: number };
   };
 
-  SET_AUDIO_PRE_PHONEME_LENGTH: {
+  SET_AUDIO_ITEM_PRE_PHONEME_LENGTH: {
     mutation: { audioKey: AudioKey; prePhonemeLength: number };
   };
 
-  SET_AUDIO_POST_PHONEME_LENGTH: {
+  SET_AUDIO_ITEM_POST_PHONEME_LENGTH: {
     mutation: { audioKey: AudioKey; postPhonemeLength: number };
   };
 
@@ -358,7 +345,7 @@ export type AudioStoreTypes = {
     }): Promise<EditorAudioQuery>;
   };
 
-  SET_AUDIO_VOICE: {
+  SET_AUDIO_ITEM_VOICE: {
     mutation: { audioKey: AudioKey; voice: Voice };
   };
 
@@ -383,7 +370,7 @@ export type AudioStoreTypes = {
     };
   };
 
-  SET_AUDIO_MORA_DATA: {
+  SET_AUDIO_ITEM_MORA_DATA: {
     mutation: {
       audioKey: AudioKey;
       accentPhraseIndex: number;
@@ -393,7 +380,7 @@ export type AudioStoreTypes = {
     };
   };
 
-  APPLY_AUDIO_PRESET: {
+  APPLY_AUDIO_ITEM_PRESET: {
     mutation: { audioKey: AudioKey };
   };
 
@@ -422,30 +409,41 @@ export type AudioStoreTypes = {
     getter(audioKey: AudioKey): string;
   };
 
-  GET_AUDIO_PLAY_OFFSETS: {
+  GET_ACCENT_PHRASE_START_TIME: {
     action(payload: { audioKey: AudioKey }): number[];
   };
 
-  FETCH_AUDIO: {
-    action(payload: { audioKey: AudioKey }): Promise<FetchAudioResult>;
+  /**
+   * audioItemと再生開始位置を元に、音声とそれを何秒から再生すべきかを、適切なAPIからあるいはキャッシュから取得・計算する。
+   */
+  // NOTE: この関数が返すのは音声だけではなく再生開始位置も含まれるため、FETCHとは呼ばずPREPAREとした。
+  PREPARE_AUDIO_FOR_PLAYBACK: {
+    action(payload: {
+      audioItem: AudioItem;
+      signal?: AbortSignal;
+      /** 元の音声上の再生開始位置（秒）。 */
+      playbackStartPosition: number;
+    }): Promise<{
+      stream: ReadableStream<Uint8Array>;
+      /** streamを先頭から読み飛ばすべき量（秒）。 */
+      streamOffset: number;
+      /** 今回ストリーミング合成APIで取得した音声か。キャッシュの場合は常にfalse。 */
+      isStreamingSynthesis: boolean;
+    }>;
   };
 
-  FETCH_AUDIO_FROM_AUDIO_ITEM: {
-    action(payload: { audioItem: AudioItem }): Promise<FetchAudioResult>;
+  IS_STREAMING_SYNTHESIS_SUPPORTED: {
+    getter: (audioItem: AudioItem) => boolean;
   };
 
-  CONNECT_AUDIO: {
-    action(payload: { encodedBlobs: string[] }): Blob | null;
-  };
-
-  GENERATE_AND_SAVE_AUDIO: {
+  GENERATE_AND_SAVE_AUDIO_FILE: {
     action(payload: {
       audioKey: AudioKey;
       filePath?: string;
     }): SaveResultObject;
   };
 
-  MULTI_GENERATE_AND_SAVE_AUDIO: {
+  MULTI_GENERATE_AND_SAVE_AUDIO_FILE: {
     action(payload: {
       audioKeys: AudioKey[];
       dirPath?: string;
@@ -453,7 +451,7 @@ export type AudioStoreTypes = {
     }): SaveResultObject[] | "canceled";
   };
 
-  GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
+  GENERATE_AND_CONNECT_AND_SAVE_AUDIO_FILE: {
     action(payload: {
       filePath?: string;
       callback?: (finishedCount: number, totalCount: number) => void;
@@ -464,23 +462,11 @@ export type AudioStoreTypes = {
     action(payload: { filePath?: string }): SaveResultObject | undefined;
   };
 
-  PLAY_AUDIO: {
-    action(payload: { audioKey: AudioKey }): boolean;
-  };
-
-  PLAY_AUDIO_BLOB: {
-    action(payload: { audioBlob: Blob; audioKey?: AudioKey }): boolean;
-  };
-
-  SET_AUDIO_PRESET_KEY: {
+  SET_AUDIO_ITEM_PRESET_KEY: {
     mutation: {
       audioKey: AudioKey;
       presetKey: PresetKey | undefined;
     };
-  };
-
-  PLAY_CONTINUOUSLY_AUDIO: {
-    action(): void;
   };
 };
 
@@ -520,7 +506,7 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: AudioKey; text: string }): void;
   };
 
-  COMMAND_CHANGE_AUDIO_TEXT: {
+  COMMAND_CHANGE_AUDIO_ITEM_TEXT: {
     mutation: { audioKey: AudioKey; text: string } & (
       | { update: "Text" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
@@ -595,7 +581,7 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_SET_AUDIO_MORA_DATA: {
+  COMMAND_SET_AUDIO_ITEM_MORA_DATA: {
     mutation: {
       audioKey: AudioKey;
       accentPhraseIndex: number;
@@ -612,7 +598,7 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE: {
+  COMMAND_SET_AUDIO_ITEM_MORA_DATA_ACCENT_PHRASE: {
     mutation: {
       audioKey: AudioKey;
       accentPhraseIndex: number;
@@ -629,37 +615,37 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_SPEED_SCALE: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_SPEED_SCALE: {
     mutation: { audioKeys: AudioKey[]; speedScale: number };
     action(payload: { audioKeys: AudioKey[]; speedScale: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_PITCH_SCALE: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_PITCH_SCALE: {
     mutation: { audioKeys: AudioKey[]; pitchScale: number };
     action(payload: { audioKeys: AudioKey[]; pitchScale: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_INTONATION_SCALE: {
     mutation: { audioKeys: AudioKey[]; intonationScale: number };
     action(payload: { audioKeys: AudioKey[]; intonationScale: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_VOLUME_SCALE: {
     mutation: { audioKeys: AudioKey[]; volumeScale: number };
     action(payload: { audioKeys: AudioKey[]; volumeScale: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_PAUSE_LENGTH_SCALE: {
     mutation: { audioKeys: AudioKey[]; pauseLengthScale: number };
     action(payload: { audioKeys: AudioKey[]; pauseLengthScale: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_PRE_PHONEME_LENGTH: {
     mutation: { audioKeys: AudioKey[]; prePhonemeLength: number };
     action(payload: { audioKeys: AudioKey[]; prePhonemeLength: number }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_POST_PHONEME_LENGTH: {
     mutation: { audioKeys: AudioKey[]; postPhonemeLength: number };
     action(payload: { audioKeys: AudioKey[]; postPhonemeLength: number }): void;
   };
@@ -675,7 +661,7 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_MULTI_SET_AUDIO_PRESET: {
+  COMMAND_MULTI_SET_AUDIO_ITEM_PRESET: {
     mutation: {
       audioKeys: AudioKey[];
       presetKey: PresetKey | undefined;
@@ -686,12 +672,12 @@ export type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_MULTI_APPLY_AUDIO_PRESET: {
+  COMMAND_MULTI_APPLY_AUDIO_ITEM_PRESET: {
     mutation: { audioKeys: AudioKey[] };
     action(payload: { audioKeys: AudioKey[] }): void;
   };
 
-  COMMAND_FULLY_APPLY_AUDIO_PRESET: {
+  COMMAND_FULLY_APPLY_AUDIO_ITEM_PRESET: {
     mutation: { presetKey: PresetKey };
     action(payload: { presetKey: PresetKey }): void;
   };
@@ -725,11 +711,32 @@ export type AudioCommandStoreTypes = {
  * Audio Player Store Types
  */
 
+export type CurrentPlayState =
+  | {
+      type: "preparing";
+    }
+  | {
+      type: "stopped";
+    }
+  | {
+      type: "playing";
+      audioKey: AudioKey;
+      currentTime: number;
+    };
+
 export type AudioPlayerStoreState = {
-  nowPlayingAudioKey?: AudioKey;
+  currentPlayState: CurrentPlayState;
 };
 
 export type AudioPlayerStoreTypes = {
+  START_PLAYBACK: {
+    action(payload: { audioKey: AudioKey }): boolean;
+  };
+
+  START_CONTINUOUS_PLAYBACK: {
+    action(): void;
+  };
+
   ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER: {
     getter: () => number | undefined;
   };
@@ -738,20 +745,26 @@ export type AudioPlayerStoreTypes = {
     getter: boolean;
   };
 
-  SET_AUDIO_NOW_PLAYING: {
-    mutation: { audioKey: AudioKey; nowPlaying: boolean };
+  SET_CURRENT_PLAY_STATE: {
+    mutation: { currentPlayState: CurrentPlayState };
   };
 
-  SET_AUDIO_SOURCE: {
-    mutation: { audioBlob: Blob };
-  };
-
-  PLAY_AUDIO_PLAYER: {
-    action(payload: { offset?: number; audioKey?: AudioKey }): Promise<boolean>;
-  };
-
-  STOP_AUDIO: {
+  STOP_PLAYBACK: {
     action(): void;
+  };
+
+  PLAY_AUDIO_STREAM: {
+    action(payload: {
+      stream: WavStream;
+      /** streamの先頭からの読み飛ばし量（秒）。 */
+      streamOffset: number;
+      /** 元の音声上の再生開始位置（秒）。 */
+      playbackStartPosition: number;
+
+      audioKey: AudioKey;
+      signal: AbortSignal;
+      isStreamingSynthesis: boolean;
+    }): Promise<boolean>;
   };
 };
 
@@ -1520,10 +1533,6 @@ export type SongStoreTypes = {
     action(): void;
   };
 
-  APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
-    action(payload: { device: string }): void;
-  };
-
   SET_LOOP_ENABLED: {
     mutation: { isLoopEnabled: boolean };
     action(payload: { isLoopEnabled: boolean }): void;
@@ -1813,7 +1822,7 @@ export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
   altPortInfos: AltPortInfos;
-  hasDownloadableDefaultEngine: boolean;
+  downloadableDefaultEngineId?: EngineId;
 };
 
 export type EngineStoreTypes = {
@@ -1821,8 +1830,8 @@ export type EngineStoreTypes = {
     action(): void;
   };
 
-  SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
-    mutation: { hasDownloadableDefaultEngine: boolean };
+  SET_DOWNLOADABLE_DEFAULT_ENGINE_ID: {
+    mutation: { downloadableDefaultEngineId?: EngineId };
   };
 
   SET_ENGINE_INFO: {
@@ -2255,6 +2264,7 @@ export type DialogStates = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
+  isEngineUpdateNotificationDialogOpen: boolean;
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
   isPresetManageDialogOpen: boolean;
@@ -2434,15 +2444,15 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
+  SHOW_GENERATE_AND_SAVE_ALL_AUDIO_FILE_DIALOG: {
     action(): void;
   };
 
-  SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
+  SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_FILE_DIALOG: {
     action(): void;
   };
 
-  SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG: {
+  SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_FILE_DIALOG: {
     action(): void;
   };
 
@@ -2562,7 +2572,8 @@ export type IEngineConnectorFactoryActionsMapper = <
 >(
   action: K,
 ) => (
-  _: Parameters<IEngineConnectorFactoryActions[K]>[0],
+  params: Parameters<IEngineConnectorFactoryActions[K]>[0],
+  initOverrides?: Parameters<IEngineConnectorFactoryActions[K]>[1],
 ) => ReturnType<IEngineConnectorFactoryActions[K]>;
 
 export type ProxyStoreTypes = {
