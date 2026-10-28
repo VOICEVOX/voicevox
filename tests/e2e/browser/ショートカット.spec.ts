@@ -144,7 +144,7 @@ test("Escapeでテキスト欄からフォーカスを外せる", async ({ page 
   });
 });
 
-test("CtrlまたはMeta+Zは入力欄外でだけテキスト欄の追加を元に戻す", async ({
+test("Ctrl+ZまたはCmd+Zは入力欄外でだけテキスト欄の追加を元に戻す", async ({
   page,
 }) => {
   await navigateToMain(page);
