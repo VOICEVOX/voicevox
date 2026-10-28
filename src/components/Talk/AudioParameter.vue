@@ -41,10 +41,9 @@
       :modelValue="previewSlider.qSliderProps.modelValue.value"
       @update:modelValue="
         (value) => {
-          if (value == undefined) {
-            throw new Error('Undefined value received');
-          }
-          previewSlider.qSliderProps['onUpdate:modelValue'](value);
+          previewSlider.qSliderProps['onUpdate:modelValue'](
+            ensureNotNullish(value),
+          );
         }
       "
       @click.stop="stopPropagation"
@@ -59,6 +58,7 @@
 import { computed, reactive } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import type { MoraDataType } from "@/type/preload";
+import { ensureNotNullish } from "@/type/utility";
 
 const props = withDefaults(
   defineProps<{

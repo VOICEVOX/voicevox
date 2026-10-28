@@ -21,10 +21,9 @@
           :modelValue="previewAccentSlider.qSliderProps.modelValue.value"
           @update:modelValue="
             (value) => {
-              if (value == undefined) {
-                throw new Error('Undefined value received');
-              }
-              previewAccentSlider.qSliderProps['onUpdate:modelValue'](value);
+              previewAccentSlider.qSliderProps['onUpdate:modelValue'](
+                ensureNotNullish(value),
+              );
             }
           "
           @click.stop="stopPropagation"
@@ -68,6 +67,7 @@
 import { computed } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import type { AccentPhrase } from "@/openapi";
+import { ensureNotNullish } from "@/type/utility";
 
 const props = withDefaults(
   defineProps<{
