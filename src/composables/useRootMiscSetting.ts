@@ -9,10 +9,10 @@ export const useRootMiscSetting = <T extends keyof RootMiscSettingType>(
 ) => {
   const state = computed(() => store.state[key]);
   const setter = (value: RootMiscSettingType[T]) => {
-    // Vuexの型処理でUnionが解かれてしまうのを迂回している
+    // @ts-expect-error Vuexの型処理でUnionが解かれてしまうのを迂回している
     // FIXME: このワークアラウンドをなくす
     void store.actions.SET_ROOT_MISC_SETTING({
-      key: key as never,
+      key,
       value,
     });
   };

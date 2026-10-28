@@ -20,7 +20,9 @@
           :disable="previewAccentSlider.qSliderProps.disable.value"
           :modelValue="previewAccentSlider.qSliderProps.modelValue.value"
           @update:modelValue="
-            previewAccentSlider.qSliderProps['onUpdate:modelValue']
+            previewAccentSlider.qSliderProps['onUpdate:modelValue'] as (
+              value: number | null,
+            ) => void
           "
           @click.stop="stopPropagation"
           @change="previewAccentSlider.qSliderProps.onChange"

@@ -1,8 +1,11 @@
 managePackageManagerVersions: true
 
 minimumReleaseAge: 10080
-
 minimumReleaseAgeExclude:
+  - "@vizejs/*"
+  - "@typescript/*"
+  - vize
+  - vue
   - electron
 
 onlyBuiltDependencies:
