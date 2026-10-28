@@ -39,7 +39,9 @@
       :step="previewSlider.qSliderProps.step.value"
       :disable="previewSlider.qSliderProps.disable.value"
       :modelValue="previewSlider.qSliderProps.modelValue.value"
-      @update:modelValue="previewSlider.qSliderProps['onUpdate:modelValue']"
+      @update:modelValue="
+        $event && previewSlider.qSliderProps['onUpdate:modelValue']($event)
+      "
       @click.stop="stopPropagation"
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"

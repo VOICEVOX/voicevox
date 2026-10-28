@@ -191,7 +191,8 @@
           :disable="parameter.slider.qSliderProps.disable.value"
           :modelValue="parameter.slider.qSliderProps.modelValue.value"
           @update:modelValue="
-            parameter.slider.qSliderProps['onUpdate:modelValue']
+            $event &&
+            parameter.slider.qSliderProps['onUpdate:modelValue']($event)
           "
           @change="handleParameterChange(parameter, $event)"
           @wheel="parameter.slider.qSliderProps.onWheel"
@@ -278,7 +279,8 @@
           "
           :modelValue="morphingRateSlider.qSliderProps.modelValue.value"
           @update:modelValue="
-            morphingRateSlider.qSliderProps['onUpdate:modelValue']
+            $event &&
+            morphingRateSlider.qSliderProps['onUpdate:modelValue']($event)
           "
           @change="morphingRateSlider.qSliderProps.onChange"
           @wheel="morphingRateSlider.qSliderProps.onWheel"
