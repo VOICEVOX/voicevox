@@ -1,6 +1,7 @@
 import js from "@eslint/js";
 import globals from "globals";
-import importPlugin from "eslint-plugin-import";
+import importPlugin from "eslint-plugin-import-x";
+import nPlugin from "eslint-plugin-n";
 import storybookPlugin from "eslint-plugin-storybook";
 import vueParser from "vue-eslint-parser";
 import vuePlugin from "eslint-plugin-vue";
@@ -84,6 +85,7 @@ export default defineConfigWithVueTs(
     name: "voicevox/defaults/plugins",
     plugins: {
       import: importPlugin,
+      n: nPlugin,
       progress: progressPlugin,
     },
   },
@@ -180,7 +182,7 @@ export default defineConfigWithVueTs(
         },
       ],
       "import/order": "error",
-      "import/enforce-node-protocol-usage": ["error", "always"],
+      "n/prefer-node-protocol": "error",
       "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
       "no-constant-condition": ["error", { checkLoops: false }], // while(true) などを許可
       "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",

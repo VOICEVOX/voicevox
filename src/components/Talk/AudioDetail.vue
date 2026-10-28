@@ -26,7 +26,7 @@
         </div>
         <div class="play-button-wrapper">
           <QBtn
-            v-if="!nowPlaying && !nowGenerating"
+            v-if="!nowPlaying && !nowPreparing"
             fab
             color="primary"
             textColor="display-on-primary"
@@ -39,7 +39,7 @@
             color="primary"
             textColor="display-on-primary"
             icon="stop"
-            :disable="nowGenerating"
+            :disable="nowPreparing"
             @click="stop"
           ></QBtn>
         </div>
@@ -117,7 +117,7 @@ registerHotkeyWithCleanup({
   editor: "talk",
   name: "再生/停止",
   callback: () => {
-    if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+    if (!nowPlaying.value && !nowPreparing.value && !uiLocked.value) {
       void play();
     } else {
       stop();
@@ -154,11 +154,8 @@ registerHotkeyWithCleanup({
   name: "全体のイントネーションをリセット",
   callback: () => {
     if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
-      const audioKeys = store.state.enableMultiSelect
-        ? store.getters.SELECTED_AUDIO_KEYS
-        : [store.getters.ACTIVE_AUDIO_KEY];
       void store.actions.COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH({
-        audioKeys,
+        audioKeys: store.getters.SELECTED_AUDIO_KEYS,
       });
     }
   },
@@ -170,11 +167,12 @@ registerHotkeyWithCleanup({
     if (
       !uiLocked.value &&
       store.getters.ACTIVE_AUDIO_KEY &&
-      store.getters.AUDIO_PLAY_START_POINT != undefined
+      store.getters.PLAYBACK_START_ACCENT_PHRASE_INDEX != undefined
     ) {
       void store.actions.COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH({
         audioKey: store.getters.ACTIVE_AUDIO_KEY,
-        accentPhraseIndex: store.getters.AUDIO_PLAY_START_POINT,
+        accentPhraseIndex: store.getters.PLAYBACK_START_ACCENT_PHRASE_INDEX,
+        type: "both",
       });
     }
   },
@@ -212,10 +210,10 @@ const activePointScrollMode = computed(() => store.state.activePointScrollMode);
 // 再生開始アクセント句
 const startPoint = computed({
   get: () => {
-    return store.getters.AUDIO_PLAY_START_POINT;
+    return store.getters.PLAYBACK_START_ACCENT_PHRASE_INDEX;
   },
   set: (startPoint) => {
-    void store.actions.SET_AUDIO_PLAY_START_POINT({ startPoint });
+    void store.actions.SET_PLAYBACK_START_ACCENT_PHRASE_INDEX({ startPoint });
   },
 });
 // アクティブ(再生されている状態)なアクセント句
@@ -247,7 +245,7 @@ watch(accentPhrases, async () => {
 // audio play
 const play = async () => {
   try {
-    await store.actions.PLAY_AUDIO({
+    await store.actions.START_PLAYBACK({
       audioKey: props.activeAudioKey,
     });
   } catch (e) {
@@ -260,12 +258,12 @@ const play = async () => {
 };
 
 const stop = () => {
-  void store.actions.STOP_AUDIO();
+  void store.actions.STOP_PLAYBACK();
 };
 
 const nowPlaying = computed(() => store.getters.NOW_PLAYING);
-const nowGenerating = computed(
-  () => store.state.audioStates[props.activeAudioKey]?.nowGenerating,
+const nowPreparing = computed(
+  () => store.state.currentPlayState.type === "preparing",
 );
 
 const audioDetail = ref<HTMLElement>();
@@ -314,9 +312,10 @@ const scrollToActivePoint = () => {
 let requestId: number | undefined;
 watch(nowPlaying, async (newState) => {
   if (newState) {
-    const accentPhraseOffsets = await store.actions.GET_AUDIO_PLAY_OFFSETS({
-      audioKey: props.activeAudioKey,
-    });
+    const accentPhraseOffsets =
+      await store.actions.GET_ACCENT_PHRASE_START_TIME({
+        audioKey: props.activeAudioKey,
+      });
     const currentTimeGetter =
       store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER;
     // 現在再生されているaudio elementの再生時刻を描画毎に取得(監視)し、

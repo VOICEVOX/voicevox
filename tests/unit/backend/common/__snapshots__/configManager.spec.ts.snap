@@ -8,6 +8,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "confirmedTips": {
     "engineStartedOnAltPort": false,
     "notifyOnGenerate": false,
+    "streamingUnrecommended": false,
     "tweakableSliderByScroll": false,
   },
   "currentTheme": "Default",
@@ -18,7 +19,6 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "enableKatakanaEnglish": true,
   "enableMemoNotation": false,
   "enableMultiEngine": false,
-  "enableMultiSelect": true,
   "enablePreset": false,
   "enableRubyNotation": false,
   "engineSettings": {
@@ -231,10 +231,11 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "shouldApplyDefaultPresetOnVoiceChanged": false,
   "showAddAudioItemButton": true,
   "showAudioLength": false,
-  "showSingCharacterPortrait": true,
+  "showSongCharacterPortrait": true,
   "showTextLineNumber": false,
   "splitTextWhenPaste": "PERIOD_AND_NEW_LINE",
   "splitterPosition": {},
+  "streamingMode": "STABLE",
   "toolbarSetting": [
     "PLAY_CONTINUOUSLY",
     "STOP",

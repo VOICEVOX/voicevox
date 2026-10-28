@@ -4,8 +4,8 @@ import {
   calcMinimumDistanceVectorRectAndPoint,
   type Rect,
   Vector2D,
-} from "@/sing/utility";
-import { getXInBorderBox, getYInBorderBox } from "@/sing/viewHelper";
+} from "@/song/utility";
+import { getXInBorderBox, getYInBorderBox } from "@/song/viewHelper";
 
 export const useAutoScrollOnEdge = (
   element: Ref<HTMLElement | null>,

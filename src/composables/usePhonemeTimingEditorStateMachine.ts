@@ -1,7 +1,9 @@
 import { computed, type ComputedRef, ref, watch } from "vue";
-import type { CursorState, ViewportInfo } from "@/sing/viewHelper";
+import type { CursorState, ViewportInfo } from "@/song/viewHelper";
 import type {
   PhonemeTimingPreview,
+  PhonemeTimingTarget,
+  PhonemeBandYRange,
   PhonemeTimingEditorPartialStore,
   PhonemeTimingEditorPreviewMode,
   PhonemeTimingEditorInput,
@@ -9,19 +11,21 @@ import type {
   PhonemeTimingEditorIdleStateId,
   PhonemeTimingInfo,
   PhraseInfo,
-} from "@/sing/phonemeTimingEditorStateMachine/common";
+} from "@/song/phonemeTimingEditorStateMachine/common";
 import type { PhraseKey } from "@/store/type";
 import type { TrackId } from "@/type/preload";
 import type { PhonemeTimingEditData, Tempo } from "@/domain/project/type";
-import { createPhonemeTimingEditorStateMachine } from "@/sing/phonemeTimingEditorStateMachine";
+import { createPhonemeTimingEditorStateMachine } from "@/song/phonemeTimingEditorStateMachine";
 
 export const usePhonemeTimingEditorStateMachine = (
   store: PhonemeTimingEditorPartialStore,
   viewportInfo: ComputedRef<ViewportInfo>,
   phonemeTimingInfos: ComputedRef<PhonemeTimingInfo[]>,
   phraseInfos: ComputedRef<Map<PhraseKey, PhraseInfo>>,
+  phonemeBandYRange: ComputedRef<PhonemeBandYRange>,
 ) => {
   const refs = {
+    activePhoneme: ref<PhonemeTimingTarget>(),
     previewPhonemeTiming: ref<PhonemeTimingPreview | undefined>(undefined),
     previewMode: ref<PhonemeTimingEditorPreviewMode>("IDLE"),
     cursorState: ref<CursorState>("UNSET"),
@@ -38,6 +42,7 @@ export const usePhonemeTimingEditorStateMachine = (
     editorFrameRate: computed<number>(() => store.state.editorFrameRate),
     phonemeTimingInfos,
     phraseInfos,
+    phonemeBandYRange,
   };
 
   const idleStateId = computed<PhonemeTimingEditorIdleStateId>(() =>
@@ -62,6 +67,7 @@ export const usePhonemeTimingEditorStateMachine = (
   });
 
   return {
+    activePhoneme: computed(() => refs.activePhoneme.value),
     stateMachineProcess: (input: PhonemeTimingEditorInput) => {
       stateMachine.process(input);
     },

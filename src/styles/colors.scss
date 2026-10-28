@@ -41,7 +41,7 @@ $sequencer-black-key: var(--color-sequencer-black-key);
 :root {
   --color-toolbar: var(--color-primary);
   --color-toolbar-rgb: var(--color-primary-rgb);
-  --color-sing-toolbar: var(--color-background);
+  --color-song-toolbar: var(--color-background);
 
   --color-toolbar-button: var(--color-background);
   --color-toolbar-button-rgb: var(--color-background-rgb);
@@ -64,7 +64,7 @@ $sequencer-black-key: var(--color-sequencer-black-key);
 :root[is-dark-theme="true"] {
   --color-toolbar: var(--color-surface);
   --color-toolbar-rgb: var(--color-surface-rgb);
-  --color-sing-toolbar: var(--color-surface);
+  --color-song-toolbar: var(--color-surface);
 
   --color-toolbar-button: var(--color-primary);
   --color-toolbar-button-rgb: var(--color-primary-rgb);
@@ -87,7 +87,7 @@ $sequencer-black-key: var(--color-sequencer-black-key);
 $toolbar: var(--color-toolbar);
 $toolbar-rgb: var(--color-toolbar-rgb);
 
-$sing-toolbar: var(--color-sing-toolbar);
+$song-toolbar: var(--color-song-toolbar);
 
 $toolbar-button: var(--color-toolbar-button);
 $toolbar-button-rgb: var(--color-toolbar-button-rgb);

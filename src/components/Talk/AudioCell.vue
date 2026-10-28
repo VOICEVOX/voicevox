@@ -7,11 +7,8 @@
       active: isActiveAudioCell,
       // selectedクラスはテストで使われているので残す。
       // TODO: テストをこのクラスに依存しないようにして、このクラスを消す。
-      selected: isSelectedAudioCell && isMultiSelectEnabled,
-      'selected-highlight':
-        isSelectedAudioCell &&
-        isMultiSelectEnabled &&
-        selectedAudioKeys.length > 1,
+      selected: isSelectedAudioCell,
+      'selected-highlight': isSelectedAudioCell && selectedAudioKeys.length > 1,
     }"
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
@@ -21,7 +18,7 @@
     <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->
     <div
       v-if="
-        isMultiSelectEnabled && isActiveAudioCell
+        isActiveAudioCell
           ? isCtrlOrCommandKeyDown
           : isCtrlOrCommandKeyDown || isShiftKeyDown
       "
@@ -86,7 +83,7 @@
       <template #after>
         <div
           v-if="showAudioLength && audioDuration != undefined"
-          class="q-mr-sm audio-length"
+          class="audio-length"
         >
           {{ audioDuration.toFixed(2) }}s
         </div>
@@ -94,6 +91,7 @@
           v-if="enableDeleteButton"
           round
           flat
+          class="delete-button"
           icon="delete_outline"
           size="0.8rem"
           :disable="uiLocked"
@@ -182,8 +180,6 @@ const isInitializingSpeaker = computed(() =>
 const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-
-const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
 
 const selectAndSetActiveAudioKey = () => {
   void store.actions.SET_ACTIVE_AUDIO_KEY({ audioKey: props.audioKey });
@@ -279,9 +275,7 @@ const selectedVoice = computed<Voice | undefined>({
   set(voice: Voice | undefined) {
     if (voice == undefined) return;
     void store.actions.COMMAND_MULTI_CHANGE_VOICE({
-      audioKeys: isMultiSelectEnabled.value
-        ? store.getters.SELECTED_AUDIO_KEYS
-        : [props.audioKey],
+      audioKeys: store.getters.SELECTED_AUDIO_KEYS,
       voice,
     });
   },
@@ -329,7 +323,7 @@ const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
   if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
     isChangeFlag.value = false;
-    await store.actions.COMMAND_CHANGE_AUDIO_TEXT({
+    await store.actions.COMMAND_CHANGE_AUDIO_ITEM_TEXT({
       audioKey: props.audioKey,
       text: audioTextBuffer.value,
     });
@@ -431,7 +425,7 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   if (e && e.isComposing) return;
   const index = audioKeys.value.indexOf(props.audioKey) + offset;
   if (index >= 0 && index < audioKeys.value.length) {
-    if (isMultiSelectEnabled.value && e?.shiftKey) {
+    if (e?.shiftKey) {
       emit("focusCell", {
         audioKey: audioKeys.value[index],
         focusTarget: "root",
@@ -457,10 +451,7 @@ const moveDownCell = moveCell(1);
 const willRemove = ref(false);
 const removeCell = async () => {
   let audioKeysToDelete: AudioKey[];
-  if (
-    isMultiSelectEnabled.value &&
-    store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)
-  ) {
+  if (store.getters.SELECTED_AUDIO_KEYS.includes(props.audioKey)) {
     audioKeysToDelete = store.getters.SELECTED_AUDIO_KEYS;
   } else {
     audioKeysToDelete = [props.audioKey];
@@ -527,9 +518,7 @@ const selectCharacterAt = (index: number) => {
     styleId: style.styleId,
   };
   void store.actions.COMMAND_MULTI_CHANGE_VOICE({
-    audioKeys: isMultiSelectEnabled.value
-      ? store.getters.SELECTED_AUDIO_KEYS
-      : [props.audioKey],
+    audioKeys: store.getters.SELECTED_AUDIO_KEYS,
     voice,
   });
 };
@@ -537,8 +526,7 @@ const selectCharacterAt = (index: number) => {
 // 削除ボタンの有効／無効判定
 const enableDeleteButton = computed(() => {
   return (
-    store.state.audioKeys.length >
-    (isMultiSelectEnabled.value ? store.getters.SELECTED_AUDIO_KEYS.length : 1)
+    store.state.audioKeys.length > store.getters.SELECTED_AUDIO_KEYS.length
   );
 });
 
@@ -744,6 +732,13 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     :deep(.q-field__after) {
       height: 2rem;
       padding-left: 5px;
+
+      // NOTE: Quasarは`after(:empty)`の場合に`display: none`で非表示にしているため、
+      // `display`の変更を`after:not(:empty)`の場合のみにしてレイアウト崩れを抑えている
+      &:not(:empty) {
+        display: grid;
+        align-content: center;
+      }
     }
 
     &.q-field--filled.q-field--highlighted :deep(.q-field__control)::before {
@@ -751,7 +746,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     }
   }
 
-  &:not(:hover) > .q-input > .q-field__after > .q-btn:not(:focus):not(:active) {
+  &:not(:hover) .delete-button:not(:focus):not(:active) {
     @include visually-hidden.visually-hidden;
   }
 
@@ -777,6 +772,20 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   opacity: 0.6;
   white-space: nowrap;
   font-size: 0.85rem;
+  grid-area: 1 / 1;
+  min-width: 2.8rem;
+  text-align: right;
   user-select: none;
+
+  // 削除ボタンがある行のホバー中、または削除ボタンのフォーカス中は音声長を隠す
+  .audio-cell:hover .q-input:has(.delete-button) &,
+  .audio-cell .q-input:has(.delete-button:focus) & {
+    visibility: hidden;
+  }
+}
+
+.delete-button {
+  grid-area: 1 / 1;
+  justify-self: end;
 }
 </style>

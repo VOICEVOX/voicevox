@@ -13,9 +13,9 @@ import {
   SongTrackRenderer,
   type SongTrackRenderingEvent,
   type SongTrackRenderingResult,
-} from "@/sing/songTrackRendering";
-import { getOverlappingNoteIds } from "@/sing/storeHelper";
-import { calculateHash, getLast } from "@/sing/utility";
+} from "@/song/songTrackRendering";
+import { getOverlappingNoteIds } from "@/song/storeHelper";
+import { calculateHash, getLast } from "@/song/utility";
 import type { PhraseKey, SingingVoice } from "@/store/type";
 import {
   type EngineId,
@@ -25,7 +25,7 @@ import {
 } from "@/type/preload";
 import { ExhaustiveError } from "@/type/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { createDefaultTrack } from "@/sing/domain";
+import { createDefaultTrack } from "@/song/domain";
 import type {
   Note,
   Singer,
@@ -102,7 +102,7 @@ export class SongTrackRendererTestUtility {
           });
           return await mock.singFrameF0({
             speaker: 0,
-            bodySingFrameF0SingFrameF0Post: {
+            bodySingFrameF0: {
               score: { notes: args.notes },
               frameAudioQuery: args.query,
             },
@@ -115,7 +115,7 @@ export class SongTrackRendererTestUtility {
           });
           return await mock.singFrameVolume({
             speaker: 0,
-            bodySingFrameVolumeSingFrameVolumePost: {
+            bodySingFrameVolume: {
               score: { notes: args.notes },
               frameAudioQuery: args.query,
             },

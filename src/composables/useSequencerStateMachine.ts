@@ -7,9 +7,9 @@ import type {
   PartialStore,
   Refs,
   ViewportInfo,
-} from "@/sing/sequencerStateMachine/common";
-import { getNoteDuration } from "@/sing/music";
-import { createSequencerStateMachine } from "@/sing/sequencerStateMachine";
+} from "@/song/sequencerStateMachine/common";
+import { getNoteDuration } from "@/song/music";
+import { createSequencerStateMachine } from "@/song/sequencerStateMachine";
 import { ExhaustiveError } from "@/type/utility";
 
 export const useSequencerStateMachine = (args: {

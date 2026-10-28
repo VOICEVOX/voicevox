@@ -17,8 +17,6 @@ export const useCommonMenuBarData = (store: Store) => {
     () => editor.value && store.getters.CAN_REDO(editor.value),
   );
 
-  const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
-
   const audioKeys = computed(() => store.state.audioKeys);
 
   const createNewProject = async () => {
@@ -237,22 +235,18 @@ export const useCommonMenuBarData = (store: Store) => {
           disabled: !canRedo.value,
           disableWhenUiLocked: true,
         },
-        ...(isMultiSelectEnabled.value
-          ? [
-              {
-                type: "button",
-                label: "すべて選択",
-                onClick: async () => {
-                  if (!uiLocked.value && isMultiSelectEnabled.value) {
-                    await store.actions.SET_SELECTED_AUDIO_KEYS({
-                      audioKeys: audioKeys.value,
-                    });
-                  }
-                },
-                disableWhenUiLocked: true,
-              } as const,
-            ]
-          : []),
+        {
+          type: "button",
+          label: "すべて選択",
+          onClick: async () => {
+            if (!uiLocked.value) {
+              await store.actions.SET_SELECTED_AUDIO_KEYS({
+                audioKeys: audioKeys.value,
+              });
+            }
+          },
+          disableWhenUiLocked: true,
+        },
       ],
     },
 

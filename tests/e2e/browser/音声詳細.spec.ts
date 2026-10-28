@@ -60,6 +60,26 @@ test("詳細調整欄のコンテキストメニュー", async ({ page }) => {
     .getByRole("textbox", { name: "1行目" })
     .fill("あれもこれもそれもどれも");
   await page.getByRole("textbox", { name: "1行目" }).press("Enter");
+
+  // イントネーションと長さの各欄に対応するリセット項目が表示される
+  const firstAccentPhrase = page.locator(".accent-phrase").first();
+  await page.getByText("ｲﾝﾄﾈｰｼｮﾝ").click();
+  await firstAccentPhrase.click({ button: "right" });
+  await expect(page.getByText("イントネーションをリセット")).toBeVisible();
+  await page.getByText("イントネーションをリセット").click();
+
+  await page.getByText("長さ", { exact: true }).click();
+  await firstAccentPhrase.click({ button: "right" });
+  await expect(page.getByText("長さをリセット")).toBeVisible();
+  await page.getByText("長さをリセット").click();
+
+  await page.getByText("ｱｸｾﾝﾄ").click();
+  await firstAccentPhrase.click({ button: "right" });
+  await expect(
+    page.getByText("イントネーションと長さをリセット"),
+  ).toBeVisible();
+  await page.getByText("イントネーションと長さをリセット").click();
+
   await page.getByText("ソレモ").click({
     button: "right",
   });

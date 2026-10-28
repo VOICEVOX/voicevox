@@ -61,6 +61,7 @@ export const settingStoreState: SettingStoreState = {
     tweakableSliderByScroll: false,
     engineStartedOnAltPort: false,
     notifyOnGenerate: false,
+    streamingUnrecommended: false,
   },
   engineSettings: {},
   enablePreset: false,
@@ -72,12 +73,12 @@ export const settingStoreState: SettingStoreState = {
     soloAndMute: true,
     panAndGain: true,
   },
-  showSingCharacterPortrait: true,
+  showSongCharacterPortrait: true,
   defaultLyricMode: "doremi",
   playheadPositionDisplayFormat: "MINUTES_SECONDS",
   enableKatakanaEnglish: true,
-  enableMultiSelect: true,
   showAudioLength: false,
+  streamingMode: "STABLE",
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -152,14 +153,15 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "enableRubyNotation",
         "enableMemoNotation",
         "skipUpdateVersion",
+        "skipEngineUpdateVersion",
         "undoableTrackOperations",
-        "showSingCharacterPortrait",
+        "showSongCharacterPortrait",
         "defaultLyricMode",
         "playheadPositionDisplayFormat",
         "openedEditor",
         "enableKatakanaEnglish",
-        "enableMultiSelect",
         "showAudioLength",
+        "streamingMode",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード

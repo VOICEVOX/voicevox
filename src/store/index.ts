@@ -22,13 +22,14 @@ import {
   getCharacterInfo,
 } from "./audio";
 import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
+import { audioContextStorePlugins } from "./audioContext";
 import {
-  singingStoreState,
-  singingStore,
-  singingStorePlugins,
-  singingCommandStoreState,
-  singingCommandStore,
-} from "./singing";
+  songStoreState,
+  songStore,
+  songStorePlugins,
+  songCommandStoreState,
+  songCommandStore,
+} from "./song";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
@@ -359,7 +360,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...uiStoreState,
     ...audioStoreState,
     ...audioPlayerStoreState,
-    ...singingStoreState,
+    ...songStoreState,
     ...commandStoreState,
     ...engineStoreState,
     ...projectStoreState,
@@ -369,8 +370,8 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...presetStoreState,
     ...dictionaryStoreState,
     ...proxyStoreState,
-    ...singingStoreState,
-    ...singingCommandStoreState,
+    ...songStoreState,
+    ...songCommandStoreState,
   },
 
   getters: {
@@ -386,8 +387,8 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...audioCommandStore.getters,
     ...indexStore.getters,
     ...proxyStore.getters,
-    ...singingStore.getters,
-    ...singingCommandStore.getters,
+    ...songStore.getters,
+    ...songCommandStore.getters,
   },
 
   mutations: {
@@ -403,8 +404,8 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...dictionaryStore.mutations,
     ...indexStore.mutations,
     ...proxyStore.mutations,
-    ...singingStore.mutations,
-    ...singingCommandStore.mutations,
+    ...songStore.mutations,
+    ...songCommandStore.mutations,
   },
 
   actions: {
@@ -420,11 +421,11 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...dictionaryStore.actions,
     ...indexStore.actions,
     ...proxyStore.actions,
-    ...singingStore.actions,
-    ...singingCommandStore.actions,
+    ...songStore.actions,
+    ...songCommandStore.actions,
   },
 
-  plugins: [...singingStorePlugins],
+  plugins: [...songStorePlugins, ...audioContextStorePlugins],
 
   strict: !isProduction,
 });

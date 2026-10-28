@@ -4,7 +4,8 @@
 
     <QPageContainer>
       <QPage class="main-row-panes">
-        <ProgressView />
+        <ProgressView :progress="store.getters.PROGRESS" />
+        <ProgressView :progress="playbackProgress" />
         <EngineStartupOverlay :isCompletedInitialStartup />
 
         <QSplitter
@@ -171,11 +172,13 @@ const props = defineProps<{
 
 const store = useStore();
 
+const playbackProgress = computed(() =>
+  store.state.currentPlayState.type === "preparing" ? 0 : -1,
+);
+
 const audioKeys = computed(() => store.state.audioKeys);
 const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-
-const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 
@@ -184,7 +187,7 @@ registerHotkeyWithCleanup({
   name: "音声書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.actions.SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG();
+      void store.actions.SHOW_GENERATE_AND_SAVE_ALL_AUDIO_FILE_DIALOG();
     }
   },
 });
@@ -193,7 +196,7 @@ registerHotkeyWithCleanup({
   name: "選択音声を書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.actions.SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG();
+      void store.actions.SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_FILE_DIALOG();
     }
   },
 });
@@ -202,7 +205,7 @@ registerHotkeyWithCleanup({
   name: "音声を繋げて書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.actions.SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG();
+      void store.actions.SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_FILE_DIALOG();
     }
   },
 });
@@ -281,7 +284,7 @@ registerHotkeyWithCleanup({
   enableInTextbox: false,
   name: "すべて選択",
   callback: () => {
-    if (!uiLocked.value && isMultiSelectEnabled.value) {
+    if (!uiLocked.value) {
       void store.actions.SET_SELECTED_AUDIO_KEYS({
         audioKeys: audioKeys.value,
       });
@@ -699,7 +702,7 @@ const showAddAudioItemButton = computed(() => {
 
 // 台本欄の空きスペースがクリックされたら選択解除
 const onAudioCellPaneClick = () => {
-  if (store.state.enableMultiSelect && activeAudioKey.value) {
+  if (activeAudioKey.value) {
     void store.actions.SET_SELECTED_AUDIO_KEYS({
       audioKeys: [activeAudioKey.value],
     });

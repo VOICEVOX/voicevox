@@ -17,8 +17,8 @@ import * as runtime from '../runtime';
 import type {
   AccentPhrase,
   AudioQuery,
-  BodySingFrameF0SingFrameF0Post,
-  BodySingFrameVolumeSingFrameVolumePost,
+  BodySingFrameF0,
+  BodySingFrameVolume,
   CorsPolicyMode,
   DownloadableLibraryInfo,
   EngineManifest,
@@ -40,10 +40,10 @@ import {
     AccentPhraseToJSON,
     AudioQueryFromJSON,
     AudioQueryToJSON,
-    BodySingFrameF0SingFrameF0PostFromJSON,
-    BodySingFrameF0SingFrameF0PostToJSON,
-    BodySingFrameVolumeSingFrameVolumePostFromJSON,
-    BodySingFrameVolumeSingFrameVolumePostToJSON,
+    BodySingFrameF0FromJSON,
+    BodySingFrameF0ToJSON,
+    BodySingFrameVolumeFromJSON,
+    BodySingFrameVolumeToJSON,
     CorsPolicyModeFromJSON,
     CorsPolicyModeToJSON,
     DownloadableLibraryInfoFromJSON,
@@ -207,13 +207,13 @@ export interface SingFrameAudioQueryRequest {
 
 export interface SingFrameF0Request {
     speaker: number;
-    bodySingFrameF0SingFrameF0Post: BodySingFrameF0SingFrameF0Post;
+    bodySingFrameF0: BodySingFrameF0;
     coreVersion?: string;
 }
 
 export interface SingFrameVolumeRequest {
     speaker: number;
-    bodySingFrameVolumeSingFrameVolumePost: BodySingFrameVolumeSingFrameVolumePost;
+    bodySingFrameVolume: BodySingFrameVolume;
     coreVersion?: string;
 }
 
@@ -234,6 +234,15 @@ export interface SpeakerInfoRequest {
 }
 
 export interface SpeakersRequest {
+    coreVersion?: string;
+}
+
+export interface StreamingSynthesisRequest {
+    speaker: number;
+    audioQuery: AudioQuery;
+    startOffset?: number;
+    segmentLength?: number;
+    enableInterrogativeUpspeak?: boolean;
     coreVersion?: string;
 }
 
@@ -788,7 +797,7 @@ export interface DefaultApiInterface {
      * 
      * @summary 楽譜・歌唱音声合成用のクエリからフレームごとの基本周波数を得る
      * @param {number} speaker 
-     * @param {BodySingFrameF0SingFrameF0Post} bodySingFrameF0SingFrameF0Post 
+     * @param {BodySingFrameF0} bodySingFrameF0 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -805,7 +814,7 @@ export interface DefaultApiInterface {
      * 
      * @summary 楽譜・歌唱音声合成用のクエリからフレームごとの音量を得る
      * @param {number} speaker 
-     * @param {BodySingFrameVolumeSingFrameVolumePost} bodySingFrameVolumeSingFrameVolumePost 
+     * @param {BodySingFrameVolume} bodySingFrameVolume 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -885,6 +894,26 @@ export interface DefaultApiInterface {
      * Speakers
      */
     speakers(requestParameters: SpeakersRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>>;
+
+    /**
+     * 
+     * @summary ストリーミングで音声合成する
+     * @param {number} speaker 
+     * @param {AudioQuery} audioQuery 
+     * @param {number} [startOffset] 音声の開始位置
+     * @param {number} [segmentLength] 一度に合成する音声の長さ
+     * @param {boolean} [enableInterrogativeUpspeak] 疑問系のテキストが与えられたら語尾を自動調整する
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    streamingSynthesisRaw(requestParameters: StreamingSynthesisRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>>;
+
+    /**
+     * ストリーミングで音声合成する
+     */
+    streamingSynthesis(requestParameters: StreamingSynthesisRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob>;
 
     /**
      * 対応デバイスの一覧を取得します。
@@ -2253,8 +2282,8 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameF0.');
         }
 
-        if (requestParameters.bodySingFrameF0SingFrameF0Post === null || requestParameters.bodySingFrameF0SingFrameF0Post === undefined) {
-            throw new runtime.RequiredError('bodySingFrameF0SingFrameF0Post','Required parameter requestParameters.bodySingFrameF0SingFrameF0Post was null or undefined when calling singFrameF0.');
+        if (requestParameters.bodySingFrameF0 === null || requestParameters.bodySingFrameF0 === undefined) {
+            throw new runtime.RequiredError('bodySingFrameF0','Required parameter requestParameters.bodySingFrameF0 was null or undefined when calling singFrameF0.');
         }
 
         const queryParameters: any = {};
@@ -2276,7 +2305,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: BodySingFrameF0SingFrameF0PostToJSON(requestParameters.bodySingFrameF0SingFrameF0Post),
+            body: BodySingFrameF0ToJSON(requestParameters.bodySingFrameF0),
         }, initOverrides);
 
         return new runtime.JSONApiResponse<any>(response);
@@ -2298,8 +2327,8 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameVolume.');
         }
 
-        if (requestParameters.bodySingFrameVolumeSingFrameVolumePost === null || requestParameters.bodySingFrameVolumeSingFrameVolumePost === undefined) {
-            throw new runtime.RequiredError('bodySingFrameVolumeSingFrameVolumePost','Required parameter requestParameters.bodySingFrameVolumeSingFrameVolumePost was null or undefined when calling singFrameVolume.');
+        if (requestParameters.bodySingFrameVolume === null || requestParameters.bodySingFrameVolume === undefined) {
+            throw new runtime.RequiredError('bodySingFrameVolume','Required parameter requestParameters.bodySingFrameVolume was null or undefined when calling singFrameVolume.');
         }
 
         const queryParameters: any = {};
@@ -2321,7 +2350,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: BodySingFrameVolumeSingFrameVolumePostToJSON(requestParameters.bodySingFrameVolumeSingFrameVolumePost),
+            body: BodySingFrameVolumeToJSON(requestParameters.bodySingFrameVolume),
         }, initOverrides);
 
         return new runtime.JSONApiResponse<any>(response);
@@ -2484,6 +2513,63 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      */
     async speakers(requestParameters: SpeakersRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {
         const response = await this.speakersRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * ストリーミングで音声合成する
+     */
+    async streamingSynthesisRaw(requestParameters: StreamingSynthesisRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling streamingSynthesis.');
+        }
+
+        if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
+            throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling streamingSynthesis.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.speaker !== undefined) {
+            queryParameters['speaker'] = requestParameters.speaker;
+        }
+
+        if (requestParameters.startOffset !== undefined) {
+            queryParameters['start_offset'] = requestParameters.startOffset;
+        }
+
+        if (requestParameters.segmentLength !== undefined) {
+            queryParameters['segment_length'] = requestParameters.segmentLength;
+        }
+
+        if (requestParameters.enableInterrogativeUpspeak !== undefined) {
+            queryParameters['enable_interrogative_upspeak'] = requestParameters.enableInterrogativeUpspeak;
+        }
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/streaming_synthesis`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: AudioQueryToJSON(requestParameters.audioQuery),
+        }, initOverrides);
+
+        return new runtime.BlobApiResponse(response);
+    }
+
+    /**
+     * ストリーミングで音声合成する
+     */
+    async streamingSynthesis(requestParameters: StreamingSynthesisRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
+        const response = await this.streamingSynthesisRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

@@ -29,5 +29,7 @@
 }
 
 .cursor-erase {
-  cursor: crosshair; // TODO: 削除用消しゴム的カーソルが現状ないため、用意するまではcrosshair
+  // TODO: 削除用消しゴム的カーソルが現状ないため、用意するまではcell
+  // crosshairより消す操作だと伝わりやすい
+  cursor: cell;
 }

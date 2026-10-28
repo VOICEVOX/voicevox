@@ -38,7 +38,7 @@ Issue 側で取り組み始めたことを伝えるか、最初に Draft プル�
 ## 環境構築
 
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。  
-Node.js の管理ツール（[nvs](https://github.com/jasongin/nvs)や[Volta](https://volta.sh)など）を利用すると簡単にインストールでき、Node.js の自動切り替えもできます。
+Node.js の管理ツール（[nvs](https://github.com/jasongin/nvs)や[nvm](https://github.com/nvm-sh/nvm)など）を利用すると簡単にインストールでき、Node.js の自動切り替えもできます。
 
 Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を Fork して `git clone` してください。
 
@@ -309,6 +309,17 @@ ShellScript の文法チェックを行います。
 shellcheck ./build/*.sh
 shellcheck ./tools/*.bash
 ```
+
+## GitHub Actions のリント
+
+[jactionlint](https://github.com/jdx/jactionlint) を使って GitHub Actions のワークフローと composite action のチェックを行っています。
+
+```bash
+pnpm run jactionlint
+```
+
+[ShellCheck](https://github.com/koalaman/shellcheck) がインストールされていれば、`run:` のシェルスクリプトもチェックされます。
+チェックする内容は`.github/jactionlint.yaml`で設定しています。
 
 ## GitHub Actions のバージョン固定
 

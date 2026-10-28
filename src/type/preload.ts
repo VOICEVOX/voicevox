@@ -132,8 +132,8 @@ export interface Sandbox {
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): Promise<string>;
-  hasDownloadableDefaultEngine(): Promise<boolean>;
   getDownloadableDefaultEnginePackageIds(): Promise<EngineId[]>;
+  getEnginePackageUpdateInfosUrl(engineId: EngineId): Promise<UrlString>;
 }
 
 export type AppInfos = {
@@ -141,7 +141,12 @@ export type AppInfos = {
   version: string;
 };
 
-export type StyleType = "talk" | "singing_teacher" | "frame_decode" | "sing";
+export type StyleType =
+  | "talk"
+  | "streaming_talk"
+  | "singing_teacher"
+  | "frame_decode"
+  | "sing";
 
 export type StyleInfo = {
   styleName?: string;
@@ -382,6 +387,7 @@ export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
   engineStartedOnAltPort: boolean; // エンジンのポート変更の通知
   notifyOnGenerate: boolean; // 音声書き出し時の通知
+  streamingUnrecommended: boolean; // ストリーミング再生で生成が再生に追いつかない場合の通知
 };
 
 // ルート直下にある雑多な設定値
@@ -400,20 +406,23 @@ export const rootMiscSettingSchema = z.object({
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
+  skipEngineUpdateVersion: z.string().optional(), // エンジンのアップデートをスキップしたバージョン
   undoableTrackOperations: z // ソングエディタでどのトラック操作をUndo可能にするか
     .object({
       soloAndMute: z.boolean().default(true),
       panAndGain: z.boolean().default(true),
     })
     .prefault({}),
-  showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
+  showSongCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
   defaultLyricMode: z.enum(["doremi", "la"]).default("doremi"), // デフォルト歌詞の動作モード
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
   enableKatakanaEnglish: z.boolean().default(true), // 未知の英単語をカタカナ読みに変換するかどうか
-  enableMultiSelect: z.boolean().default(true), // 複数選択を有効にするかどうか
   showAudioLength: z.boolean().default(false), // 音声の長さを表示するかどうか
+  streamingMode: z
+    .enum(["LOW_LATENCY", "BALANCED", "STABLE"])
+    .default("STABLE"), // ストリーミング再生のモード
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
@@ -484,6 +493,7 @@ export function getConfigSchema({ isMac }: { isMac: boolean }) {
         tweakableSliderByScroll: z.boolean().default(false),
         engineStartedOnAltPort: z.boolean().default(false),
         notifyOnGenerate: z.boolean().default(false),
+        streamingUnrecommended: z.boolean().default(false),
       })
       .prefault({}),
     registeredEngineDirs: z.string().array().default([]),

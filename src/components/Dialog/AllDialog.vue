@@ -30,7 +30,14 @@
   />
   <EngineManageDialog v-model:dialogOpened="isEngineManageDialogOpenComputed" />
   <UpdateNotificationDialogContainer
-    :canOpenDialog="canOpenNotificationDialog"
+    v-model:dialogOpened="isUpdateNotificationDialogOpenComputed"
+    :canOpenDialog="isEnginesReady"
+  />
+  <EngineUpdateNotificationDialogContainer
+    v-if="downloadableDefaultEngineId != undefined"
+    v-model:dialogOpened="isEngineUpdateNotificationDialogOpenComputed"
+    :downloadableDefaultEngineId
+    :canOpenDialog="isEnginesReady"
   />
   <ExportSongAudioDialog v-model:dialogOpened="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
@@ -51,6 +58,7 @@ import AcceptTermsDialog from "@/components/Dialog/AcceptDialog/AcceptTermsDialo
 import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
+import EngineUpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/EngineContainer.vue";
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
 import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
@@ -58,7 +66,7 @@ import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
-const props = defineProps<{
+defineProps<{
   isEnginesReady: boolean;
 }>();
 const store = useStore();
@@ -168,14 +176,38 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
 });
 
 // エディタのアップデート確認ダイアログ
-const canOpenNotificationDialog = computed(() => {
-  return (
+// NOTE: isEnginesReadyをここに入れると、エンジン起動中に開閉フラグが立ち、何も表示されないままLOCK_UIとLOCK_MENUBARされる。
+//       そのためisEnginesReadyはcanOpenDialogで渡している。
+// ref: https://github.com/VOICEVOX/voicevox/blob/933997fab22a9f25db89c0c055273dd639535d9f/src/store/ui.ts#L195-L197
+const isUpdateNotificationDialogOpenComputed = computed({
+  get: () =>
     !store.state.isAcceptTermsDialogOpen &&
     !store.state.isOldCharacterOrderDialogOpen &&
     !store.state.isOldDefaultStyleSelectDialogOpen &&
     !store.state.isAcceptRetrieveTelemetryDialogOpen &&
-    props.isEnginesReady
-  );
+    store.state.isUpdateNotificationDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isUpdateNotificationDialogOpen: val,
+    }),
+});
+
+// エンジンのアップデート確認ダイアログ
+const downloadableDefaultEngineId = computed(
+  () => store.state.downloadableDefaultEngineId,
+);
+const isEngineUpdateNotificationDialogOpenComputed = computed({
+  get: () =>
+    !store.state.isAcceptTermsDialogOpen &&
+    !store.state.isOldCharacterOrderDialogOpen &&
+    !store.state.isOldDefaultStyleSelectDialogOpen &&
+    !store.state.isAcceptRetrieveTelemetryDialogOpen &&
+    !store.state.isUpdateNotificationDialogOpen &&
+    store.state.isEngineUpdateNotificationDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isEngineUpdateNotificationDialogOpen: val,
+    }),
 });
 
 // ソングのオーディオエクスポート時の設定ダイアログ

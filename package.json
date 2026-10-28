@@ -8,9 +8,6 @@
   "engines": {
     "node": ">=24.11.1 <25"
   },
-  "volta": {
-    "node": "24.11.1"
-  },
   "packageManager": "pnpm@10.28.2",
   "scripts": {
     "// --- lint ---": "",
@@ -20,6 +17,7 @@
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ --ignore dist_preview/ ./",
     "typecheck": "vize check",
     "typos": "cross-env ./vendored/typos/typos",
+    "jactionlint": "cross-env ./vendored/jactionlint/jactionlint",
     "// --- tools ---": "",
     "license:generate": "tsx tools/generateLicenses.ts",
     "license:merge": "tsx tools/mergeLicenses.ts",
@@ -52,7 +50,7 @@
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "install-electron && electron-builder install-app-deps && playwright install chromium",
-    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts",
+    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadJactionlint.ts",
     "postuninstall": "electron-builder install-app-deps"
   },
   "dependencies": {
@@ -88,7 +86,7 @@
     "@eslint/eslintrc": "3.3.5",
     "@eslint/js": "10.0.1",
     "@openapitools/openapi-generator-cli": "2.32.0",
-    "@playwright/test": "1.60.0",
+    "@playwright/test": "1.61.0",
     "@quasar/vite-plugin": "1.11.0",
     "@storybook/addon-docs": "10.4.0",
     "@storybook/addon-links": "10.4.0",
@@ -117,12 +115,13 @@
     "acorn-walk": "8.3.5",
     "cross-env": "10.1.0",
     "dotenv": "17.4.2",
-    "electron": "42.1.0",
-    "electron-builder": "26.15.2",
+    "electron": "42.11.18",
+    "electron-builder": "26.16.1",
     "eslint": "10.4.0",
     "eslint-config-flat-gitignore": "2.3.0",
     "eslint-plugin-file-progress": "4.0.0-beta.1",
-    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-import-x": "4.17.1",
+    "eslint-plugin-n": "18.3.0",
     "eslint-plugin-prettier": "5.5.5",
     "eslint-plugin-storybook": "10.4.0",
     "eslint-plugin-vue": "10.9.1",
@@ -131,7 +130,7 @@
     "jiti": "2.7.0",
     "license-checker-rseidelsohn": "4.4.2",
     "markdownlint-cli": "0.48.0",
-    "playwright": "1.60.0",
+    "playwright": "1.61.0",
     "prettier": "3.8.3",
     "rulesync": "8.18.0",
     "sass-embedded": "1.99.0",

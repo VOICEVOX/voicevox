@@ -6,6 +6,7 @@ minimumReleaseAgeExclude:
   - "@typescript/*"
   - vize
   - vue
+  - electron
 
 onlyBuiltDependencies:
   - '@nestjs/core'

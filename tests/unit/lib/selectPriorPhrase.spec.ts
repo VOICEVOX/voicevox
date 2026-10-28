@@ -4,7 +4,7 @@ import {
   DEFAULT_TPQN,
   type PhraseRange,
   selectPriorPhrase,
-} from "@/sing/domain";
+} from "@/song/domain";
 
 const createPhraseRange = (start: number, end: number): PhraseRange => {
   return {
