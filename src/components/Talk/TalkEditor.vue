@@ -40,7 +40,7 @@
                   reverse
                   unit="px"
                   :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
-                  separatorClass="home-splitter"
+                  separatorClass="home-splitter audio-info-pane-splitter"
                   :separatorStyle="{ width: shouldShowPanes ? '3px' : '0' }"
                   class="full-width overflow-hidden"
                   :disable="!shouldShowPanes"
@@ -794,14 +794,10 @@ const onAudioCellPaneClick = () => {
 }
 
 // Quasarのデフォルトではリサイズ判定が境界線の両側6pxずつまで広がり、
-// スクロールバー（幅12px）の半分がリサイズ判定になってしまうため、
-// VSCodeと同程度の判定幅（合計7px）になるよう両側2pxずつに狭める
-.q-splitter--vertical > :deep(.home-splitter) > .q-splitter__separator-area {
+// 台本欄のスクロールバー（幅12px）の半分がリサイズ判定になってしまうため、
+// 台本欄とパラメータ欄の境界のみ、VSCodeと同程度の判定幅（合計7px）になるよう両側2pxずつに狭める
+.q-splitter > :deep(.audio-info-pane-splitter) > .q-splitter__separator-area {
   left: -2px;
   right: -2px;
-}
-.q-splitter--horizontal > :deep(.home-splitter) > .q-splitter__separator-area {
-  top: -2px;
-  bottom: -2px;
 }
 </style>
