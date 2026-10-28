@@ -294,7 +294,7 @@ test("ソングの入力欄内ではSpaceで再生しない", async ({ page }) =
   });
 });
 
-test("エディタを切り替えると表示中のエディタだけで元に戻す", async ({
+test("表示中のエディタのコールバックのみが呼ばれる", async ({
   page,
 }) => {
   await navigateToMain(page);
