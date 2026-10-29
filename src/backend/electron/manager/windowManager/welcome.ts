@@ -83,7 +83,7 @@ class WelcomeWindowManager {
       },
       icon: path.join(this.staticDir, "icon.png"),
       titleBarStyle: "hidden",
-      trafficLightPosition: { x: 6, y: 4 },
+      trafficLightPosition: { x: 9, y: 9 },
       frame: false,
     });
     const ipc = createIpcSendProxy<WelcomeIpcSOData>(win);

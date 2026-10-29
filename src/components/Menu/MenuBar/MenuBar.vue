@@ -178,6 +178,7 @@ watch(uiLocked, () => {
 
 .q-bar {
   min-height: vars.$menubar-height;
+
   -webkit-app-region: drag; // Electronのドラッグ領域
   :deep(.q-btn) {
     margin-left: 0;
@@ -191,12 +192,13 @@ watch(uiLocked, () => {
 
 .window-title {
   height: vars.$menubar-height;
+  line-height: vars.$menubar-height;
   margin-right: 10%;
   text-overflow: ellipsis;
   overflow: hidden;
 }
 
 .mac-traffic-light-space {
-  margin-right: 70px;
+  margin-right: 80px;
 }
 </style>
