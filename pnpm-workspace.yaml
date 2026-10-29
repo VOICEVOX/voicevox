@@ -12,7 +12,4 @@ engineStrict: true
 
 minimumReleaseAge: 10080
 
-minimumReleaseAgeExclude:
-  - electron
-
 saveExact: true
