@@ -32,11 +32,11 @@ export class EraseVolumeState implements State<
     | undefined;
 
   constructor(args: {
-    cursorPosAtStart: PositionOnVolumeEditor;
+    startPosition: PositionOnVolumeEditor;
     targetTrackId: TrackId;
     returnStateId: VolumeEditorIdleStateId;
   }) {
-    this.cursorPosAtStart = args.cursorPosAtStart;
+    this.cursorPosAtStart = args.startPosition;
     this.trackId = args.targetTrackId;
     this.returnStateId = args.returnStateId;
     this.currentCursorPos = this.cursorPosAtStart;
@@ -94,12 +94,12 @@ export class EraseVolumeState implements State<
     }
 
     if (input.type === "pointerEvent") {
-      const { pointerEvent, cursorPos, targetArea } = input;
+      const { pointerEvent, pointerInfo, targetArea } = input;
       const mouseButton = getButton(pointerEvent);
 
       if (targetArea === "Window") {
         if (pointerEvent.type === "pointermove") {
-          this.currentCursorPos = cursorPos;
+          this.currentCursorPos = pointerInfo;
           this.innerContext.executePreviewProcess = true;
         } else if (
           (pointerEvent.type === "pointerup" &&
@@ -108,7 +108,7 @@ export class EraseVolumeState implements State<
         ) {
           // pointermoveのプレビュー処理が次のanimation frameを待っている場合でも、
           // 確定位置を取りこぼさないように同期的に反映する
-          this.currentCursorPos = cursorPos;
+          this.currentCursorPos = pointerInfo;
           this.previewEraseVolume(context);
           this.innerContext.executePreviewProcess = false;
 
@@ -119,7 +119,7 @@ export class EraseVolumeState implements State<
         targetArea === "VolumeEditorArea" &&
         pointerEvent.type === "pointermove"
       ) {
-        this.currentCursorPos = cursorPos;
+        this.currentCursorPos = pointerInfo;
         this.innerContext.executePreviewProcess = true;
       }
     }

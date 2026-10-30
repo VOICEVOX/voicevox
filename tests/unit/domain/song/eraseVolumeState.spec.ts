@@ -24,7 +24,7 @@ describe("EraseVolumeState", () => {
         type: "pointerEvent",
         targetArea: "VolumeEditorArea",
         pointerEvent: { type: "pointermove" } as PointerEvent,
-        cursorPos: createPointerInfo(10),
+        pointerInfo: createPointerInfo(10),
       },
       context,
       setNextState: vi.fn(),
@@ -40,7 +40,7 @@ describe("EraseVolumeState", () => {
         type: "pointerEvent",
         targetArea: "VolumeEditorArea",
         pointerEvent: { type: "pointerleave" } as PointerEvent,
-        cursorPos: createPointerInfo(10),
+        pointerInfo: createPointerInfo(10),
       },
       context,
       setNextState: vi.fn(),
@@ -60,7 +60,7 @@ describe("EraseVolumeState", () => {
     const context = createContext();
     context.highlightedFrame.value = 10;
     const state = new EraseVolumeState({
-      cursorPosAtStart: { frame: 10, db: 1 },
+      startPosition: { frame: 10, db: 1 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "eraseVolumeIdle",
     });
@@ -72,7 +72,7 @@ describe("EraseVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointermove", button: 0 } as PointerEvent,
-        cursorPos: createPointerInfo(12),
+        pointerInfo: createPointerInfo(12),
       },
       context,
       setNextState: vi.fn(),
@@ -82,7 +82,7 @@ describe("EraseVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointerup", button: 0 } as PointerEvent,
-        cursorPos: createPointerInfo(12),
+        pointerInfo: createPointerInfo(12),
       },
       context,
       setNextState: vi.fn(),

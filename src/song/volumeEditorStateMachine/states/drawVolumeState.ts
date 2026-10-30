@@ -42,12 +42,12 @@ export class DrawVolumeState implements State<
     | undefined;
 
   constructor(args: {
-    cursorPosAtStart: PositionOnVolumeEditor;
+    startPosition: PositionOnVolumeEditor;
     startTooltipData: VolumeEditorTooltipData;
     targetTrackId: TrackId;
     returnStateId: VolumeEditorIdleStateId;
   }) {
-    this.cursorPosAtStart = args.cursorPosAtStart;
+    this.cursorPosAtStart = args.startPosition;
     this.tooltipDataAtStart = args.startTooltipData;
     this.trackId = args.targetTrackId;
     this.returnStateId = args.returnStateId;
@@ -111,23 +111,23 @@ export class DrawVolumeState implements State<
       return;
     }
 
-    const { pointerEvent, cursorPos, targetArea } = input;
+    const { pointerEvent, pointerInfo, targetArea } = input;
     const mouseButton = getButton(pointerEvent);
 
     // 対象がWindow
     if (targetArea === "Window") {
       if (pointerEvent.type === "pointermove") {
-        this.currentCursorPos = cursorPos;
+        this.currentCursorPos = pointerInfo;
         this.innerContext.executePreviewProcess = true;
-        this.updateHighlightedFrame(context, cursorPos.frame);
-        this.updateTooltipData(context, cursorPos);
+        this.updateHighlightedFrame(context, pointerInfo.frame);
+        this.updateTooltipData(context, pointerInfo);
       } else if (
         (pointerEvent.type === "pointerup" && mouseButton === "LEFT_BUTTON") ||
         pointerEvent.type === "pointercancel"
       ) {
         // pointermoveのプレビュー処理が次のanimation frameを待っている場合でも、
         // 確定位置を取りこぼさないように同期的に反映する
-        this.currentCursorPos = cursorPos;
+        this.currentCursorPos = pointerInfo;
         this.previewDrawVolume(context);
         this.innerContext.executePreviewProcess = false;
 
@@ -143,10 +143,10 @@ export class DrawVolumeState implements State<
     // 対象がVolumeEditorArea
     if (targetArea === "VolumeEditorArea") {
       if (pointerEvent.type === "pointermove") {
-        this.currentCursorPos = cursorPos;
+        this.currentCursorPos = pointerInfo;
         this.innerContext.executePreviewProcess = true;
-        this.updateHighlightedFrame(context, cursorPos.frame);
-        this.updateTooltipData(context, cursorPos);
+        this.updateHighlightedFrame(context, pointerInfo.frame);
+        this.updateTooltipData(context, pointerInfo);
       }
     }
   }

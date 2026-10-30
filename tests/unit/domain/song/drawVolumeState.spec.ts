@@ -25,7 +25,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "VolumeEditorArea",
         pointerEvent: { type: "pointermove" } as PointerEvent,
-        cursorPos: createPointerInfo(10, 0),
+        pointerInfo: createPointerInfo(10, 0),
       },
       context,
       setNextState: vi.fn(),
@@ -41,7 +41,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "VolumeEditorArea",
         pointerEvent: { type: "pointermove" } as PointerEvent,
-        cursorPos: createPointerInfo(150, 0),
+        pointerInfo: createPointerInfo(150, 0),
       },
       context,
       setNextState: vi.fn(),
@@ -57,7 +57,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "VolumeEditorArea",
         pointerEvent: { type: "pointerleave" } as PointerEvent,
-        cursorPos: createPointerInfo(10, 0),
+        pointerInfo: createPointerInfo(10, 0),
       },
       context,
       setNextState: vi.fn(),
@@ -81,7 +81,7 @@ describe("DrawVolumeState", () => {
       { startFrame: 100, endFrame: 200 },
     ]);
     const state = new DrawVolumeState({
-      cursorPosAtStart: { frame: 10, db: 0 },
+      startPosition: { frame: 10, db: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -96,7 +96,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointermove", button: 0 } as PointerEvent,
-        cursorPos: createPointerInfo(120, 0),
+        pointerInfo: createPointerInfo(120, 0),
       },
       context,
       setNextState: vi.fn(),
@@ -122,7 +122,7 @@ describe("DrawVolumeState", () => {
 
     const context = createContext();
     const state = new DrawVolumeState({
-      cursorPosAtStart: { frame: 10, db: 0 },
+      startPosition: { frame: 10, db: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -134,7 +134,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointermove", button: 0 } as PointerEvent,
-        cursorPos: createPointerInfo(8, 6),
+        pointerInfo: createPointerInfo(8, 6),
       },
       context,
       setNextState: vi.fn(),
@@ -157,7 +157,7 @@ describe("DrawVolumeState", () => {
 
     const context = createContext();
     const state = new DrawVolumeState({
-      cursorPosAtStart: { frame: 10, db: 0 },
+      startPosition: { frame: 10, db: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -169,7 +169,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointermove", button: 0 } as PointerEvent,
-        cursorPos: createPointerInfo(12, 6),
+        pointerInfo: createPointerInfo(12, 6),
       },
       context,
       setNextState: vi.fn(),
@@ -179,7 +179,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointerup", button: 0 } as PointerEvent,
-        cursorPos: createPointerInfo(12, 6),
+        pointerInfo: createPointerInfo(12, 6),
       },
       context,
       setNextState: vi.fn(),

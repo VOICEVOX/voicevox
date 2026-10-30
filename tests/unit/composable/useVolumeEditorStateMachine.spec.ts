@@ -37,7 +37,7 @@ const createPointerInput = (
   type: "pointerEvent",
   targetArea: "VolumeEditorArea",
   pointerEvent: { type } as PointerEvent,
-  cursorPos: { frame, db: 0, x: 100, y: 60 },
+  pointerInfo: { frame, db: 0, x: 100, y: 60 },
 });
 
 describe("useVolumeEditorStateMachine", () => {

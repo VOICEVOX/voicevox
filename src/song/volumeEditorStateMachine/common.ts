@@ -33,13 +33,13 @@ export type VolumeEditorInput =
       readonly type: "pointerEvent";
       readonly targetArea: "VolumeEditorArea";
       readonly pointerEvent: PointerEvent;
-      readonly cursorPos: VolumeEditorPointerInfo;
+      readonly pointerInfo: VolumeEditorPointerInfo;
     }
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "Window";
       readonly pointerEvent: PointerEvent;
-      readonly cursorPos: VolumeEditorPointerInfo;
+      readonly pointerInfo: VolumeEditorPointerInfo;
     };
 
 export type VolumePreviewEdit =
@@ -110,7 +110,7 @@ export type VolumeEditorStateDefinitions = StateDefinitions<
     {
       id: "drawVolume";
       factoryArgs: {
-        cursorPosAtStart: PositionOnVolumeEditor;
+        startPosition: PositionOnVolumeEditor;
         startTooltipData: VolumeEditorTooltipData;
         targetTrackId: TrackId;
         returnStateId: VolumeEditorIdleStateId;
@@ -119,7 +119,7 @@ export type VolumeEditorStateDefinitions = StateDefinitions<
     {
       id: "eraseVolume";
       factoryArgs: {
-        cursorPosAtStart: PositionOnVolumeEditor;
+        startPosition: PositionOnVolumeEditor;
         targetTrackId: TrackId;
         returnStateId: VolumeEditorIdleStateId;
       };

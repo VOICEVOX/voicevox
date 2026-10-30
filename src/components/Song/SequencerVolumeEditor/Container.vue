@@ -157,7 +157,7 @@ const processPointerEvent = (event: VolumeEditorPointerEvent) => {
     type: "pointerEvent",
     targetArea: event.targetArea,
     pointerEvent: event.pointerEvent,
-    cursorPos: event.pointerInfo,
+    pointerInfo: event.pointerInfo,
   });
 };
 </script>
