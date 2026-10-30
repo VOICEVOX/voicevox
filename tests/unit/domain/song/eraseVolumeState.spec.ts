@@ -4,6 +4,7 @@ import type {
   VolumeEditorContext,
   VolumeEditorPointerInfo,
 } from "@/song/volumeEditorStateMachine/common";
+import { relativeVolumeEditMode } from "@/song/volumeEditMode";
 import { EraseVolumeIdleState } from "@/song/volumeEditorStateMachine/states/eraseVolumeIdleState";
 import { EraseVolumeState } from "@/song/volumeEditorStateMachine/states/eraseVolumeState";
 import { TrackId } from "@/type/preload";
@@ -23,7 +24,7 @@ describe("EraseVolumeState", () => {
         type: "pointerEvent",
         targetArea: "VolumeEditorArea",
         pointerEvent: { type: "pointermove" } as PointerEvent,
-        pointerInfo: createPointerInfo(10),
+        cursorPos: createPointerInfo(10),
       },
       context,
       setNextState: vi.fn(),
@@ -39,7 +40,7 @@ describe("EraseVolumeState", () => {
         type: "pointerEvent",
         targetArea: "VolumeEditorArea",
         pointerEvent: { type: "pointerleave" } as PointerEvent,
-        pointerInfo: createPointerInfo(10),
+        cursorPos: createPointerInfo(10),
       },
       context,
       setNextState: vi.fn(),
@@ -59,7 +60,7 @@ describe("EraseVolumeState", () => {
     const context = createContext();
     context.highlightedFrame.value = 10;
     const state = new EraseVolumeState({
-      startPosition: { frame: 10, value: 1 },
+      cursorPosAtStart: { frame: 10, db: 1 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "eraseVolumeIdle",
     });
@@ -71,7 +72,7 @@ describe("EraseVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointermove", button: 0 } as PointerEvent,
-        pointerInfo: createPointerInfo(12),
+        cursorPos: createPointerInfo(12),
       },
       context,
       setNextState: vi.fn(),
@@ -81,7 +82,7 @@ describe("EraseVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointerup", button: 0 } as PointerEvent,
-        pointerInfo: createPointerInfo(12),
+        cursorPos: createPointerInfo(12),
       },
       context,
       setNextState: vi.fn(),
@@ -110,6 +111,7 @@ function createContext(): VolumeEditorContext {
     hoverPointer: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     getEditableFrameRanges: () => [{ startFrame: 0, endFrame: 100 }],
+    volumeEditMode: relativeVolumeEditMode,
     store: {
       state: {
         sequencerVolumeTool: "ERASE",
@@ -127,8 +129,8 @@ function createContext(): VolumeEditorContext {
 
 function createPointerInfo(frame: number): VolumeEditorPointerInfo {
   return {
-    position: { frame, value: 1 },
-    db: 0,
+    frame,
+    db: 1,
     x: 100,
     y: 50,
   };

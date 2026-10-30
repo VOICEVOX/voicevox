@@ -2,16 +2,21 @@ import type { ComputedRef, Ref } from "vue";
 import type { Store } from "@/store";
 import type { StateDefinitions } from "@/song/stateMachine";
 import type { CursorState } from "@/song/viewHelper";
+import type { VolumeEditMode } from "@/song/volumeEditMode";
 import type { VolumeEditableFrameRange } from "@/song/volumeEditRanges";
 import type { TrackId } from "@/type/preload";
 
 export type PositionOnVolumeEditor = {
   readonly frame: number;
-  readonly value: number;
+  readonly db: number;
 };
 
+/**
+ * ポインタが指すフレームとdB、ボリュームエディター内の座標。
+ * frameとdbは、ボリュームエディターの横軸と縦軸の目盛りと同じ単位で表す。
+ */
 export type VolumeEditorPointerInfo = {
-  readonly position: PositionOnVolumeEditor;
+  readonly frame: number;
   readonly db: number;
   readonly x: number;
   readonly y: number;
@@ -28,13 +33,13 @@ export type VolumeEditorInput =
       readonly type: "pointerEvent";
       readonly targetArea: "VolumeEditorArea";
       readonly pointerEvent: PointerEvent;
-      readonly pointerInfo: VolumeEditorPointerInfo;
+      readonly cursorPos: VolumeEditorPointerInfo;
     }
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "Window";
       readonly pointerEvent: PointerEvent;
-      readonly pointerInfo: VolumeEditorPointerInfo;
+      readonly cursorPos: VolumeEditorPointerInfo;
     };
 
 export type VolumePreviewEdit =
@@ -86,6 +91,7 @@ export type VolumeEditorPartialStore = {
 export type VolumeEditorContext = VolumeEditorRefs &
   VolumeEditorComputedRefs & {
     readonly getEditableFrameRanges: () => readonly VolumeEditableFrameRange[];
+    readonly volumeEditMode: VolumeEditMode;
     readonly store: VolumeEditorPartialStore;
   };
 
@@ -104,7 +110,7 @@ export type VolumeEditorStateDefinitions = StateDefinitions<
     {
       id: "drawVolume";
       factoryArgs: {
-        startPosition: PositionOnVolumeEditor;
+        cursorPosAtStart: PositionOnVolumeEditor;
         startTooltipData: VolumeEditorTooltipData;
         targetTrackId: TrackId;
         returnStateId: VolumeEditorIdleStateId;
@@ -113,7 +119,7 @@ export type VolumeEditorStateDefinitions = StateDefinitions<
     {
       id: "eraseVolume";
       factoryArgs: {
-        startPosition: PositionOnVolumeEditor;
+        cursorPosAtStart: PositionOnVolumeEditor;
         targetTrackId: TrackId;
         returnStateId: VolumeEditorIdleStateId;
       };

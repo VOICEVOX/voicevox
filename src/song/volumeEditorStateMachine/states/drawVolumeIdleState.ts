@@ -38,7 +38,7 @@ export class DrawVolumeIdleState implements State<
       return;
     }
 
-    const { pointerEvent, pointerInfo } = input;
+    const { pointerEvent, cursorPos } = input;
 
     if (pointerEvent.type === "pointerleave") {
       context.cursorState.value = "UNSET";
@@ -48,17 +48,16 @@ export class DrawVolumeIdleState implements State<
       return;
     }
 
-    const { position } = pointerInfo;
     const editableRange = findVolumeEditableFrameRange(
-      position.frame,
+      cursorPos.frame,
       context.getEditableFrameRanges(),
     );
     const isEditable = editableRange != undefined;
     context.cursorState.value = isEditable ? "DRAW" : "NOT_ALLOWED";
     context.showDrawFeedback.value = isEditable;
-    context.highlightedFrame.value = isEditable ? position.frame : undefined;
+    context.highlightedFrame.value = isEditable ? cursorPos.frame : undefined;
     context.hoverPointer.value = isEditable
-      ? { x: pointerInfo.x, y: pointerInfo.y }
+      ? { x: cursorPos.x, y: cursorPos.y }
       : undefined;
 
     if (
@@ -67,11 +66,11 @@ export class DrawVolumeIdleState implements State<
       isEditable
     ) {
       setNextState("drawVolume", {
-        startPosition: position,
+        cursorPosAtStart: cursorPos,
         startTooltipData: {
-          db: pointerInfo.db,
-          pointerX: pointerInfo.x,
-          pointerY: pointerInfo.y,
+          db: cursorPos.db,
+          pointerX: cursorPos.x,
+          pointerY: cursorPos.y,
         },
         targetTrackId: context.selectedTrackId.value,
         returnStateId: this.id,

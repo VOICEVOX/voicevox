@@ -12,6 +12,7 @@ import type {
 import type { TrackId } from "@/type/preload";
 import type { VolumeEditValue } from "@/domain/project/type";
 import { createVolumeEditorStateMachine } from "@/song/volumeEditorStateMachine";
+import type { VolumeEditMode } from "@/song/volumeEditMode";
 import type { VolumeEditableFrameRange } from "@/song/volumeEditRanges";
 
 export const useVolumeEditorStateMachine = (
@@ -20,6 +21,7 @@ export const useVolumeEditorStateMachine = (
     getEditableFrameRanges: () => readonly VolumeEditableFrameRange[];
     /** 表示中のカーブの値。編集可能区間外はnull、範囲外のフレームはundefined。 */
     getEffectiveVolumeValue: (frame: number) => VolumeEditValue | undefined;
+    volumeEditMode: VolumeEditMode;
   },
 ) => {
   const refs = {
@@ -49,6 +51,7 @@ export const useVolumeEditorStateMachine = (
       ...refs,
       ...computedRefs,
       getEditableFrameRanges: options.getEditableFrameRanges,
+      volumeEditMode: options.volumeEditMode,
       store,
     },
     idleStateId.value,

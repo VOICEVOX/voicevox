@@ -4,6 +4,7 @@ import type {
   VolumeEditorContext,
   VolumeEditorPointerInfo,
 } from "@/song/volumeEditorStateMachine/common";
+import { relativeVolumeEditMode } from "@/song/volumeEditMode";
 import { DrawVolumeIdleState } from "@/song/volumeEditorStateMachine/states/drawVolumeIdleState";
 import { DrawVolumeState } from "@/song/volumeEditorStateMachine/states/drawVolumeState";
 import { TrackId } from "@/type/preload";
@@ -24,7 +25,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "VolumeEditorArea",
         pointerEvent: { type: "pointermove" } as PointerEvent,
-        pointerInfo: createPointerInfo(10, 0),
+        cursorPos: createPointerInfo(10, 0),
       },
       context,
       setNextState: vi.fn(),
@@ -40,7 +41,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "VolumeEditorArea",
         pointerEvent: { type: "pointermove" } as PointerEvent,
-        pointerInfo: createPointerInfo(150, 0),
+        cursorPos: createPointerInfo(150, 0),
       },
       context,
       setNextState: vi.fn(),
@@ -56,7 +57,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "VolumeEditorArea",
         pointerEvent: { type: "pointerleave" } as PointerEvent,
-        pointerInfo: createPointerInfo(10, 0),
+        cursorPos: createPointerInfo(10, 0),
       },
       context,
       setNextState: vi.fn(),
@@ -80,7 +81,7 @@ describe("DrawVolumeState", () => {
       { startFrame: 100, endFrame: 200 },
     ]);
     const state = new DrawVolumeState({
-      startPosition: { frame: 10, value: 0 },
+      cursorPosAtStart: { frame: 10, db: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -95,7 +96,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointermove", button: 0 } as PointerEvent,
-        pointerInfo: createPointerInfo(120, 0),
+        cursorPos: createPointerInfo(120, 0),
       },
       context,
       setNextState: vi.fn(),
@@ -121,7 +122,7 @@ describe("DrawVolumeState", () => {
 
     const context = createContext();
     const state = new DrawVolumeState({
-      startPosition: { frame: 10, value: 0 },
+      cursorPosAtStart: { frame: 10, db: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -133,7 +134,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointermove", button: 0 } as PointerEvent,
-        pointerInfo: createPointerInfo(8, 6),
+        cursorPos: createPointerInfo(8, 6),
       },
       context,
       setNextState: vi.fn(),
@@ -156,7 +157,7 @@ describe("DrawVolumeState", () => {
 
     const context = createContext();
     const state = new DrawVolumeState({
-      startPosition: { frame: 10, value: 0 },
+      cursorPosAtStart: { frame: 10, db: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -168,7 +169,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointermove", button: 0 } as PointerEvent,
-        pointerInfo: createPointerInfo(12, 6),
+        cursorPos: createPointerInfo(12, 6),
       },
       context,
       setNextState: vi.fn(),
@@ -178,7 +179,7 @@ describe("DrawVolumeState", () => {
         type: "pointerEvent",
         targetArea: "Window",
         pointerEvent: { type: "pointerup", button: 0 } as PointerEvent,
-        pointerInfo: createPointerInfo(12, 6),
+        cursorPos: createPointerInfo(12, 6),
       },
       context,
       setNextState: vi.fn(),
@@ -210,6 +211,7 @@ function createContext(
     hoverPointer: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     getEditableFrameRanges: () => editableRanges,
+    volumeEditMode: relativeVolumeEditMode,
     store: {
       state: {
         sequencerVolumeTool: "DRAW",
@@ -227,7 +229,7 @@ function createContext(
 
 function createPointerInfo(frame: number, db: number): VolumeEditorPointerInfo {
   return {
-    position: { frame, value: db },
+    frame,
     db,
     x: frame * 10,
     y: 60,

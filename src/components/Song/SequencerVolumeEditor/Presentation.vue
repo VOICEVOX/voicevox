@@ -206,7 +206,7 @@ const {
   tempos: toRef(() => props.tempos),
   tpqn: toRef(() => props.tpqn),
   frameRate: toRef(() => props.editorFrameRate),
-  volumeEditMode,
+  valueScale: volumeValueScale,
   onPointerEvent: (event) => emit("pointerEvent", event),
 });
 

@@ -4,7 +4,7 @@ import { VOLUME_EDITOR_LAYOUT } from "./style";
 import type { Tempo } from "@/domain/project/type";
 import { tickToSecond } from "@/song/music";
 import { baseXToTick, type ViewportInfo } from "@/song/viewHelper";
-import type { VolumeEditMode } from "@/song/volumeEditMode";
+import type { VolumeValueScale } from "@/song/volumeValueScale";
 import type {
   VolumeEditorPointerInfo,
   VolumeEditorPreviewMode,
@@ -25,7 +25,7 @@ export const useVolumeEditorPointerInput = (options: {
   tempos: ReadonlyRef<readonly Tempo[]>;
   tpqn: ReadonlyRef<number>;
   frameRate: ReadonlyRef<number>;
-  volumeEditMode: ReadonlyRef<VolumeEditMode>;
+  valueScale: ReadonlyRef<VolumeValueScale>;
   onPointerEvent: (event: VolumeEditorPointerEvent) => void;
 }) => {
   const canvasContainer = ref<HTMLElement | null>(null);
@@ -85,12 +85,10 @@ export const useVolumeEditorPointerInput = (options: {
     const frame = Math.max(0, Math.round(seconds * options.frameRate.value));
 
     const normalizedY = 1 - localY / rect.height;
-    const db =
-      options.volumeEditMode.value.valueScale.normalizedYToDb(normalizedY);
-    const value = options.volumeEditMode.value.toStoredValue(db);
+    const db = options.valueScale.value.normalizedYToDb(normalizedY);
 
     return {
-      position: { frame, value },
+      frame,
       db,
       x: localX,
       y: localY,
