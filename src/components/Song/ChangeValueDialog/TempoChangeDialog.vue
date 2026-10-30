@@ -30,6 +30,8 @@ const props = defineProps<{
   tempoChange: Omit<Tempo, "position">;
   mode: "add" | "edit";
 }>();
+// NOTE: Vueのバグにより型エラーが発生するため`useDialogPluginComponent`を使わずに直接定義する
+// ref: https://github.com/vuejs/language-tools/issues/6324
 defineEmits<{
   ok: [payload: { tempoChange: Omit<Tempo, "position"> }];
   hide: [];
