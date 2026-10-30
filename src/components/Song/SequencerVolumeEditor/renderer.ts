@@ -48,7 +48,7 @@ export type VolumeEditPosition = {
   readonly baseX: number;
   readonly normalizedY: number;
   readonly showPoint: boolean;
-  /** レーン上端からこの位置までの縦ガイドと、この高さの横ガイドを引くか。 */
+  /** ボリュームエディターの上端からこの位置までの縦ガイドと、この高さの横ガイドを引くか。 */
   readonly showGuides: boolean;
 };
 
