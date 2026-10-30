@@ -103,6 +103,7 @@ const {
   // 実効値はステートマシンのプレビューから導くため後で定義されるが、
   // 呼ばれるのはポインタ操作時なので初期化順は問題にならない
   getEffectiveVolumeValue: (frame) => effectiveFramewise.value[frame],
+  volumeEditMode,
 });
 
 // レンダリングが進むと編集可能区間は増減し、区間オブジェクトを保持すると

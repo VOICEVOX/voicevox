@@ -2,6 +2,7 @@ import { nextTick, reactive, ref } from "vue";
 import { describe, expect, it, vi } from "vitest";
 import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
 import type { VolumeEditValue } from "@/domain/project/type";
+import { relativeVolumeEditMode } from "@/song/volumeEditMode";
 import type {
   VolumeEditorInput,
   VolumeEditorPartialStore,
@@ -24,6 +25,7 @@ const createStateMachine = () => {
   const stateMachine = useVolumeEditorStateMachine(store, {
     getEditableFrameRanges: () => editableRanges.value,
     getEffectiveVolumeValue: (frame) => effectiveFramewise.value[frame],
+    volumeEditMode: relativeVolumeEditMode,
   });
   return { ...stateMachine, store, editableRanges, effectiveFramewise };
 };
@@ -35,7 +37,7 @@ const createPointerInput = (
   type: "pointerEvent",
   targetArea: "VolumeEditorArea",
   pointerEvent: { type } as PointerEvent,
-  pointerInfo: { position: { frame, value: 0 }, db: 0, x: 100, y: 60 },
+  pointerInfo: { frame, db: 0, x: 100, y: 60 },
 });
 
 describe("useVolumeEditorStateMachine", () => {
