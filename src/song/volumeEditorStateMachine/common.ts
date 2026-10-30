@@ -13,7 +13,7 @@ export type PositionOnVolumeEditor = {
 
 /**
  * ポインタが指すフレームとdB、ボリュームエディター内の座標。
- * frameとdbは、ボリュームエディターの横軸と縦軸の目盛りと同じ単位で表す。
+ * dbは、ボリュームエディターの縦軸の目盛りと同じ単位で表す。
  */
 export type VolumeEditorPointerInfo = {
   readonly frame: number;
