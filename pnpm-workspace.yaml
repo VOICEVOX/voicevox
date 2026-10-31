@@ -1,12 +1,15 @@
-managePackageManagerVersions: true
+allowBuilds:
+  '@nestjs/core': true
+  '@openapitools/openapi-generator-cli': true
+  '@parcel/watcher': false
+  electron-winstaller: false
+  esbuild: true
+  tldjs: false
+  unrs-resolver: false
+  vue-demi: true
+
+engineStrict: true
 
 minimumReleaseAge: 10080
 
-minimumReleaseAgeExclude:
-  - electron
-
-onlyBuiltDependencies:
-  - '@nestjs/core'
-  - '@openapitools/openapi-generator-cli'
-  - esbuild
-  - vue-demi
+saveExact: true

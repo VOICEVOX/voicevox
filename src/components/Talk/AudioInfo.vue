@@ -191,7 +191,12 @@
           :disable="parameter.slider.qSliderProps.disable.value"
           :modelValue="parameter.slider.qSliderProps.modelValue.value"
           @update:modelValue="
-            parameter.slider.qSliderProps['onUpdate:modelValue']
+            (value) => {
+              if (value == undefined) {
+                throw new Error('Undefined value received');
+              }
+              parameter.slider.qSliderProps['onUpdate:modelValue'](value);
+            }
           "
           @change="handleParameterChange(parameter, $event)"
           @wheel="parameter.slider.qSliderProps.onWheel"
@@ -278,7 +283,11 @@
           "
           :modelValue="morphingRateSlider.qSliderProps.modelValue.value"
           @update:modelValue="
-            morphingRateSlider.qSliderProps['onUpdate:modelValue']
+            (value) => {
+              morphingRateSlider.qSliderProps['onUpdate:modelValue'](
+                ensureNotNullish(value),
+              );
+            }
           "
           @change="morphingRateSlider.qSliderProps.onChange"
           @wheel="morphingRateSlider.qSliderProps.onWheel"
@@ -313,6 +322,7 @@ import type { EngineManifest } from "@/openapi";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { SLIDER_PARAMETERS } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
+import { ensureNotNullish } from "@/type/utility";
 
 const props = defineProps<{
   activeAudioKey: AudioKey;

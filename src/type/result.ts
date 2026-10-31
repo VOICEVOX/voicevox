@@ -38,8 +38,7 @@
  * console.log(value); // -> "ok string"
  */
 export type Result<T, E extends string | undefined = string | undefined> =
-  | SuccessResult<T>
-  | FailureResult<E>;
+  SuccessResult<T> | FailureResult<E>;
 
 /**
  * 成功Result
