@@ -6,10 +6,7 @@ import storybookPlugin from "eslint-plugin-storybook";
 import vueParser from "vue-eslint-parser";
 import vuePlugin from "eslint-plugin-vue";
 import vuePrettierConfig from "@vue/eslint-config-prettier";
-import {
-  defineConfigWithVueTs,
-  vueTsConfigs,
-} from "@vue/eslint-config-typescript";
+import { withVueTs, vueTsConfigs } from "@vue/eslint-config-typescript";
 import { configs as tsConfigs, parser as tsParser } from "typescript-eslint";
 import type { FlatConfig } from "@typescript-eslint/utils/ts-eslint";
 import progressPlugin from "eslint-plugin-file-progress";
@@ -52,7 +49,7 @@ const vueParserOptions: ParserOptions = {
 };
 
 const typeCheckedParserOptions: ParserOptions = {
-  project: ["./tsconfig.json"],
+  projectService: true,
   tsconfigRootDir: import.meta.dirname,
 };
 
@@ -80,7 +77,7 @@ const typeCheckedRules: Rules = {
   "@typescript-eslint/no-import-type-side-effects": "error",
 };
 
-export default defineConfigWithVueTs(
+export default withVueTs(
   {
     name: "voicevox/defaults/plugins",
     plugins: {
@@ -116,7 +113,7 @@ export default defineConfigWithVueTs(
   ...pluginConfig(vuePlugin.configs["flat/recommended"]),
   ...pluginConfig("eslint:recommended", js.configs.recommended),
   ...pluginConfig("@vue/prettier", vuePrettierConfig),
-  ...pluginConfig(vueTsConfigs.recommended.toConfigArray()),
+  ...pluginConfig(vueTsConfigs.recommended),
   ...pluginConfig(voicevoxPlugin.configs.all),
   ...pluginConfig(storybookPlugin.configs["flat/recommended"]),
   ...pluginConfig(vitestPlugin.configs.recommended),

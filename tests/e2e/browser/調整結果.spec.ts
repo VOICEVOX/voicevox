@@ -11,7 +11,10 @@ async function getSliderValues(page: Page) {
   const moraTables = await page.locator(".accent-phrase").all();
   return await Promise.all(
     moraTables.map(async (moraTable) => {
-      const sliders = await moraTable.locator(".q-slider").all();
+      const sliders = await moraTable
+        .locator(".q-slider")
+        .getByRole("slider")
+        .all();
       return await Promise.all(
         sliders.map(async (slider) => {
           const value = await slider.getAttribute("aria-valuenow");

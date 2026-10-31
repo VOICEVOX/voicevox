@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { QInput, useDialogPluginComponent } from "quasar";
+import { QInput } from "quasar";
 import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
 import type { Tempo } from "@/domain/project/type";
@@ -30,9 +30,12 @@ const props = defineProps<{
   tempoChange: Omit<Tempo, "position">;
   mode: "add" | "edit";
 }>();
-defineEmits({
-  ...useDialogPluginComponent.emitsObject,
-});
+// NOTE: Vueのバグにより型エラーが発生するため`useDialogPluginComponent`を使わずに直接定義する
+// ref: https://github.com/vuejs/language-tools/issues/6324
+defineEmits<{
+  ok: [payload: { tempoChange: Omit<Tempo, "position"> }];
+  hide: [];
+}>();
 
 const tempoChange = ref(cloneWithUnwrapProxy(props.tempoChange));
 </script>
