@@ -57,14 +57,14 @@
               {{ scope.opt.label }}
             </div>
           </template>
-          <template #option="scope">
+          <template #option="item">
             <!-- 選択中のプリセットを再度選んだときはv-modelが更新されないため、クリックで再適用する -->
             <QItem
-              v-bind="scope.itemProps"
-              @click="scope.selected && reapplyPreset(scope.opt.key)"
+              v-bind="item.itemProps"
+              @click="item.selected && reapplyPreset(item.opt.key)"
             >
               <QItemSection>
-                <QItemLabel>{{ scope.opt.label }}</QItemLabel>
+                <QItemLabel>{{ item.opt.label }}</QItemLabel>
               </QItemSection>
             </QItem>
           </template>
@@ -323,6 +323,7 @@ import type { EngineManifest } from "@/openapi";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { SLIDER_PARAMETERS } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
+import { assertNonNullable } from "@/type/utility";
 
 const props = defineProps<{
   activeAudioKey: AudioKey;
@@ -734,7 +735,7 @@ const changePreset = (presetKey: PresetKey | undefined) =>
 // 選択中のプリセットを再適用する（パラメータをプリセット値に戻す）
 // 複数選択中の場合は選択中のすべてのAudioItemに適用する
 const reapplyPreset = (presetKey: PresetKey | undefined) => {
-  if (presetKey == undefined) return;
+  assertNonNullable(presetKey);
   void changePreset(presetKey);
 };
 
