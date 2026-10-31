@@ -211,7 +211,7 @@ const VOLUME_EDITOR_LAYERS = [
   "editPosition",
 ] as const;
 
-/** 描く層。層ごとに、依存する入力が変わったときだけ描き直す。 */
+/** 描画レイヤー。レイヤーごとに、依存する入力が変わったときだけ描き直す。 */
 type VolumeEditorLayer = (typeof VOLUME_EDITOR_LAYERS)[number];
 
 export class VolumeEditorRenderer {
