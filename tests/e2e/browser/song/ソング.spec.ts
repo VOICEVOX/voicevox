@@ -83,3 +83,41 @@ test("ドラッグで長いノートを追加できる", async ({ page }) => {
     expect(secondNoteBox.width).toBeGreaterThanOrEqual(firstNoteBox.width * 2);
   });
 });
+
+test("テンポ欄の入力中はキー操作でノートが動いたり消えたりしない", async ({
+  page,
+}) => {
+  await navigateToSong(page);
+
+  const sequencer = page.getByLabel("シーケンサ");
+  const notes = sequencer.locator(".note");
+
+  await test.step("ノートを追加して選択", async () => {
+    await sequencer.click({ position: { x: 100, y: 171 } });
+    await expect(notes).toHaveCount(1);
+    await sequencer.click({ position: { x: 100, y: 171 } });
+  });
+
+  const beforeNoteBox = ensureNotNullish(await notes.first().boundingBox());
+
+  await test.step("テンポ欄でキーを押す", async () => {
+    await page.getByLabel("テンポ").click();
+    for (const key of [
+      "ArrowUp",
+      "ArrowDown",
+      "ArrowRight",
+      "ArrowLeft",
+      "Backspace",
+      "Delete",
+    ]) {
+      await page.keyboard.press(key);
+    }
+  });
+
+  await test.step("ノートがそのまま残っていることを確認", async () => {
+    await expect(notes).toHaveCount(1);
+    const afterNoteBox = ensureNotNullish(await notes.first().boundingBox());
+    expect(afterNoteBox.x).toEqual(beforeNoteBox.x);
+    expect(afterNoteBox.y).toEqual(beforeNoteBox.y);
+  });
+});
