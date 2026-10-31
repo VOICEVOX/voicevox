@@ -18,7 +18,9 @@ describe("useVolumeEditorPointerInput", () => {
     const wrapper = mount(
       defineComponent({
         setup() {
+          const canvasContainer = ref<HTMLElement | null>(null);
           const mountedPointerInput = useVolumeEditorPointerInput({
+            canvasContainer,
             previewMode,
             viewportInfo: ref({
               scaleX: 1,
@@ -33,7 +35,7 @@ describe("useVolumeEditorPointerInput", () => {
             onPointerEvent,
           });
           pointerInput = mountedPointerInput;
-          return () => h("div", { ref: mountedPointerInput.canvasContainer });
+          return () => h("div", { ref: canvasContainer });
         },
       }),
     );
