@@ -294,9 +294,7 @@ test("ソングの入力欄内ではSpaceで再生しない", async ({ page }) =
   });
 });
 
-test("表示中のエディタのコールバックのみが呼ばれる", async ({
-  page,
-}) => {
+test("表示中のエディタのコールバックのみが呼ばれる", async ({ page }) => {
   await navigateToMain(page);
 
   const audioCells = page.locator(".audio-cell");
