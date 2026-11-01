@@ -4,6 +4,7 @@ import type {
   VolumeEditorContext,
   VolumeEditorPointerInfo,
 } from "@/song/volumeEditorStateMachine/common";
+import { relativeVolumeEditMode } from "@/song/volumeEditMode";
 import { DrawVolumeIdleState } from "@/song/volumeEditorStateMachine/states/drawVolumeIdleState";
 import { DrawVolumeState } from "@/song/volumeEditorStateMachine/states/drawVolumeState";
 import { TrackId } from "@/type/preload";
@@ -80,7 +81,7 @@ describe("DrawVolumeState", () => {
       { startFrame: 100, endFrame: 200 },
     ]);
     const state = new DrawVolumeState({
-      startPosition: { frame: 10, value: 0 },
+      startPosition: { frame: 10, db: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -121,7 +122,7 @@ describe("DrawVolumeState", () => {
 
     const context = createContext();
     const state = new DrawVolumeState({
-      startPosition: { frame: 10, value: 0 },
+      startPosition: { frame: 10, db: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -156,7 +157,7 @@ describe("DrawVolumeState", () => {
 
     const context = createContext();
     const state = new DrawVolumeState({
-      startPosition: { frame: 10, value: 0 },
+      startPosition: { frame: 10, db: 0 },
       startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
@@ -210,6 +211,7 @@ function createContext(
     hoverPointer: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     getEditableFrameRanges: () => editableRanges,
+    volumeEditMode: relativeVolumeEditMode,
     store: {
       state: {
         sequencerVolumeTool: "DRAW",
@@ -227,7 +229,7 @@ function createContext(
 
 function createPointerInfo(frame: number, db: number): VolumeEditorPointerInfo {
   return {
-    position: { frame, value: db },
+    frame,
     db,
     x: frame * 10,
     y: 60,
