@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.26.2",
+    "descriptions": [
+      "キャラクター「ブイブイ・コバコ」を追加",
+      "開発環境の向上"
+    ],
+    "contributors": ["Akikukeo1"]
+  },
+  {
     "version": "0.26.1",
     "descriptions": ["開発環境の向上"],
     "contributors": ["sabonerune"]
