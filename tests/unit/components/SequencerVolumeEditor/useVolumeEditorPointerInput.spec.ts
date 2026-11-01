@@ -13,8 +13,7 @@ describe("useVolumeEditorPointerInput", () => {
     const previewMode = ref<VolumeEditorPreviewMode>("IDLE");
     const onPointerEvent = vi.fn<(event: VolumeEditorPointerEvent) => void>();
     let pointerInput:
-      | ReturnType<typeof useVolumeEditorPointerInput>
-      | undefined;
+      ReturnType<typeof useVolumeEditorPointerInput> | undefined;
 
     const wrapper = mount(
       defineComponent({

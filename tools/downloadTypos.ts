@@ -26,7 +26,7 @@ const TYPOS_DIRECTORY_PATH = path.join(BINARY_BASE_PATH, "typos");
 // typosのバージョンを保存しておくテキストファイル
 const TYPOS_VERSION_FILE_NAME = "version.txt";
 
-const TYPOS_VERSION = "v1.43.4";
+const TYPOS_VERSION = "v1.51.1";
 
 // 動作環境でのOSとCPUアーキテクチャ
 const currentOS = os.platform();
@@ -86,31 +86,31 @@ function getDownloadInfo(): { url: string; sha256: string } {
       [CPU_ARCHITECTURE.ARM]: {
         triplet: "aarch64-apple-darwin",
         sha256:
-          "bd5b1e04de8710813464cc510fd33a2e4a797320901d23f49042e1d1863ef023",
+          "316d50a32c3726a80ab39c6d12141b70080498973c5e8a9b068b12cde78b10c1",
       },
       [CPU_ARCHITECTURE.X86_64]: {
         triplet: "x86_64-apple-darwin",
         sha256:
-          "24e104185f1522d1906f7e8299e43e39faefe527dbe73b163cfaadad8012a113",
+          "f3451079971633a7f769fb958fe06b0d64b5f1dc46df0854aa1ddb9a6f4031d6",
       },
     },
     [OS.LINUX]: {
       [CPU_ARCHITECTURE.ARM]: {
         triplet: "aarch64-unknown-linux-musl",
         sha256:
-          "7eeb93b5dbd4590ef60f6a09ab94e0dae70d2f333c0447284f1cad0379786f5b",
+          "2ac5e37b3236b3c07dec5cdf1527acf143aec4674a6089b0bf424d021b35e099",
       },
       [CPU_ARCHITECTURE.X86_64]: {
         triplet: "x86_64-unknown-linux-musl",
         sha256:
-          "f05f9da84ba714789271a2915060f8b7d329411b5c11e83b8d2c367ef592036c",
+          "93c301fd4120ff076e2cc2a6d6a61cab4a4bdb81899287c0938b452e56d1f454",
       },
     },
     [OS.WINDOWS]: {
       [CPU_ARCHITECTURE.X86_64]: {
         triplet: "x86_64-pc-windows-msvc",
         sha256:
-          "6f1e5688724d347bfbb6419cc76c364b54a97afef75cdbcf02cc838852dbb6cd",
+          "518f759fba43205f17a717656054c1d25bc883455a6296989e9d021c6edb7c59",
       },
     },
   };

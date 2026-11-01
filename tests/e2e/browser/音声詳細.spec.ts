@@ -84,7 +84,8 @@ test("詳細調整欄のコンテキストメニュー", async ({ page }) => {
     button: "right",
   });
   await page
-    .getByRole("listitem")
+    .getByRole("list")
+    .getByRole("button")
     .filter({ has: page.getByText("削除") })
     .click();
   await page.waitForTimeout(100);

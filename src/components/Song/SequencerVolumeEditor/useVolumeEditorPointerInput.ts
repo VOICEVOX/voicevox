@@ -33,8 +33,7 @@ export const useVolumeEditorPointerInput = (options: {
   // getBoundingClientRectは呼ぶたびにブラウザのレイアウト再計算を発生させることがあり、
   // pointermoveの頻度で呼ぶとドラッグ中の描画がカクつくため、取得済みの矩形を使い回す
   let viewportRectCache:
-    | { left: number; top: number; width: number; height: number }
-    | undefined;
+    { left: number; top: number; width: number; height: number } | undefined;
 
   const getViewportRect = () => {
     const rect =
