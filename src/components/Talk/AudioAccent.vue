@@ -20,9 +20,11 @@
           :disable="previewAccentSlider.qSliderProps.disable.value"
           :modelValue="previewAccentSlider.qSliderProps.modelValue.value"
           @update:modelValue="
-            previewAccentSlider.qSliderProps['onUpdate:modelValue'] as (
-              value: number | null,
-            ) => void
+            (value) => {
+              previewAccentSlider.qSliderProps['onUpdate:modelValue'](
+                ensureNotNullish(value),
+              );
+            }
           "
           @click.stop="stopPropagation"
           @change="previewAccentSlider.qSliderProps.onChange"
@@ -65,6 +67,7 @@
 import { computed } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import type { AccentPhrase } from "@/openapi";
+import { ensureNotNullish } from "@/type/utility";
 
 const props = withDefaults(
   defineProps<{

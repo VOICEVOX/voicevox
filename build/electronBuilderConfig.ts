@@ -134,6 +134,9 @@ const builderOptions: ElectronBuilderConfiguration = {
     grantFileProtocolExtraPrivileges: false,
   },
   electronLanguages: ["en-US", "ja"],
+  // NOTE: 特許の懸念があるAAC・H.264デコーダーを含まないFFmpegに差し替える。
+  // VOICEVOXはこれらのコーデックを使用しない。
+  downloadAlternateFFmpeg: true,
   toolsets: {
     appimage: "1.0.3",
   },

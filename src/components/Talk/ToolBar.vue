@@ -1,10 +1,7 @@
 <template>
   <QHeader class="q-py-sm">
     <QToolbar>
-      <template
-        v-for="(button, i) in buttons"
-        :key="button.text ?? `spacer-${i}`"
-      >
+      <template v-for="(button, index) in buttons" :key="index">
         <QSpace v-if="button.text == null" />
         <QBtn
           v-else
