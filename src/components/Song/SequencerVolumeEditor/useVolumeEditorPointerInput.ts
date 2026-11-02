@@ -1,10 +1,10 @@
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted } from "vue";
 import type { Ref } from "vue";
 import { VOLUME_EDITOR_LAYOUT } from "./style";
 import type { Tempo } from "@/domain/project/type";
 import { tickToSecond } from "@/song/music";
 import { baseXToTick, type ViewportInfo } from "@/song/viewHelper";
-import type { VolumeEditMode } from "@/song/volumeEditMode";
+import type { VolumeValueScale } from "@/song/volumeValueScale";
 import type {
   VolumeEditorPointerInfo,
   VolumeEditorPreviewMode,
@@ -20,15 +20,16 @@ export type VolumeEditorPointerEvent = {
 };
 
 export const useVolumeEditorPointerInput = (options: {
+  canvasContainer: ReadonlyRef<HTMLElement | null>;
   previewMode: ReadonlyRef<VolumeEditorPreviewMode>;
   viewportInfo: ReadonlyRef<ViewportInfo>;
   tempos: ReadonlyRef<readonly Tempo[]>;
   tpqn: ReadonlyRef<number>;
   frameRate: ReadonlyRef<number>;
-  volumeEditMode: ReadonlyRef<VolumeEditMode>;
+  valueScale: ReadonlyRef<VolumeValueScale>;
   onPointerEvent: (event: VolumeEditorPointerEvent) => void;
 }) => {
-  const canvasContainer = ref<HTMLElement | null>(null);
+  const { canvasContainer } = options;
 
   // getBoundingClientRectは呼ぶたびにブラウザのレイアウト再計算を発生させることがあり、
   // pointermoveの頻度で呼ぶとドラッグ中の描画がカクつくため、取得済みの矩形を使い回す
@@ -84,12 +85,10 @@ export const useVolumeEditorPointerInput = (options: {
     const frame = Math.max(0, Math.round(seconds * options.frameRate.value));
 
     const normalizedY = 1 - localY / rect.height;
-    const db =
-      options.volumeEditMode.value.valueScale.normalizedYToDb(normalizedY);
-    const value = options.volumeEditMode.value.toStoredValue(db);
+    const db = options.valueScale.value.normalizedYToDb(normalizedY);
 
     return {
-      position: { frame, value },
+      frame,
       db,
       x: localX,
       y: localY,
@@ -165,7 +164,6 @@ export const useVolumeEditorPointerInput = (options: {
   });
 
   return {
-    canvasContainer,
     updateViewportRectCache,
     onSurfacePointerDown,
     onSurfacePointerUp,
