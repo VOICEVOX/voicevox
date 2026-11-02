@@ -74,7 +74,7 @@ test("実験的機能：調整結果の保持", async ({ page }) => {
   ]);
   // 読点が追加されていることを確認
   const firstAccentPhrase = page.locator(".accent-phrase").first();
-  expect(await firstAccentPhrase.getByText("、").isVisible()).toBeTruthy();
+  await expect(firstAccentPhrase.getByText("、")).toBeVisible();
 
   // 句読点（pauseMora）だけの変更/削除：句読点部分以外は変わらない
   await audioCell.locator("input").clear();
@@ -89,7 +89,7 @@ test("実験的機能：調整結果の保持", async ({ page }) => {
     [6.5, 6.5, 6.5, 6.5],
   ]);
   // 読点が削除されていることを確認
-  expect(await firstAccentPhrase.getByText("、").isVisible()).toBeFalsy();
+  await expect(firstAccentPhrase.getByText("、")).not.toBeVisible();
 
   // 一部のアクセント句のみ変更：他のアクセント句は変わらない
   await audioCell.locator("input").clear();

@@ -81,7 +81,7 @@ export async function fillAudioCell(page: Page, index: number, text: string) {
 
 /** input要素の値が期待通りか検証する */
 export async function validateInput(locator: Locator, expectedText: string) {
-  expect(await locator.inputValue()).toBe(expectedText);
+  await expect(locator).toHaveValue(expectedText);
 }
 
 /** QSplitterのlocatorから、中央のドラッグできる範囲のLocatorを取得する */
