@@ -1,112 +1,16 @@
 import { computed, ref } from "vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
+  PositionOnVolumeEditor,
   VolumeEditorContext,
-  VolumeEditorPointerInfo,
 } from "@/song/volumeEditorStateMachine/common";
 import { relativeVolumeEditMode } from "@/song/volumeEditMode";
-import { DrawVolumeIdleState } from "@/song/volumeEditorStateMachine/states/drawVolumeIdleState";
 import { DrawVolumeState } from "@/song/volumeEditorStateMachine/states/drawVolumeState";
 import { TrackId } from "@/type/preload";
 
 describe("DrawVolumeState", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
-  });
-
-  it("idle中はポインタ位置の編集可能区間をハイライトし、ホバー座標を保持する", () => {
-    const context = createContext();
-    const state = new DrawVolumeIdleState();
-
-    state.onEnter(context);
-    expect(context.showDrawFeedback.value).toBe(false);
-    state.process({
-      input: {
-        type: "pointerEvent",
-        targetArea: "VolumeEditorArea",
-        pointerEvent: { type: "pointermove" } as PointerEvent,
-        pointerInfo: createPointerInfo(10, 0),
-      },
-      context,
-      setNextState: vi.fn(),
-    });
-
-    expect(context.cursorState.value).toBe("DRAW");
-    expect(context.showDrawFeedback.value).toBe(true);
-    expect(context.highlightedFrame.value).toBe(10);
-    expect(context.hoverPointer.value).toEqual({ x: 100, y: 60 });
-
-    state.process({
-      input: {
-        type: "pointerEvent",
-        targetArea: "VolumeEditorArea",
-        pointerEvent: { type: "pointermove" } as PointerEvent,
-        pointerInfo: createPointerInfo(150, 0),
-      },
-      context,
-      setNextState: vi.fn(),
-    });
-
-    expect(context.cursorState.value).toBe("NOT_ALLOWED");
-    expect(context.showDrawFeedback.value).toBe(false);
-    expect(context.highlightedFrame.value).toBeUndefined();
-    expect(context.hoverPointer.value).toBeUndefined();
-
-    state.process({
-      input: {
-        type: "pointerEvent",
-        targetArea: "VolumeEditorArea",
-        pointerEvent: { type: "pointerleave" } as PointerEvent,
-        pointerInfo: createPointerInfo(10, 0),
-      },
-      context,
-      setNextState: vi.fn(),
-    });
-
-    expect(context.cursorState.value).toBe("UNSET");
-    expect(context.showDrawFeedback.value).toBe(false);
-    expect(context.highlightedFrame.value).toBeUndefined();
-    expect(context.hoverPointer.value).toBeUndefined();
-  });
-
-  it("描画中は現在の編集可能区間へハイライトを追随させる", () => {
-    vi.stubGlobal(
-      "requestAnimationFrame",
-      vi.fn(() => 1),
-    );
-    vi.stubGlobal("cancelAnimationFrame", vi.fn());
-
-    const context = createContext([
-      { startFrame: 0, endFrame: 50 },
-      { startFrame: 100, endFrame: 200 },
-    ]);
-    const state = new DrawVolumeState({
-      startPosition: { frame: 10, db: 0 },
-      startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
-      targetTrackId: TrackId("trackId"),
-      returnStateId: "drawVolumeIdle",
-    });
-
-    state.onEnter(context);
-    expect(context.showDrawFeedback.value).toBe(true);
-    expect(context.highlightedFrame.value).toBe(10);
-
-    state.process({
-      input: {
-        type: "pointerEvent",
-        targetArea: "Window",
-        pointerEvent: { type: "pointermove", button: 0 } as PointerEvent,
-        pointerInfo: createPointerInfo(120, 0),
-      },
-      context,
-      setNextState: vi.fn(),
-    });
-
-    expect(context.highlightedFrame.value).toBe(120);
-
-    state.onExit(context);
-    expect(context.showDrawFeedback.value).toBe(false);
-    expect(context.highlightedFrame.value).toBeUndefined();
   });
 
   it("左方向へ戻しながら描画しても補間できる", () => {
@@ -123,7 +27,6 @@ describe("DrawVolumeState", () => {
     const context = createContext();
     const state = new DrawVolumeState({
       startPosition: { frame: 10, db: 0 },
-      startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
     });
@@ -158,7 +61,6 @@ describe("DrawVolumeState", () => {
     const context = createContext();
     const state = new DrawVolumeState({
       startPosition: { frame: 10, db: 0 },
-      startTooltipData: { db: 0, pointerX: 100, pointerY: 50 },
       targetTrackId: TrackId("trackId"),
       returnStateId: "drawVolumeIdle",
     });
@@ -186,8 +88,6 @@ describe("DrawVolumeState", () => {
     });
     state.onExit(context);
 
-    expect(context.tooltipData.value).toBeUndefined();
-
     expect(
       context.store.actions.COMMAND_SET_VOLUME_EDIT_DATA,
     ).toHaveBeenCalledWith({
@@ -204,11 +104,6 @@ function createContext(
   return {
     previewVolumeEdit: ref(undefined),
     previewMode: ref("IDLE"),
-    cursorState: ref("UNSET"),
-    showDrawFeedback: ref(false),
-    tooltipData: ref(undefined),
-    highlightedFrame: ref(undefined),
-    hoverPointer: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     getEditableFrameRanges: () => editableRanges,
     volumeEditMode: relativeVolumeEditMode,
@@ -227,11 +122,6 @@ function createContext(
   };
 }
 
-function createPointerInfo(frame: number, db: number): VolumeEditorPointerInfo {
-  return {
-    frame,
-    db,
-    x: frame * 10,
-    y: 60,
-  };
+function createPointerInfo(frame: number, db: number): PositionOnVolumeEditor {
+  return { frame, db };
 }
