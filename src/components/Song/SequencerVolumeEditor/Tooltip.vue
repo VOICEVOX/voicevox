@@ -40,7 +40,7 @@ const tooltipStyle = computed(() => {
   }
   const minLeft = VOLUME_EDITOR_LAYOUT.keyColumnWidthPx;
   // エリアが狭くてツールチップが収まらない場合は、
-  // レーンの左上に置き、右下へのはみ出しは許容する
+  // ボリュームエディターの左上に置き、右下へのはみ出しは許容する
   const maxLeft = Math.max(
     minLeft,
     width - VOLUME_EDITOR_LAYOUT.tooltipClampWidthPx,
