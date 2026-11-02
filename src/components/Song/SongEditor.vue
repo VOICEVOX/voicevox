@@ -18,8 +18,12 @@
         <SideBar v-if="isSidebarOpen" />
       </template>
       <template #after>
+        <!-- 非同期コンポーネントの子要素にある`onActivated()`フックが発火しないバグに対するワークアラウンド -->
+        <!-- ref: https://github.com/vuejs/core/issues/7276 -->
         <!-- full-heightで高さをQSplitterの高さに揃える -->
-        <ScoreSequencer class="full-height" />
+        <KeepAlive>
+          <ScoreSequencer class="full-height" />
+        </KeepAlive>
       </template>
     </QSplitter>
   </div>
