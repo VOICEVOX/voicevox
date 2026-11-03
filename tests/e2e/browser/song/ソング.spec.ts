@@ -34,24 +34,24 @@ test("ノートを追加・削除できる", async ({ page }) => {
 
   const sequencer = page.getByLabel("シーケンサ");
 
-  const getCurrentNote = () => sequencer.locator(".note");
+  const notes = sequencer.locator(".note");
 
   await test.step("ノートの追加", async () => {
-    await expect(getCurrentNote()).toHaveCount(0);
+    await expect(notes).toHaveCount(0);
     await sequencer.click({ position: { x: 100, y: 171 } });
-    await expect(getCurrentNote()).toHaveCount(1);
+    await expect(notes).toHaveCount(1);
     await sequencer.click({ position: { x: 200, y: 171 } });
-    await expect(getCurrentNote()).toHaveCount(2);
+    await expect(notes).toHaveCount(2);
   });
 
   await test.step("ノートの削除", async () => {
-    await expect(getCurrentNote()).toHaveCount(2);
+    await expect(notes).toHaveCount(2);
     await sequencer.click({ position: { x: 100, y: 171 } });
     await page.keyboard.press("Delete");
-    await expect(getCurrentNote()).toHaveCount(1);
+    await expect(notes).toHaveCount(1);
     await sequencer.click({ position: { x: 200, y: 171 } });
     await page.keyboard.press("Delete");
-    await expect(getCurrentNote()).toHaveCount(0);
+    await expect(notes).toHaveCount(0);
   });
 });
 
