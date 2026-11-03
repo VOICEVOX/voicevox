@@ -20,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+import { QBtnToggle } from "quasar";
 import { computed } from "vue";
 import { useStore } from "@/store";
 import type { EditorType } from "@/type/preload";

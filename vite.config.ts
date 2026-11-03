@@ -3,7 +3,8 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { rm } from "node:fs/promises";
 import electronPlugin, { type ElectronOptions } from "vite-plugin-electron";
-import vue from "@vitejs/plugin-vue";
+// import vue from "@vitejs/plugin-vue";
+import vize from "@vizejs/vite-plugin";
 import electronDefaultImport from "electron";
 import { type BuildOptions, defineConfig, loadEnv, type Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
@@ -117,7 +118,10 @@ export default defineConfig((options) => {
       },
     },
     plugins: [
-      vue(),
+      // vue(),
+      vize({
+        templateSyntax: "quirks",
+      }),
       quasar({ autoImportComponentCase: "pascal" }),
       isElectron && [
         cleanDistPlugin(),
@@ -259,6 +263,57 @@ export default defineConfig((options) => {
         },
       ],
     },
+    vue: {
+      compiler: {
+        templateSyntax: "quirks",
+      },
+      linter: {
+        typeAware: true,
+        rules: {
+          // Vizeの機能不足系
+          // 本当はcamelCaseにしたい
+          "vue/attribute-hyphenation": "off",
+          "vue/v-on-event-hyphenation": "off",
+
+          // viteのimportは許してほしい（Vueにファイルパスを書くと解決されたりするのかな）
+          "vue/no-unsafe-url": "off",
+
+          // False Positive系
+          // Storybookのcomponentを対象にしてしまっている！
+          "script/no-potential-component-option-typo": "off",
+
+          // propsとしてのanchorはHTMLのanchorではない
+          // src/components/Talk/AudioParameter.vue:26 など
+          "a11y/no-refer-to-non-existent-id": "off",
+
+          // <p>の中にtemplateで要素を構築するみたいなことをしていると空のpと判定される
+          "html/no-empty-palpable-content": "off",
+
+          // コードベースが悪い系
+          // MenuBarでnon-scoped styleを使っている、がこれなんとかできないのかなぁ
+          "vue/require-scoped-style": "off",
+
+          // Electronでそれ必要～？
+          "vue/no-template-target-blank": "off",
+
+          // labelにforをつけるべき！
+          "a11y/label-has-for": "off",
+
+          // tabindexはちゃんとつけるべき！
+          "a11y/interactive-supports-focus": "off",
+
+          // a11yは一旦無効
+          // そのうち有効にしたいかも
+          "a11y/mouse-events-have-key-events": "off",
+          "a11y/no-static-element-interactions": "off",
+          "a11y/click-events-have-key-events": "off",
+          "a11y/no-i-for-icon": "off",
+          "a11y/img-alt": "off",
+          "a11y/alt-text": "off",
+          "a11y/form-control-has-label": "off",
+        },
+      },
+    },
   };
 });
 const cleanDistPlugin = (): Plugin => {
@@ -283,36 +338,38 @@ const electronPreloadOptions = (
   },
   entries: Record<string, string>,
 ): ElectronOptions[] =>
-  Object.entries(entries).map(([name, entry]): ElectronOptions => ({
-    onstart({ reload }) {
-      if (!options.skipLaunchElectron) {
-        reload();
-      }
-    },
-    vite: {
-      plugins: [isProduction && checkSuspiciousImportsPlugin({})],
-      resolve: {
-        tsconfigPaths: true,
+  Object.entries(entries).map(
+    ([name, entry]): ElectronOptions => ({
+      onstart({ reload }) {
+        if (!options.skipLaunchElectron) {
+          reload();
+        }
       },
-      build: {
-        outDir: path.join(import.meta.dirname, "dist"),
-        sourcemap: options.sourcemap,
-        target: options.electronTargetVersion?.node,
-        rollupOptions: {
-          input: {
-            [name]: path.join(import.meta.dirname, entry),
-          },
-          output: {
-            format: "cjs",
-            codeSplitting: false,
-            entryFileNames: `[name].cjs`,
-            chunkFileNames: `[name].cjs`,
-            assetFileNames: `[name].[ext]`,
+      vite: {
+        plugins: [isProduction && checkSuspiciousImportsPlugin({})],
+        resolve: {
+          tsconfigPaths: true,
+        },
+        build: {
+          outDir: path.join(import.meta.dirname, "dist"),
+          sourcemap: options.sourcemap,
+          target: options.electronTargetVersion?.node,
+          rollupOptions: {
+            input: {
+              [name]: path.join(import.meta.dirname, entry),
+            },
+            output: {
+              format: "cjs",
+              codeSplitting: false,
+              entryFileNames: `[name].cjs`,
+              chunkFileNames: `[name].cjs`,
+              assetFileNames: `[name].[ext]`,
+            },
           },
         },
       },
-    },
-  }));
+    }),
+  );
 
 /** バックエンドAPIをフロントエンドから実行するコードを注入する */
 const injectLoaderScriptPlugin = (scriptPath: string): Plugin => {
