@@ -5,7 +5,6 @@ import { getQuasarMenu } from "../locators";
 import {
   collectAllAudioCellContents,
   fillAudioCell,
-  validateInput,
   undo,
   redo,
 } from "./utils";
@@ -70,7 +69,7 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
       .first()
       .click();
     await expect(page.locator(".audio-cell")).toHaveCount(3);
-    await validateInput(page.locator(".audio-cell input").first(), "bar");
+    await expect(page.locator(".audio-cell input").first()).toHaveValue("bar");
   });
 
   await test.step("ドラッグするとAudioCellの順番が入れ替わる", async () => {
@@ -98,22 +97,22 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
     );
     await page.mouse.up();
 
-    await validateInput(page.locator(".audio-cell input").first(), "baz");
-    await validateInput(page.locator(".audio-cell input").nth(1), "bar");
+    await expect(page.locator(".audio-cell input").first()).toHaveValue("baz");
+    await expect(page.locator(".audio-cell input").nth(1)).toHaveValue("bar");
   });
 
   await test.step("Undoしたら元の値に戻る", async () => {
     await undo(page);
 
-    await validateInput(page.locator(".audio-cell input").first(), "bar");
-    await validateInput(page.locator(".audio-cell input").nth(1), "baz");
+    await expect(page.locator(".audio-cell input").first()).toHaveValue("bar");
+    await expect(page.locator(".audio-cell input").nth(1)).toHaveValue("baz");
   });
 
   await test.step("Redoしたら入れ替え後の値に戻る", async () => {
     await redo(page);
 
-    await validateInput(page.locator(".audio-cell input").first(), "baz");
-    await validateInput(page.locator(".audio-cell input").nth(1), "bar");
+    await expect(page.locator(".audio-cell input").first()).toHaveValue("baz");
+    await expect(page.locator(".audio-cell input").nth(1)).toHaveValue("bar");
   });
 });
 
