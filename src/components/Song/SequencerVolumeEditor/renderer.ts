@@ -214,6 +214,32 @@ const VOLUME_EDITOR_LAYERS = [
 /** 描画レイヤー。レイヤーごとに、依存する入力が変わったときだけ描き直す。 */
 type VolumeEditorLayer = (typeof VOLUME_EDITOR_LAYERS)[number];
 
+/**
+ * ボリュームエディターのキャンバスに描くPIXIのレンダラーを生成する。
+ * 生成を待つ間に中断されたときは、生成したレンダラーを破棄して`undefined`を返す。
+ */
+export const createVolumeEditorPixiRenderer = async (options: {
+  canvas: HTMLCanvasElement;
+  width: number;
+  height: number;
+  signal: AbortSignal;
+}) => {
+  const renderer = await PIXI.autoDetectRenderer({
+    canvas: options.canvas,
+    backgroundAlpha: 0,
+    antialias: true,
+    resolution: window.devicePixelRatio || 1,
+    autoDensity: true,
+    width: options.width,
+    height: options.height,
+  });
+  if (options.signal.aborted) {
+    renderer.destroy({ removeView: true });
+    return undefined;
+  }
+  return renderer;
+};
+
 export class VolumeEditorRenderer {
   private readonly renderer: PIXI.Renderer;
   private readonly stage: PIXI.Container;
@@ -226,14 +252,14 @@ export class VolumeEditorRenderer {
   private readonly editPositionGraphics: PIXI.Graphics;
 
   private requestId: number | undefined;
+  private viewportInfo: ViewportInfo;
   private canvasWidth: number;
   private canvasHeight: number;
   private colors: VolumeEditorColors;
-  private viewportInfo: ViewportInfo | undefined;
-  private volumeSegments: VolumeSegment[] | undefined;
+  private volumeSegments: VolumeSegment[];
   /** 0dBの高さ。0dB線と面の下端に使う。 */
-  private baselineNormalizedY: number | undefined;
-  private erasePreviewRanges: readonly VolumeEditorBaseXRange[] | undefined;
+  private baselineNormalizedY: number;
+  private erasePreviewRanges: readonly VolumeEditorBaseXRange[];
   private feedbackRange: VolumeEditorBaseXRange | undefined;
   private editPosition: VolumeEditPosition | undefined;
   // 面の組み立ては重いので、ポインタ移動のたびに変わる値では組み直さない
@@ -242,29 +268,42 @@ export class VolumeEditorRenderer {
   );
   private destroyed = false;
 
-  private constructor(
+  /** `renderer`は、このクラスの`destroy`で破棄する。 */
+  constructor(
     renderer: PIXI.Renderer,
     options: {
       width: number;
       height: number;
-      initialColors: VolumeEditorColors;
+      viewportInfo: ViewportInfo;
+      colors: VolumeEditorColors;
+      volumeSegments: VolumeSegment[];
+      baselineNormalizedY: number;
+      erasePreviewRanges: readonly VolumeEditorBaseXRange[];
+      feedbackRange: VolumeEditorBaseXRange | undefined;
+      editPosition: VolumeEditPosition | undefined;
     },
   ) {
     this.renderer = renderer;
     this.canvasWidth = options.width;
     this.canvasHeight = options.height;
-    this.colors = options.initialColors;
+    this.viewportInfo = options.viewportInfo;
+    this.colors = options.colors;
+    this.volumeSegments = options.volumeSegments;
+    this.baselineNormalizedY = options.baselineNormalizedY;
+    this.erasePreviewRanges = options.erasePreviewRanges;
+    this.feedbackRange = options.feedbackRange;
+    this.editPosition = options.editPosition;
     this.stage = new PIXI.Container();
     this.zeroLineGraphics = new PIXI.Graphics();
     this.areaGraphics = new PIXI.Graphics();
     this.erasePreviewGraphics = new PIXI.Graphics();
     this.effectiveVolumeLine = new VolumeLine({
-      color: options.initialColors.line,
+      color: options.colors.line,
       width: VOLUME_EDITOR_LINE_WIDTH.volume,
       isVisible: true,
     });
     this.volumeFeedbackLine = new VolumeLine({
-      color: options.initialColors.feedback,
+      color: options.colors.feedback,
       width: VOLUME_EDITOR_LINE_WIDTH.hoveredVolume,
       isVisible: false,
     });
@@ -286,33 +325,6 @@ export class VolumeEditorRenderer {
       this.requestId = window.requestAnimationFrame(renderIfNeeded);
     };
     this.requestId = window.requestAnimationFrame(renderIfNeeded);
-  }
-
-  static async create(options: {
-    canvas: HTMLCanvasElement;
-    width: number;
-    height: number;
-    initialColors: VolumeEditorColors;
-    signal: AbortSignal;
-  }) {
-    const renderer = await PIXI.autoDetectRenderer({
-      canvas: options.canvas,
-      backgroundAlpha: 0,
-      antialias: true,
-      resolution: window.devicePixelRatio || 1,
-      autoDensity: true,
-      width: options.width,
-      height: options.height,
-    });
-    if (options.signal.aborted) {
-      renderer.destroy({ removeView: true });
-      return undefined;
-    }
-    return new VolumeEditorRenderer(renderer, {
-      width: options.width,
-      height: options.height,
-      initialColors: options.initialColors,
-    });
   }
 
   updateViewportInfo(viewportInfo: ViewportInfo) {
@@ -373,6 +385,16 @@ export class VolumeEditorRenderer {
     }
   }
 
+  private get viewInfo(): VolumeViewInfo {
+    return {
+      viewportWidth: this.canvasWidth,
+      viewportHeight: this.canvasHeight,
+      zoomX: this.viewportInfo.scaleX,
+      offsetX: this.viewportInfo.offsetX,
+      leftPadding: VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
+    };
+  }
+
   destroy() {
     if (this.destroyed) {
       return;
@@ -393,86 +415,66 @@ export class VolumeEditorRenderer {
   }
 
   private render() {
-    const {
-      viewportInfo,
-      volumeSegments,
-      baselineNormalizedY,
-      erasePreviewRanges,
-    } = this;
-    // まだ受け取っていない入力があるうちは描かない
-    if (
-      this.destroyed ||
-      viewportInfo == undefined ||
-      volumeSegments == undefined ||
-      baselineNormalizedY == undefined ||
-      erasePreviewRanges == undefined
-    ) {
+    if (this.destroyed) {
       return;
     }
-
-    const viewInfo: VolumeViewInfo = {
-      viewportWidth: this.canvasWidth,
-      viewportHeight: this.canvasHeight,
-      zoomX: viewportInfo.scaleX,
-      offsetX: viewportInfo.offsetX,
-      leftPadding: VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
-    };
     for (const layer of this.dirtyLayers) {
-      switch (layer) {
-        case "zeroLine":
-          this.renderZeroLine(viewInfo, baselineNormalizedY);
-          break;
-        case "area":
-          this.renderArea(viewInfo, volumeSegments, baselineNormalizedY);
-          break;
-        case "erasePreview":
-          this.renderErasePreview(viewInfo, erasePreviewRanges);
-          break;
-        case "effectiveVolumeLine":
-          this.renderEffectiveVolumeLine(viewInfo, volumeSegments);
-          break;
-        case "volumeFeedbackLine":
-          this.renderVolumeFeedbackLine(viewInfo, volumeSegments);
-          break;
-        case "endpoints":
-          this.renderEndpoints(viewInfo, volumeSegments);
-          break;
-        case "editPosition":
-          this.renderEditPosition(viewInfo);
-          break;
-        default:
-          throw new ExhaustiveError(layer);
-      }
+      this.renderLayer(layer);
     }
     this.dirtyLayers.clear();
     this.renderer.render(this.stage);
   }
 
-  private renderEffectiveVolumeLine(
-    viewInfo: VolumeViewInfo,
-    volumeSegments: VolumeSegment[],
-  ) {
-    this.effectiveVolumeLine.color = this.colors.line;
-    this.effectiveVolumeLine.update(volumeSegments, viewInfo);
+  private renderLayer(layer: VolumeEditorLayer) {
+    switch (layer) {
+      case "zeroLine":
+        this.renderZeroLine();
+        break;
+      case "area":
+        this.renderArea();
+        break;
+      case "erasePreview":
+        this.renderErasePreview();
+        break;
+      case "effectiveVolumeLine":
+        this.renderEffectiveVolumeLine();
+        break;
+      case "volumeFeedbackLine":
+        this.renderVolumeFeedbackLine();
+        break;
+      case "endpoints":
+        this.renderEndpoints();
+        break;
+      case "editPosition":
+        this.renderEditPosition();
+        break;
+      default:
+        throw new ExhaustiveError(layer);
+    }
   }
 
-  private renderVolumeFeedbackLine(
-    viewInfo: VolumeViewInfo,
-    volumeSegments: VolumeSegment[],
-  ) {
+  private renderEffectiveVolumeLine() {
+    this.effectiveVolumeLine.color = this.colors.line;
+    this.effectiveVolumeLine.update(this.volumeSegments, this.viewInfo);
+  }
+
+  private renderVolumeFeedbackLine() {
     const feedbackSegments = filterVolumeSegmentsByBaseXRange(
-      volumeSegments,
+      this.volumeSegments,
       this.feedbackRange,
     );
     this.volumeFeedbackLine.color = this.colors.feedback;
     this.volumeFeedbackLine.isVisible = feedbackSegments.length > 0;
-    this.volumeFeedbackLine.update(feedbackSegments, viewInfo);
+    this.volumeFeedbackLine.update(feedbackSegments, this.viewInfo);
   }
 
-  private renderZeroLine(viewInfo: VolumeViewInfo, baseline: number) {
+  private renderZeroLine() {
     this.zeroLineGraphics.clear();
-    const { colors } = this;
-    const y = volumeNormalizedYToScreenY(baseline, viewInfo.viewportHeight);
+    const { viewInfo, colors } = this;
+    const y = volumeNormalizedYToScreenY(
+      this.baselineNormalizedY,
+      viewInfo.viewportHeight,
+    );
     const { zeroLineDashPx, zeroLineGapPx } = VOLUME_EDITOR_LAYOUT;
     // PIXIのGraphicsには破線の指定がないので、短い線分を並べて描く
     for (
@@ -491,13 +493,10 @@ export class VolumeEditorRenderer {
     });
   }
 
-  private renderArea(
-    viewInfo: VolumeViewInfo,
-    volumeSegments: VolumeSegment[],
-    baseline: number,
-  ) {
+  private renderArea() {
     this.areaGraphics.clear();
-    const { colors } = this;
+    const { viewInfo, colors } = this;
+    const baseline = this.baselineNormalizedY;
     const baselineY = volumeNormalizedYToScreenY(
       baseline,
       viewInfo.viewportHeight,
@@ -506,7 +505,7 @@ export class VolumeEditorRenderer {
       color: colors.areaContainer.toRgbNumber(),
       alpha: colors.areaContainer.toAlphaFloat(),
     };
-    for (const segment of volumeSegments) {
+    for (const segment of this.volumeSegments) {
       const { startIndex, endIndex } = computeVisibleVolumePointRange(
         segment,
         viewInfo,
@@ -537,13 +536,13 @@ export class VolumeEditorRenderer {
     }
   }
 
-  private renderEndpoints(
-    viewInfo: VolumeViewInfo,
-    volumeSegments: VolumeSegment[],
-  ) {
+  private renderEndpoints() {
     this.endpointsGraphics.clear();
     const { colors } = this;
-    for (const node of buildVolumeEndpointNodes(volumeSegments, viewInfo)) {
+    for (const node of buildVolumeEndpointNodes(
+      this.volumeSegments,
+      this.viewInfo,
+    )) {
       const color = isVolumeEndpointInFeedbackRange(node, this.feedbackRange)
         ? colors.feedback
         : colors.line;
@@ -556,13 +555,10 @@ export class VolumeEditorRenderer {
     }
   }
 
-  private renderErasePreview(
-    viewInfo: VolumeViewInfo,
-    erasePreviewRanges: readonly VolumeEditorBaseXRange[],
-  ) {
+  private renderErasePreview() {
     this.erasePreviewGraphics.clear();
-    const { colors } = this;
-    for (const range of erasePreviewRanges) {
+    const { viewInfo, colors } = this;
+    for (const range of this.erasePreviewRanges) {
       if (range.endBaseX <= range.startBaseX) {
         continue;
       }
@@ -587,13 +583,13 @@ export class VolumeEditorRenderer {
     }
   }
 
-  private renderEditPosition(viewInfo: VolumeViewInfo) {
+  private renderEditPosition() {
     this.editPositionGraphics.clear();
     const editPosition = this.editPosition;
     if (editPosition == undefined) {
       return;
     }
-    const { colors } = this;
+    const { viewInfo, colors } = this;
     const x = volumeBaseXToScreenX(editPosition.baseX, viewInfo);
     const y = volumeNormalizedYToScreenY(
       editPosition.normalizedY,
