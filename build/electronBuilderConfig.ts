@@ -16,6 +16,10 @@ const dotenvPath = [
 ];
 dotenv.config({ path: dotenvPath, quiet: true });
 
+const installerMode = z
+  .enum(["download", "embed"])
+  .default("download")
+  .parse(process.env.VOICEVOX_ENGINE_MODE);
 const voicevoxEnginePlacement = parseVoicevoxEnginePlacementFromEnv(
   process.env.VOICEVOX_ENGINE_PLACEMENT_MODE,
   process.env.VOICEVOX_ENGINE_DIR,
@@ -119,7 +123,8 @@ const builderOptions: ElectronBuilderConfiguration = {
   productName: "VOICEVOX",
   appId: "jp.hiroshiba.voicevox",
   copyright: "Hiroshiba Kazuyuki",
-  afterAllArtifactBuild,
+  afterAllArtifactBuild: (buildResult) =>
+    afterAllArtifactBuild(buildResult, installerMode),
   afterPack: (context) => afterPack(context, voicevoxEnginePlacement),
   electronFuses: {
     runAsNode: false,
@@ -129,6 +134,9 @@ const builderOptions: ElectronBuilderConfiguration = {
     grantFileProtocolExtraPrivileges: false,
   },
   electronLanguages: ["en-US", "ja"],
+  // NOTE: 特許の懸念があるAAC・H.264デコーダーを含まないFFmpegに差し替える。
+  // VOICEVOXはこれらのコーデックを使用しない。
+  downloadAlternateFFmpeg: true,
   toolsets: {
     appimage: "1.0.3",
   },
@@ -147,7 +155,10 @@ const builderOptions: ElectronBuilderConfiguration = {
   },
   nsisWeb: {
     artifactName: NSIS_WEB_ARTIFACT_NAME || undefined,
-    include: "build/installer.nsh",
+    include:
+      installerMode === "embed"
+        ? "build/installer.nsh"
+        : "build/installer-download.nsh",
     oneClick: false,
     allowToChangeInstallationDirectory: true,
   },

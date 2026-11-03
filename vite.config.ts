@@ -212,12 +212,12 @@ export default defineConfig((options) => {
             include: browserTestPaths,
             globals: true,
             name: "browser",
+            api: 7158,
             browser: {
               enabled: true,
               instances: [{ browser: "chromium" }],
               provider: playwrightProvider(),
               headless: true,
-              api: 7158,
               ui: false,
             },
           },
@@ -244,12 +244,12 @@ export default defineConfig((options) => {
           test: {
             globals: true,
             name: "storybook",
+            api: 7159,
             browser: {
               enabled: true,
               instances: [{ browser: "chromium" }],
               provider: playwrightProvider(),
               headless: true,
-              api: 7159,
               ui: false,
             },
             isolate: false,
@@ -283,38 +283,36 @@ const electronPreloadOptions = (
   },
   entries: Record<string, string>,
 ): ElectronOptions[] =>
-  Object.entries(entries).map(
-    ([name, entry]): ElectronOptions => ({
-      onstart({ reload }) {
-        if (!options.skipLaunchElectron) {
-          reload();
-        }
+  Object.entries(entries).map(([name, entry]): ElectronOptions => ({
+    onstart({ reload }) {
+      if (!options.skipLaunchElectron) {
+        reload();
+      }
+    },
+    vite: {
+      plugins: [isProduction && checkSuspiciousImportsPlugin({})],
+      resolve: {
+        tsconfigPaths: true,
       },
-      vite: {
-        plugins: [isProduction && checkSuspiciousImportsPlugin({})],
-        resolve: {
-          tsconfigPaths: true,
-        },
-        build: {
-          outDir: path.join(import.meta.dirname, "dist"),
-          sourcemap: options.sourcemap,
-          target: options.electronTargetVersion?.node,
-          rollupOptions: {
-            input: {
-              [name]: path.join(import.meta.dirname, entry),
-            },
-            output: {
-              format: "cjs",
-              codeSplitting: false,
-              entryFileNames: `[name].cjs`,
-              chunkFileNames: `[name].cjs`,
-              assetFileNames: `[name].[ext]`,
-            },
+      build: {
+        outDir: path.join(import.meta.dirname, "dist"),
+        sourcemap: options.sourcemap,
+        target: options.electronTargetVersion?.node,
+        rollupOptions: {
+          input: {
+            [name]: path.join(import.meta.dirname, entry),
+          },
+          output: {
+            format: "cjs",
+            codeSplitting: false,
+            entryFileNames: `[name].cjs`,
+            chunkFileNames: `[name].cjs`,
+            assetFileNames: `[name].[ext]`,
           },
         },
       },
-    }),
-  );
+    },
+  }));
 
 /** バックエンドAPIをフロントエンドから実行するコードを注入する */
 const injectLoaderScriptPlugin = (scriptPath: string): Plugin => {

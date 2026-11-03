@@ -4,12 +4,12 @@ import { createPartialStore } from "./vuex";
 import { createLogger } from "@/helpers/log";
 import type { EngineManifest } from "@/openapi";
 import type { EngineId, EngineInfo } from "@/type/preload";
+import { UnreachableError } from "@/type/utility";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
   engineSupportedDevices: {},
   altPortInfos: {},
-  hasDownloadableDefaultEngine: false,
 };
 const { info, error } = createLogger("store/engine");
 
@@ -21,10 +21,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   PULL_AND_INIT_ENGINE_INFOS: {
     async action({ state, mutations }) {
       let engineInfos = await window.backend.engineInfos();
-      mutations.SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE({
-        hasDownloadableDefaultEngine:
-          await window.backend.hasDownloadableDefaultEngine(),
-      });
 
       // マルチエンジンオフモード時はデフォルトエンジンだけにする。
       if (state.isMultiEngineOffMode) {
@@ -36,12 +32,23 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         engineIds,
         engineInfos,
       });
+
+      const downloadableDefaultEnginePackageIds =
+        await window.backend.getDownloadableDefaultEnginePackageIds();
+      if (downloadableDefaultEnginePackageIds.length > 1) {
+        throw new UnreachableError(
+          `Multiple downloadable default engines are not supported: ${downloadableDefaultEnginePackageIds.join(", ")}`,
+        );
+      }
+      mutations.SET_DOWNLOADABLE_DEFAULT_ENGINE_ID({
+        downloadableDefaultEngineId: downloadableDefaultEnginePackageIds.at(0),
+      });
     },
   },
 
-  SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
-    mutation(state, { hasDownloadableDefaultEngine }) {
-      state.hasDownloadableDefaultEngine = hasDownloadableDefaultEngine;
+  SET_DOWNLOADABLE_DEFAULT_ENGINE_ID: {
+    mutation(state, { downloadableDefaultEngineId }) {
+      state.downloadableDefaultEngineId = downloadableDefaultEngineId;
     },
   },
 

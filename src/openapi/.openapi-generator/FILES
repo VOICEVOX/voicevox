@@ -4,8 +4,8 @@ index.ts
 models/AccentPhrase.ts
 models/AudioQuery.ts
 models/BaseLibraryInfo.ts
-models/BodySingFrameF0SingFrameF0Post.ts
-models/BodySingFrameVolumeSingFrameVolumePost.ts
+models/BodySingFrameF0.ts
+models/BodySingFrameVolume.ts
 models/CorsPolicyMode.ts
 models/DownloadableLibraryInfo.ts
 models/EngineManifest.ts

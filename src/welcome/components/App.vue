@@ -38,7 +38,7 @@ import { provideWelcomeStore } from "@/welcome/store";
 const store = provideWelcomeStore();
 
 onMounted(() => {
-  store.initialize();
+  void store.startup();
 });
 </script>
 

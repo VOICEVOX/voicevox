@@ -1,6 +1,9 @@
+; エンジン同梱版と非同梱版で使う Windows インストーラー用の NSIS スクリプト
+; 同梱版の分割ファイル処理と、両方に共通するインストール・アンインストール処理を定義する
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
 !include "funcs.nsh"
+!ifndef VOICEVOX_DOWNLOAD_INSTALLER
 
 ; voicevox-X.X.X-x64.nsis.7z.ini などが配置されている場所
 ; 開発中はここを一時的に差し替えて、out フォルダ内で npx http-server などとするとテストしやすい
@@ -782,10 +785,12 @@ FunctionEnd
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION deleteArchive
 
 !macroend
+!endif
 
 !macro customHeader
-  ; インストール成功後に%LOCALAPPDATA%\voicevox-updater\を削除する
+  ; インストール成功後
   Function .onInstSuccess
+    ; %LOCALAPPDATA%\voicevox-updater\を削除する
     ; https://github.com/electron-userland/electron-builder/blob/f717e0ea67cec7c5c298889efee7df724838491a/packages/app-builder-lib/templates/nsis/include/installer.nsh#L77
     ${if} $installMode == "all"
       SetShellVarContext current
@@ -797,6 +802,20 @@ FunctionEnd
     ${if} $installMode == "all"
       SetShellVarContext all
     ${endif}
+
+    ; 通常ユーザーとしてアプリを自動起動する
+    ; https://github.com/electron-userland/electron-builder/blob/a6117b3011a105204af8cc2eca02a56976d1ef29/packages/app-builder-lib/templates/nsis/assistedInstaller.nsh#L50
+    !ifdef VOICEVOX_AUTO_START_APP
+      ${ifNot} ${Silent}
+        HideWindow
+        ${if} ${isUpdated}
+          StrCpy $1 "--updated"
+        ${else}
+          StrCpy $1 ""
+        ${endif}
+        ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
+      ${endif}
+    !endif
   FunctionEnd
 !macroend
 

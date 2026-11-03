@@ -147,7 +147,8 @@ const selectedStyleIndex = ref<number>(0);
 
 const talkStyles = computed(() =>
   props.characterInfo.metas.styles.filter(
-    (style) => style.styleType === "talk",
+    (style) =>
+      style.styleType === "talk" || style.styleType === "streaming_talk",
   ),
 );
 

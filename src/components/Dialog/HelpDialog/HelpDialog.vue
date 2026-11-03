@@ -117,7 +117,7 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
 }
 const newUpdateResult = useFetchNewUpdateInfos(
   () => getAppInfos().version,
-  UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL),
+  () => UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL),
 );
 
 // エディタのOSSライセンス取得
@@ -230,7 +230,7 @@ const pagedata = computed(() => {
       },
       {
         type: "item",
-        name: "利用規約",
+        name: "エンジンの利用規約",
         parent: manifest.name,
         component: MarkdownView,
         props: {
@@ -253,8 +253,7 @@ const pagedata = computed(() => {
         component: UpdateInfo,
         props: {
           updateInfos: manifest.updateInfos,
-          // TODO: エンジン側で最新バージョンチェックAPIが出来たら実装する。
-          //       https://github.com/VOICEVOX/voicevox_engine/issues/476
+          // TODO: ダウンロード式のデフォルトエンジンは更新情報を確認できるので実装する。
           isUpdateAvailable: false,
         },
       },

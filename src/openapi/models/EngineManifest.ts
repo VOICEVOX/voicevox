@@ -45,13 +45,13 @@ export interface EngineManifest {
      */
     manifestVersion: string;
     /**
-     * エンジン名
+     * 
      * @type {string}
      * @memberof EngineManifest
      */
     name: string;
     /**
-     * ブランド名
+     * 
      * @type {string}
      * @memberof EngineManifest
      */

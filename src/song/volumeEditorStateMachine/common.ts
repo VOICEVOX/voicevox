@@ -2,16 +2,21 @@ import type { ComputedRef, Ref } from "vue";
 import type { Store } from "@/store";
 import type { StateDefinitions } from "@/song/stateMachine";
 import type { CursorState } from "@/song/viewHelper";
+import type { VolumeEditMode } from "@/song/volumeEditMode";
 import type { VolumeEditableFrameRange } from "@/song/volumeEditRanges";
 import type { TrackId } from "@/type/preload";
 
 export type PositionOnVolumeEditor = {
   readonly frame: number;
-  readonly value: number;
+  readonly db: number;
 };
 
+/**
+ * ポインタが指すフレームとdB、ボリュームエディター内の座標。
+ * dbは、ボリュームエディターの縦軸の目盛りと同じ単位で表す。
+ */
 export type VolumeEditorPointerInfo = {
-  readonly position: PositionOnVolumeEditor;
+  readonly frame: number;
   readonly db: number;
   readonly x: number;
   readonly y: number;
@@ -86,6 +91,7 @@ export type VolumeEditorPartialStore = {
 export type VolumeEditorContext = VolumeEditorRefs &
   VolumeEditorComputedRefs & {
     readonly getEditableFrameRanges: () => readonly VolumeEditableFrameRange[];
+    readonly volumeEditMode: VolumeEditMode;
     readonly store: VolumeEditorPartialStore;
   };
 

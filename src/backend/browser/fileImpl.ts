@@ -133,7 +133,7 @@ export type WritableFilePath =
       path: FakePath;
     };
 
-// NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
+// NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO_FILE action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
 // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
 // showSaveFilePicker での疑似パスが渡ってくる可能性もある。
 export const writeFileImpl = async (obj: {

@@ -77,6 +77,7 @@ class WelcomeWindowManager {
     const win = new BrowserWindow({
       minWidth: 320,
       backgroundColor,
+      show: false,
       webPreferences: {
         preload: path.join(import.meta.dirname, "welcomePreload.cjs"),
       },

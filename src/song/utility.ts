@@ -219,8 +219,7 @@ export function applySmoothTransitions(
   data: number[],
   jumpIndices: number[],
   transitionConstraints:
-    | { left: number; right: number }
-    | { left: number; right: number }[],
+    { left: number; right: number } | { left: number; right: number }[],
 ) {
   const transitionConstraintArray = Array.isArray(transitionConstraints)
     ? transitionConstraints

@@ -18,7 +18,7 @@ export const useElectronMenuBarData = (
   const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 
   const hasDownloadableDefaultEngine = computed(() => {
-    return store.state.hasDownloadableDefaultEngine;
+    return store.state.downloadableDefaultEngineId != undefined;
   });
 
   // 「エンジン」メニューのエンジン毎の項目
@@ -83,9 +83,21 @@ export const useElectronMenuBarData = (
         },
         disableWhenUiLocked: false,
       },
+      hasDownloadableDefaultEngine.value && {
+        type: "button",
+        label: enableMultiEngine.value
+          ? "デフォルトエンジンの管理"
+          : "エンジンの管理",
+        onClick: () => {
+          void store.actions.CHECK_EDITED_AND_NOT_SAVE({
+            nextAction: "switchToWelcome",
+          });
+        },
+        disableWhenUiLocked: false,
+      },
       enableMultiEngine.value && {
         type: "button",
-        label: "エンジンの管理",
+        label: "マルチエンジンの管理",
         onClick: () => {
           void store.actions.SET_DIALOG_OPEN({
             isEngineManageDialogOpen: true,
@@ -105,16 +117,6 @@ export const useElectronMenuBarData = (
           disableWhenUiLocked: false,
           disableWhileReloadingLock: true,
         },
-      hasDownloadableDefaultEngine.value && {
-        type: "button",
-        label: "エンジンのセットアップ",
-        onClick: () => {
-          void store.actions.CHECK_EDITED_AND_NOT_SAVE({
-            nextAction: "switchToWelcome",
-          });
-        },
-        disableWhenUiLocked: false,
-      },
     ]);
 
     return {

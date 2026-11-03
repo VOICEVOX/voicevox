@@ -22,6 +22,7 @@ import {
   getCharacterInfo,
 } from "./audio";
 import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
+import { audioContextStorePlugins } from "./audioContext";
 import {
   songStoreState,
   songStore,
@@ -424,7 +425,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...songCommandStore.actions,
   },
 
-  plugins: [...songStorePlugins],
+  plugins: [...songStorePlugins, ...audioContextStorePlugins],
 
   strict: !isProduction,
 });

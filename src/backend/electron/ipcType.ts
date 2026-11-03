@@ -7,6 +7,7 @@ import type {
   MessageBoxReturnValue,
   NativeThemeType,
   ToolbarSettingType,
+  UrlString,
 } from "@/type/preload";
 import type { AltPortInfos } from "@/store/type";
 import type { Result } from "@/type/result";
@@ -225,14 +226,14 @@ export type IpcIHData = {
     return: Result<Uint8Array>;
   };
 
-  HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
-    args: [];
-    return: boolean;
-  };
-
   GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: {
     args: [];
     return: EngineId[];
+  };
+
+  GET_ENGINE_PACKAGE_UPDATE_INFOS_URL: {
+    args: [obj: { engineId: EngineId }];
+    return: UrlString;
   };
 };
 

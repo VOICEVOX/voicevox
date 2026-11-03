@@ -384,6 +384,7 @@ const getFeatureName = (name: keyof SupportedFeatures) => {
       manageLibrary: "音声ライブラリのインストール・アンインストール",
       returnResourceUrl: "キャラクター情報のリソースをURLで返送",
       applyKatakanaEnglish: "未知の英単語をカタカナ読みに変換",
+      streamingSynthesis: "音声を生成しながら再生",
     };
   return featureNameMap[name];
 };

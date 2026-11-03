@@ -23,6 +23,7 @@ export interface WelcomeSandbox {
   ): Promise<EnginePackageLatestInfo>;
   launchMainWindow(): Promise<void>;
   getCurrentTheme(): Promise<string>;
+  displayReady(): Promise<void>;
   registerIpcHandler(listeners: {
     updateEngineDownloadProgress?: (obj: {
       engineId: EngineId;

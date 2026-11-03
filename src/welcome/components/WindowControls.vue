@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
+import { mdiWindowRestore } from "@quasar/extras/mdi-v7";
 
 const props = defineProps<{
   isMaximized: boolean;

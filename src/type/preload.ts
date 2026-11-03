@@ -132,8 +132,8 @@ export interface Sandbox {
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): Promise<string>;
-  hasDownloadableDefaultEngine(): Promise<boolean>;
   getDownloadableDefaultEnginePackageIds(): Promise<EngineId[]>;
+  getEnginePackageUpdateInfosUrl(engineId: EngineId): Promise<UrlString>;
 }
 
 export type AppInfos = {
@@ -141,7 +141,8 @@ export type AppInfos = {
   version: string;
 };
 
-export type StyleType = "talk" | "singing_teacher" | "frame_decode" | "sing";
+export type StyleType =
+  "talk" | "streaming_talk" | "singing_teacher" | "frame_decode" | "sing";
 
 export type StyleInfo = {
   styleName?: string;
@@ -185,9 +186,7 @@ export type Voice = {
 export type Encoding = "UTF-8" | "Shift_JIS";
 
 export type AcceptRetrieveTelemetryStatus =
-  | "Unconfirmed"
-  | "Accepted"
-  | "Refused";
+  "Unconfirmed" | "Accepted" | "Refused";
 
 export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
@@ -280,8 +279,7 @@ export type Preset = {
   morphingInfo?: MorphingInfo;
 };
 export type PresetSliderKey =
-  | keyof Omit<Preset, "name" | "morphingInfo">
-  | "morphingRate";
+  keyof Omit<Preset, "name" | "morphingInfo"> | "morphingRate";
 
 export type MorphingInfo = {
   rate: number;
@@ -307,10 +305,7 @@ export type MorphableTargetInfoTable = Record<
 >;
 
 export type HotkeyReturnType =
-  | void
-  | boolean
-  | Promise<void>
-  | Promise<boolean>;
+  void | boolean | Promise<void> | Promise<boolean>;
 
 export const toolbarButtonTagSchema = z.enum([
   "PLAY_CONTINUOUSLY",
@@ -333,11 +328,7 @@ export type ToolbarSettingType = z.infer<typeof toolbarSettingSchema>[];
 export type NativeThemeType = "system" | "light" | "dark";
 
 export type MoraDataType =
-  | "consonant"
-  | "vowel"
-  | "pitch"
-  | "pause"
-  | "voicing";
+  "consonant" | "vowel" | "pitch" | "pause" | "voicing";
 
 export type ThemeColorType =
   | "primary"
@@ -382,6 +373,7 @@ export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
   engineStartedOnAltPort: boolean; // エンジンのポート変更の通知
   notifyOnGenerate: boolean; // 音声書き出し時の通知
+  streamingUnrecommended: boolean; // ストリーミング再生で生成が再生に追いつかない場合の通知
 };
 
 // ルート直下にある雑多な設定値
@@ -400,6 +392,7 @@ export const rootMiscSettingSchema = z.object({
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
+  skipEngineUpdateVersion: z.string().optional(), // エンジンのアップデートをスキップしたバージョン
   undoableTrackOperations: z // ソングエディタでどのトラック操作をUndo可能にするか
     .object({
       soloAndMute: z.boolean().default(true),
@@ -413,6 +406,9 @@ export const rootMiscSettingSchema = z.object({
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
   enableKatakanaEnglish: z.boolean().default(true), // 未知の英単語をカタカナ読みに変換するかどうか
   showAudioLength: z.boolean().default(false), // 音声の長さを表示するかどうか
+  streamingMode: z
+    .enum(["LOW_LATENCY", "BALANCED", "STABLE"])
+    .default("STABLE"), // ストリーミング再生のモード
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
@@ -483,6 +479,7 @@ export function getConfigSchema({ isMac }: { isMac: boolean }) {
         tweakableSliderByScroll: z.boolean().default(false),
         engineStartedOnAltPort: z.boolean().default(false),
         notifyOnGenerate: z.boolean().default(false),
+        streamingUnrecommended: z.boolean().default(false),
       })
       .prefault({}),
     registeredEngineDirs: z.string().array().default([]),

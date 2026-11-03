@@ -182,7 +182,7 @@ export async function generateAndSaveOneAudioWithDialog({
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result: SaveResultObject = await withProgress(
-    actions.GENERATE_AND_SAVE_AUDIO({
+    actions.GENERATE_AND_SAVE_AUDIO_FILE({
       audioKey,
       filePath,
     }),
@@ -205,7 +205,7 @@ export async function multiGenerateAndSaveAudioWithDialog({
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
-    actions.MULTI_GENERATE_AND_SAVE_AUDIO({
+    actions.MULTI_GENERATE_AND_SAVE_AUDIO_FILE({
       audioKeys,
       dirPath,
       callback: (finishedCount) =>
@@ -271,7 +271,7 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
-    actions.GENERATE_AND_CONNECT_AND_SAVE_AUDIO({
+    actions.GENERATE_AND_CONNECT_AND_SAVE_AUDIO_FILE({
       filePath,
       callback: (finishedCount, totalCount) =>
         actions.SET_PROGRESS_FROM_COUNT({ finishedCount, totalCount }),
@@ -389,7 +389,7 @@ export const showNotifyAndNotShowAgainButton = (
     message: options.message,
     color: "toast" + suffix,
     textColor: "toast-display" + suffix,
-    icon: options.isWarning ? "warning" : "info",
+    icon: options.icon,
     timeout: NOTIFY_TIMEOUT,
     actions: [
       {
