@@ -5,6 +5,7 @@ import BaseSelect from "./BaseSelect.vue";
 import BaseSelectItem from "./BaseSelectItem.vue";
 
 const meta: Meta<typeof BaseSelect> = {
+  // @ts-expect-error: StorybookとVueのGenericsつきコンポーネントは相性が悪い
   component: BaseSelect,
   render: (args) => ({
     components: { BaseSelect, BaseSelectItem },
