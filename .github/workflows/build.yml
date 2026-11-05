@@ -23,8 +23,8 @@ on:
         default: false
 
 env:
-  VOICEVOX_ENGINE_VERSION: 0.26.0
-  VOICEVOX_RESOURCE_VERSION: 0.26.0
+  VOICEVOX_ENGINE_VERSION: 0.26.1
+  VOICEVOX_RESOURCE_VERSION: 0.26.1
   VOICEVOX_EDITOR_VERSION:
     |- # workflow_dispatchのバージョン名か、999.999.999-developが入る
     ${{ github.event.inputs.version || '999.999.999-develop' }}
@@ -95,7 +95,7 @@ jobs:
             compressed_artifact_name: voicevox-macos-arm64
             installer_artifact_name: macos-arm64-dmg
             macos_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
-            os: macos-14
+            os: macos-15
             env_file: .env.download-vvpp
 
           # Linux NVIDIA GPU
@@ -182,7 +182,7 @@ jobs:
             compressed_artifact_name: voicevox-macos-cpu-arm64
             installer_artifact_name: macos-cpu-arm64-dmg
             macos_artifact_name: "VOICEVOX-CPU.${version}-arm64.${ext}"
-            os: macos-14
+            os: macos-15
             env_file: .env.embed-engine.macos
 
     runs-on: ${{ matrix.os }}
