@@ -50,8 +50,7 @@ type EngineState = {
 };
 
 export type LaunchEditorState =
-  | { enabled: true }
-  | { enabled: false; reason: string };
+  { enabled: true } | { enabled: false; reason: string };
 
 function createWelcomeStore() {
   const allEngineState = ref<AllEngineState>({

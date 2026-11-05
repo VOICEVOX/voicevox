@@ -2809,10 +2809,10 @@ export const songStore = createPartialStore<SongStoreTypes>({
           }
           // ディレクトリが選択されなかった（キャンセルされた）場合は、全トラックをキャンセル扱いとして処理を中断する
           if (!dirPath) {
-            return createArray(
-              state.tracks.size,
-              (): SaveResultObject => ({ result: "CANCELED", path: "" }),
-            );
+            return createArray(state.tracks.size, (): SaveResultObject => ({
+              result: "CANCELED",
+              path: "",
+            }));
           }
 
           // レンダリング処理が実行中の場合、終了するかキャンセルされるまで待機する
@@ -2822,10 +2822,10 @@ export const songStore = createPartialStore<SongStoreTypes>({
             });
             // 待機中にエクスポートがキャンセルされた場合は、全トラックをキャンセル扱いとして処理を中断する
             if (state.cancellationOfExportRequested) {
-              return createArray(
-                state.tracks.size,
-                (): SaveResultObject => ({ result: "CANCELED", path: "" }),
-              );
+              return createArray(state.tracks.size, (): SaveResultObject => ({
+                result: "CANCELED",
+                path: "",
+              }));
             }
           }
 

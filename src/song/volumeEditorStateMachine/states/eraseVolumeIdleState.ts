@@ -47,14 +47,13 @@ export class EraseVolumeIdleState implements State<
       return;
     }
 
-    const { position } = pointerInfo;
     const editableRange = findVolumeEditableFrameRange(
-      position.frame,
+      pointerInfo.frame,
       context.getEditableFrameRanges(),
     );
     const isEditable = editableRange != undefined;
     context.cursorState.value = "ERASE";
-    context.highlightedFrame.value = isEditable ? position.frame : undefined;
+    context.highlightedFrame.value = isEditable ? pointerInfo.frame : undefined;
     context.hoverPointer.value = isEditable
       ? { x: pointerInfo.x, y: pointerInfo.y }
       : undefined;
@@ -64,7 +63,7 @@ export class EraseVolumeIdleState implements State<
       getButton(pointerEvent) === "LEFT_BUTTON"
     ) {
       setNextState("eraseVolume", {
-        startPosition: position,
+        startPosition: pointerInfo,
         targetTrackId: context.selectedTrackId.value,
         returnStateId: this.id,
       });
