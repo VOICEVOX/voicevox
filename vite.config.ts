@@ -130,14 +130,7 @@ export default defineConfig((options) => {
             onstart: ({ startup }) => {
               console.log("main process build is complete.");
               if (!skipLaunchElectron) {
-                // ここのprocess.argvは以下のような形で渡ってくる：
-                // ["node", ".../vite.js", (...vite用の引数...), "--", その他引数...]
-                const args: string[] = [".", "--no-sandbox"];
-                const doubleDashIndex = process.argv.indexOf("--");
-                if (doubleDashIndex !== -1) {
-                  args.push("--", ...process.argv.slice(doubleDashIndex + 1));
-                }
-                void startup(args);
+                launchElectron(startup);
               }
             },
             vite: {
@@ -275,6 +268,24 @@ const cleanDistPlugin = (): Plugin => {
   };
 };
 
+// onstartに渡されるstartup関数の型（vite-plugin-electronは単体でexportしていない）
+type ElectronStartup = Parameters<
+  NonNullable<ElectronOptions["onstart"]>
+>[0]["startup"];
+
+// Electronをリポジトリルートから起動する。main・preloadどちらのonstartからも呼ばれる
+const launchElectron = (startup: ElectronStartup) => {
+  // ここのprocess.argvは以下のような形で渡ってくる：
+  // ["node", ".../vite.js", (...vite用の引数...), "--", その他引数...]
+  const args: string[] = [".", "--no-sandbox"];
+  const doubleDashIndex = process.argv.indexOf("--");
+  if (doubleDashIndex !== -1) {
+    args.push("--", ...process.argv.slice(doubleDashIndex + 1));
+  }
+  // 省略するとvite-plugin-electronがViteのroot（src/）をcwdにするため、リポジトリルートを明示する
+  void startup(args, { cwd: import.meta.dirname });
+};
+
 const electronPreloadOptions = (
   options: {
     skipLaunchElectron: boolean;
@@ -284,9 +295,16 @@ const electronPreloadOptions = (
   entries: Record<string, string>,
 ): ElectronOptions[] =>
   Object.entries(entries).map(([name, entry]): ElectronOptions => ({
-    onstart({ reload }) {
-      if (!options.skipLaunchElectron) {
+    onstart({ reload, startup }) {
+      if (options.skipLaunchElectron) {
+        return;
+      }
+      // preloadのビルドがmainより後に終わると未起動のままここに来るが、その場合のreload()はcwdがsrcになるため使わない
+      // process.electronAppにはvite-plugin-electronのstartup()が起動したElectronの子プロセスが入る（未起動時はundefined）
+      if ("electronApp" in process && process.electronApp != undefined) {
         reload();
+      } else {
+        launchElectron(startup);
       }
     },
     vite: {
