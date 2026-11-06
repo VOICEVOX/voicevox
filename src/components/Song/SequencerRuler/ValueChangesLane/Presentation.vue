@@ -1,23 +1,16 @@
 <template>
-  <div ref="valueChangesLane" class="value-changes-lane">
+  <div
+    class="value-changes-lane"
+    :style="{ width: `${width}px` }"
+    @contextmenu.stop.prevent="onLaneContextMenu"
+  >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
-      :height
+      height="20"
       shape-rendering="crispEdges"
       class="value-changes-lane-svg"
-      @contextmenu.stop.prevent="onLaneContextMenu"
     >
-      <!-- レーン全体に透明背景を敷いて、空き部分の右クリックを拾う -->
-      <rect
-        class="lane-background"
-        :width
-        height="20"
-        y="20"
-        fill="transparent"
-        @contextmenu.stop.prevent="onLaneContextMenu"
-      />
-
       <!-- テンポ・拍子表示 -->
       <template v-for="item in displayValueChanges" :key="item.position">
         <g class="value-changes-lane-item">
@@ -25,7 +18,7 @@
             ref="valueChangeText"
             font-size="12"
             :x="item.x - offset + valueChangeTextPadding"
-            y="34"
+            y="14"
             class="value-changes-lane-value-change"
             @click.stop="onValueClick($event, item.original)"
             @contextmenu.stop.prevent="onValueClick($event, item.original)"
@@ -35,8 +28,8 @@
           <line
             :x1="item.x - offset"
             :x2="item.x - offset"
-            y1="0"
-            :y2="height"
+            y1="-20"
+            y2="20"
             class="value-changes-lane-value-change-line"
           />
         </g>
@@ -53,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef, onMounted, onUnmounted } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import type { ValueChange } from "./Container.vue";
 import ContextMenu, {
   type ContextMenuItemData,
@@ -67,7 +60,6 @@ defineOptions({
 
 const props = defineProps<{
   width: number;
-  height?: number;
   offset: number;
   valueChanges: ValueChange[];
   contextMenuData: ContextMenuItemData[];
@@ -80,37 +72,9 @@ const emit = defineEmits<{
   contextMenuHide: [];
 }>();
 
-const height = ref(props.height ?? 44);
 const valueChangeTextPadding = 4;
 const contextMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
 const log = createLogger("ValueChangesLane");
-
-// レーンのリサイズ監視
-const valueChangesLane = useTemplateRef<HTMLDivElement>("valueChangesLane");
-let resizeObserver: ResizeObserver | undefined;
-
-onMounted(() => {
-  const element = valueChangesLane.value;
-  if (!element) {
-    throw new Error("valueChangesLane element is null.");
-  }
-  resizeObserver = new ResizeObserver((entries) => {
-    let blockSize = 0;
-    for (const entry of entries) {
-      for (const borderBoxSize of entry.borderBoxSize) {
-        blockSize = borderBoxSize.blockSize;
-      }
-    }
-    if (blockSize > 0 && blockSize !== height.value) {
-      height.value = blockSize;
-    }
-  });
-  resizeObserver.observe(element);
-});
-
-onUnmounted(() => {
-  resizeObserver?.disconnect();
-});
 
 // フォントスタイルの取得
 const valueChangeText = useTemplateRef<SVGTextElement[]>("valueChangeText");
@@ -193,23 +157,18 @@ const onValueClick = (event: MouseEvent, valueChange: ValueChange) => {
 
 <style scoped lang="scss">
 .value-changes-lane {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  position: relative;
+  height: 20px;
 }
 
 .value-changes-lane-svg {
+  // テンポ・拍子の縦線をルーラー上端まで表示するため
+  overflow: visible;
   pointer-events: none;
 }
 
 .value-changes-lane-item {
   pointer-events: none;
-}
-
-.lane-background {
-  pointer-events: auto;
 }
 
 .value-changes-lane-value-change {

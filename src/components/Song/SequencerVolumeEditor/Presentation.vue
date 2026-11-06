@@ -88,7 +88,6 @@ import {
   type ViewportInfo,
 } from "@/song/viewHelper";
 import { createThemeColorResolver } from "@/song/graphics/cssColor";
-import type { VolumeViewInfo } from "@/song/graphics/volumeLine";
 import type { VolumeEditMode } from "@/song/volumeEditMode";
 import type {
   VolumeEditableFrameRange,
@@ -136,11 +135,16 @@ const emit = defineEmits<{
 const volumeEditMode = toRef(() => props.volumeEditMode);
 const volumeValueScale = computed(() => volumeEditMode.value.valueScale);
 
-const zeroLinePosition = computed(
-  () => `${(1 - volumeValueScale.value.dbToNormalizedY(0)) * 100}%`,
+// 0dBの高さ
+const baselineNormalizedY = computed(() =>
+  volumeValueScale.value.dbToNormalizedY(0),
 );
 
-const resolveVolumeLineColors = createThemeColorResolver({
+const zeroLinePosition = computed(
+  () => `${(1 - baselineNormalizedY.value) * 100}%`,
+);
+
+const resolveVolumeEditorColors = createThemeColorResolver({
   line: "--scheme-color-song-volume-line",
   hovered: "--scheme-color-song-volume-line-hover",
   editing: "--scheme-color-song-volume-line-editing",
@@ -151,27 +155,16 @@ const resolveVolumeLineColors = createThemeColorResolver({
   guide: "--scheme-color-song-volume-value-guide-line",
 });
 
+const canvasContainer = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const viewportWidth = ref<number>();
 const viewportHeight = ref<number>();
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
-const viewInfo = computed<VolumeViewInfo | undefined>(() => {
-  if (viewportWidth.value == undefined || viewportHeight.value == undefined)
-    return undefined;
-  return {
-    viewportWidth: viewportWidth.value,
-    viewportHeight: viewportHeight.value,
-    zoomX: props.viewportInfo.scaleX,
-    offsetX: props.viewportInfo.offsetX,
-    leftPadding: VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
-  };
-});
 
 let renderer: VolumeEditorRenderer | undefined;
 let resizeObserver: ResizeObserver | undefined;
 let rendererAbortController: AbortController | undefined;
 
-// px⇔フレームの変換はポインタ入力側の逆変換と対で保守するため、ビュー側に置く
 const frameToBaseX = (frame: number) => {
   const seconds = frame / props.editorFrameRate;
   const ticks = secondToTick(seconds, toRaw(props.tempos), props.tpqn);
@@ -194,19 +187,19 @@ const tooltipState = computed(() => {
 });
 
 const {
-  canvasContainer,
   updateViewportRectCache,
   onSurfacePointerDown,
   onSurfacePointerUp,
   onSurfacePointerMove,
   onSurfacePointerLeave,
 } = useVolumeEditorPointerInput({
+  canvasContainer,
   previewMode: toRef(() => props.previewMode),
   viewportInfo: toRef(() => props.viewportInfo),
   tempos: toRef(() => props.tempos),
   tpqn: toRef(() => props.tpqn),
   frameRate: toRef(() => props.editorFrameRate),
-  volumeEditMode,
+  valueScale: volumeValueScale,
   onPointerEvent: (event) => emit("pointerEvent", event),
 });
 
@@ -270,8 +263,8 @@ const editPosition = computed<VolumeEditPosition | undefined>(() => {
 });
 
 const laneNotes = computed(() => {
-  const view = viewInfo.value;
-  if (view == undefined) return [];
+  const width = viewportWidth.value;
+  if (width == undefined) return [];
   const frame = props.highlightedFrame;
   const activeTick =
     props.previewMode === "VOLUME_DRAW" && frame != undefined
@@ -297,7 +290,7 @@ const laneNotes = computed(() => {
     .filter(
       (note) =>
         note.x + note.width >= 0 &&
-        note.x < view.viewportWidth - view.leftPadding,
+        note.x < width - VOLUME_EDITOR_LAYOUT.keyColumnWidthPx,
     );
 });
 
@@ -308,8 +301,8 @@ const erasePreviewBaseXRanges = computed<VolumeEditorBaseXRange[]>(() =>
   })),
 );
 
-const getVolumeEditorLineColors = (element: HTMLElement) => {
-  const colors = resolveVolumeLineColors(element, props.isDark);
+const getVolumeEditorColors = (element: HTMLElement) => {
+  const colors = resolveVolumeEditorColors(element, props.isDark);
   return {
     line: colors.line,
     feedback:
@@ -399,34 +392,30 @@ const onWheel = (event: WheelEvent) => {
   }
 };
 
-const rendererCurve = computed(() => ({
-  volumeSegments: volumeSegments.value,
-  feedbackRange: feedbackBaseXRange.value,
-  erasePreviewRanges: erasePreviewBaseXRanges.value,
-  valueScale: volumeValueScale.value,
-}));
-
-const updateRendererView = (renderImmediately = false) => {
-  const view = viewInfo.value;
+const updateRendererColors = () => {
   const containerElement = canvasContainer.value;
-  if (
-    renderer == undefined ||
-    view == undefined ||
-    containerElement == undefined
-  ) {
+  if (renderer == undefined || containerElement == undefined) {
     return;
   }
-  renderer.updateView(
-    { viewInfo: view, colors: getVolumeEditorLineColors(containerElement) },
-    renderImmediately,
-  );
+  renderer.updateColors(getVolumeEditorColors(containerElement));
 };
 
-// 強調線の色はpreviewModeで切り替わるため、表示の更新に含める
-watch([viewInfo, () => props.previewMode, () => props.isDark], () =>
-  updateRendererView(),
+watch(
+  () => props.viewportInfo,
+  (viewportInfo) => renderer?.updateViewportInfo(viewportInfo),
 );
-watch(rendererCurve, (curve) => renderer?.updateCurve(curve));
+// 強調線の色はpreviewModeで切り替わるため、色の更新に含める
+watch([() => props.previewMode, () => props.isDark], () =>
+  updateRendererColors(),
+);
+watch(volumeSegments, (segments) => renderer?.updateVolumeSegments(segments));
+watch(baselineNormalizedY, (baseline) =>
+  renderer?.updateBaselineNormalizedY(baseline),
+);
+watch(erasePreviewBaseXRanges, (ranges) =>
+  renderer?.updateErasePreviewRanges(ranges),
+);
+watch(feedbackBaseXRange, (range) => renderer?.updateFeedbackRange(range));
 watch(editPosition, (position) => renderer?.updateEditPosition(position));
 
 onMounted(async () => {
@@ -444,16 +433,20 @@ onMounted(async () => {
     canvas: canvasElement,
     width: viewportWidth.value,
     height: viewportHeight.value,
-    initialColors: getVolumeEditorLineColors(containerElement),
+    initialColors: getVolumeEditorColors(containerElement),
     signal: rendererAbortController.signal,
   });
   if (renderer == undefined) {
     return;
   }
 
-  renderer.updateCurve(rendererCurve.value);
+  renderer.updateViewportInfo(props.viewportInfo);
+  renderer.updateVolumeSegments(volumeSegments.value);
+  renderer.updateBaselineNormalizedY(baselineNormalizedY.value);
+  renderer.updateErasePreviewRanges(erasePreviewBaseXRanges.value);
+  renderer.updateFeedbackRange(feedbackBaseXRange.value);
   renderer.updateEditPosition(editPosition.value);
-  updateRendererView(true);
+  updateRendererColors();
   resizeObserver = new ResizeObserver(() => {
     const width = containerElement.clientWidth;
     const height = containerElement.clientHeight;
@@ -468,7 +461,6 @@ onMounted(async () => {
     viewportWidth.value = width;
     viewportHeight.value = height;
     renderer?.resize(width, height);
-    updateRendererView(true);
   });
   resizeObserver.observe(containerElement);
 });

@@ -39,7 +39,13 @@
       :step="previewSlider.qSliderProps.step.value"
       :disable="previewSlider.qSliderProps.disable.value"
       :modelValue="previewSlider.qSliderProps.modelValue.value"
-      @update:modelValue="previewSlider.qSliderProps['onUpdate:modelValue']"
+      @update:modelValue="
+        (value) => {
+          previewSlider.qSliderProps['onUpdate:modelValue'](
+            ensureNotNullish(value),
+          );
+        }
+      "
       @click.stop="stopPropagation"
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"
@@ -52,6 +58,7 @@
 import { computed, reactive } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import type { MoraDataType } from "@/type/preload";
+import { ensureNotNullish } from "@/type/utility";
 
 const props = withDefaults(
   defineProps<{
