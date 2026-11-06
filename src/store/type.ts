@@ -114,11 +114,7 @@ export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
 export type AltPortInfos = Record<EngineId, string>;
 
 export type SaveResult =
-  | "SUCCESS"
-  | "WRITE_ERROR"
-  | "ENGINE_ERROR"
-  | "UNKNOWN_ERROR"
-  | "CANCELED";
+  "SUCCESS" | "WRITE_ERROR" | "ENGINE_ERROR" | "UNKNOWN_ERROR" | "CANCELED";
 export type SaveResultObject = {
   result: SaveResult;
   path: string | undefined;
@@ -134,9 +130,9 @@ export type WatchStoreStatePlugin = (
 ) => void;
 
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
-  [P in keyof T as Extract<keyof T[P], U> extends never
-    ? never
-    : P]: T[P] extends {
+  [
+    P in keyof T as Extract<keyof T[P], U> extends never ? never : P
+  ]: T[P] extends {
     [K in U]: infer R;
   }
     ? U extends "action"
@@ -549,8 +545,7 @@ export type AudioCommandStoreTypes = {
     mutation: { audioKey: AudioKey; accentPhrases: AccentPhrase[] };
     action(
       payload: { audioKey: AudioKey; accentPhraseIndex: number } & (
-        | { isPause: false; moraIndex: number }
-        | { isPause: true }
+        { isPause: false; moraIndex: number } | { isPause: true }
       ),
     ): void;
   };
@@ -877,8 +872,7 @@ export type ParameterPanelEditTarget = "PHONEME_TIMING" | "VOLUME";
 
 // プロジェクトの書き出しに使えるファイル形式
 export type ExportSongProjectFileType =
-  | SingleFileProjectFormat
-  | MultiFileProjectFormat;
+  SingleFileProjectFormat | MultiFileProjectFormat;
 
 export type TrackParameters = {
   gain: boolean;
@@ -895,9 +889,7 @@ export type SongExportSetting = {
 };
 
 export type SongExportState =
-  | "EXPORTING_AUDIO"
-  | "EXPORTING_LABEL"
-  | "NOT_EXPORTING";
+  "EXPORTING_AUDIO" | "EXPORTING_LABEL" | "NOT_EXPORTING";
 
 export type SongStoreState = {
   tpqn: number; // Ticks Per Quarter Note
@@ -1822,7 +1814,7 @@ export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
   altPortInfos: AltPortInfos;
-  hasDownloadableDefaultEngine: boolean;
+  downloadableDefaultEngineId?: EngineId;
 };
 
 export type EngineStoreTypes = {
@@ -1830,8 +1822,8 @@ export type EngineStoreTypes = {
     action(): void;
   };
 
-  SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
-    mutation: { hasDownloadableDefaultEngine: boolean };
+  SET_DOWNLOADABLE_DEFAULT_ENGINE_ID: {
+    mutation: { downloadableDefaultEngineId?: EngineId };
   };
 
   SET_ENGINE_INFO: {
@@ -2264,6 +2256,7 @@ export type DialogStates = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
+  isEngineUpdateNotificationDialogOpen: boolean;
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
   isPresetManageDialogOpen: boolean;

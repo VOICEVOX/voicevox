@@ -2,74 +2,79 @@
   <section class="engine-card">
     <div class="engine-card-head">
       <div class="engine-name">{{ engineState.embeddedInfo.engineName }}</div>
-      <span class="status-pill">
-        {{
-          engineState.currentInfo.status === "notInstalled"
-            ? "未インストール"
-            : "インストール済み"
-        }}</span
-      >
-    </div>
-    <div class="engine-meta">
-      <div>最新バージョン：{{ latestVersionText }}</div>
-      <div v-if="engineState.currentInfo.status === 'installed'">
-        インストール済み：{{ engineState.currentInfo.installedVersion }}
+      <div class="engine-status">
+        <span
+          v-if="engineState.currentInfo.status === 'installed'"
+          class="status-pill"
+        >
+          バージョン {{ engineState.currentInfo.installedVersion }}
+        </span>
+        <span class="status-pill">
+          {{
+            engineState.currentInfo.status === "notInstalled"
+              ? "未インストール"
+              : "インストール済み"
+          }}
+        </span>
       </div>
     </div>
+    <div v-if="cardState.type === 'loading'" class="engine-meta">
+      （読み込み中）
+    </div>
     <div
-      v-if="progressInfo.type === 'download' || progressInfo.type === 'install'"
+      v-if="cardState.type === 'fetched' && cardState.status === 'idle'"
+      class="engine-meta"
+    >
+      {{ cardState.latestInfoMessage }}
+    </div>
+    <div
+      v-if="cardState.type === 'fetched' && cardState.status !== 'idle'"
       class="engine-progress"
     >
       <div class="engine-progress-label">
-        {{ progressInfo.type === "download" ? "ダウンロード" : "インストール" }}
+        {{ cardState.status === "download" ? "ダウンロード" : "インストール" }}
       </div>
       <div class="engine-progress-bar">
         <div
           class="engine-progress-fill"
-          :style="{ width: `${progressInfo.progress}%` }"
+          :style="{ width: `${cardState.progress}%` }"
         ></div>
       </div>
       <div class="engine-progress-value">
-        {{ Math.floor(progressInfo.progress) }}%
+        {{ Math.floor(cardState.progress) }}%
       </div>
     </div>
-    <div class="engine-actions">
-      <div class="engine-target-select">
-        <BaseSelect
-          v-if="latestInfo.type === 'fetched'"
-          :disabled="isControlDisabled"
-          :modelValue="selectedRuntimeTarget"
-          @update:modelValue="handleRuntimeTargetChange"
-        >
-          <BaseSelectItem
-            v-for="targetInfo in latestInfo.info.availableRuntimeTargets"
-            :key="targetInfo.target"
-            :value="targetInfo.target"
-            :label="targetInfo.packageInfo.displayInfo.label"
-          />
-        </BaseSelect>
-      </div>
-      <div v-if="latestInfo.type === 'fetchError'" class="engine-fetch-error">
+    <EngineRuntimeTargetSelect
+      v-if="cardState.type === 'fetched'"
+      :engineId="props.engineId"
+      :availableRuntimeTargets="cardState.availableRuntimeTargets"
+      :modelValue="cardState.selectedRuntimeTarget"
+      :disabled="cardState.status !== 'idle'"
+      @update:modelValue="handleRuntimeTargetChange"
+    />
+    <div v-if="cardState.type !== 'loading'" class="engine-actions">
+      <div v-if="cardState.type === 'fetchError'" class="engine-fetch-error">
         最新情報の取得に失敗しました。
       </div>
       <div class="engine-action-buttons">
         <BaseButton
-          v-if="latestInfo.type === 'fetchError'"
+          v-if="cardState.type === 'fetchError'"
           label="エラー詳細"
           variant="default"
-          @click="showErrorDetailDialog(latestInfo.error)"
+          @click="showErrorDetailDialog(cardState.error)"
         />
         <BaseButton
-          v-if="latestInfo.type === 'fetchError'"
+          v-if="cardState.type === 'fetchError'"
           label="再試行"
           variant="default"
           @click="store.fetchEngineLatestInfo(props.engineId)"
         />
         <BaseButton
-          :label="currentEngineStatus.actionLabel"
-          :disabled="isControlDisabled"
-          :variant="currentEngineStatus.color"
-          @click="store.installEngine(props.engineId)"
+          v-if="cardState.type === 'fetched'"
+          :label="cardState.installationButton.label"
+          :disabled="cardState.installationButton.disabled"
+          :variant="cardState.installationButton.variant"
+          @click="handleInstallEngine"
         />
       </div>
     </div>
@@ -78,17 +83,42 @@
 
 <script setup lang="ts">
 import semver from "semver";
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import EngineRuntimeTargetSelect from "./EngineRuntimeTargetSelect.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
-import BaseSelect from "@/components/Base/BaseSelect.vue";
-import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
-import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
+import type {
+  PackageInfo,
+  RuntimeTarget,
+} from "@/domain/defaultEngine/latestDefaultEngine";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
-import { assertNonNullable, ExhaustiveError } from "@/type/utility";
+import { assertNonNullable } from "@/type/utility";
 import type { EngineId } from "@/type/preload";
-import { useStore, type EngineProgressInfo } from "@/welcome/store";
-import type { EnginePackageLatestInfo } from "@/domain/enginePackage";
+import { useStore } from "@/welcome/store";
+import type {
+  EnginePackageCurrentInfo,
+  EnginePackageLatestInfo,
+} from "@/domain/enginePackage";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
+
+type InstallationButton = {
+  label: string;
+  variant: "primary" | "default";
+  disabled: boolean;
+};
+
+/** カードの表示状態。`type`は最新情報の取得状況、`status`はインストールの進捗を表す。 */
+type EngineCardState =
+  | { type: "loading" }
+  | ({
+      type: "fetched";
+      availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"];
+      selectedRuntimeTarget: RuntimeTarget;
+      installationButton: InstallationButton;
+    } & (
+      | { status: "idle"; latestInfoMessage: string }
+      | { status: "download" | "install"; progress: number }
+    ))
+  | { type: "fetchError"; error: unknown };
 
 const props = defineProps<{
   engineId: EngineId;
@@ -96,106 +126,127 @@ const props = defineProps<{
 
 const store = useStore();
 
-const engineState = computed(() => store.getEngineState(props.engineId));
-const latestInfo = computed(() => engineState.value.latestInfo);
-const selectedRuntimeTarget = computed(() =>
-  store.getSelectedRuntimeTarget(props.engineId),
-);
-const progressInfo = computed<EngineProgressInfo>(() =>
-  store.getEngineProgress(props.engineId),
-);
+/**
+ * インストール直後かどうか。
+ * インストール直後に再インストールを誤って押さないよう、ボタンを無効にするために使う。
+ * インストールが成功してからエンジン選択を変えるまでの間だけtrueになる。
+ */
+const hasJustCompletedInstallation = ref(false);
 
-function findSelectedPackageInfo(
-  availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"],
-  selected: RuntimeTarget,
-) {
-  const targetInfo = availableRuntimeTargets.find(
-    (info) => info.target === selected,
+const engineState = computed(() => store.getEngineState(props.engineId));
+const cardState = computed<EngineCardState>(() => {
+  const engine = engineState.value;
+  const latestInfo = engine.latestInfo;
+  if (latestInfo.type === "loading") {
+    return { type: "loading" };
+  }
+  if (latestInfo.type === "fetchError") {
+    return { type: "fetchError", error: latestInfo.error };
+  }
+
+  const availableRuntimeTargets = latestInfo.info.availableRuntimeTargets;
+  const selectedRuntimeTargetInfo = availableRuntimeTargets.find(
+    (info) => info.target === latestInfo.selectedRuntimeTarget,
   );
-  assertNonNullable(targetInfo);
-  return targetInfo.packageInfo;
+  assertNonNullable(selectedRuntimeTargetInfo);
+
+  const display = createInstallationCardDisplay(
+    engine.currentInfo,
+    selectedRuntimeTargetInfo.packageInfo,
+    hasJustCompletedInstallation.value,
+    latestInfo.progress.type !== "idle",
+  );
+  const fetchedCardData = {
+    availableRuntimeTargets,
+    selectedRuntimeTarget: latestInfo.selectedRuntimeTarget,
+    installationButton: display.installationButton,
+  };
+
+  if (latestInfo.progress.type === "idle") {
+    return {
+      ...fetchedCardData,
+      type: "fetched",
+      status: "idle",
+      latestInfoMessage: display.latestInfoMessage,
+    };
+  }
+
+  return {
+    ...fetchedCardData,
+    type: "fetched",
+    status: latestInfo.progress.type,
+    progress: latestInfo.progress.progress,
+  };
+});
+
+function createInstallationCardDisplay(
+  currentInfo: EnginePackageCurrentInfo,
+  packageInfo: PackageInfo,
+  hasJustCompletedInstallation: boolean,
+  isBusy: boolean,
+): { installationButton: InstallationButton; latestInfoMessage: string } {
+  const latestVersion = packageInfo.version;
+  const humanReadableSize = sizeToHumanReadable(
+    packageInfo.files.reduce((acc, file) => acc + file.size, 0),
+  );
+  if (currentInfo.status === "notInstalled") {
+    return {
+      installationButton: {
+        label: `インストール（${humanReadableSize}）`,
+        variant: "primary",
+        disabled: isBusy,
+      },
+      latestInfoMessage: `最新バージョン ${latestVersion} をインストールしてください。`,
+    };
+  }
+  if (semver.lt(currentInfo.installedVersion, latestVersion)) {
+    return {
+      installationButton: {
+        label: `アップデート（${humanReadableSize}）`,
+        variant: "primary",
+        disabled: isBusy,
+      },
+      latestInfoMessage: `最新バージョン ${latestVersion} にアップデートできます。`,
+    };
+  }
+  if (hasJustCompletedInstallation) {
+    return {
+      installationButton: {
+        label: "インストール済み",
+        variant: "default",
+        disabled: true,
+      },
+      latestInfoMessage: `最新バージョン ${latestVersion} がインストール済みです。`,
+    };
+  }
+  return {
+    installationButton: {
+      label: `再インストール（${humanReadableSize}）`,
+      variant: "default",
+      disabled: isBusy,
+    },
+    latestInfoMessage: `最新バージョン ${latestVersion} がインストール済みです。`,
+  };
 }
 
 function showErrorDetailDialog(error: unknown) {
   void showErrorDialog("最新情報の取得に失敗しました", error);
 }
 
-const latestVersionText = computed(() => {
-  switch (latestInfo.value.type) {
-    case "fetched": {
-      return findSelectedPackageInfo(
-        latestInfo.value.info.availableRuntimeTargets,
-        selectedRuntimeTarget.value,
-      ).version;
-    }
-    case "fetchError":
-      return "（取得失敗）";
-    case "loading":
-      return "（読み込み中）";
-    default:
-      throw new ExhaustiveError(latestInfo.value);
-  }
-});
-
-const currentEngineStatus = computed<{
-  actionLabel: string;
-  color: "default" | "primary";
-}>(() => {
-  if (latestInfo.value.type !== "fetched") {
-    if (engineState.value.currentInfo.status === "notInstalled") {
-      return {
-        actionLabel: "未インストール",
-        color: "default",
-      };
-    }
-
-    return {
-      actionLabel: "インストール済み",
-      color: "default",
-    };
-  }
-
-  const selectedPackageInfo = findSelectedPackageInfo(
-    latestInfo.value.info.availableRuntimeTargets,
-    selectedRuntimeTarget.value,
-  );
-  const humanReadableSize = sizeToHumanReadable(
-    selectedPackageInfo.files.reduce((acc, file) => acc + file.size, 0),
-  );
-  if (engineState.value.currentInfo.status === "notInstalled") {
-    return {
-      actionLabel: `インストール（${humanReadableSize}）`,
-      color: "primary",
-    };
-  }
-  const isOutdated = semver.lt(
-    engineState.value.currentInfo.installedVersion,
-    selectedPackageInfo.version,
-  );
-  if (isOutdated) {
-    return {
-      actionLabel: `アップデート（${humanReadableSize}）`,
-      color: "primary",
-    };
-  }
-  return {
-    actionLabel: `再インストール（${humanReadableSize}）`,
-    color: "default",
-  };
-});
-
-const isControlDisabled = computed(() => {
-  return progressInfo.value.type !== "idle";
-});
-
-const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {
-  assertNonNullable(value);
+const handleRuntimeTargetChange = (value: RuntimeTarget) => {
   store.setSelectedRuntimeTarget(props.engineId, value);
+  hasJustCompletedInstallation.value = false;
+};
+
+const handleInstallEngine = async () => {
+  const result = await store.installEngine(props.engineId);
+  hasJustCompletedInstallation.value = result === "succeeded";
 };
 </script>
 
 <style scoped lang="scss">
 @use "@/styles/v2/colors" as colors;
+@use "@/styles/v2/mixin" as mixin;
 @use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors_v1;
 
@@ -217,7 +268,12 @@ const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {
 }
 
 .engine-name {
-  font-weight: 700;
+  @include mixin.headline-3;
+}
+
+.engine-status {
+  display: flex;
+  gap: vars.$gap-1;
 }
 
 .status-pill {
@@ -231,8 +287,6 @@ const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {
 }
 
 .engine-meta {
-  display: grid;
-  gap: 4px;
   color: colors.$display;
 }
 

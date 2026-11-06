@@ -11,8 +11,7 @@ import { assertNonNullable } from "@/type/utility";
 type TransferableResultCause = { isDisplayable: boolean; message: string };
 
 export type TransferableResult<T> =
-  | { ok: true; value: T }
-  | { ok: false; causes: TransferableResultCause[] };
+  { ok: true; value: T } | { ok: false; causes: TransferableResultCause[] };
 
 /** 例外メッセージ用のオブジェクトにラップする */
 export async function wrapToTransferableResult<T>(

@@ -11,6 +11,7 @@ import {
   type EngineId,
   type EngineInfo,
   engineSettingSchema,
+  UrlString,
 } from "@/type/preload";
 import {
   type PackageInfo,
@@ -248,6 +249,21 @@ export class EngineAndVvppController {
     return {
       engineName: envEngineInfo.name,
     };
+  }
+
+  /**
+   * エンジンの更新情報のURLを取得する。
+   */
+  getEnginePackageUpdateInfosUrl(engineId: EngineId): UrlString {
+    const envEngineInfo = this.getDownloadableEnvEngineInfos().find(
+      (info) => info.uuid === engineId,
+    );
+    assertNonNullable(
+      envEngineInfo,
+      `Engine info not found for engineId: ${engineId}`,
+    );
+
+    return UrlString(envEngineInfo.latestUpdateInfosUrl);
   }
 
   /**

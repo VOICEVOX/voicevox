@@ -18,7 +18,7 @@ export const useElectronMenuBarData = (
   const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 
   const hasDownloadableDefaultEngine = computed(() => {
-    return store.state.hasDownloadableDefaultEngine;
+    return store.state.downloadableDefaultEngineId != undefined;
   });
 
   // 「エンジン」メニューのエンジン毎の項目

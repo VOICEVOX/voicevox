@@ -7,6 +7,9 @@ const meta: Meta<typeof Presentation> = {
   component: Presentation,
   args: {
     dialogOpened: false,
+    title: "アップデートのお知らせ",
+    description: "公式サイトから最新バージョンをダウンロードできます。",
+    updateButtonLabel: "公式サイトを開く",
     latestVersion: "1.0.0",
     newUpdateInfos: [
       {
@@ -22,6 +25,7 @@ const meta: Meta<typeof Presentation> = {
     ],
     "onUpdate:dialogOpened": fn(),
     onSkipThisVersionClick: fn(),
+    onUpdateClick: fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
@@ -74,8 +78,6 @@ export const OpenOfficialSite: Story = {
   name: "公式サイトを開くボタンを押す",
   args: { ...Opened.args },
   play: async ({ args }) => {
-    window.open = fn();
-
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
     const button = canvas.getByRole("button", {
@@ -83,11 +85,8 @@ export const OpenOfficialSite: Story = {
     });
     await userEvent.click(button);
 
-    // 公式サイトが開かれる
-    await expect(window.open).toBeCalledWith(
-      "https://voicevox.hiroshiba.jp/",
-      "_blank",
-    );
+    // アップデートイベントが呼ばれる
+    await expect(args["onUpdateClick"]).toBeCalled();
     // ダイアログを閉じるイベントが呼ばれる
     await expect(args["onUpdate:dialogOpened"]).toBeCalledWith(false);
   },

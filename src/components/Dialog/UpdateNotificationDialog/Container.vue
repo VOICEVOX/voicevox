@@ -6,35 +6,32 @@
 <template>
   <UpdateNotificationDialog
     v-if="newUpdateResult.status == 'updateAvailable'"
-    v-model:dialogOpened="isDialogOpenComputed"
+    v-model:dialogOpened="dialogOpened"
+    title="アップデートのお知らせ"
+    description="公式サイトから最新バージョンをダウンロードできます。"
+    updateButtonLabel="公式サイトを開く"
     :latestVersion="newUpdateResult.latestVersion"
     :newUpdateInfos="newUpdateResult.newUpdateInfos"
     @skipThisVersionClick="handleSkipThisVersionClick"
+    @updateClick="handleUpdateClick"
   />
 </template>
 
 <script setup lang="ts">
 import semver from "semver";
-import { computed, watchEffect } from "vue";
+import { watchEffect } from "vue";
 import UpdateNotificationDialog from "./Presentation.vue";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { useStore } from "@/store";
 import { UrlString } from "@/type/preload";
 import { getAppInfos } from "@/domain/appInfo";
 
+const dialogOpened = defineModel<boolean>("dialogOpened");
 const props = defineProps<{
   canOpenDialog: boolean; // ダイアログを開いても良いかどうか
 }>();
 
 const store = useStore();
-
-const isDialogOpenComputed = computed({
-  get: () => store.state.isUpdateNotificationDialogOpen,
-  set: (val) =>
-    store.actions.SET_DIALOG_OPEN({
-      isUpdateNotificationDialogOpen: val,
-    }),
-});
 
 // エディタのアップデート確認
 if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
@@ -59,8 +56,7 @@ const currentVersionGetter = async () => {
 };
 
 // 新しいバージョンがあれば取得
-const newUpdateResult = useFetchNewUpdateInfos(
-  currentVersionGetter,
+const newUpdateResult = useFetchNewUpdateInfos(currentVersionGetter, () =>
   UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL),
 );
 
@@ -72,6 +68,11 @@ const handleSkipThisVersionClick = (version: string) => {
   });
 };
 
+// アップデートが選ばれたときの処理
+const handleUpdateClick = () => {
+  window.open(import.meta.env.VITE_OFFICIAL_WEBSITE_URL, "_blank");
+};
+
 // ダイアログを開くかどうか
 // ダイアログを開ける状態、かつ新しいアップデートがある場合にダイアログを開く
 const stopWatchEffect = watchEffect(() => {
@@ -79,7 +80,7 @@ const stopWatchEffect = watchEffect(() => {
     props.canOpenDialog &&
     newUpdateResult.value.status == "updateAvailable"
   ) {
-    isDialogOpenComputed.value = true;
+    dialogOpened.value = true;
     stopWatchEffect(); // ダイアログを開く処理は一度だけしか実行しないようにする
   }
 });

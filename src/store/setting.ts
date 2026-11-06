@@ -153,6 +153,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "enableRubyNotation",
         "enableMemoNotation",
         "skipUpdateVersion",
+        "skipEngineUpdateVersion",
         "undoableTrackOperations",
         "showSongCharacterPortrait",
         "defaultLyricMode",
