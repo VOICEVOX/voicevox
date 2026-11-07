@@ -20,8 +20,9 @@ test("利用規約同意前に各種UIが無効になっている", async ({ pag
     timeout: 90 * 1000,
   });
 
-  // ソングボタン
-  const songButton = page.getByRole("toolbar").getByText("ソング");
+  const songButton = page
+    .locator("#app")
+    .getByRole("button", { name: "ソング" });
   await expect(songButton).toBeVisible();
   await expect(songButton).toBeDisabled();
 });
