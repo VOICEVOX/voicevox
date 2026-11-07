@@ -8,11 +8,7 @@
     :tpqn
     :editorFrameRate
     :previewMode
-    :cursorState
-    :showDrawFeedback
-    :tooltipData
-    :highlightedFrame
-    :highlightedEditableRange
+    :editableFrameRanges
     :tool
     :isDark
     :uiLocked
@@ -41,7 +37,6 @@ import { getDefaultLyric } from "@/song/domain";
 import { buildVolumeEditDisplayData } from "@/song/volumeEditDisplay";
 import {
   deriveVolumeEditableFrameRanges,
-  findVolumeEditableFrameRange,
   type VolumeEditableFrameRange,
 } from "@/song/volumeEditRanges";
 import type { ViewportInfo } from "@/song/viewHelper";
@@ -90,32 +85,11 @@ const editableFrameRanges = computed<readonly VolumeEditableFrameRange[]>(() =>
   }),
 );
 
-const {
-  volumePreviewEdit,
-  stateMachineProcess,
-  previewMode,
-  cursorState,
-  showDrawFeedback,
-  tooltipData,
-  highlightedFrame,
-} = useVolumeEditorStateMachine(store, {
-  getEditableFrameRanges: () => editableFrameRanges.value,
-  // 実効値はステートマシンのプレビューから導くため後で定義されるが、
-  // 呼ばれるのはポインタ操作時なので初期化順は問題にならない
-  getEffectiveVolumeValue: (frame) => effectiveFramewise.value[frame],
-  volumeEditMode,
-});
-
-// レンダリングが進むと編集可能区間は増減し、区間オブジェクトを保持すると
-// 消えた区間や境界の古い区間をハイライトし続けてしまう。
-// そのためステートマシンはフレームだけを持ち、ここでその時点の区間に解決する
-const highlightedEditableRange = computed(() => {
-  const frame = highlightedFrame.value;
-  if (frame == undefined) {
-    return undefined;
-  }
-  return findVolumeEditableFrameRange(frame, editableFrameRanges.value);
-});
+const { volumePreviewEdit, stateMachineProcess, previewMode } =
+  useVolumeEditorStateMachine(store, {
+    getEditableFrameRanges: () => editableFrameRanges.value,
+    volumeEditMode,
+  });
 
 const volumeEditDisplayData = computed(() =>
   buildVolumeEditDisplayData({
