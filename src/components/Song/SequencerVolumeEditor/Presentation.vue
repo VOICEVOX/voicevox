@@ -70,6 +70,7 @@ import {
 } from "./useVolumeEditorPointerInput";
 import {
   buildVolumeSegments,
+  createVolumeEditorPixiRenderer,
   VolumeEditorRenderer,
   type VolumeEditorBaseXRange,
   type VolumeEditPosition,
@@ -159,7 +160,6 @@ let renderer: VolumeEditorRenderer | undefined;
 let resizeObserver: ResizeObserver | undefined;
 let rendererAbortController: AbortController | undefined;
 
-// px⇔フレームの変換はポインタ入力側の逆変換と対で保守するため、ビュー側に置く
 const frameToBaseX = (frame: number) => {
   const seconds = frame / props.editorFrameRate;
   const ticks = secondToTick(seconds, toRaw(props.tempos), props.tpqn);
@@ -562,24 +562,28 @@ onMounted(async () => {
   viewportHeight.value = containerElement.clientHeight;
 
   rendererAbortController = new AbortController();
-  renderer = await VolumeEditorRenderer.create({
+  const pixiRenderer = await createVolumeEditorPixiRenderer({
     canvas: canvasElement,
     width: viewportWidth.value,
     height: viewportHeight.value,
-    initialColors: getVolumeEditorColors(containerElement),
     signal: rendererAbortController.signal,
   });
-  if (renderer == undefined) {
+  if (pixiRenderer == undefined) {
     return;
   }
 
-  renderer.updateViewportInfo(props.viewportInfo);
-  renderer.updateVolumeSegments(volumeSegments.value);
-  renderer.updateBaselineNormalizedY(baselineNormalizedY.value);
-  renderer.updateErasePreviewRanges(erasePreviewBaseXRanges.value);
-  renderer.updateFeedbackRange(feedbackBaseXRange.value);
-  renderer.updateEditPosition(editPosition.value);
-  updateRendererColors();
+  // 生成を待つ間に変わった値も反映されるように、待ったあとの値を渡す
+  renderer = new VolumeEditorRenderer(pixiRenderer, {
+    width: viewportWidth.value,
+    height: viewportHeight.value,
+    viewportInfo: props.viewportInfo,
+    colors: getVolumeEditorColors(containerElement),
+    volumeSegments: volumeSegments.value,
+    baselineNormalizedY: baselineNormalizedY.value,
+    erasePreviewRanges: erasePreviewBaseXRanges.value,
+    feedbackRange: feedbackBaseXRange.value,
+    editPosition: editPosition.value,
+  });
   resizeObserver = new ResizeObserver(() => {
     const width = containerElement.clientWidth;
     const height = containerElement.clientHeight;
