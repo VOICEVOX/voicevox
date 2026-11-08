@@ -38,9 +38,9 @@ if [ ! -d "$ESIGNERCKA_INSTALL_DIR" ]; then
         "https://github.com/SSLcom/eSignerCKA/releases/download/v1.0.6/SSL.COM-eSigner-CKA_1.0.6.zip"
     echo "e4971440e4ebed94328492cf36e18999554c5c657c856f1cb14a6072c8b1c263  SSL.COM-eSigner-CKA_1.0.6.zip" | sha256sum --check
     unzip -o SSL.COM-eSigner-CKA_1.0.6.zip
-    mv *eSigner*CKA_*.exe eSigner_CKA_Installer.exe
+    mv ./*eSigner*CKA_*.exe eSigner_CKA_Installer.exe
     powershell "
-        & ./eSigner_CKA_Installer.exe /CURRENTUSER /VERYSILENT /SUPPRESSMSGBOXES /DIR="$ESIGNERCKA_INSTALL_DIR" | Out-Null
+        & ./eSigner_CKA_Installer.exe /CURRENTUSER /VERYSILENT /SUPPRESSMSGBOXES /DIR=$ESIGNERCKA_INSTALL_DIR | Out-Null
         & '$ESIGNERCKA_INSTALL_DIR\eSignerCKATool.exe' config -mode product -user '$ESIGNERCKA_USERNAME' -pass '$ESIGNERCKA_PASSWORD' -totp '$ESIGNERCKA_TOTP_SECRET' -key '$ESIGNERCKA_INSTALL_DIR\master.key' -r
         & '$ESIGNERCKA_INSTALL_DIR\eSignerCKATool.exe' unload
     "
@@ -50,6 +50,8 @@ fi
 # 証明書を読み込む
 powershell "& '$ESIGNERCKA_INSTALL_DIR\eSignerCKATool.exe' load"
 
+# PowerShellの変数なので、シングルクォートで展開しないようにしている
+# shellcheck disable=SC2016
 THUMBPRINT=$(
     powershell '
         $CodeSigningCert = Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert | Select-Object -First 1
@@ -61,5 +63,6 @@ THUMBPRINT=$(
 echo "$THUMBPRINT" >"$THUMBPRINT_PATH"
 
 # 対応しているsigntoolのパスを出力
+# shellcheck disable=SC2012
 SIGNTOOL_PATH=$(ls "C:/Program Files (x86)/Windows Kits/"10/bin/*/x86/signtool.exe | sort -V | tail -n 1) # なぜかこれじゃないと動かない
 echo "$SIGNTOOL_PATH" >"$SIGNTOOL_PATH_PATH"
