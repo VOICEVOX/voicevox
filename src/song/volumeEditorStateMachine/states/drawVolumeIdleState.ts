@@ -5,7 +5,7 @@ import type {
 } from "../common";
 import type { SetNextState, State } from "@/song/stateMachine";
 import { getButton } from "@/song/viewHelper";
-import { findVolumeEditableFrameRange } from "@/song/volumeEditRanges";
+import { isFrameInVolumeEditableRange } from "@/song/volumeEditRanges";
 
 export class DrawVolumeIdleState implements State<
   VolumeEditorStateDefinitions,
@@ -14,13 +14,7 @@ export class DrawVolumeIdleState implements State<
 > {
   readonly id = "drawVolumeIdle";
 
-  onEnter(context: VolumeEditorContext) {
-    context.cursorState.value = "UNSET";
-    context.showDrawFeedback.value = false;
-    context.tooltipData.value = undefined;
-    context.highlightedFrame.value = undefined;
-    context.hoverPointer.value = undefined;
-  }
+  onEnter() {}
 
   process({
     input,
@@ -40,49 +34,21 @@ export class DrawVolumeIdleState implements State<
 
     const { pointerEvent, pointerInfo } = input;
 
-    if (pointerEvent.type === "pointerleave") {
-      context.cursorState.value = "UNSET";
-      context.showDrawFeedback.value = false;
-      context.highlightedFrame.value = undefined;
-      context.hoverPointer.value = undefined;
-      return;
-    }
-
-    const editableRange = findVolumeEditableFrameRange(
-      pointerInfo.frame,
-      context.getEditableFrameRanges(),
-    );
-    const isEditable = editableRange != undefined;
-    context.cursorState.value = isEditable ? "DRAW" : "NOT_ALLOWED";
-    context.showDrawFeedback.value = isEditable;
-    context.highlightedFrame.value = isEditable ? pointerInfo.frame : undefined;
-    context.hoverPointer.value = isEditable
-      ? { x: pointerInfo.x, y: pointerInfo.y }
-      : undefined;
-
     if (
       pointerEvent.type === "pointerdown" &&
       getButton(pointerEvent) === "LEFT_BUTTON" &&
-      isEditable
+      isFrameInVolumeEditableRange(
+        pointerInfo.frame,
+        context.getEditableFrameRanges(),
+      )
     ) {
       setNextState("drawVolume", {
         startPosition: pointerInfo,
-        startTooltipData: {
-          db: pointerInfo.db,
-          pointerX: pointerInfo.x,
-          pointerY: pointerInfo.y,
-        },
         targetTrackId: context.selectedTrackId.value,
         returnStateId: this.id,
       });
     }
   }
 
-  onExit(context: VolumeEditorContext) {
-    context.cursorState.value = "UNSET";
-    context.showDrawFeedback.value = false;
-    context.tooltipData.value = undefined;
-    context.highlightedFrame.value = undefined;
-    context.hoverPointer.value = undefined;
-  }
+  onExit() {}
 }

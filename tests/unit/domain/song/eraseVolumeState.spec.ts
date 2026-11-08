@@ -1,53 +1,16 @@
 import { computed, ref } from "vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
+  PositionOnVolumeEditor,
   VolumeEditorContext,
-  VolumeEditorPointerInfo,
 } from "@/song/volumeEditorStateMachine/common";
 import { relativeVolumeEditMode } from "@/song/volumeEditMode";
-import { EraseVolumeIdleState } from "@/song/volumeEditorStateMachine/states/eraseVolumeIdleState";
 import { EraseVolumeState } from "@/song/volumeEditorStateMachine/states/eraseVolumeState";
 import { TrackId } from "@/type/preload";
 
 describe("EraseVolumeState", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
-  });
-
-  it("idle中はポインタ位置の編集可能区間をハイライトし、ホバー座標を保持する", () => {
-    const context = createContext();
-    const state = new EraseVolumeIdleState();
-
-    state.onEnter(context);
-    state.process({
-      input: {
-        type: "pointerEvent",
-        targetArea: "VolumeEditorArea",
-        pointerEvent: { type: "pointermove" } as PointerEvent,
-        pointerInfo: createPointerInfo(10),
-      },
-      context,
-      setNextState: vi.fn(),
-    });
-
-    expect(context.cursorState.value).toBe("ERASE");
-    expect(context.showDrawFeedback.value).toBe(false);
-    expect(context.highlightedFrame.value).toBe(10);
-    expect(context.hoverPointer.value).toEqual({ x: 100, y: 50 });
-
-    state.process({
-      input: {
-        type: "pointerEvent",
-        targetArea: "VolumeEditorArea",
-        pointerEvent: { type: "pointerleave" } as PointerEvent,
-        pointerInfo: createPointerInfo(10),
-      },
-      context,
-      setNextState: vi.fn(),
-    });
-
-    expect(context.highlightedFrame.value).toBeUndefined();
-    expect(context.hoverPointer.value).toBeUndefined();
   });
 
   it("pointerup時にanimation frame待ちの確定位置を反映する", () => {
@@ -58,7 +21,6 @@ describe("EraseVolumeState", () => {
     vi.stubGlobal("cancelAnimationFrame", vi.fn());
 
     const context = createContext();
-    context.highlightedFrame.value = 10;
     const state = new EraseVolumeState({
       startPosition: { frame: 10, db: 1 },
       targetTrackId: TrackId("trackId"),
@@ -66,7 +28,6 @@ describe("EraseVolumeState", () => {
     });
 
     state.onEnter(context);
-    expect(context.highlightedFrame.value).toBeUndefined();
     state.process({
       input: {
         type: "pointerEvent",
@@ -89,8 +50,6 @@ describe("EraseVolumeState", () => {
     });
     state.onExit(context);
 
-    expect(context.tooltipData.value).toBeUndefined();
-
     expect(
       context.store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA,
     ).toHaveBeenCalledWith({
@@ -104,11 +63,6 @@ function createContext(): VolumeEditorContext {
   return {
     previewVolumeEdit: ref(undefined),
     previewMode: ref("IDLE"),
-    cursorState: ref("UNSET"),
-    showDrawFeedback: ref(false),
-    tooltipData: ref(undefined),
-    highlightedFrame: ref(undefined),
-    hoverPointer: ref(undefined),
     selectedTrackId: computed(() => TrackId("trackId")),
     getEditableFrameRanges: () => [{ startFrame: 0, endFrame: 100 }],
     volumeEditMode: relativeVolumeEditMode,
@@ -127,11 +81,6 @@ function createContext(): VolumeEditorContext {
   };
 }
 
-function createPointerInfo(frame: number): VolumeEditorPointerInfo {
-  return {
-    frame,
-    db: 1,
-    x: 100,
-    y: 50,
-  };
+function createPointerInfo(frame: number): PositionOnVolumeEditor {
+  return { frame, db: 1 };
 }

@@ -49,11 +49,7 @@ export class EraseVolumeState implements State<
       startFrame: this.cursorPosAtStart.frame,
       frameLength: 1,
     };
-    context.cursorState.value = "ERASE";
-    context.showDrawFeedback.value = false;
     context.previewMode.value = "VOLUME_ERASE";
-    context.tooltipData.value = undefined;
-    context.highlightedFrame.value = undefined;
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -154,11 +150,7 @@ export class EraseVolumeState implements State<
     }
 
     context.previewVolumeEdit.value = undefined;
-    context.cursorState.value = "UNSET";
-    context.showDrawFeedback.value = false;
     context.previewMode.value = "IDLE";
-    context.tooltipData.value = undefined;
-    context.highlightedFrame.value = undefined;
   }
 
   private previewEraseVolume(context: VolumeEditorContext) {
