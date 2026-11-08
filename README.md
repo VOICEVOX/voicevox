@@ -327,10 +327,22 @@ pnpm run jactionlint
 
 ```bash
 # バージョンを固定する
-pinact run
+pnpm run pinact run
 
 # バージョンを更新して固定する
-pinact run --update --min-age 7
+pnpm run pinact run --update --min-age 7
+```
+
+## ツールのバージョン更新
+
+[mise](https://github.com/jdx/mise) を使って、開発に必要なツールのバージョンを更新できます。
+
+```bash
+# ツールのバージョンを更新する
+pnpm run mise upgrade --bump
+
+# mise 自体のバージョンを更新する
+pnpm run mise:update
 ```
 
 ## OpenAPI generator

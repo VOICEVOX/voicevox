@@ -6,13 +6,20 @@ import storybookPlugin from "eslint-plugin-storybook";
 import vueParser from "vue-eslint-parser";
 import vuePlugin from "eslint-plugin-vue";
 import vuePrettierConfig from "@vue/eslint-config-prettier";
-import { withVueTs, vueTsConfigs } from "@vue/eslint-config-typescript";
+import {
+  configureVueProject,
+  withVueTs,
+  vueTsConfigs,
+} from "@vue/eslint-config-typescript";
 import { configs as tsConfigs, parser as tsParser } from "typescript-eslint";
 import type { FlatConfig } from "@typescript-eslint/utils/ts-eslint";
 import progressPlugin from "eslint-plugin-file-progress";
 import gitignoreConfig from "eslint-config-flat-gitignore";
 import vitestPlugin from "@vitest/eslint-plugin";
 import voicevoxPlugin from "./eslint-plugin";
+
+// NOTE: eslint-plugin-vueはプロジェクト内に再帰的なシンボリックリンクがあると壊れてしまうので、`.mise`を含むディレクトリを除外するようにする
+configureVueProject({ rootDir: `${import.meta.dirname}/src` });
 
 type Config = FlatConfig.Config;
 type ConfigArray = FlatConfig.ConfigArray;
