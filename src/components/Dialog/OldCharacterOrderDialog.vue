@@ -20,6 +20,19 @@
           <QSpace />
 
           <div class="row items-center no-wrap">
+            <QBtnToggle
+              v-model="styleType"
+              unelevated
+              color="toolbar-button"
+              textColor="toolbar-button-display"
+              toggleColor="primary"
+              toggleTextColor="display-on-primary"
+              class="q-mr-sm"
+              :options="[
+                { label: 'トーク', value: 'talk' },
+                { label: 'ソング', value: 'singerLike' },
+              ]"
+            />
             <QBtn
               unelevated
               label="完了"
@@ -50,8 +63,8 @@
             <span class="text-h6 q-py-md">サンプルボイス一覧</span>
             <div>
               <CharacterTryListenCard
-                v-for="characterInfo of characterInfos"
-                :key="characterInfo.metas.speakerUuid"
+                v-for="characterInfo of filteredCharacterInfos"
+                :key="`${characterInfo.metas.speakerUuid}-${styleType}`"
                 :characterInfo
                 :isSelected="
                   selectedCharacter === characterInfo.metas.speakerUuid
@@ -114,6 +127,7 @@ import type {
   StyleId,
   StyleInfo,
 } from "@/type/preload";
+import { filterCharacterInfosByStyleType } from "@/store/utility";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
@@ -136,17 +150,38 @@ const characterInfosMap = computed(() => {
 const newCharacters = ref<SpeakerId[]>([]);
 const hasNewCharacter = computed(() => newCharacters.value.length > 0);
 
+const styleType = ref<"talk" | "singerLike">("talk");
+const filteredCharacterInfos = computed(() =>
+  filterCharacterInfosByStyleType(props.characterInfos, styleType.value),
+);
+
 // サンプルボイス一覧のキャラクター順番
 const sampleCharacterOrder = ref<SpeakerId[]>([]);
 
 // 選択中のキャラクター
-const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
+const selectedCharacter = ref<SpeakerId | undefined>(
+  props.characterInfos[0].metas.speakerUuid,
+);
 const selectCharacter = (speakerUuid: SpeakerId) => {
   selectedCharacter.value = speakerUuid;
 };
+const portrait = ref<string | undefined>(props.characterInfos[0].portraitPath);
+const updatePortraitToFirstStyle = (characterInfo: CharacterInfo) => {
+  portrait.value =
+    characterInfo.metas.styles[0].portraitPath ?? characterInfo.portraitPath;
+};
 const selectCharacterWithChangePortrait = (speakerUuid: SpeakerId) => {
+  const characterInfo = filteredCharacterInfos.value.find(
+    (characterInfo) => characterInfo.metas.speakerUuid === speakerUuid,
+  );
+
   selectCharacter(speakerUuid);
-  portrait.value = characterInfosMap.value[speakerUuid].portraitPath;
+  if (characterInfo != undefined) updatePortraitToFirstStyle(characterInfo);
+  else portrait.value = characterInfosMap.value[speakerUuid].portraitPath;
+};
+const syncSelectedCharacterWithStyleType = () => {
+  if (selectedCharacter.value != undefined)
+    selectCharacterWithChangePortrait(selectedCharacter.value);
 };
 
 // キャラクター表示順序
@@ -167,6 +202,7 @@ watch(dialogOpened, async (newValue, oldValue) => {
     ];
 
     selectedCharacter.value = sampleCharacterOrder.value[0];
+    syncSelectedCharacterWithStyleType();
 
     // 保存済みのキャラクターリストを取得
     // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
@@ -223,6 +259,11 @@ const stop = () => {
   playing.value = undefined;
 };
 
+watch(styleType, () => {
+  stop();
+  syncSelectedCharacterWithStyleType();
+});
+
 // 再生していたら停止、再生していなかったら再生
 const togglePlayOrStop = (
   speakerUuid: SpeakerId,
@@ -252,9 +293,6 @@ const closeDialog = () => {
   dialogOpened.value = false;
 };
 
-const portrait = ref<string | undefined>(
-  characterInfosMap.value[selectedCharacter.value].portraitPath,
-);
 const updatePortrait = (portraitPath: string) => {
   portrait.value = portraitPath;
 };
