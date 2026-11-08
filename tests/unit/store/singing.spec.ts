@@ -510,3 +510,14 @@ test("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS is no-op when AudioContext is undefin
     store.actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS(),
   ).resolves.toBeUndefined();
 });
+
+test("トラック数が1から増えたら、サイドバーを開く", async () => {
+  expect(store.state.tracks.size).toBe(1);
+  expect(store.state.isSongSidebarOpen).toBe(false);
+
+  const { trackId, track } = await store.actions.CREATE_TRACK();
+  await store.actions.INSERT_TRACK({ trackId, track, prevTrackId: undefined });
+  await nextTick();
+
+  expect(store.state.isSongSidebarOpen).toBe(true);
+});
