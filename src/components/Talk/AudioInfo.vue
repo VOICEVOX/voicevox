@@ -275,14 +275,25 @@
         無効な設定です
       </div>
       <div :class="{ disabled: morphingTargetStyleInfo == undefined }">
-        <span class="text-body1 q-mb-xs"
-          >割合
-          {{
+        <QInput
+          dense
+          borderless
+          maxlength="5"
+          :disable="
+            morphingRateSlider.qSliderProps.disable.value ||
+            morphingTargetStyleInfo == undefined
+          "
+          :modelValue="
             morphingRateSlider.state.currentValue.value != undefined
               ? morphingRateSlider.state.currentValue.value.toFixed(2)
               : undefined
-          }}</span
+          "
+          @change="handleMorphingRateChange"
         >
+          <template #before
+            ><span class="text-body1 text-display">割合</span></template
+          >
+        </QInput>
         <QSlider
           dense
           snap
@@ -683,6 +694,16 @@ const morphingRateSlider = previewSliderHelper({
   scrollStep: SLIDER_PARAMETERS.morphingRate.scrollStep,
   scrollMinStep: SLIDER_PARAMETERS.morphingRate.scrollMinStep,
 });
+const handleMorphingRateChange = (inputValue: string | number | null) => {
+  if (inputValue == null) throw new Error("inputValue is null");
+  const value = adjustSliderValue(
+    "モーフィング割合入力",
+    inputValue.toString(),
+    morphingRateSlider.qSliderProps.min.value,
+    morphingRateSlider.qSliderProps.max.value,
+  );
+  return setMorphingRate(value);
+};
 
 // プリセット
 const enablePreset = computed(() => store.state.enablePreset);
