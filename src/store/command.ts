@@ -96,13 +96,12 @@ export const commandStoreState: CommandStoreState = {
 };
 
 /**
- * Undo/Redoのパッチ適用の後に実行されるHookの型。
+ * Undo/Redoの後に実行されるHookの型。
+ * Undo/Redoする履歴が無いときも実行される。
  *
- * Hookの引数のmutationsからは、Undo/Redoの履歴を変更するmutationを除外している。
- *
- * パッチは、配列の番号やオブジェクトのキーで変更先を指定している。
- * そのため、パッチが変更する配列やオブジェクトの要素を、Hook内で増減したり並び替えたりしてしまうと、以降のUndo/Redoが正しく動作しなくなる。
- * この制約は型で保証されていない。
+ * Hook内では、Undo/Redoの履歴と、Undo/Redoの対象のstateを変更してはいけない。以降のUndo/Redoが正しく動作しなくなることがあるため。
+ * Undo/Redoの履歴を変更するmutationは、Hookの引数のmutationsの型から除外しているが、
+ * Undo/Redoの対象のstateを変更するmutationは型で除外していないので、Hook内で呼ばないように注意する必要がある。
  */
 export type AfterUndoRedoHook = (context: {
   afterState: DeepReadonly<State>;
@@ -113,10 +112,10 @@ export type AfterUndoRedoHook = (context: {
 }) => void;
 
 /**
- * Undo/Redoのパッチ適用の後に実行されるHookを作成する関数の型。
+ * Undo/Redoの後に実行されるHookを作成する関数の型。
  *
- * 関数はパッチ適用前に呼ばれ、関数が返すHookはパッチ適用後に実行される。
- * パッチはstateをその場で書き換えるため、パッチ適用前の値は、関数の中でコピーしておく必要がある。
+ * 関数はUndo/Redoの前に呼ばれ、関数が返すHookはUndo/Redoの後に実行される。
+ * Undo/Redoはパッチでstateをその場で書き換えるため、Undo/Redoの前の値は、関数の中でコピーしておく必要がある。
  */
 export type AfterUndoRedoHookFactory = (
   beforeState: DeepReadonly<State>,

@@ -2622,12 +2622,12 @@ export type ActionContext = DotNotationActionContext<
   AllMutations
 >;
 
-export const commandMutationsCreator = <S, M extends MutationsBase>(
+export type CommandMutationName = `COMMAND_${string}`;
+
+const commandMutationsCreator = <S, M extends MutationsBase>(
   arg: PayloadRecipeTree<S, M>,
   editor: EditorType,
 ): MutationTree<S, M> => createCommandMutationTree<S, M>(arg, editor);
-
-export type CommandMutationName = `COMMAND_${string}`;
 
 export const transformCommandStore = <
   S,
