@@ -13,7 +13,7 @@ import type {
   IndexStoreTypes,
   State,
 } from "./type";
-import { commandStoreState, commandStore } from "./command";
+import { commandStoreState, createCommandStore } from "./command";
 import {
   audioStoreState,
   audioStore,
@@ -27,6 +27,7 @@ import {
   songStoreState,
   songStore,
   songStorePlugins,
+  songStoreUndoRedoHooks,
   songCommandStoreState,
   songCommandStore,
 } from "./song";
@@ -353,6 +354,11 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       mutations.SET_IS_MULTI_ENGINE_OFF_MODE({ isMultiEngineOffMode });
     },
   },
+});
+
+const commandStore = createCommandStore({
+  talk: [],
+  song: [...songStoreUndoRedoHooks],
 });
 
 export const store = createStore<State, AllGetters, AllActions, AllMutations>({

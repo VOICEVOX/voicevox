@@ -1,16 +1,17 @@
-import { toRaw } from "vue";
+import { toRaw, type DeepReadonly } from "vue";
 import { enablePatches, enableMapSet, Immer } from "immer";
 
 import type {
+  AllMutations,
   Command,
   CommandStoreState,
   CommandStoreTypes,
   State,
 } from "./type";
 import { applyPatches } from "@/store/immerPatchUtility";
-import { undoRedoHooks } from "@/store/undoRedoHooks";
 import {
   createPartialStore,
+  type DotNotationCommit,
   type Mutation,
   type MutationsBase,
   type MutationTree,
@@ -93,69 +94,104 @@ export const commandStoreState: CommandStoreState = {
   },
 };
 
-export const commandStore = createPartialStore<CommandStoreTypes>({
-  CAN_UNDO: {
-    getter: (state) => (editor: EditorType) => {
-      return state.undoCommands[editor].length > 0;
-    },
-  },
+/**
+ * UndoRedoHookに渡すmutation。
+ * Undo/Redoの履歴を変更するmutationを除外している。
+ */
+type UndoRedoHookMutations = Omit<
+  DotNotationCommit<AllMutations>,
+  `COMMAND_${string}` | "UNDO" | "REDO" | "CLEAR_COMMANDS"
+>;
 
-  CAN_REDO: {
-    getter: (state) => (editor: EditorType) => {
-      return state.redoCommands[editor].length > 0;
-    },
-  },
+/**
+ * Undo/Redoのパッチ適用の前後に実行する処理。
+ *
+ * パッチ適用前に呼ばれ、パッチ適用後に実行する関数を返す。
+ * パッチはstateをその場で書き換えるため、beforeとafterは同じオブジェクトを指す。
+ * パッチ適用前の値は、パッチ適用前の呼び出しの中でコピーして、返す関数に保持する。
+ *
+ * パッチは記録時のstateの内容を前提に適用される。
+ * この前提に関わるstateをmutationで変更すると、Undo/Redoは正しく動作しない。
+ * この変更は型では検出できない。
+ */
+export type UndoRedoHook = (
+  before: DeepReadonly<State>,
+) => (after: DeepReadonly<State>, mutations: UndoRedoHookMutations) => void;
 
-  UNDO: {
-    mutation(state, { editor }) {
-      const command = state.undoCommands[editor].pop();
-      if (command != null) {
-        state.redoCommands[editor].push(command);
-        applyPatches(state, command.undoPatches);
-      }
+export const createCommandStore = (
+  undoRedoHooks: Record<EditorType, UndoRedoHook[]>,
+) =>
+  createPartialStore<CommandStoreTypes>({
+    CAN_UNDO: {
+      getter: (state) => (editor: EditorType) => {
+        return state.undoCommands[editor].length > 0;
+      },
     },
-    action({ state, mutations }, { editor }: { editor: EditorType }) {
-      const runAfterPatches = undoRedoHooks[editor](state);
-      mutations.UNDO({ editor });
-      runAfterPatches(state, mutations);
-    },
-  },
 
-  REDO: {
-    mutation(state, { editor }) {
-      const command = state.redoCommands[editor].pop();
-      if (command != null) {
-        state.undoCommands[editor].push(command);
-        applyPatches(state, command.redoPatches);
-      }
+    CAN_REDO: {
+      getter: (state) => (editor: EditorType) => {
+        return state.redoCommands[editor].length > 0;
+      },
     },
-    action({ state, mutations }, { editor }: { editor: EditorType }) {
-      const runAfterPatches = undoRedoHooks[editor](state);
-      mutations.REDO({ editor });
-      runAfterPatches(state, mutations);
-    },
-  },
 
-  LAST_COMMAND_IDS: {
-    getter(state) {
-      const getLastCommandId = (commands: Command[]): CommandId | null => {
-        if (commands.length == 0) return null;
-        else return commands[commands.length - 1].id;
-      };
-
-      return {
-        talk: getLastCommandId(state.undoCommands["talk"]),
-        song: getLastCommandId(state.undoCommands["song"]),
-      };
+    UNDO: {
+      mutation(state, { editor }) {
+        const command = state.undoCommands[editor].pop();
+        if (command != null) {
+          state.redoCommands[editor].push(command);
+          applyPatches(state, command.undoPatches);
+        }
+      },
+      action({ state, mutations }, { editor }: { editor: EditorType }) {
+        const afterPatchesHooks = undoRedoHooks[editor].map((hook) =>
+          hook(state),
+        );
+        mutations.UNDO({ editor });
+        for (const afterPatchesHook of afterPatchesHooks) {
+          afterPatchesHook(state, mutations);
+        }
+      },
     },
-  },
 
-  CLEAR_COMMANDS: {
-    mutation(state) {
-      for (const editor of ["talk", "song"] as const) {
-        state.undoCommands[editor].splice(0);
-        state.redoCommands[editor].splice(0);
-      }
+    REDO: {
+      mutation(state, { editor }) {
+        const command = state.redoCommands[editor].pop();
+        if (command != null) {
+          state.undoCommands[editor].push(command);
+          applyPatches(state, command.redoPatches);
+        }
+      },
+      action({ state, mutations }, { editor }: { editor: EditorType }) {
+        const afterPatchesHooks = undoRedoHooks[editor].map((hook) =>
+          hook(state),
+        );
+        mutations.REDO({ editor });
+        for (const afterPatchesHook of afterPatchesHooks) {
+          afterPatchesHook(state, mutations);
+        }
+      },
     },
-  },
-});
+
+    LAST_COMMAND_IDS: {
+      getter(state) {
+        const getLastCommandId = (commands: Command[]): CommandId | null => {
+          if (commands.length == 0) return null;
+          else return commands[commands.length - 1].id;
+        };
+
+        return {
+          talk: getLastCommandId(state.undoCommands["talk"]),
+          song: getLastCommandId(state.undoCommands["song"]),
+        };
+      },
+    },
+
+    CLEAR_COMMANDS: {
+      mutation(state) {
+        for (const editor of ["talk", "song"] as const) {
+          state.undoCommands[editor].splice(0);
+          state.redoCommands[editor].splice(0);
+        }
+      },
+    },
+  });
