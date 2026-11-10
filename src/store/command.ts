@@ -4,6 +4,7 @@ import { enablePatches, enableMapSet, Immer } from "immer";
 import type {
   AllMutations,
   Command,
+  CommandMutationName,
   CommandStoreState,
   CommandStoreTypes,
   State,
@@ -95,31 +96,34 @@ export const commandStoreState: CommandStoreState = {
 };
 
 /**
- * UndoRedoHookに渡すmutation。
- * Undo/Redoの履歴を変更するmutationを除外している。
+ * Undo/Redoのパッチ適用の後に実行されるHookの型。
+ *
+ * Hookの引数のmutationsからは、Undo/Redoの履歴を変更するmutationを除外している。
+ *
+ * パッチは、配列の番号やオブジェクトのキーで変更先を指定している。
+ * そのため、パッチが変更する配列やオブジェクトの要素を、Hook内で増減したり並び替えたりしてしまうと、以降のUndo/Redoが正しく動作しなくなる。
+ * この制約は型で保証されていない。
  */
-type UndoRedoHookMutations = Omit<
-  DotNotationCommit<AllMutations>,
-  `COMMAND_${string}` | "UNDO" | "REDO" | "CLEAR_COMMANDS"
->;
+export type AfterUndoRedoHook = (
+  after: DeepReadonly<State>,
+  mutations: Omit<
+    DotNotationCommit<AllMutations>,
+    CommandMutationName | keyof CommandStoreTypes
+  >,
+) => void;
 
 /**
- * Undo/Redoのパッチ適用の前後に実行する処理。
+ * Undo/Redoのパッチ適用の後に実行されるHookを作成する関数の型。
  *
- * パッチ適用前に呼ばれ、パッチ適用後に実行する関数を返す。
- * パッチはstateをその場で書き換えるため、beforeとafterは同じオブジェクトを指す。
- * パッチ適用前の値は、パッチ適用前の呼び出しの中でコピーして、返す関数に保持する。
- *
- * パッチは記録時のstateの内容を前提に適用される。
- * この前提に関わるstateをmutationで変更すると、Undo/Redoは正しく動作しない。
- * この変更は型では検出できない。
+ * 関数はパッチ適用前に呼ばれ、関数が返すHookはパッチ適用後に実行される。
+ * パッチはstateをその場で書き換えるため、パッチ適用前の値は、関数の中でコピーしておく必要がある。
  */
-export type UndoRedoHook = (
+export type AfterUndoRedoHookFactory = (
   before: DeepReadonly<State>,
-) => (after: DeepReadonly<State>, mutations: UndoRedoHookMutations) => void;
+) => AfterUndoRedoHook;
 
 export const createCommandStore = (
-  undoRedoHooks: Record<EditorType, UndoRedoHook[]>,
+  afterUndoRedoHookFactories: Record<EditorType, AfterUndoRedoHookFactory[]>,
 ) =>
   createPartialStore<CommandStoreTypes>({
     CAN_UNDO: {
@@ -143,12 +147,12 @@ export const createCommandStore = (
         }
       },
       action({ state, mutations }, { editor }: { editor: EditorType }) {
-        const afterPatchesHooks = undoRedoHooks[editor].map((hook) =>
-          hook(state),
+        const afterUndoRedoHooks = afterUndoRedoHookFactories[editor].map(
+          (factory) => factory(state),
         );
         mutations.UNDO({ editor });
-        for (const afterPatchesHook of afterPatchesHooks) {
-          afterPatchesHook(state, mutations);
+        for (const afterUndoRedoHook of afterUndoRedoHooks) {
+          afterUndoRedoHook(state, mutations);
         }
       },
     },
@@ -162,12 +166,12 @@ export const createCommandStore = (
         }
       },
       action({ state, mutations }, { editor }: { editor: EditorType }) {
-        const afterPatchesHooks = undoRedoHooks[editor].map((hook) =>
-          hook(state),
+        const afterUndoRedoHooks = afterUndoRedoHookFactories[editor].map(
+          (factory) => factory(state),
         );
         mutations.REDO({ editor });
-        for (const afterPatchesHook of afterPatchesHooks) {
-          afterPatchesHook(state, mutations);
+        for (const afterUndoRedoHook of afterUndoRedoHooks) {
+          afterUndoRedoHook(state, mutations);
         }
       },
     },

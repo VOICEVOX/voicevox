@@ -27,7 +27,7 @@ import {
   songStoreState,
   songStore,
   songStorePlugins,
-  songStoreUndoRedoHooks,
+  songStoreAfterUndoRedoHookFactories,
   songCommandStoreState,
   songCommandStore,
 } from "./song";
@@ -358,7 +358,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
 const commandStore = createCommandStore({
   talk: [],
-  song: [...songStoreUndoRedoHooks],
+  song: [...songStoreAfterUndoRedoHookFactories],
 });
 
 export const store = createStore<State, AllGetters, AllActions, AllMutations>({

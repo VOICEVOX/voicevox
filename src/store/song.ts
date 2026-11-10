@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import { getAudioContext, isAudioContextAvailable } from "./audioContext";
 import { createPartialStore, type StorePlugins } from "./vuex";
-import type { UndoRedoHook } from "./command";
+import type { AfterUndoRedoHookFactory } from "./command";
 import { createUILockAction } from "./ui";
 import {
   type SongStoreState,
@@ -3481,11 +3481,11 @@ export const songStore = createPartialStore<SongStoreTypes>({
 });
 
 // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
-const deselectAllNotes: UndoRedoHook = () => (_, mutations) => {
+const deselectAllNotes: AfterUndoRedoHookFactory = () => (_, mutations) => {
   mutations.DESELECT_ALL_NOTES();
 };
 
-export const songStoreUndoRedoHooks = [deselectAllNotes];
+export const songStoreAfterUndoRedoHookFactories = [deselectAllNotes];
 
 export const songStorePlugins: StorePlugins = [
   (store) => {
