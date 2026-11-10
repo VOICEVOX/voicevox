@@ -3480,12 +3480,13 @@ export const songStore = createPartialStore<SongStoreTypes>({
   },
 });
 
-// TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
-const deselectAllNotes: AfterUndoRedoHookFactory = () => (_, mutations) => {
-  mutations.DESELECT_ALL_NOTES();
-};
-
-export const songStoreAfterUndoRedoHookFactories = [deselectAllNotes];
+export const songStoreAfterUndoRedoHookFactories: AfterUndoRedoHookFactory[] = [
+  () =>
+    ({ mutations }) => {
+      // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
+      mutations.DESELECT_ALL_NOTES();
+    },
+];
 
 export const songStorePlugins: StorePlugins = [
   (store) => {

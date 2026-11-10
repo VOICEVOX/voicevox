@@ -104,13 +104,13 @@ export const commandStoreState: CommandStoreState = {
  * そのため、パッチが変更する配列やオブジェクトの要素を、Hook内で増減したり並び替えたりしてしまうと、以降のUndo/Redoが正しく動作しなくなる。
  * この制約は型で保証されていない。
  */
-export type AfterUndoRedoHook = (
-  after: DeepReadonly<State>,
+export type AfterUndoRedoHook = (context: {
+  afterState: DeepReadonly<State>;
   mutations: Omit<
     DotNotationCommit<AllMutations>,
     CommandMutationName | keyof CommandStoreTypes
-  >,
-) => void;
+  >;
+}) => void;
 
 /**
  * Undo/Redoのパッチ適用の後に実行されるHookを作成する関数の型。
@@ -119,7 +119,7 @@ export type AfterUndoRedoHook = (
  * パッチはstateをその場で書き換えるため、パッチ適用前の値は、関数の中でコピーしておく必要がある。
  */
 export type AfterUndoRedoHookFactory = (
-  before: DeepReadonly<State>,
+  beforeState: DeepReadonly<State>,
 ) => AfterUndoRedoHook;
 
 export const createCommandStore = (
@@ -152,7 +152,7 @@ export const createCommandStore = (
         );
         mutations.UNDO({ editor });
         for (const afterUndoRedoHook of afterUndoRedoHooks) {
-          afterUndoRedoHook(state, mutations);
+          afterUndoRedoHook({ afterState: state, mutations });
         }
       },
     },
@@ -171,7 +171,7 @@ export const createCommandStore = (
         );
         mutations.REDO({ editor });
         for (const afterUndoRedoHook of afterUndoRedoHooks) {
-          afterUndoRedoHook(state, mutations);
+          afterUndoRedoHook({ afterState: state, mutations });
         }
       },
     },
