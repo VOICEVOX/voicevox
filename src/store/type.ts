@@ -2622,7 +2622,9 @@ export type ActionContext = DotNotationActionContext<
   AllMutations
 >;
 
-export const commandMutationsCreator = <S, M extends MutationsBase>(
+export type CommandMutationName = `COMMAND_${string}`;
+
+const commandMutationsCreator = <S, M extends MutationsBase>(
   arg: PayloadRecipeTree<S, M>,
   editor: EditorType,
 ): MutationTree<S, M> => createCommandMutationTree<S, M>(arg, editor);
@@ -2631,7 +2633,9 @@ export const transformCommandStore = <
   S,
   G extends GettersBase,
   A extends ActionsBase,
-  M extends MutationsBase,
+  // CommandMutationNameに一致しない名前のMutationがあると型エラーになる
+  M extends MutationsBase &
+    Record<Exclude<keyof M, CommandMutationName>, never>,
 >(
   options: StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations>,
   editor: EditorType,

@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { getAudioContext, isAudioContextAvailable } from "./audioContext";
 import { createPartialStore, type StorePlugins } from "./vuex";
+import type { AfterUndoRedoHookFactory } from "./command";
 import { createUILockAction } from "./ui";
 import {
   type SongStoreState,
@@ -1125,9 +1126,6 @@ export const songStore = createPartialStore<SongStoreTypes>({
         noteIdsSet.has(state.editingLyricNoteId)
       ) {
         state.editingLyricNoteId = undefined;
-      }
-      for (const noteId of noteIds) {
-        state._selectedNoteIds.delete(noteId);
       }
       selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
@@ -3478,6 +3476,14 @@ export const songStore = createPartialStore<SongStoreTypes>({
     ),
   },
 });
+
+export const songStoreAfterUndoRedoHookFactories: AfterUndoRedoHookFactory[] = [
+  () =>
+    ({ mutations }) => {
+      // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
+      mutations.DESELECT_ALL_NOTES();
+    },
+];
 
 export const songStorePlugins: StorePlugins = [
   (store) => {
