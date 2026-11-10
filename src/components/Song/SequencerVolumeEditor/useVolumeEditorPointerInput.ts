@@ -1,11 +1,14 @@
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import type { Ref } from "vue";
 import { VOLUME_EDITOR_LAYOUT } from "./style";
+import {
+  onMountedOrActivated,
+  onUnmountedOrDeactivated,
+} from "@/composables/onMountOrActivate";
 import type { Tempo } from "@/domain/project/type";
 import { tickToSecond } from "@/song/music";
 import { baseXToTick, type ViewportInfo } from "@/song/viewHelper";
 import type { VolumeValueScale } from "@/song/volumeValueScale";
-import type { VolumeEditorPreviewMode } from "@/song/volumeEditorStateMachine/common";
 import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 
 type ReadonlyRef<T> = Readonly<Pick<Ref<T>, "value">>;
@@ -45,7 +48,6 @@ export type VolumeEditorPointerEvent = {
 
 export const useVolumeEditorPointerInput = (options: {
   canvasContainer: ReadonlyRef<HTMLElement | null>;
-  previewMode: ReadonlyRef<VolumeEditorPreviewMode>;
   viewportInfo: ReadonlyRef<ViewportInfo>;
   tempos: ReadonlyRef<readonly Tempo[]>;
   tpqn: ReadonlyRef<number>;
@@ -121,54 +123,51 @@ export const useVolumeEditorPointerInput = (options: {
 
   const pointerState = ref<VolumeEditorPointerState>({ type: "UNKNOWN" });
 
-  const dispatchPointerEvent = (
-    pointerEvent: PointerEvent,
-    targetArea: "VolumeEditorArea" | "Window",
-    pointerInfo: VolumeEditorPointerInfo,
-  ) => {
-    options.onPointerEvent({ pointerEvent, targetArea, pointerInfo });
-  };
-
-  // ボリュームエディターの要素で受けたイベントでは、ステートマシンへ渡すかどうかを判定する前に
-  // pointerStateを書き換える。ドラッグ中はpointerleaveをステートマシンへ渡さないが、
-  // ポインタが外に出たことはpointerStateに反映する必要があるため
-  const onSurfacePointerDown = (event: PointerEvent) => {
+  const onPointerDown = (event: PointerEvent) => {
     updateViewportRectCache();
     const pointerInfo = computeViewportPointerInfo(event);
     pointerState.value = { type: "INSIDE", pointerInfo };
-    if (event.button !== 0) {
-      return;
-    }
-    dispatchPointerEvent(event, "VolumeEditorArea", pointerInfo);
+    options.onPointerEvent({
+      pointerEvent: event,
+      targetArea: "VolumeEditorArea",
+      pointerInfo,
+    });
   };
 
-  const onSurfacePointerMove = (event: PointerEvent) => {
+  const onPointerMove = (event: PointerEvent) => {
     const pointerInfo = computeViewportPointerInfo(event);
     pointerState.value = { type: "INSIDE", pointerInfo };
-    if (options.previewMode.value !== "IDLE") {
-      return;
-    }
-    dispatchPointerEvent(event, "VolumeEditorArea", pointerInfo);
+    options.onPointerEvent({
+      pointerEvent: event,
+      targetArea: "VolumeEditorArea",
+      pointerInfo,
+    });
   };
 
-  const onSurfacePointerLeave = (event: PointerEvent) => {
+  const onPointerLeave = (event: PointerEvent) => {
     const pointerInfo = computeViewportPointerInfo(event);
     pointerState.value = { type: "OUTSIDE", pointerInfo };
-    if (options.previewMode.value === "IDLE") {
-      dispatchPointerEvent(event, "VolumeEditorArea", pointerInfo);
-    }
+    options.onPointerEvent({
+      pointerEvent: event,
+      targetArea: "VolumeEditorArea",
+      pointerInfo,
+    });
   };
 
-  // ドラッグを終える受け渡しは、同じpointerupを受けたwindowのリスナーが行う
-  const onSurfacePointerUp = (event: PointerEvent) => {
+  const onPointerUp = (event: PointerEvent) => {
     const pointerInfo = computeViewportPointerInfo(event);
     pointerState.value = { type: "INSIDE", pointerInfo };
+    options.onPointerEvent({
+      pointerEvent: event,
+      targetArea: "VolumeEditorArea",
+      pointerInfo,
+    });
   };
 
   // windowで受けたイベントからは、ボリュームエディターの上にあるかは分からない。
   // ボリュームエディターの上で起きたイベントはwindowより先に受けるので、
   // その時点でINSIDEになっていなければ外にある
-  const dispatchWindowPointerEvent = (event: PointerEvent) => {
+  const onWindowPointerEvent = (event: PointerEvent) => {
     const pointerInfo = computeViewportPointerInfo(event);
     const currentState = pointerState.value;
     switch (currentState.type) {
@@ -182,45 +181,31 @@ export const useVolumeEditorPointerInput = (options: {
       default:
         throw new ExhaustiveError(currentState);
     }
-    dispatchPointerEvent(event, "Window", pointerInfo);
+    options.onPointerEvent({
+      pointerEvent: event,
+      targetArea: "Window",
+      pointerInfo,
+    });
   };
 
-  const onWindowPointerMove = (event: PointerEvent) => {
-    if (options.previewMode.value !== "IDLE") {
-      dispatchWindowPointerEvent(event);
-    }
-  };
-
-  const onWindowPointerUp = (event: PointerEvent) => {
-    if (options.previewMode.value !== "IDLE") {
-      dispatchWindowPointerEvent(event);
-    }
-  };
-
-  const onWindowPointerCancel = (event: PointerEvent) => {
-    if (options.previewMode.value !== "IDLE") {
-      dispatchWindowPointerEvent(event);
-    }
-  };
-
-  onMounted(() => {
-    window.addEventListener("pointermove", onWindowPointerMove);
-    window.addEventListener("pointerup", onWindowPointerUp);
-    window.addEventListener("pointercancel", onWindowPointerCancel);
+  onMountedOrActivated(() => {
+    window.addEventListener("pointermove", onWindowPointerEvent);
+    window.addEventListener("pointerup", onWindowPointerEvent);
+    window.addEventListener("pointercancel", onWindowPointerEvent);
   });
 
-  onUnmounted(() => {
-    window.removeEventListener("pointermove", onWindowPointerMove);
-    window.removeEventListener("pointerup", onWindowPointerUp);
-    window.removeEventListener("pointercancel", onWindowPointerCancel);
+  onUnmountedOrDeactivated(() => {
+    window.removeEventListener("pointermove", onWindowPointerEvent);
+    window.removeEventListener("pointerup", onWindowPointerEvent);
+    window.removeEventListener("pointercancel", onWindowPointerEvent);
   });
 
   return {
     pointerState,
     updateViewportRectCache,
-    onSurfacePointerDown,
-    onSurfacePointerUp,
-    onSurfacePointerMove,
-    onSurfacePointerLeave,
+    onPointerDown,
+    onPointerUp,
+    onPointerMove,
+    onPointerLeave,
   };
 };
