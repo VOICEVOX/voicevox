@@ -1127,9 +1127,6 @@ export const songStore = createPartialStore<SongStoreTypes>({
       ) {
         state.editingLyricNoteId = undefined;
       }
-      for (const noteId of noteIds) {
-        state._selectedNoteIds.delete(noteId);
-      }
       selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
       });
