@@ -31,10 +31,10 @@
     <canvas ref="canvas" class="volume-editor-canvas" />
     <div
       class="volume-editor-area"
-      @pointerdown="onSurfacePointerDown"
-      @pointerup="onSurfacePointerUp"
-      @pointermove="onSurfacePointerMove"
-      @pointerleave="onSurfacePointerLeave"
+      @pointerdown="onPointerDown"
+      @pointerup="onPointerUp"
+      @pointermove="onPointerMove"
+      @pointerleave="onPointerLeave"
     ></div>
     <Tooltip :state="tooltipState" :viewportWidth :viewportHeight />
     <div class="volume-grid-labels" aria-hidden="true">
@@ -169,13 +169,12 @@ const frameToBaseX = (frame: number) => {
 const {
   pointerState,
   updateViewportRectCache,
-  onSurfacePointerDown,
-  onSurfacePointerUp,
-  onSurfacePointerMove,
-  onSurfacePointerLeave,
+  onPointerDown,
+  onPointerUp,
+  onPointerMove,
+  onPointerLeave,
 } = useVolumeEditorPointerInput({
   canvasContainer,
-  previewMode: toRef(() => props.previewMode),
   viewportInfo: toRef(() => props.viewportInfo),
   tempos: toRef(() => props.tempos),
   tpqn: toRef(() => props.tpqn),
