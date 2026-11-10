@@ -8,6 +8,7 @@ import type {
   State,
 } from "./type";
 import { applyPatches } from "@/store/immerPatchUtility";
+import { undoRedoHooks } from "@/store/undoRedoHooks";
 import {
   createPartialStore,
   type Mutation,
@@ -113,12 +114,10 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.undoPatches);
       }
     },
-    action({ mutations }, { editor }: { editor: EditorType }) {
+    action({ state, mutations }, { editor }: { editor: EditorType }) {
+      const runAfterPatches = undoRedoHooks[editor](state);
       mutations.UNDO({ editor });
-      if (editor === "song") {
-        // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
-        mutations.DESELECT_ALL_NOTES();
-      }
+      runAfterPatches(state, mutations);
     },
   },
 
@@ -130,12 +129,10 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.redoPatches);
       }
     },
-    action({ mutations }, { editor }: { editor: EditorType }) {
+    action({ state, mutations }, { editor }: { editor: EditorType }) {
+      const runAfterPatches = undoRedoHooks[editor](state);
       mutations.REDO({ editor });
-      if (editor === "song") {
-        // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
-        mutations.DESELECT_ALL_NOTES();
-      }
+      runAfterPatches(state, mutations);
     },
   },
 
