@@ -1,27 +1,26 @@
-@use "./variables" as vars;
-
-// BaseUIと統合するときに合わせ直さずに済むよう、BaseUIと同じ基準値から作る
+// 値はBaseUIと同じく8pxを基準にしている
+// BaseUIの変数を参照すると、BaseUI側を変更しにくくなるので、別に定義する
+// 必要であれば、BaseUIへ統合するときに値をそろえる
 // ソングは表示する要素が多いので、BaseUIにない小さい値も持つ
-// 名前の数字は、基準値が8pxのときのpx
 // ここには複数のコンポーネントでそろえる寸法だけを置く
 // 詳細: https://github.com/VOICEVOX/voicevox/issues/3147
 
-$size-control: vars.$size-control; // 32px
-$size-control-small: calc(var(--size-basis) * 3.5); // 28px
-$size-icon: calc(var(--size-basis) * 2.5); // 20px
-$size-icon-small: calc(var(--size-basis) * 2.25); // 18px
+$size-control: 32px;
+$size-control-small: 28px;
+$size-icon: 20px;
+$size-icon-small: 18px;
 
-$space-2: calc(var(--gap-basis) * 0.25);
-$space-4: calc(var(--gap-basis) * 0.5);
-$space-6: calc(var(--gap-basis) * 0.75);
-$space-8: vars.$gap-1;
-$space-12: calc(var(--gap-basis) * 1.5);
-$space-16: vars.$gap-2;
-$space-24: calc(var(--gap-basis) * 3);
+$space-2: 2px;
+$space-4: 4px;
+$space-6: 6px;
+$space-8: 8px;
+$space-12: 12px;
+$space-16: 16px;
+$space-24: 24px;
 
-$radius-6: calc(var(--radius-basis) * 0.75);
-$radius-8: vars.$radius-1;
-$radius-12: calc(var(--radius-basis) * 1.5);
+$radius-6: 6px;
+$radius-8: 8px;
+$radius-12: 12px;
 $radius-full: 9999px;
 
 $font-size-caption: 11px;

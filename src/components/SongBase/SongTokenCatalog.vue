@@ -12,11 +12,7 @@
     <section v-else-if="section === 'sizes'">
       <div v-for="name in sizeNames" :key="name" class="row">
         <span class="preview">
-          <span
-            class="size-box"
-            :data-token="name"
-            :style="{ width: v(name), height: v(name) }"
-          />
+          <span class="size-box" :style="{ width: v(name), height: v(name) }" />
         </span>
         <code class="name">${{ name }}</code>
         <code class="value">{{ values[name] }}</code>
@@ -26,11 +22,7 @@
     <section v-else-if="section === 'spaces'">
       <div v-for="name in spaceNames" :key="name" class="row">
         <span class="preview">
-          <span
-            class="space-bar"
-            :data-token="name"
-            :style="{ width: v(name) }"
-          />
+          <span class="space-bar" :style="{ width: v(name) }" />
         </span>
         <code class="name">${{ name }}</code>
         <code class="value">{{ values[name] }}</code>
@@ -40,11 +32,7 @@
     <section v-else-if="section === 'radii'">
       <div v-for="name in radiusNames" :key="name" class="row">
         <span class="preview">
-          <span
-            class="radius-box"
-            :data-token="name"
-            :style="{ borderRadius: v(name) }"
-          />
+          <span class="radius-box" :style="{ borderRadius: v(name) }" />
         </span>
         <code class="name">${{ name }}</code>
         <code class="value">{{ values[name] }}</code>
@@ -53,7 +41,7 @@
 
     <section v-else-if="section === 'typography'">
       <div v-for="name in fontSizeNames" :key="name" class="row">
-        <span class="sample" :data-token="name" :style="{ fontSize: v(name) }">
+        <span class="sample" :style="{ fontSize: v(name) }">
           ドレミ 1/16 135
         </span>
         <code class="name">${{ name }}</code>
@@ -119,20 +107,10 @@ onMounted(() => {
   if (root.value == null) {
     throw new Error("root is not mounted");
   }
-  // calcで定義した値は、そのままではpxで読めないので、表示した見本の寸法を測って示す
-  const measure = (element: HTMLElement) => {
-    const style = getComputedStyle(element);
-    if (element.classList.contains("radius-box")) {
-      return style.borderTopLeftRadius;
-    }
-    if (element.classList.contains("sample")) {
-      return style.fontSize;
-    }
-    return style.width;
-  };
+  const style = getComputedStyle(root.value);
   values.value = Object.fromEntries(
-    [...root.value.querySelectorAll<HTMLElement>("[data-token]")].map(
-      (element) => [element.dataset.token, measure(element)],
+    [...sizeNames, ...spaceNames, ...radiusNames, ...fontSizeNames].map(
+      (name) => [name, style.getPropertyValue(`--song-vars-${name}`).trim()],
     ),
   );
 });
