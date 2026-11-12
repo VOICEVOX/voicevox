@@ -1,0 +1,56 @@
+@use "./song-variables" as song-vars;
+
+// 背景色を置き換えずに重ねるので、選択中やオンの部品でもホバーと押下の反応が見える
+@mixin state-layer(
+  $hovered: var(--scheme-color-song-control-hovered),
+  $pressed: var(--scheme-color-song-control-pressed)
+) {
+  &:hover:not(:disabled, [data-disabled]) {
+    background-image: linear-gradient($hovered, $hovered);
+  }
+
+  &:active:not(:disabled, [data-disabled]) {
+    background-image: linear-gradient($pressed, $pressed);
+  }
+}
+
+// 枠を内側に描き、隣の部品と詰めて並べても枠が隠れないようにする
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--scheme-color-primary);
+    outline-offset: -2px;
+  }
+}
+
+@mixin disabled {
+  &:disabled,
+  &[data-disabled] {
+    opacity: song-vars.$opacity-disabled;
+    cursor: default;
+  }
+}
+
+// Medium体はフォント名が分かれているので、標準フォントのときだけ切り替える
+@mixin font-medium {
+  font-weight: 500;
+
+  body[data-editor-font="default"] & {
+    font-family: "Unhinted Rounded M+ 1p Medium", sans-serif;
+  }
+}
+
+// ポップアップ(メニューやツールチップ)の面
+@mixin popup-surface {
+  border: 1px solid var(--scheme-color-song-border);
+  border-radius: song-vars.$radius-8;
+  background: var(--scheme-color-surface-container-highest);
+  color: var(--scheme-color-on-surface);
+}
+
+// 拍子やテンポなど、読み取ってほしい値の文字
+@mixin value-text {
+  color: var(--scheme-color-on-surface);
+  font-size: song-vars.$font-size-value;
+  font-variant-numeric: tabular-nums;
+  @include font-medium;
+}
