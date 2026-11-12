@@ -876,3 +876,31 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     from var(--scheme-color-song-phoneme-bound-editing) l c h / 35%
   );
 }
+
+/* SongBaseのコンポーネント: スキームを調整したときに一緒に変わるよう、
+   役割にない色も値は書かず、on-surfaceとprimaryから作る。 */
+:root {
+  // 補助の文字に使うので、白い背景でコントラスト比4.5:1を保てる濃さにする
+  --scheme-color-song-on-surface-sub: oklch(
+    from var(--scheme-color-on-surface) l c h / 60%
+  );
+  --scheme-color-song-control-hovered: oklch(
+    from var(--scheme-color-on-surface) l c h / 8%
+  );
+  --scheme-color-song-control-pressed: oklch(
+    from var(--scheme-color-on-surface) l c h / 12%
+  );
+  // ノートなどの色と紛れないよう、選んだツールは色を付けずに濃淡で示す
+  --scheme-color-song-control-selected: oklch(
+    from var(--scheme-color-on-surface) l c h / 12%
+  );
+  --scheme-color-song-control-checked: oklch(
+    from var(--scheme-color-primary) l c h / 14%
+  );
+  --scheme-color-song-divider: oklch(
+    from var(--scheme-color-on-surface) l c h / 12%
+  );
+  --scheme-color-song-border: oklch(
+    from var(--scheme-color-on-surface) l c h / 20%
+  );
+}
