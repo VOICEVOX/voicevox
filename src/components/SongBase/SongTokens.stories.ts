@@ -3,8 +3,8 @@ import type { Meta, StoryObj } from "@storybook/vue3-vite";
 import SongTokenCatalog from "./SongTokenCatalog.vue";
 
 /**
- * ソングの部品(SongBase)で共有するトークンの一覧。
- * 色は `song-colors.scss` のCSS変数、寸法などは `song-variables.scss` のSCSS変数
+ * SongBaseのコンポーネントで共有するトークンの一覧。
+ * 色は`song-colors.scss`、寸法などは`song-variables.scss`で定義している
  */
 const meta: Meta<typeof SongTokenCatalog> = {
   component: SongTokenCatalog,

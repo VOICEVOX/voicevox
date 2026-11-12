@@ -877,11 +877,10 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
   );
 }
 
-/* ソングの部品(SongBase)
-   主な文字や面はスキームの役割をそのまま使い、ここでは役割にない重ね色や線だけを、
-   on-surfaceとprimaryから作る。 */
+/* SongBaseのコンポーネント: スキームを調整したときに一緒に変わるよう、
+   役割にない色も値は書かず、on-surfaceとprimaryから作る。 */
 :root {
-  // 補助の文字にも使うため、白地で4.5:1を保てる濃さにしている
+  // 補助の文字に使うので、白い背景でコントラスト比4.5:1を保てる濃さにする
   --scheme-color-song-on-surface-sub: oklch(
     from var(--scheme-color-on-surface) l c h / 60%
   );
@@ -891,7 +890,7 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
   --scheme-color-song-control-pressed: oklch(
     from var(--scheme-color-on-surface) l c h / 12%
   );
-  // 選んだツールは色を使わず濃淡で示し、編集内容の色と競合させない
+  // ノートなどの色と紛れないよう、選んだツールは色を付けずに濃淡で示す
   --scheme-color-song-control-selected: oklch(
     from var(--scheme-color-on-surface) l c h / 12%
   );

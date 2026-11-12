@@ -1,6 +1,6 @@
 @use "./song-variables" as song-vars;
 
-// 背景色を置き換えずに重ねるので、選択中やオンの部品でもホバーと押下の反応が見える
+// 背景色の上に重ねて描くので、選択中や設定がオンのコンポーネントでも、ホバーと押下が分かる
 @mixin state-layer(
   $hovered: var(--scheme-color-song-control-hovered),
   $pressed: var(--scheme-color-song-control-pressed)
@@ -14,7 +14,7 @@
   }
 }
 
-// 枠を内側に描き、隣の部品と詰めて並べても枠が隠れないようにする
+// 隣のコンポーネントと詰めて並べても隠れないよう、枠を内側に描く
 @mixin focus-ring {
   &:focus-visible {
     outline: 2px solid var(--scheme-color-primary);
@@ -30,7 +30,7 @@
   }
 }
 
-// Medium体はフォント名が分かれているので、標準フォントのときだけ切り替える
+// 太さ500の文字は別のフォント名で用意しているので、エディターのフォントが標準のときだけ、そのフォントに切り替える
 @mixin font-medium {
   font-weight: 500;
 
@@ -39,7 +39,6 @@
   }
 }
 
-// ポップアップ(メニューやツールチップ)の面
 @mixin popup-surface {
   border: 1px solid var(--scheme-color-song-border);
   border-radius: song-vars.$radius-8;
@@ -47,7 +46,7 @@
   color: var(--scheme-color-on-surface);
 }
 
-// 拍子やテンポなど、読み取ってほしい値の文字
+// 値が変わっても桁の位置がずれないよう、数字の幅をそろえる
 @mixin value-text {
   color: var(--scheme-color-on-surface);
   font-size: song-vars.$font-size-value;

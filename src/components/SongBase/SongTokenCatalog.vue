@@ -70,7 +70,7 @@
 <script setup lang="ts">
 import { onMounted, ref, useTemplateRef } from "vue";
 
-// Storybookでトークンを一覧するための部品。アプリでは使わない
+// Storybookでトークンを一覧するためのコンポーネント。アプリでは使わない
 defineProps<{
   section: "colors" | "sizes" | "spaces" | "radii" | "typography";
 }>();
@@ -110,7 +110,7 @@ const fontSizeNames = [
   "font-size-value",
 ];
 
-// SCSS変数はスタイルの中でCSS変数に写してから参照する
+// テンプレートからはSCSS変数を読めないので、スタイルでCSS変数に入れてから参照する
 const v = (name: string) => `var(--song-vars-${name})`;
 
 const root = useTemplateRef<HTMLElement>("root");
@@ -119,7 +119,7 @@ onMounted(() => {
   if (root.value == null) {
     throw new Error("root is not mounted");
   }
-  // 基準値から計算する値もあるので、描いた見本の寸法を読んで実際の値を示す
+  // calcで定義した値は、そのままではpxで読めないので、表示した見本の寸法を測って示す
   const measure = (element: HTMLElement) => {
     const style = getComputedStyle(element);
     if (element.classList.contains("radius-box")) {
@@ -149,7 +149,7 @@ onMounted(() => {
   }
 
   padding: song-vars.$space-24;
-  // 部品が実際に置かれる面の上で見比べる
+  // 半透明の色を実際の見え方で比べるため、ツールバーと同じ背景にする
   background: var(--scheme-color-song-toolbar-container);
   color: var(--scheme-color-on-surface);
 }

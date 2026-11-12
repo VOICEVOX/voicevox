@@ -1,12 +1,11 @@
 @use "./variables" as vars;
 
-// ソングの部品(SongBase)で共有する寸法
-// BaseUIの寸法の延長として同じ基準値から作り、高密度な表示に要る小さい段だけを足す
-// 名前の数字は基準値が8pxのときの値
-// 1つの部品や画面に閉じる寸法は、ここではなくその部品の中に書く
+// BaseUIと統合するときに合わせ直さずに済むよう、BaseUIと同じ基準値から作る
+// ソングは表示する要素が多いので、BaseUIにない小さい値も持つ
+// 名前の数字は、基準値が8pxのときのpx
+// ここには複数のコンポーネントでそろえる寸法だけを置く
 // 詳細: https://github.com/VOICEVOX/voicevox/issues/3147
 
-// 部品のsizeプロパティ(default/small)と対応させる
 $size-control: vars.$size-control; // 32px
 $size-control-small: calc(var(--size-basis) * 3.5); // 28px
 $size-icon: calc(var(--size-basis) * 2.5); // 20px
@@ -30,7 +29,7 @@ $font-size-body: 12px;
 $font-size-control: 13px;
 $font-size-value: 14px;
 
-// 補助の文字色に掛けても、無効だと分かる薄さになりつつ読める値
+// 補助の文字色に重ねても読める範囲で、無効だと分かる薄さにする
 $opacity-disabled: 0.6;
 
 $shadow-popup: 0 6px 18px oklch(from var(--scheme-color-shadow) l c h / 16%);
