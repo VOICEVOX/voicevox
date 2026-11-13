@@ -1,6 +1,5 @@
 import * as PIXI from "pixi.js";
 import { VOLUME_EDITOR_LAYOUT, VOLUME_EDITOR_LINE_WIDTH } from "./style";
-import type { VolumeEditValue } from "@/domain/project/type";
 import {
   findFirstVolumePointAfter,
   findFirstVolumePointAtOrAfter,
@@ -22,8 +21,10 @@ export type VolumeEditorBaseXRange = {
 
 export type VolumeEditorColors = {
   readonly line: Color;
-  /** ホバー中・描画中の区間に使う線色。端点も同じ色にする。 */
-  readonly feedback: Color;
+  /** ホバー中の強調に使う線色。端点も同じ色にする。 */
+  readonly hovered: Color;
+  /** 編集中の強調に使う線色。端点も同じ色にする。 */
+  readonly editing: Color;
   /** 0dB基準線とカーブの間の塗り。 */
   readonly areaContainer: Color;
   readonly erasePreviewOverlay: Color;
@@ -32,52 +33,20 @@ export type VolumeEditorColors = {
   readonly guide: Color;
 };
 
-/** 次の操作で編集するフレームと値。 */
-export type VolumeEditPosition = {
-  readonly baseX: number;
-  readonly normalizedY: number;
-  readonly showPoint: boolean;
-  /** ボリュームエディターの上端からこの位置までの縦ガイドと、この高さの横ガイドを引くか。 */
-  readonly showGuides: boolean;
+/** ホバー中か、編集中か。 */
+export type VolumeEditorHighlightPhase = "HOVER" | "EDITING";
+
+/** ポインタのある編集可能区間。この区間のカーブを強調して描く。 */
+export type PointedEditableRangeHighlight = {
+  readonly range: VolumeEditorBaseXRange;
+  readonly phase: VolumeEditorHighlightPhase;
 };
 
-export const buildVolumeSegments = (
-  framewiseData: readonly VolumeEditValue[],
-  options: {
-    frameToBaseX: (frame: number) => number;
-    valueToNormalizedY: (value: number) => number;
-  },
-) => {
-  const segments: VolumeSegment[] = [];
-  let current: VolumeSegment | undefined;
-
-  for (const [frame, value] of framewiseData.entries()) {
-    if (value == null) {
-      if (current != undefined && current.length >= 2) {
-        segments.push(current);
-      }
-      current = undefined;
-      continue;
-    }
-
-    const baseX = options.frameToBaseX(frame);
-    if (!Number.isFinite(baseX)) {
-      throw new Error("baseX must be finite.");
-    }
-
-    if (current == undefined) {
-      current = [];
-    }
-    current.push({
-      baseX,
-      normalizedY: options.valueToNormalizedY(value),
-    });
-  }
-
-  if (current != undefined && current.length >= 2) {
-    segments.push(current);
-  }
-  return segments;
+/** ポインタのフレームでのボリューム値。この位置を画面上で示す。 */
+export type PointedVolumeValueIndicator = {
+  readonly baseX: number;
+  readonly normalizedY: number;
+  readonly phase: VolumeEditorHighlightPhase;
 };
 
 /** 0dBを跨ぐ面の自己交差を避け、基準線とカーブの間を塗れるようにする。 */
@@ -157,26 +126,35 @@ export const buildVolumeEndpointNodes = (
   return nodes;
 };
 
-/** 統合した端点も、実効線と同じ範囲を強調する。 */
-export const isVolumeEndpointInFeedbackRange = (
+/** 統合した端点も、強調線と同じ範囲を強調する。 */
+export const isVolumeEndpointInHighlightRange = (
   range: VolumeEditorBaseXRange,
-  feedbackRange: VolumeEditorBaseXRange | undefined,
+  highlightRange: VolumeEditorBaseXRange,
 ) => {
   return (
-    feedbackRange != undefined &&
-    range.startBaseX <= feedbackRange.endBaseX &&
-    feedbackRange.startBaseX <= range.endBaseX
+    range.startBaseX <= highlightRange.endBaseX &&
+    highlightRange.startBaseX <= range.endBaseX
   );
+};
+
+const getHighlightColor = (
+  colors: VolumeEditorColors,
+  phase: VolumeEditorHighlightPhase,
+) => {
+  switch (phase) {
+    case "HOVER":
+      return colors.hovered;
+    case "EDITING":
+      return colors.editing;
+    default:
+      throw new ExhaustiveError(phase);
+  }
 };
 
 export const filterVolumeSegmentsByBaseXRange = (
   segments: VolumeSegment[],
-  range: VolumeEditorBaseXRange | undefined,
+  range: VolumeEditorBaseXRange,
 ) => {
-  if (range == undefined) {
-    return [];
-  }
-
   const clippedSegments: VolumeSegment[] = [];
   for (const segment of segments) {
     const firstPoint = segment[0];
@@ -206,9 +184,9 @@ const VOLUME_EDITOR_LAYERS = [
   "area",
   "erasePreview",
   "effectiveVolumeLine",
-  "volumeFeedbackLine",
+  "pointedEditableRangeLine",
   "endpoints",
-  "editPosition",
+  "pointedValueIndicator",
 ] as const;
 
 /** 描画レイヤー。レイヤーごとに、依存する入力が変わったときだけ描き直す。 */
@@ -247,9 +225,9 @@ export class VolumeEditorRenderer {
   private readonly areaGraphics: PIXI.Graphics;
   private readonly erasePreviewGraphics: PIXI.Graphics;
   private readonly effectiveVolumeLine: VolumeLine;
-  private readonly volumeFeedbackLine: VolumeLine;
+  private readonly pointedEditableRangeLine: VolumeLine;
   private readonly endpointsGraphics: PIXI.Graphics;
-  private readonly editPositionGraphics: PIXI.Graphics;
+  private readonly pointedValueIndicatorGraphics: PIXI.Graphics;
 
   private requestId: number | undefined;
   private viewportInfo: ViewportInfo;
@@ -260,8 +238,9 @@ export class VolumeEditorRenderer {
   /** 0dBの高さ。0dB線と面の下端に使う。 */
   private baselineNormalizedY: number;
   private erasePreviewRanges: readonly VolumeEditorBaseXRange[];
-  private feedbackRange: VolumeEditorBaseXRange | undefined;
-  private editPosition: VolumeEditPosition | undefined;
+  private pointedEditableRangeHighlight:
+    PointedEditableRangeHighlight | undefined;
+  private pointedValueIndicator: PointedVolumeValueIndicator | undefined;
   // 面の組み立ては重いので、ポインタ移動のたびに変わる値では組み直さない
   private readonly dirtyLayers = new Set<VolumeEditorLayer>(
     VOLUME_EDITOR_LAYERS,
@@ -279,8 +258,8 @@ export class VolumeEditorRenderer {
       volumeSegments: VolumeSegment[];
       baselineNormalizedY: number;
       erasePreviewRanges: readonly VolumeEditorBaseXRange[];
-      feedbackRange: VolumeEditorBaseXRange | undefined;
-      editPosition: VolumeEditPosition | undefined;
+      pointedEditableRangeHighlight: PointedEditableRangeHighlight | undefined;
+      pointedValueIndicator: PointedVolumeValueIndicator | undefined;
     },
   ) {
     this.renderer = renderer;
@@ -291,8 +270,8 @@ export class VolumeEditorRenderer {
     this.volumeSegments = options.volumeSegments;
     this.baselineNormalizedY = options.baselineNormalizedY;
     this.erasePreviewRanges = options.erasePreviewRanges;
-    this.feedbackRange = options.feedbackRange;
-    this.editPosition = options.editPosition;
+    this.pointedEditableRangeHighlight = options.pointedEditableRangeHighlight;
+    this.pointedValueIndicator = options.pointedValueIndicator;
     this.stage = new PIXI.Container();
     this.zeroLineGraphics = new PIXI.Graphics();
     this.areaGraphics = new PIXI.Graphics();
@@ -302,21 +281,21 @@ export class VolumeEditorRenderer {
       width: VOLUME_EDITOR_LINE_WIDTH.volume,
       isVisible: true,
     });
-    this.volumeFeedbackLine = new VolumeLine({
-      color: options.colors.feedback,
+    this.pointedEditableRangeLine = new VolumeLine({
+      color: options.colors.hovered,
       width: VOLUME_EDITOR_LINE_WIDTH.hoveredVolume,
       isVisible: false,
     });
     this.endpointsGraphics = new PIXI.Graphics();
-    this.editPositionGraphics = new PIXI.Graphics();
+    this.pointedValueIndicatorGraphics = new PIXI.Graphics();
 
     this.stage.addChild(this.zeroLineGraphics);
     this.stage.addChild(this.areaGraphics);
     this.stage.addChild(this.erasePreviewGraphics);
     this.stage.addChild(this.effectiveVolumeLine.container);
-    this.stage.addChild(this.volumeFeedbackLine.container);
+    this.stage.addChild(this.pointedEditableRangeLine.container);
     this.stage.addChild(this.endpointsGraphics);
-    this.stage.addChild(this.editPositionGraphics);
+    this.stage.addChild(this.pointedValueIndicatorGraphics);
 
     const renderIfNeeded = () => {
       if (this.dirtyLayers.size > 0) {
@@ -351,7 +330,7 @@ export class VolumeEditorRenderer {
     this.markDirty([
       "area",
       "effectiveVolumeLine",
-      "volumeFeedbackLine",
+      "pointedEditableRangeLine",
       "endpoints",
     ]);
   }
@@ -369,14 +348,18 @@ export class VolumeEditorRenderer {
   }
 
   /** 端点の色も強調によって変わるので、端点も描き直す。 */
-  updateFeedbackRange(feedbackRange: VolumeEditorBaseXRange | undefined) {
-    this.feedbackRange = feedbackRange;
-    this.markDirty(["volumeFeedbackLine", "endpoints"]);
+  updatePointedEditableRangeHighlight(
+    highlight: PointedEditableRangeHighlight | undefined,
+  ) {
+    this.pointedEditableRangeHighlight = highlight;
+    this.markDirty(["pointedEditableRangeLine", "endpoints"]);
   }
 
-  updateEditPosition(editPosition: VolumeEditPosition | undefined) {
-    this.editPosition = editPosition;
-    this.markDirty(["editPosition"]);
+  updatePointedValueIndicator(
+    indicator: PointedVolumeValueIndicator | undefined,
+  ) {
+    this.pointedValueIndicator = indicator;
+    this.markDirty(["pointedValueIndicator"]);
   }
 
   private markDirty(layers: readonly VolumeEditorLayer[]) {
@@ -404,12 +387,12 @@ export class VolumeEditorRenderer {
       window.cancelAnimationFrame(this.requestId);
     }
     this.effectiveVolumeLine.destroy();
-    this.volumeFeedbackLine.destroy();
+    this.pointedEditableRangeLine.destroy();
     this.zeroLineGraphics.destroy();
     this.areaGraphics.destroy();
     this.endpointsGraphics.destroy();
     this.erasePreviewGraphics.destroy();
-    this.editPositionGraphics.destroy();
+    this.pointedValueIndicatorGraphics.destroy();
     this.stage.destroy();
     this.renderer.destroy({ removeView: true });
   }
@@ -439,14 +422,14 @@ export class VolumeEditorRenderer {
       case "effectiveVolumeLine":
         this.renderEffectiveVolumeLine();
         break;
-      case "volumeFeedbackLine":
-        this.renderVolumeFeedbackLine();
+      case "pointedEditableRangeLine":
+        this.renderPointedEditableRangeLine();
         break;
       case "endpoints":
         this.renderEndpoints();
         break;
-      case "editPosition":
-        this.renderEditPosition();
+      case "pointedValueIndicator":
+        this.renderPointedValueIndicator();
         break;
       default:
         throw new ExhaustiveError(layer);
@@ -458,14 +441,21 @@ export class VolumeEditorRenderer {
     this.effectiveVolumeLine.update(this.volumeSegments, this.viewInfo);
   }
 
-  private renderVolumeFeedbackLine() {
-    const feedbackSegments = filterVolumeSegmentsByBaseXRange(
-      this.volumeSegments,
-      this.feedbackRange,
-    );
-    this.volumeFeedbackLine.color = this.colors.feedback;
-    this.volumeFeedbackLine.isVisible = feedbackSegments.length > 0;
-    this.volumeFeedbackLine.update(feedbackSegments, this.viewInfo);
+  private renderPointedEditableRangeLine() {
+    const highlight = this.pointedEditableRangeHighlight;
+    let segments: VolumeSegment[] = [];
+    if (highlight != undefined) {
+      segments = filterVolumeSegmentsByBaseXRange(
+        this.volumeSegments,
+        highlight.range,
+      );
+      this.pointedEditableRangeLine.color = getHighlightColor(
+        this.colors,
+        highlight.phase,
+      );
+    }
+    this.pointedEditableRangeLine.isVisible = segments.length > 0;
+    this.pointedEditableRangeLine.update(segments, this.viewInfo);
   }
 
   private renderZeroLine() {
@@ -539,13 +529,16 @@ export class VolumeEditorRenderer {
   private renderEndpoints() {
     this.endpointsGraphics.clear();
     const { colors } = this;
+    const highlight = this.pointedEditableRangeHighlight;
     for (const node of buildVolumeEndpointNodes(
       this.volumeSegments,
       this.viewInfo,
     )) {
-      const color = isVolumeEndpointInFeedbackRange(node, this.feedbackRange)
-        ? colors.feedback
-        : colors.line;
+      const color =
+        highlight != undefined &&
+        isVolumeEndpointInHighlightRange(node, highlight.range)
+          ? getHighlightColor(colors, highlight.phase)
+          : colors.line;
       this.endpointsGraphics
         .circle(node.x, node.y, VOLUME_EDITOR_LAYOUT.endpointRadiusPx)
         .fill({
@@ -583,39 +576,48 @@ export class VolumeEditorRenderer {
     }
   }
 
-  private renderEditPosition() {
-    this.editPositionGraphics.clear();
-    const editPosition = this.editPosition;
-    if (editPosition == undefined) {
+  private renderPointedValueIndicator() {
+    this.pointedValueIndicatorGraphics.clear();
+    const indicator = this.pointedValueIndicator;
+    if (indicator == undefined) {
       return;
     }
     const { viewInfo, colors } = this;
-    const x = volumeBaseXToScreenX(editPosition.baseX, viewInfo);
+    const x = volumeBaseXToScreenX(indicator.baseX, viewInfo);
     const y = volumeNormalizedYToScreenY(
-      editPosition.normalizedY,
+      indicator.normalizedY,
       viewInfo.viewportHeight,
     );
-    if (editPosition.showGuides) {
-      // 1pxの線を画素の境目に揃えてにじませない。拍線と同じ位置合わせにする
-      const guideX = Math.round(x) - 0.5;
-      const guideY = Math.round(y) - 0.5;
-      this.editPositionGraphics
-        .moveTo(guideX, 0)
-        .lineTo(guideX, guideY)
-        .moveTo(viewInfo.leftPadding, guideY)
-        .lineTo(viewInfo.viewportWidth, guideY)
-        .stroke({
-          width: VOLUME_EDITOR_LINE_WIDTH.guide,
-          color: colors.guide.toRgbNumber(),
-          alpha: colors.guide.toAlphaFloat(),
+    switch (indicator.phase) {
+      case "HOVER": {
+        // ホバー中は、カーブ上に点を描く
+        const radius = VOLUME_EDITOR_LAYOUT.hoverPointRadiusPx;
+        this.pointedValueIndicatorGraphics.circle(x, y, radius).fill({
+          color: colors.hoverPoint.toRgbNumber(),
+          alpha: colors.hoverPoint.toAlphaFloat(),
         });
-    }
-    if (editPosition.showPoint) {
-      const radius = VOLUME_EDITOR_LAYOUT.hoverPointRadiusPx;
-      this.editPositionGraphics.circle(x, y, radius).fill({
-        color: colors.hoverPoint.toRgbNumber(),
-        alpha: colors.hoverPoint.toAlphaFloat(),
-      });
+        break;
+      }
+      case "EDITING": {
+        // ボリュームエディターの上端からこの位置までの縦ガイドと、この高さの横ガイドを引く。
+        // ガイドは静止中だと拍の罫線と紛れるため、編集中だけ引く。
+        // 1pxの線を画素の境目に揃えてにじませない。拍線と同じ位置合わせにする
+        const guideX = Math.round(x) - 0.5;
+        const guideY = Math.round(y) - 0.5;
+        this.pointedValueIndicatorGraphics
+          .moveTo(guideX, 0)
+          .lineTo(guideX, guideY)
+          .moveTo(viewInfo.leftPadding, guideY)
+          .lineTo(viewInfo.viewportWidth, guideY)
+          .stroke({
+            width: VOLUME_EDITOR_LINE_WIDTH.guide,
+            color: colors.guide.toRgbNumber(),
+            alpha: colors.guide.toAlphaFloat(),
+          });
+        break;
+      }
+      default:
+        throw new ExhaustiveError(indicator.phase);
     }
   }
 }

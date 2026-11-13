@@ -69,11 +69,11 @@ import {
   type VolumeEditorPointerEvent,
 } from "./useVolumeEditorPointerInput";
 import {
-  buildVolumeSegments,
   createVolumeEditorPixiRenderer,
   VolumeEditorRenderer,
+  type PointedEditableRangeHighlight,
+  type PointedVolumeValueIndicator,
   type VolumeEditorBaseXRange,
-  type VolumeEditPosition,
 } from "./renderer";
 import { VOLUME_EDITOR_LAYOUT } from "./style";
 import ContextMenu, {
@@ -89,6 +89,7 @@ import {
   type ViewportInfo,
 } from "@/song/viewHelper";
 import { createThemeColorResolver } from "@/song/graphics/cssColor";
+import { buildVolumeSegments } from "@/song/graphics/volumeLine";
 import type { VolumeEditMode } from "@/song/volumeEditMode";
 import {
   findVolumeEditableFrameRange,
@@ -269,7 +270,9 @@ const volumeSegments = computed(() =>
 );
 
 // 描画ツールのとき、ポインタのある編集可能区間を強調する
-const feedbackBaseXRange = computed<VolumeEditorBaseXRange | undefined>(() => {
+const pointedEditableRangeHighlight = computed<
+  PointedEditableRangeHighlight | undefined
+>(() => {
   const range = pointedEditableRange.value;
   if (props.uiLocked || range == undefined) {
     return undefined;
@@ -282,14 +285,14 @@ const feedbackBaseXRange = computed<VolumeEditorBaseXRange | undefined>(() => {
     case "IDLE":
       switch (props.tool) {
         case "DRAW":
-          return baseXRange;
+          return { range: baseXRange, phase: "HOVER" };
         case "ERASE":
           return undefined;
         default:
           throw new ExhaustiveError(props.tool);
       }
     case "VOLUME_DRAW":
-      return baseXRange;
+      return { range: baseXRange, phase: "EDITING" };
     case "VOLUME_ERASE":
       return undefined;
     default:
@@ -297,62 +300,62 @@ const feedbackBaseXRange = computed<VolumeEditorBaseXRange | undefined>(() => {
   }
 });
 
-// ポインタ位置ではなく編集するフレームと値に合わせ、ガイドと編集結果がずれないようにする
-const editPosition = computed<VolumeEditPosition | undefined>(() => {
-  if (props.uiLocked) {
-    return undefined;
-  }
-  switch (props.previewMode) {
-    case "IDLE": {
-      switch (props.tool) {
-        case "DRAW":
-          break;
-        case "ERASE":
-          return undefined;
-        default:
-          throw new ExhaustiveError(props.tool);
-      }
-      if (
-        pointerState.value.type !== "INSIDE" ||
-        pointedEditableRange.value == undefined
-      ) {
-        return undefined;
-      }
-      const pointerInfo = pointerState.value.pointerInfo;
-      const value = props.effectiveFramewise[pointerInfo.frame];
-      if (value == null) {
-        return undefined;
-      }
-      // ホバー中は、そのフレームの今の値をカーブ上に示す
-      return {
-        baseX: frameToBaseX(pointerInfo.frame),
-        normalizedY: volumeValueScale.value.dbToNormalizedY(value),
-        showPoint: true,
-        showGuides: false,
-      };
-    }
-    case "VOLUME_DRAW": {
-      if (pointerState.value.type === "UNKNOWN") {
-        throw new Error("pointer position is unknown while dragging.");
-      }
-      if (pointedEditableRange.value == undefined) {
-        return undefined;
-      }
-      const pointerInfo = pointerState.value.pointerInfo;
-      // 描画中は書き込む値を示す。ガイドは静止中だと拍の罫線と紛れるため、描画中だけ引く
-      return {
-        baseX: frameToBaseX(pointerInfo.frame),
-        normalizedY: volumeValueScale.value.dbToNormalizedY(pointerInfo.db),
-        showPoint: false,
-        showGuides: true,
-      };
-    }
-    case "VOLUME_ERASE":
+// ポインタの画面上の座標ではなく、ポインタのフレームとその値の位置に描き、表示と編集結果がずれないようにする
+const pointedValueIndicator = computed<PointedVolumeValueIndicator | undefined>(
+  () => {
+    if (props.uiLocked) {
       return undefined;
-    default:
-      throw new ExhaustiveError(props.previewMode);
-  }
-});
+    }
+    switch (props.previewMode) {
+      case "IDLE": {
+        switch (props.tool) {
+          case "DRAW":
+            break;
+          case "ERASE":
+            return undefined;
+          default:
+            throw new ExhaustiveError(props.tool);
+        }
+        if (
+          pointerState.value.type !== "INSIDE" ||
+          pointedEditableRange.value == undefined
+        ) {
+          return undefined;
+        }
+        const pointerInfo = pointerState.value.pointerInfo;
+        const value = props.effectiveFramewise[pointerInfo.frame];
+        if (value == null) {
+          return undefined;
+        }
+        // ホバー中は、そのフレームの今の値を示す
+        return {
+          baseX: frameToBaseX(pointerInfo.frame),
+          normalizedY: volumeValueScale.value.dbToNormalizedY(value),
+          phase: "HOVER",
+        };
+      }
+      case "VOLUME_DRAW": {
+        if (pointerState.value.type === "UNKNOWN") {
+          throw new Error("pointer position is unknown while dragging.");
+        }
+        if (pointedEditableRange.value == undefined) {
+          return undefined;
+        }
+        const pointerInfo = pointerState.value.pointerInfo;
+        // 描画中は、書き込む値を示す
+        return {
+          baseX: frameToBaseX(pointerInfo.frame),
+          normalizedY: volumeValueScale.value.dbToNormalizedY(pointerInfo.db),
+          phase: "EDITING",
+        };
+      }
+      case "VOLUME_ERASE":
+        return undefined;
+      default:
+        throw new ExhaustiveError(props.previewMode);
+    }
+  },
+);
 
 // 描画中に強調する音符を決めるtick
 const activeTick = computed(() => {
@@ -413,8 +416,8 @@ const getVolumeEditorColors = (element: HTMLElement) => {
   const colors = resolveVolumeEditorColors(element, props.isDark);
   return {
     line: colors.line,
-    feedback:
-      props.previewMode === "VOLUME_DRAW" ? colors.editing : colors.hovered,
+    hovered: colors.hovered,
+    editing: colors.editing,
     areaContainer: colors.areaContainer,
     erasePreviewOverlay: colors.erasePreviewOverlay,
     zeroLine: colors.zeroLine,
@@ -537,9 +540,9 @@ watch(
   () => props.viewportInfo,
   (viewportInfo) => renderer?.updateViewportInfo(viewportInfo),
 );
-// 強調線の色はpreviewModeで切り替わるため、色の更新に含める
-watch([() => props.previewMode, () => props.isDark], () =>
-  updateRendererColors(),
+watch(
+  () => props.isDark,
+  () => updateRendererColors(),
 );
 watch(volumeSegments, (segments) => renderer?.updateVolumeSegments(segments));
 watch(baselineNormalizedY, (baseline) =>
@@ -548,8 +551,12 @@ watch(baselineNormalizedY, (baseline) =>
 watch(erasePreviewBaseXRanges, (ranges) =>
   renderer?.updateErasePreviewRanges(ranges),
 );
-watch(feedbackBaseXRange, (range) => renderer?.updateFeedbackRange(range));
-watch(editPosition, (position) => renderer?.updateEditPosition(position));
+watch(pointedEditableRangeHighlight, (highlight) =>
+  renderer?.updatePointedEditableRangeHighlight(highlight),
+);
+watch(pointedValueIndicator, (indicator) =>
+  renderer?.updatePointedValueIndicator(indicator),
+);
 
 onMounted(async () => {
   const containerElement = canvasContainer.value;
@@ -581,8 +588,8 @@ onMounted(async () => {
     volumeSegments: volumeSegments.value,
     baselineNormalizedY: baselineNormalizedY.value,
     erasePreviewRanges: erasePreviewBaseXRanges.value,
-    feedbackRange: feedbackBaseXRange.value,
-    editPosition: editPosition.value,
+    pointedEditableRangeHighlight: pointedEditableRangeHighlight.value,
+    pointedValueIndicator: pointedValueIndicator.value,
   });
   resizeObserver = new ResizeObserver(() => {
     const width = containerElement.clientWidth;
