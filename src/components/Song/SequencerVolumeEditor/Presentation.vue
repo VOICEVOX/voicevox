@@ -300,7 +300,7 @@ const pointedEditableRangeHighlight = computed<
   }
 });
 
-// ポインタの画面上の座標ではなく、ポインタのフレームとその値の位置に描き、表示と編集結果がずれないようにする
+// 表示と編集結果がずれないように、値を示す位置は、ポインタの画面上の座標ではなく、ポインタのフレームとそのフレームで示す値から決める
 const pointedValueIndicator = computed<PointedVolumeValueIndicator | undefined>(
   () => {
     if (props.uiLocked) {
@@ -412,20 +412,6 @@ const erasePreviewBaseXRanges = computed<VolumeEditorBaseXRange[]>(() =>
   })),
 );
 
-const getVolumeEditorColors = (element: HTMLElement) => {
-  const colors = resolveVolumeEditorColors(element, props.isDark);
-  return {
-    line: colors.line,
-    hovered: colors.hovered,
-    editing: colors.editing,
-    areaContainer: colors.areaContainer,
-    erasePreviewOverlay: colors.erasePreviewOverlay,
-    zeroLine: colors.zeroLine,
-    hoverPoint: colors.hoverPoint,
-    guide: colors.guide,
-  };
-};
-
 const cursorState = computed<CursorState>(() => {
   switch (props.previewMode) {
     case "IDLE":
@@ -533,7 +519,9 @@ const updateRendererColors = () => {
   if (renderer == undefined || containerElement == undefined) {
     return;
   }
-  renderer.updateColors(getVolumeEditorColors(containerElement));
+  renderer.updateColors(
+    resolveVolumeEditorColors(containerElement, props.isDark),
+  );
 };
 
 watch(
@@ -584,7 +572,7 @@ onMounted(async () => {
     width: viewportWidth.value,
     height: viewportHeight.value,
     viewportInfo: props.viewportInfo,
-    colors: getVolumeEditorColors(containerElement),
+    colors: resolveVolumeEditorColors(containerElement, props.isDark),
     volumeSegments: volumeSegments.value,
     baselineNormalizedY: baselineNormalizedY.value,
     erasePreviewRanges: erasePreviewBaseXRanges.value,

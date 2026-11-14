@@ -34,19 +34,19 @@ export type VolumeEditorColors = {
 };
 
 /** ホバー中か、編集中か。 */
-export type VolumeEditorHighlightPhase = "HOVER" | "EDITING";
+export type VolumeEditorPointerPhase = "HOVER" | "EDITING";
 
 /** ポインタのある編集可能区間。この区間のカーブを強調して描く。 */
 export type PointedEditableRangeHighlight = {
   readonly range: VolumeEditorBaseXRange;
-  readonly phase: VolumeEditorHighlightPhase;
+  readonly phase: VolumeEditorPointerPhase;
 };
 
 /** ポインタのフレームでのボリューム値。この位置を画面上で示す。 */
 export type PointedVolumeValueIndicator = {
   readonly baseX: number;
   readonly normalizedY: number;
-  readonly phase: VolumeEditorHighlightPhase;
+  readonly phase: VolumeEditorPointerPhase;
 };
 
 /** 0dBを跨ぐ面の自己交差を避け、基準線とカーブの間を塗れるようにする。 */
@@ -139,7 +139,7 @@ export const isVolumeEndpointInHighlightRange = (
 
 const getHighlightColor = (
   colors: VolumeEditorColors,
-  phase: VolumeEditorHighlightPhase,
+  phase: VolumeEditorPointerPhase,
 ) => {
   switch (phase) {
     case "HOVER":
