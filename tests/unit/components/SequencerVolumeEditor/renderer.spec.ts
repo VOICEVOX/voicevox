@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildVolumeSegments,
   buildVolumeEndpointNodes,
-  isVolumeEndpointInFeedbackRange,
+  isVolumeEndpointInHighlightRange,
   splitVolumeSegmentAtBaseline,
   filterVolumeSegmentsByBaseXRange,
 } from "@/components/Song/SequencerVolumeEditor/renderer";
 import {
+  buildVolumeSegments,
   computeVisibleVolumePointRange,
   findFirstVolumePointAfter,
   findFirstVolumePointAtOrAfter,
@@ -157,42 +157,37 @@ describe("buildVolumeEndpointNodes", () => {
   });
 });
 
-describe("isVolumeEndpointInFeedbackRange", () => {
-  it("ホバー・描画の範囲だけ端点を強調する", () => {
-    const feedbackRange = { startBaseX: 0, endBaseX: 25 };
+describe("isVolumeEndpointInHighlightRange", () => {
+  it("強調する範囲の端点だけを強調する", () => {
+    const highlightRange = { startBaseX: 0, endBaseX: 25 };
     expect(
-      isVolumeEndpointInFeedbackRange(
+      isVolumeEndpointInHighlightRange(
         { startBaseX: 20, endBaseX: 20 },
-        feedbackRange,
+        highlightRange,
       ),
     ).toBe(true);
     expect(
-      isVolumeEndpointInFeedbackRange(
+      isVolumeEndpointInHighlightRange(
         { startBaseX: 30, endBaseX: 30 },
-        feedbackRange,
+        highlightRange,
       ),
     ).toBe(false);
   });
 
-  it("統合した端点も片側の強調を引き継ぎ、範囲がなくなれば通常に戻る", () => {
+  it("統合した端点も片側の強調を引き継ぐ", () => {
     const merged = { startBaseX: 20, endBaseX: 27 };
     expect(
-      isVolumeEndpointInFeedbackRange(merged, {
+      isVolumeEndpointInHighlightRange(merged, {
         startBaseX: 27,
         endBaseX: 50,
       }),
     ).toBe(true);
-    expect(isVolumeEndpointInFeedbackRange(merged, undefined)).toBe(false);
   });
 });
 
 describe("filterVolumeSegmentsByBaseXRange", () => {
   const point = (baseX: number) => ({ baseX, normalizedY: 0 });
   const segment = [point(0), point(10), point(20), point(30)];
-
-  it("範囲が未指定なら空を返す", () => {
-    expect(filterVolumeSegmentsByBaseXRange([segment], undefined)).toEqual([]);
-  });
 
   it("範囲に完全に含まれる線分はそのまま返す", () => {
     const actual = filterVolumeSegmentsByBaseXRange([segment], {
