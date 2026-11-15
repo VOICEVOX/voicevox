@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.26.3",
+    "descriptions": ["一部環境で起動しない問題を修正"],
+    "contributors": ["sabonerune"]
+  },
+  {
     "version": "0.26.2",
     "descriptions": [
       "キャラクター「ブイブイ・コバコ」を追加",
