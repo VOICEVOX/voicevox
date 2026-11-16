@@ -5,21 +5,22 @@ import {
   useVolumeEditorPointerInput,
   type VolumeEditorPointerEvent,
 } from "@/components/Song/SequencerVolumeEditor/useVolumeEditorPointerInput";
-import { relativeVolumeEditMode } from "@/song/volumeEditMode";
 import type { VolumeEditorPreviewMode } from "@/song/volumeEditorStateMachine/common";
+import { relativeVolumeValueScale } from "@/song/volumeValueScale";
 
 describe("useVolumeEditorPointerInput", () => {
-  it("ポインタイベントをエディタの座標と編集値へ変換する", () => {
+  it("ポインタイベントをエディタのフレームとdBへ変換する", () => {
     const previewMode = ref<VolumeEditorPreviewMode>("IDLE");
     const onPointerEvent = vi.fn<(event: VolumeEditorPointerEvent) => void>();
     let pointerInput:
-      | ReturnType<typeof useVolumeEditorPointerInput>
-      | undefined;
+      ReturnType<typeof useVolumeEditorPointerInput> | undefined;
 
     const wrapper = mount(
       defineComponent({
         setup() {
+          const canvasContainer = ref<HTMLElement | null>(null);
           const mountedPointerInput = useVolumeEditorPointerInput({
+            canvasContainer,
             previewMode,
             viewportInfo: ref({
               scaleX: 1,
@@ -30,11 +31,11 @@ describe("useVolumeEditorPointerInput", () => {
             tempos: ref([{ position: 0, bpm: 120 }]),
             tpqn: ref(480),
             frameRate: ref(93.75),
-            volumeEditMode: ref(relativeVolumeEditMode),
+            valueScale: ref(relativeVolumeValueScale),
             onPointerEvent,
           });
           pointerInput = mountedPointerInput;
-          return () => h("div", { ref: mountedPointerInput.canvasContainer });
+          return () => h("div", { ref: canvasContainer });
         },
       }),
     );
@@ -57,10 +58,7 @@ describe("useVolumeEditorPointerInput", () => {
       pointerEvent,
       targetArea: "VolumeEditorArea",
       pointerInfo: {
-        position: {
-          frame: 20,
-          value: 0,
-        },
+        frame: 20,
         db: 0,
         x: 100,
         y: 50,

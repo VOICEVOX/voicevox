@@ -40,8 +40,8 @@
       </div>
 
       <div class="full-width row" @wheel="setPresetByScroll($event)">
-        <!-- TODO: 同じプリセットを選択したときにも複数選択中の他のAudioItemのプリセットを変更するようにする -->
         <QSelect
+          ref="presetSelect"
           v-model="presetSelectModel"
           :options="selectablePresetList"
           class="col overflow-hidden"
@@ -52,11 +52,25 @@
           transitionShow="none"
           transitionHide="none"
           :disable="uiLocked"
+          @keydown="handlePresetSelectKeydown"
         >
           <template #selected-item="scope">
             <div class="preset-select-label">
               {{ scope.opt.label }}
             </div>
+          </template>
+          <template #option="item">
+            <!-- 選択中のプリセットを再度選んだときはv-modelが更新されないため、クリックで再適用する（キーボードでの選択はhandlePresetSelectKeydownで扱う） -->
+            <QItem
+              v-bind="item.itemProps"
+              @click="
+                item.selected && reapplyPreset(ensureNotNullish(item.opt.key))
+              "
+            >
+              <QItemSection>
+                <QItemLabel>{{ item.opt.label }}</QItemLabel>
+              </QItemSection>
+            </QItem>
           </template>
           <template #no-option>
             <QItem>
@@ -191,7 +205,12 @@
           :disable="parameter.slider.qSliderProps.disable.value"
           :modelValue="parameter.slider.qSliderProps.modelValue.value"
           @update:modelValue="
-            parameter.slider.qSliderProps['onUpdate:modelValue']
+            (value) => {
+              if (value == undefined) {
+                throw new Error('Undefined value received');
+              }
+              parameter.slider.qSliderProps['onUpdate:modelValue'](value);
+            }
           "
           @change="handleParameterChange(parameter, $event)"
           @wheel="parameter.slider.qSliderProps.onWheel"
@@ -278,7 +297,11 @@
           "
           :modelValue="morphingRateSlider.qSliderProps.modelValue.value"
           @update:modelValue="
-            morphingRateSlider.qSliderProps['onUpdate:modelValue']
+            (value) => {
+              morphingRateSlider.qSliderProps['onUpdate:modelValue'](
+                ensureNotNullish(value),
+              );
+            }
           "
           @change="morphingRateSlider.qSliderProps.onChange"
           @wheel="morphingRateSlider.qSliderProps.onWheel"
@@ -290,8 +313,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from "vue";
-import type { QSelectProps } from "quasar";
+import { computed, ref, useTemplateRef, watchEffect } from "vue";
+import type { QSelect, QSelectProps } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
 import { useStore } from "@/store";
 
@@ -313,6 +336,7 @@ import type { EngineManifest } from "@/openapi";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { SLIDER_PARAMETERS } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
+import { ensureNotNullish } from "@/type/utility";
 
 const props = defineProps<{
   activeAudioKey: AudioKey;
@@ -720,6 +744,25 @@ const changePreset = (presetKey: PresetKey | undefined) =>
     audioKeys: selectedAudioKeys.value,
     presetKey,
   });
+
+// 選択中のプリセットを再適用する（パラメータをプリセット値に戻す）
+// 複数選択中の場合は選択中のすべてのAudioItemに適用する
+const reapplyPreset = (presetKey: PresetKey) => {
+  void changePreset(presetKey);
+};
+
+const presetSelect = useTemplateRef<QSelect>("presetSelect");
+
+// キーボード（Enter）で選択中のプリセットを再度選んだときも再適用する
+// QSelectはkeydownイベントを発火してから選択処理を行うため、ここではハイライト中の項目を見て判断する
+const handlePresetSelectKeydown = (event: KeyboardEvent) => {
+  if (event.key !== "Enter" || event.isComposing) return;
+  const select = presetSelect.value;
+  if (select == undefined) return;
+  const option = selectablePresetList.value[select.getOptionIndex()];
+  if (option == undefined || !select.isOptionSelected(option)) return;
+  reapplyPreset(ensureNotNullish(option.key));
+};
 
 const presetList = computed<{ label: string; key: PresetKey }[]>(() =>
   presetKeys.value

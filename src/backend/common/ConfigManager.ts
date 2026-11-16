@@ -195,8 +195,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       // バグで追加されたソング・ハミングスタイルのデフォルトプリセットを削除する
       (() => {
         const defaultPresetKeys = config.defaultPresetKeys as
-          | ConfigType["defaultPresetKeys"]
-          | undefined;
+          ConfigType["defaultPresetKeys"] | undefined;
         if (
           defaultPresetKeys == undefined ||
           Object.keys(defaultPresetKeys).length == 0

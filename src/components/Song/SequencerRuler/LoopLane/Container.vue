@@ -393,8 +393,6 @@ const stopDragging = () => {
 
 // 右クリックメニュー
 const handleContextMenu = (event: MouseEvent) => {
-  event.preventDefault();
-  event.stopPropagation();
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
   clickX.value = event.clientX - rect.left;
 };

@@ -9,7 +9,7 @@ import { retryFetch, verifySha256 } from "./helper.js";
 
 const distPath = path.join(import.meta.dirname, "..", "vendored", "7z");
 const versionFilePath = path.join(distPath, "version.txt");
-const sevenZipVersion = "26.01";
+const sevenZipVersion = "26.05";
 const sevenZipAssetVersion = sevenZipVersion.replace(".", "");
 const sevenZipReleaseBaseUrl =
   "https://github.com/ip7z/7zip/releases/download/" + sevenZipVersion;
@@ -27,12 +27,12 @@ function getPlatformDownloadInfo(): {
         bootstrap: {
           url: `${sevenZipReleaseBaseUrl}/7zr.exe`,
           sha256:
-            "abcf64ae1cbafddb5395e4cdd3bdc7e3e0561d54a0c6380e3dd43bdbffe519a2",
+            "9bf582b894dfa665f852d7e9112b02290a1c303c2d95a21fcdc41ffcb03143b7",
         },
         url: `${sevenZipReleaseBaseUrl}/7z${sevenZipAssetVersion}-extra.7z`,
         // 7za.dll、7zxa.dllはなくても動くので、除外する
         sha256:
-          "05cda5442075a7c6ce246ca1bbb9b1f1d6f1787a9559156f9b8b2dad29a86971",
+          "f27a8f103c84785026edcba1f67faf1357225df9d19ddb0b7760d55947141bc7",
         filesToExtract: ["7za.exe", "License.txt"],
       };
     }
@@ -42,7 +42,7 @@ function getPlatformDownloadInfo(): {
           return {
             url: `${sevenZipReleaseBaseUrl}/7z${sevenZipAssetVersion}-linux-arm64.tar.xz`,
             sha256:
-              "39f8c9070c300a63c7484d9a983119ef3edf841e1ddf69f1affae29fdec5f612",
+              "0b71f6cfc34669b3bf69f2347efd3429f77020665003a13b9cdc53b784270421",
             filesToExtract: ["7zzs", "License.txt"],
           };
         }
@@ -50,7 +50,7 @@ function getPlatformDownloadInfo(): {
           return {
             url: `${sevenZipReleaseBaseUrl}/7z${sevenZipAssetVersion}-linux-x64.tar.xz`,
             sha256:
-              "8ea0fc8a135e7b848e80a4116fe22dff56c8c4518dde1f43cce67f4e340b437a",
+              "22cf82fcc6eb7474f1d5bb4f02c0f8ebd573a718089d6833dc30f8350a3b232e",
             filesToExtract: ["7zzs", "License.txt"],
           };
         }
@@ -63,7 +63,7 @@ function getPlatformDownloadInfo(): {
       return {
         url: `${sevenZipReleaseBaseUrl}/7z${sevenZipAssetVersion}-mac.tar.xz`,
         sha256:
-          "0b6b930dbf82742e3f1014c35072a6b8b3aab183fece348e7f723675f1c5bea2",
+          "12ef6830317743cfd3f0ab1724bde43fcc270d8b6d8564f8c12c2a2b7f993570",
         filesToExtract: ["7zz", "License.txt"],
       };
     }
