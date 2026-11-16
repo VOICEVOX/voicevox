@@ -440,6 +440,8 @@ export type AudioStoreTypes = {
     action(payload: {
       audioKey: AudioKey;
       /** labの開始時刻。音声を繋げて書き出すときに、1つ前の音声のlabの終了時刻を渡す。 */
+      // TODO: labをずらす処理を呼び出し側に移動する
+      // ref: https://github.com/VOICEVOX/voicevox/issues/3227
       labOffset?: number;
     }): Promise<
       Result<
