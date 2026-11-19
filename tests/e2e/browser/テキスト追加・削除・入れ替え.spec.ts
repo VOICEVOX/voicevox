@@ -5,7 +5,6 @@ import { getQuasarMenu } from "../locators";
 import {
   collectAllAudioCellContents,
   fillAudioCell,
-  validateInput,
   undo,
   redo,
 } from "./utils";
@@ -50,7 +49,7 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
     await expect(
       page.getByRole("button").filter({ hasText: "add" }),
     ).toBeVisible();
-    expect(await page.locator(".audio-cell").count()).toBe(1);
+    await expect(page.locator(".audio-cell")).toHaveCount(1);
     // ３つAudioCellを追加したらAudioCellが４つになるのを確認
     await page.getByRole("button").filter({ hasText: "add" }).click();
     await page.getByRole("button").filter({ hasText: "add" }).click();
@@ -59,7 +58,7 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
     await fillAudioCell(page, 0, "foo");
     await fillAudioCell(page, 1, "bar");
     await fillAudioCell(page, 2, "baz");
-    expect(await page.locator(".audio-cell").count()).toBe(4);
+    await expect(page.locator(".audio-cell")).toHaveCount(4);
   });
 
   await test.step("削除ボタンを押すとAudioCellが削除される", async () => {
@@ -69,8 +68,8 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
       .filter({ hasText: "delete_outline" })
       .first()
       .click();
-    expect(await page.locator(".audio-cell").count()).toBe(3);
-    await validateInput(page.locator(".audio-cell input").first(), "bar");
+    await expect(page.locator(".audio-cell")).toHaveCount(3);
+    await expect(page.locator(".audio-cell input").first()).toHaveValue("bar");
   });
 
   await test.step("ドラッグするとAudioCellの順番が入れ替わる", async () => {
@@ -98,22 +97,22 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
     );
     await page.mouse.up();
 
-    await validateInput(page.locator(".audio-cell input").first(), "baz");
-    await validateInput(page.locator(".audio-cell input").nth(1), "bar");
+    await expect(page.locator(".audio-cell input").first()).toHaveValue("baz");
+    await expect(page.locator(".audio-cell input").nth(1)).toHaveValue("bar");
   });
 
   await test.step("Undoしたら元の値に戻る", async () => {
     await undo(page);
 
-    await validateInput(page.locator(".audio-cell input").first(), "bar");
-    await validateInput(page.locator(".audio-cell input").nth(1), "baz");
+    await expect(page.locator(".audio-cell input").first()).toHaveValue("bar");
+    await expect(page.locator(".audio-cell input").nth(1)).toHaveValue("baz");
   });
 
   await test.step("Redoしたら入れ替え後の値に戻る", async () => {
     await redo(page);
 
-    await validateInput(page.locator(".audio-cell input").first(), "baz");
-    await validateInput(page.locator(".audio-cell input").nth(1), "bar");
+    await expect(page.locator(".audio-cell input").first()).toHaveValue("baz");
+    await expect(page.locator(".audio-cell input").nth(1)).toHaveValue("bar");
   });
 });
 
@@ -193,7 +192,7 @@ test("選択中のAudioCellを削除しても正しくフォーカスが移動�
   await page.waitForTimeout(100);
 
   // AudioCellが3つになっていることを確認
-  expect(await page.locator(".audio-cell").count()).toBe(3);
+  await expect(page.locator(".audio-cell")).toHaveCount(3);
 
   // 何らかのAudioCellがアクティブ状態を維持していることを確認
   // （削除後に無選択状態にならないことを確認）
