@@ -5,7 +5,6 @@ import type {
 } from "../common";
 import type { SetNextState, State } from "@/song/stateMachine";
 import { getButton } from "@/song/viewHelper";
-import { findVolumeEditableFrameRange } from "@/song/volumeEditRanges";
 
 export class EraseVolumeIdleState implements State<
   VolumeEditorStateDefinitions,
@@ -14,13 +13,7 @@ export class EraseVolumeIdleState implements State<
 > {
   readonly id = "eraseVolumeIdle";
 
-  onEnter(context: VolumeEditorContext) {
-    context.cursorState.value = "UNSET";
-    context.showDrawFeedback.value = false;
-    context.tooltipData.value = undefined;
-    context.highlightedFrame.value = undefined;
-    context.hoverPointer.value = undefined;
-  }
+  onEnter() {}
 
   process({
     input,
@@ -40,24 +33,6 @@ export class EraseVolumeIdleState implements State<
 
     const { pointerEvent, pointerInfo } = input;
 
-    if (pointerEvent.type === "pointerleave") {
-      context.cursorState.value = "UNSET";
-      context.highlightedFrame.value = undefined;
-      context.hoverPointer.value = undefined;
-      return;
-    }
-
-    const editableRange = findVolumeEditableFrameRange(
-      pointerInfo.frame,
-      context.getEditableFrameRanges(),
-    );
-    const isEditable = editableRange != undefined;
-    context.cursorState.value = "ERASE";
-    context.highlightedFrame.value = isEditable ? pointerInfo.frame : undefined;
-    context.hoverPointer.value = isEditable
-      ? { x: pointerInfo.x, y: pointerInfo.y }
-      : undefined;
-
     if (
       pointerEvent.type === "pointerdown" &&
       getButton(pointerEvent) === "LEFT_BUTTON"
@@ -70,11 +45,5 @@ export class EraseVolumeIdleState implements State<
     }
   }
 
-  onExit(context: VolumeEditorContext) {
-    context.cursorState.value = "UNSET";
-    context.showDrawFeedback.value = false;
-    context.tooltipData.value = undefined;
-    context.highlightedFrame.value = undefined;
-    context.hoverPointer.value = undefined;
-  }
+  onExit() {}
 }

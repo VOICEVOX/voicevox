@@ -4,8 +4,6 @@ import type {
   VolumeEditorContext,
   PositionOnVolumeEditor,
   VolumeEditorIdleStateId,
-  VolumeEditorPointerInfo,
-  VolumeEditorTooltipData,
 } from "../common";
 import type { SetNextState, State } from "@/song/stateMachine";
 import type { TrackId } from "@/type/preload";
@@ -13,8 +11,6 @@ import { createArray, linearInterpolation } from "@/song/utility";
 import { getButton } from "@/song/viewHelper";
 import {
   countVolumeEditDataPoints,
-  findVolumeEditableFrameRange,
-  isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
 } from "@/song/volumeEditRanges";
 
@@ -26,7 +22,6 @@ export class DrawVolumeState implements State<
   readonly id = "drawVolume";
 
   private readonly cursorPosAtStart: PositionOnVolumeEditor;
-  private readonly tooltipDataAtStart: VolumeEditorTooltipData;
   private readonly trackId: TrackId;
   private readonly returnStateId: VolumeEditorIdleStateId;
 
@@ -43,12 +38,10 @@ export class DrawVolumeState implements State<
 
   constructor(args: {
     startPosition: PositionOnVolumeEditor;
-    startTooltipData: VolumeEditorTooltipData;
     targetTrackId: TrackId;
     returnStateId: VolumeEditorIdleStateId;
   }) {
     this.cursorPosAtStart = args.startPosition;
-    this.tooltipDataAtStart = args.startTooltipData;
     this.trackId = args.targetTrackId;
     this.returnStateId = args.returnStateId;
     this.currentCursorPos = this.cursorPosAtStart;
@@ -62,11 +55,7 @@ export class DrawVolumeState implements State<
       data: [toStoredValue(this.cursorPosAtStart.db)],
       startFrame: this.cursorPosAtStart.frame,
     };
-    context.cursorState.value = "DRAW";
-    context.showDrawFeedback.value = true;
     context.previewMode.value = "VOLUME_DRAW";
-    context.tooltipData.value = this.tooltipDataAtStart;
-    this.updateHighlightedFrame(context, this.cursorPosAtStart.frame);
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -119,8 +108,6 @@ export class DrawVolumeState implements State<
       if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = pointerInfo;
         this.innerContext.executePreviewProcess = true;
-        this.updateHighlightedFrame(context, pointerInfo.frame);
-        this.updateTooltipData(context, pointerInfo);
       } else if (
         (pointerEvent.type === "pointerup" && mouseButton === "LEFT_BUTTON") ||
         pointerEvent.type === "pointercancel"
@@ -145,8 +132,6 @@ export class DrawVolumeState implements State<
       if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = pointerInfo;
         this.innerContext.executePreviewProcess = true;
-        this.updateHighlightedFrame(context, pointerInfo.frame);
-        this.updateTooltipData(context, pointerInfo);
       }
     }
   }
@@ -184,40 +169,7 @@ export class DrawVolumeState implements State<
     }
 
     context.previewVolumeEdit.value = undefined;
-    context.cursorState.value = "UNSET";
-    context.showDrawFeedback.value = false;
     context.previewMode.value = "IDLE";
-    context.tooltipData.value = undefined;
-    context.highlightedFrame.value = undefined;
-  }
-
-  private updateHighlightedFrame(context: VolumeEditorContext, frame: number) {
-    const editableRange = findVolumeEditableFrameRange(
-      frame,
-      context.getEditableFrameRanges(),
-    );
-    context.highlightedFrame.value =
-      editableRange == undefined ? undefined : frame;
-  }
-
-  private updateTooltipData(
-    context: VolumeEditorContext,
-    pointerInfo: VolumeEditorPointerInfo,
-  ) {
-    if (
-      !isFrameInVolumeEditableRange(
-        pointerInfo.frame,
-        context.getEditableFrameRanges(),
-      )
-    ) {
-      context.tooltipData.value = undefined;
-      return;
-    }
-    context.tooltipData.value = {
-      db: pointerInfo.db,
-      pointerX: pointerInfo.x,
-      pointerY: pointerInfo.y,
-    };
   }
 
   private previewDrawVolume(context: VolumeEditorContext) {
