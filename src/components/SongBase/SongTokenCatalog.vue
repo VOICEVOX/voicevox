@@ -58,7 +58,6 @@
 <script setup lang="ts">
 import { onMounted, ref, useTemplateRef } from "vue";
 
-// Storybookでトークンを一覧するためのコンポーネント。アプリでは使わない
 defineProps<{
   section: "colors" | "sizes" | "spaces" | "radii" | "typography";
 }>();
