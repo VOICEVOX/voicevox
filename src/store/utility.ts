@@ -203,17 +203,46 @@ export function currentDateString(): string {
   return `${year}${month}${date}`;
 }
 
+/** 文字数指定がないときに切り詰めるタグと、その文字数 */
+const DEFAULT_TAG_MAX_LENGTHS: Record<string, number> = {
+  text: 10,
+  trackName: 10,
+};
+
+/** 文字数を超えていたら末尾を「…」にして切り詰める */
+function truncateWithEllipsis(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return text.substring(0, maxLength - 1) + "…";
+}
+
+/**
+ * テンプレート内のタグを置換する。
+ * 「$テキスト[20]$」のようにタグ名の後ろに[文字数]を付けると、その文字数で切り詰める。
+ * 文字数は1〜99で指定できる。
+ */
 function replaceTag(
   template: string,
   replacer: Record<string, string>,
 ): string {
-  const result = template.replace(/\$(.+?)\$/g, (match, p1: string) => {
-    const replaceTagId = replaceTagStringToTagId[p1];
-    if (replaceTagId == undefined) {
-      return match;
-    }
-    return replacer[replaceTagId] ?? "";
-  });
+  const result = template.replace(
+    /\$([^$[\]]+?)(?:\[([1-9][0-9]?)\])?\$/g,
+    (match, tagString: string, maxLengthString: string | undefined) => {
+      const replaceTagId = replaceTagStringToTagId[tagString];
+      if (replaceTagId == undefined) {
+        return match;
+      }
+      const value = replacer[replaceTagId] ?? "";
+      const maxLength =
+        maxLengthString != undefined
+          ? Number(maxLengthString)
+          : DEFAULT_TAG_MAX_LENGTHS[replaceTagId];
+      return maxLength != undefined
+        ? truncateWithEllipsis(value, maxLength)
+        : value;
+    },
+  );
 
   return result;
 }
@@ -418,10 +447,7 @@ export function buildAudioFileNameFromRawData(
     pattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE;
   }
 
-  let text = sanitizeFileName(vars.text);
-  if (text.length > 10) {
-    text = text.substring(0, 9) + "…";
-  }
+  const text = sanitizeFileName(vars.text);
 
   const commonVars = formatCommonFileNameFromRawData(vars);
 
@@ -441,10 +467,7 @@ export function buildSongTrackAudioFileNameFromRawData(
     pattern = DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE;
   }
 
-  let trackName = sanitizeFileName(vars.trackName);
-  if (trackName.length > 10) {
-    trackName = trackName.substring(0, 9) + "…";
-  }
+  const trackName = sanitizeFileName(vars.trackName);
 
   const commonVars = formatCommonFileNameFromRawData(vars);
 

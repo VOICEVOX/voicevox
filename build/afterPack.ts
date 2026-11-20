@@ -3,8 +3,7 @@ import { chmodSync, cpSync, renameSync } from "node:fs";
 import type { AfterPackContext } from "electron-builder";
 
 export type VoicevoxEnginePlacement =
-  | { mode: "none" }
-  | { mode: "copy" | "move"; directory: string };
+  { mode: "none" } | { mode: "copy" | "move"; directory: string };
 
 /** Electronアプリのパッケージング後処理を行う */
 export default function afterPack(

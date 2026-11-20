@@ -82,6 +82,7 @@ async function temporaryDirectory() {
 test("テストサーバーが動いている", async () => {
   await using dummyServer = new TestServer({
     "/simple": async (_req, res) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
       res.statusCode = 200;
       res.end("Hello, World!");
     },
@@ -95,10 +96,12 @@ test("ダウンロードしたファイルはSymbol.asyncDisposeで自動削除�
   await using tempDir = await temporaryDirectory();
   await using dummyServer = new TestServer({
     "/simple": async (_req, res) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
       res.statusCode = 200;
       res.end("Hello, World!");
     },
     "/simple2": async (_req, res) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
       res.statusCode = 200;
       res.end("Hello, World!!");
     },
@@ -141,6 +144,7 @@ test("複数ファイルを同時にダウンロードできる", async () => {
   let maxConcurrent = 0;
   await using dummyServer = new TestServer({
     "/slow": async (_req, res) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
       inFlight += 1;
       maxConcurrent = Math.max(maxConcurrent, inFlight);
       await new Promise((r) => setTimeout(r, 200));
@@ -180,11 +184,13 @@ test("一つエラーが起きると全体が失敗し、かつそのときで�
     Promise.withResolvers<void>();
   await using dummyServer = new TestServer({
     "/slow-100": async (_req, res) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
       await new Promise((r) => setTimeout(r, 100));
       res.statusCode = 200;
       res.end("Hello, World!\n");
     },
     "/slow-1000": async (_req, res) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
       slow1000State = "pending";
       await new Promise((r) => setTimeout(r, 1000));
       if (res.destroyed || res.writableEnded) {
@@ -206,6 +212,7 @@ test("一つエラーが起きると全体が失敗し、かつそのときで�
       }
     },
     "/slow-fail": async (_req, res) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
       await new Promise((r) => setTimeout(r, 500));
       res.statusCode = 500;
       res.end("Internal Server Error\n");

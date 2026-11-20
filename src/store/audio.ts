@@ -59,8 +59,9 @@ import {
 } from "@/type/preload";
 import type { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
-import { getValueOrThrow, ResultError } from "@/type/result";
+import { failure, getValueOrThrow, ResultError, success } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
+import { normalizeError } from "@/helpers/normalizeError";
 import { uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ensureNotNullish, UnreachableError } from "@/type/utility";
@@ -1422,6 +1423,35 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  GENERATE_AUDIO: {
+    async action({ state, actions }, { audioKey, labOffset }) {
+      const audioItem = state.audioItems[audioKey];
+
+      let audio: Blob;
+      try {
+        const { stream } = await actions.PREPARE_AUDIO_FOR_PLAYBACK({
+          audioItem,
+          playbackStartPosition: 0,
+        });
+        audio = await new Response(stream).blob();
+      } catch (e) {
+        return failure("engine", normalizeError(e));
+      }
+
+      // 大して処理能力を要しないので、書き出し設定のon/offにかかわらず生成してしまう
+      const lab = await generateLabFromAudioQuery(
+        ensureNotNullish(audioItem.query),
+        labOffset,
+      );
+      const text = extractExportText(audioItem.text, {
+        enableMemoNotation: state.enableMemoNotation,
+        enableRubyNotation: state.enableRubyNotation,
+      });
+
+      return success({ audio, lab, text });
+    },
+  },
+
   GENERATE_AND_SAVE_AUDIO_FILE: {
     action: createUILockAction(
       async (
@@ -1457,53 +1487,36 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           filePath = await generateUniqueFilePath(filePath);
         }
 
-        let arrayBuffer: ArrayBuffer;
-        try {
-          const { stream } = await actions.PREPARE_AUDIO_FOR_PLAYBACK({
-            audioItem: state.audioItems[audioKey],
-            playbackStartPosition: 0,
-          });
-          arrayBuffer = await new Response(stream).arrayBuffer();
-        } catch (e) {
-          const errorMessage = handlePossiblyNotMorphableError(e);
+        const generateAudioResult = await actions.GENERATE_AUDIO({ audioKey });
+        if (!generateAudioResult.ok) {
           return {
             result: "ENGINE_ERROR",
             path: filePath,
-            errorMessage,
+            errorMessage: handlePossiblyNotMorphableError(
+              generateAudioResult.error,
+            ),
           };
         }
-
-        const audioQuery = ensureNotNullish(state.audioItems[audioKey].query);
+        const { audio, lab, text } = generateAudioResult.value;
 
         try {
           await window.backend
             .writeFile({
               filePath,
-              buffer: arrayBuffer,
+              buffer: await audio.arrayBuffer(),
             })
             .then(getValueOrThrow);
 
           if (state.savingSetting.exportLab) {
-            const labString = await generateLabFromAudioQuery(audioQuery);
-            if (labString == undefined)
-              return {
-                result: "WRITE_ERROR",
-                path: filePath,
-                errorMessage: "labの生成に失敗しました。",
-              };
-
             await writeTextFile({
-              text: labString,
+              text: lab,
               filePath: filePath.replace(/\.wav$/, ".lab"),
             }).then(getValueOrThrow);
           }
 
           if (state.savingSetting.exportText) {
             await writeTextFile({
-              text: extractExportText(state.audioItems[audioKey].text, {
-                enableMemoNotation: state.enableMemoNotation,
-                enableRubyNotation: state.enableRubyNotation,
-              }),
+              text,
               filePath: filePath.replace(/\.wav$/, ".txt"),
               encoding: state.savingSetting.fileEncoding,
             }).then(getValueOrThrow);
@@ -1621,46 +1634,37 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         let labOffset = 0;
         for (const audioKey of state.audioKeys) {
-          let arrayBuffer: ArrayBuffer;
-          try {
-            const { stream } = await actions.PREPARE_AUDIO_FOR_PLAYBACK({
-              audioItem: state.audioItems[audioKey],
-              playbackStartPosition: 0,
-            });
-            arrayBuffer = await new Response(stream).arrayBuffer();
-          } catch (e) {
-            const errorMessage = handlePossiblyNotMorphableError(e);
+          const generateAudioResult = await actions.GENERATE_AUDIO({
+            audioKey,
+            labOffset,
+          });
+          callback?.(++finishedCount, totalCount);
+          if (!generateAudioResult.ok) {
             return {
               result: "ENGINE_ERROR",
               path: filePath,
-              errorMessage,
+              errorMessage: handlePossiblyNotMorphableError(
+                generateAudioResult.error,
+              ),
             };
-          } finally {
-            callback?.(++finishedCount, totalCount);
           }
+          const { audio, lab, text } = generateAudioResult.value;
 
-          const audioQuery = ensureNotNullish(state.audioItems[audioKey].query);
-
-          const encodedBlob = await toBase64(new Uint8Array(arrayBuffer));
+          const encodedBlob = await toBase64(
+            new Uint8Array(await audio.arrayBuffer()),
+          );
           if (encodedBlob == undefined) {
             return { result: "WRITE_ERROR", path: filePath };
           }
           encodedBlobs.push(encodedBlob);
 
-          // 大して処理能力を要しないので、生成設定のon/offにかかわらず生成してしまう
-          const lab = await generateLabFromAudioQuery(audioQuery, labOffset);
           labs.push(lab);
 
           // 最終音素の終了時刻を取得する
           const splitLab = lab.split(" ");
           labOffset = Number(splitLab[splitLab.length - 2]);
 
-          texts.push(
-            extractExportText(state.audioItems[audioKey].text, {
-              enableMemoNotation: state.enableMemoNotation,
-              enableRubyNotation: state.enableRubyNotation,
-            }),
-          );
+          texts.push(text);
         }
 
         const engineId: EngineId | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する

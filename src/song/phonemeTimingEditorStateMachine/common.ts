@@ -80,9 +80,7 @@ export type PhonemeTimingEditorInput =
     };
 
 export type PhonemeTimingEditorPreviewMode =
-  | "IDLE"
-  | "MOVE_PHONEME_TIMING"
-  | "ERASE_PHONEME_TIMING";
+  "IDLE" | "MOVE_PHONEME_TIMING" | "ERASE_PHONEME_TIMING";
 
 /** ノート内の位置で特定した音素境界。 */
 export type PhonemeTimingTarget = {
@@ -157,8 +155,7 @@ export function isInPhonemeBandHitArea(
 }
 
 export type PhonemeTimingEditorIdleStateId =
-  | "movePhonemeTimingToolIdle"
-  | "erasePhonemeTimingToolIdle";
+  "movePhonemeTimingToolIdle" | "erasePhonemeTimingToolIdle";
 
 export type PhonemeTimingEditorStateDefinitions = StateDefinitions<
   [

@@ -6,6 +6,9 @@
         <div class="text-body2 text-grey-8">
           「$キャラ$」のようなタグを使って書き出すファイル名をカスタマイズできます。
         </div>
+        <div class="text-body2 text-grey-8">
+          「$テキスト[20]$」のように[文字数]を付けると、その文字数で切り詰めます（1〜99）。
+        </div>
       </QCardSection>
       <QCardActions class="setting-card q-px-md q-py-sm">
         <div class="row full-width justify-between">

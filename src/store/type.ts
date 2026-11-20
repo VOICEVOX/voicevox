@@ -82,6 +82,7 @@ import type {
 } from "@/domain/project/type";
 import type { LatestProjectType } from "@/infrastructures/projectFile/type";
 import type { WavFormat } from "@/helpers/fileDataGenerator";
+import type { Result } from "@/type/result";
 
 /**
  * エディタ用のAudioQuery
@@ -114,11 +115,7 @@ export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
 export type AltPortInfos = Record<EngineId, string>;
 
 export type SaveResult =
-  | "SUCCESS"
-  | "WRITE_ERROR"
-  | "ENGINE_ERROR"
-  | "UNKNOWN_ERROR"
-  | "CANCELED";
+  "SUCCESS" | "WRITE_ERROR" | "ENGINE_ERROR" | "UNKNOWN_ERROR" | "CANCELED";
 export type SaveResultObject = {
   result: SaveResult;
   path: string | undefined;
@@ -134,9 +131,9 @@ export type WatchStoreStatePlugin = (
 ) => void;
 
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
-  [P in keyof T as Extract<keyof T[P], U> extends never
-    ? never
-    : P]: T[P] extends {
+  [
+    P in keyof T as Extract<keyof T[P], U> extends never ? never : P
+  ]: T[P] extends {
     [K in U]: infer R;
   }
     ? U extends "action"
@@ -436,6 +433,28 @@ export type AudioStoreTypes = {
     getter: (audioItem: AudioItem) => boolean;
   };
 
+  /**
+   * 音声と、それに対応するlab・テキストを生成する。ファイルへの書き出しは行わない。
+   */
+  GENERATE_AUDIO: {
+    action(payload: {
+      audioKey: AudioKey;
+      /** labの開始時刻。音声を繋げて書き出すときに、1つ前の音声のlabの終了時刻を渡す。 */
+      // TODO: labをずらす処理を呼び出し側に移動する
+      // ref: https://github.com/VOICEVOX/voicevox/issues/3227
+      labOffset?: number;
+    }): Promise<
+      Result<
+        {
+          audio: Blob;
+          lab: string;
+          text: string;
+        },
+        "engine"
+      >
+    >;
+  };
+
   GENERATE_AND_SAVE_AUDIO_FILE: {
     action(payload: {
       audioKey: AudioKey;
@@ -549,8 +568,7 @@ export type AudioCommandStoreTypes = {
     mutation: { audioKey: AudioKey; accentPhrases: AccentPhrase[] };
     action(
       payload: { audioKey: AudioKey; accentPhraseIndex: number } & (
-        | { isPause: false; moraIndex: number }
-        | { isPause: true }
+        { isPause: false; moraIndex: number } | { isPause: true }
       ),
     ): void;
   };
@@ -877,8 +895,7 @@ export type ParameterPanelEditTarget = "PHONEME_TIMING" | "VOLUME";
 
 // プロジェクトの書き出しに使えるファイル形式
 export type ExportSongProjectFileType =
-  | SingleFileProjectFormat
-  | MultiFileProjectFormat;
+  SingleFileProjectFormat | MultiFileProjectFormat;
 
 export type TrackParameters = {
   gain: boolean;
@@ -895,9 +912,7 @@ export type SongExportSetting = {
 };
 
 export type SongExportState =
-  | "EXPORTING_AUDIO"
-  | "EXPORTING_LABEL"
-  | "NOT_EXPORTING";
+  "EXPORTING_AUDIO" | "EXPORTING_LABEL" | "NOT_EXPORTING";
 
 export type SongStoreState = {
   tpqn: number; // Ticks Per Quarter Note

@@ -48,9 +48,9 @@ export const migrateProjectFileObject = async (
   const { fetchMoraData, voices, showNewerVersionWarningDialog } = DI;
 
   // appVersion Validation check
-  if (
-    !("appVersion" in projectData && typeof projectData.appVersion === "string")
-  ) {
+  if (!(
+    "appVersion" in projectData && typeof projectData.appVersion === "string"
+  )) {
     throw new ProjectFileFormatError(
       "The appVersion of the project file should be string",
     );
