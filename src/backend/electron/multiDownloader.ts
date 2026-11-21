@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { net } from "electron";
 import { createLogger } from "@/helpers/log";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 
@@ -46,7 +47,7 @@ export class MultiDownloader {
           const { url, name } = p;
           log.info(`Download ${name} from ${url}`);
 
-          const res = await fetch(url, { signal: abort.signal });
+          const res = await net.fetch(url, { signal: abort.signal });
           if (!res.ok || res.body == null)
             throw new Error(`Failed to download ${name} from ${url}`);
           const downloadPath = path.join(this.downloadDir, name);

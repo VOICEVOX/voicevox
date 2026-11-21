@@ -35,8 +35,11 @@ const latestDefaultEngineInfoSchema = z.object({
 });
 
 /** デフォルトエンジンの最新情報を取得する */
-export const fetchLatestDefaultEngineInfo = async (url: string) => {
-  const response = await fetch(url);
+export const fetchLatestDefaultEngineInfo = async (
+  url: string,
+  fetchApi: (url: string) => Promise<Response>,
+) => {
+  const response = await fetchApi(url);
   return latestDefaultEngineInfoSchema.parse(await response.json());
 };
 
