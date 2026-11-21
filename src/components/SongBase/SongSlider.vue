@@ -18,17 +18,31 @@
     "
     @wheel="onWheel"
     @valueCommit="$emit('valueCommit', $event[0])"
+    @pointerdown="onPointerDown"
+    @pointerup="dragging = false"
+    @lostpointercapture="dragging = false"
   >
     <SliderTrack class="track">
       <SliderRange class="range" />
     </SliderTrack>
-    <SliderThumb class="thumb" :aria-label="label" />
+    <SongTooltip
+      :label="formatValue?.(modelValue) ?? ''"
+      :open="formatValue != undefined && dragging"
+      side="top"
+    >
+      <SliderThumb
+        class="thumb"
+        :aria-label="label"
+        :aria-valuetext="formatValue?.(modelValue)"
+      />
+    </SongTooltip>
   </SliderRoot>
 </template>
 
 <script setup lang="ts">
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "reka-ui";
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import SongTooltip from "./SongTooltip.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { debounce } from "@/helpers/timer";
 
@@ -43,12 +57,15 @@ const props = withDefaults(
     scrollStep?: number;
     disabled?: boolean;
     modelValue: number;
+    /** 指定すると、ドラッグ中につまみの上に値を表示する。aria-valuetextにもする */
+    formatValue?: (value: number) => string;
   }>(),
   {
     min: 0,
     max: 100,
     step: 1,
     scrollStep: undefined,
+    formatValue: undefined,
   },
 );
 
@@ -60,6 +77,13 @@ const emit = defineEmits<{
 const valueRatio = computed(
   () => (props.modelValue - props.min) / (props.max - props.min),
 );
+
+// SliderRootはドラッグの開始を外に知らせないので、押したときから離すまでをドラッグ中とする
+const dragging = ref(false);
+const onPointerDown = () => {
+  if (props.disabled) return;
+  dragging.value = true;
+};
 
 const debounceEmitValueCommit = debounce(
   (value: number) => emit("valueCommit", value),
