@@ -74,6 +74,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { Component } from "vue";
+import type { ComponentProps } from "vue-component-type-helpers";
 import MarkdownView from "./HelpMarkdownViewSection.vue";
 import OssLicense from "./HelpOssLicenseSection.vue";
 import UpdateInfo from "./HelpUpdateInfoSection.vue";
@@ -95,6 +96,19 @@ type PageItem = {
   props?: Record<string, unknown>;
   shouldShowOpenLogDirectoryButton?: boolean;
 };
+/**
+ * ページの項目を作る。
+ * componentに渡すpropsの型が合っていない場合は型エラーになる。
+ */
+function createPageItem<C extends Component>(
+  item: Omit<PageItem, "component" | "props"> & {
+    component: C;
+    props: ComponentProps<C>;
+  },
+): PageItem {
+  return item;
+}
+
 type PageSeparator = {
   type: "separator";
   name: string;
@@ -143,50 +157,50 @@ void store.actions.GET_CONTACT_TEXT().then((obj) => (contact.value = obj));
 
 const pagedata = computed(() => {
   const data: PageData[] = [
-    {
+    createPageItem({
       type: "item",
       name: "ソフトウェアの利用規約",
       component: MarkdownView,
       props: {
         markdown: policy.value,
       },
-    },
+    }),
     {
       type: "item",
       name: "音声ライブラリの利用規約",
       component: LibraryPolicy,
     },
-    {
+    createPageItem({
       type: "item",
       name: "使い方",
       component: MarkdownView,
       props: {
         markdown: howToUse.value,
       },
-    },
-    {
+    }),
+    createPageItem({
       type: "item",
       name: "開発コミュニティ",
       component: MarkdownView,
       props: {
         markdown: ossCommunityInfos.value,
       },
-    },
-    {
+    }),
+    createPageItem({
       type: "item",
       name: "ライセンス情報",
       component: OssLicense,
       props: {
-        licenses: licenses.value,
+        licenses: licenses.value ?? [],
       },
-    },
-    {
+    }),
+    createPageItem({
       type: "item",
       name: "アップデート情報",
       component: UpdateInfo,
       props: {
         downloadLink: import.meta.env.VITE_OFFICIAL_WEBSITE_URL,
-        updateInfos: updateInfos.value,
+        updateInfos: updateInfos.value ?? [],
         ...(newUpdateResult.value.status == "updateAvailable"
           ? {
               isUpdateAvailable: true,
@@ -197,16 +211,16 @@ const pagedata = computed(() => {
               latestVersion: "",
             }),
       },
-    },
-    {
+    }),
+    createPageItem({
       type: "item",
       name: "よくあるご質問",
       component: MarkdownView,
       props: {
         markdown: qAndA.value,
       },
-    },
-    {
+    }),
+    createPageItem({
       type: "item",
       name: "お問い合わせ",
       component: MarkdownView,
@@ -214,7 +228,7 @@ const pagedata = computed(() => {
         markdown: contact.value,
       },
       shouldShowOpenLogDirectoryButton: true,
-    },
+    }),
   ];
   for (const id of store.getters.GET_SORTED_ENGINE_INFOS.map((m) => m.uuid)) {
     const manifest = store.state.engineManifests[id];
@@ -228,7 +242,7 @@ const pagedata = computed(() => {
         type: "separator",
         name: manifest.name,
       },
-      {
+      createPageItem({
         type: "item",
         name: "エンジンの利用規約",
         parent: manifest.name,
@@ -236,8 +250,8 @@ const pagedata = computed(() => {
         props: {
           markdown: manifest.termsOfService,
         },
-      },
-      {
+      }),
+      createPageItem({
         type: "item",
         name: "ライセンス情報",
         parent: manifest.name,
@@ -245,18 +259,22 @@ const pagedata = computed(() => {
         props: {
           licenses: manifest.dependencyLicenses,
         },
-      },
-      {
+      }),
+      createPageItem({
         type: "item",
         name: "アップデート情報",
         parent: manifest.name,
         component: UpdateInfo,
         props: {
-          updateInfos: manifest.updateInfos,
+          // エンジンのアップデート情報は貢献者リストが省略されることがある
+          updateInfos: manifest.updateInfos.map((updateInfo) => ({
+            ...updateInfo,
+            contributors: updateInfo.contributors ?? [],
+          })),
           // TODO: ダウンロード式のデフォルトエンジンは更新情報を確認できるので実装する。
           isUpdateAvailable: false,
         },
-      },
+      }),
     );
   }
   return data;
