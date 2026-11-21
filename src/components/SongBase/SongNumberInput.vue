@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from "vue";
+import { onBeforeUnmount, ref, useTemplateRef } from "vue";
 import SongIconButton from "./SongIconButton.vue";
 
 const props = withDefaults(
@@ -58,12 +58,12 @@ const props = withDefaults(
   },
 );
 
-/**
- * 確定した値を通知する
- * 範囲外などで採用されなかった場合も、表示はmodelValueに戻る
- */
+// 範囲外などで採用されなかった場合も、表示はmodelValueに戻る
 const emit = defineEmits<{
+  /** 表示する値。増減ボタンでは押すたびに通知する */
   "update:modelValue": [value: number];
+  /** 確定した値。増減ボタンでは、連続して押した分を1つにまとめて通知する */
+  valueCommit: [value: number];
 }>();
 
 const inputElement = useTemplateRef<HTMLInputElement>("input");
@@ -84,11 +84,34 @@ const draftValue = () => {
     : props.modelValue;
 };
 
-const emitIfChanged = (value: number) => {
-  if (value !== props.modelValue) {
-    emit("update:modelValue", value);
+// 増減ボタンを押し終わってから確定するまでの待ち時間。BaseSliderのホイール操作に合わせる
+const COMMIT_DELAY_MS = 300;
+let pendingCommit:
+  { value: number; timer: ReturnType<typeof setTimeout> } | undefined;
+
+const commitValue = (value: number) => {
+  if (pendingCommit != undefined) {
+    clearTimeout(pendingCommit.timer);
+    pendingCommit = undefined;
   }
+  emit("valueCommit", value);
 };
+
+const commitValueLater = (value: number) => {
+  if (pendingCommit != undefined) {
+    clearTimeout(pendingCommit.timer);
+  }
+  pendingCommit = {
+    value,
+    timer: setTimeout(() => commitValue(value), COMMIT_DELAY_MS),
+  };
+};
+
+onBeforeUnmount(() => {
+  if (pendingCommit != undefined) {
+    commitValue(pendingCommit.value);
+  }
+});
 
 const startEditing = () => {
   draft.value = String(props.modelValue);
@@ -102,7 +125,10 @@ const commit = () => {
   }
   const value = clamp(draftValue());
   draft.value = undefined;
-  emitIfChanged(value);
+  if (value !== props.modelValue) {
+    emit("update:modelValue", value);
+    commitValue(value);
+  }
 };
 
 const cancel = () => {
@@ -114,7 +140,10 @@ const stepBy = (direction: 1 | -1, event: MouseEvent) => {
   const amount = event.shiftKey ? props.largeStep : props.step;
   const value = clamp(draftValue() + amount * direction);
   draft.value = undefined;
-  emitIfChanged(value);
+  if (value !== props.modelValue) {
+    emit("update:modelValue", value);
+    commitValueLater(value);
+  }
 };
 
 const onKeydown = (event: KeyboardEvent) => {
