@@ -1820,6 +1820,10 @@ export type CommandStoreTypes = {
     action(payload: { editor: EditorType }): void;
   };
 
+  ACTIVATE_NEAREST_AUDIO_ITEM_IF_REMOVED: {
+    action(payload: { previousAudioKeys: AudioKey[] }): void;
+  };
+
   LAST_COMMAND_IDS: {
     getter: Record<EditorType, CommandId | null>;
   };

@@ -14,7 +14,7 @@ import {
   type MutationsBase,
   type MutationTree,
 } from "@/store/vuex";
-import { CommandId, type EditorType } from "@/type/preload";
+import { type AudioKey, CommandId, type EditorType } from "@/type/preload";
 import { uuid4 } from "@/helpers/random";
 import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 
@@ -92,6 +92,26 @@ export const commandStoreState: CommandStoreState = {
   },
 };
 
+/**
+ * 消えたテキスト欄の近くに残っているテキスト欄を探す。
+ * テキスト欄を削除したときと同じく、消えたテキスト欄から上方向に探し、なければ下方向に探す。
+ */
+export const findNearestRemainingAudioKey = (
+  previousAudioKeys: AudioKey[],
+  removedAudioKey: AudioKey,
+  remainingAudioKeys: AudioKey[],
+): AudioKey | undefined => {
+  const startIndex = previousAudioKeys.indexOf(removedAudioKey);
+  if (startIndex === -1) return remainingAudioKeys[0];
+
+  const isRemaining = (audioKey: AudioKey) =>
+    remainingAudioKeys.includes(audioKey);
+  return (
+    previousAudioKeys.slice(0, startIndex + 1).findLast(isRemaining) ??
+    previousAudioKeys.slice(startIndex).find(isRemaining)
+  );
+};
+
 export const commandStore = createPartialStore<CommandStoreTypes>({
   CAN_UNDO: {
     getter: (state) => (editor: EditorType) => {
@@ -113,8 +133,14 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.undoPatches);
       }
     },
-    action({ mutations }, { editor }: { editor: EditorType }) {
+    action({ state, mutations, actions }, { editor }: { editor: EditorType }) {
+      const previousAudioKeys = [...state.audioKeys];
       mutations.UNDO({ editor });
+      if (editor === "talk") {
+        void actions.ACTIVATE_NEAREST_AUDIO_ITEM_IF_REMOVED({
+          previousAudioKeys,
+        });
+      }
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
@@ -130,12 +156,48 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.redoPatches);
       }
     },
-    action({ mutations }, { editor }: { editor: EditorType }) {
+    action({ state, mutations, actions }, { editor }: { editor: EditorType }) {
+      const previousAudioKeys = [...state.audioKeys];
       mutations.REDO({ editor });
+      if (editor === "talk") {
+        void actions.ACTIVATE_NEAREST_AUDIO_ITEM_IF_REMOVED({
+          previousAudioKeys,
+        });
+      }
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
       }
+    },
+  },
+
+  ACTIVATE_NEAREST_AUDIO_ITEM_IF_REMOVED: {
+    /**
+     * Undo・Redoでアクティブなテキスト欄が消えた場合に、近くのテキスト欄をアクティブにする。
+     * アクティブなテキスト欄がないと、パラメーター調整欄や詳細調整欄が表示されなくなるため。
+     */
+    action(
+      { state, getters, actions },
+      { previousAudioKeys }: { previousAudioKeys: AudioKey[] },
+    ) {
+      const removedAudioKey = state._activeAudioKey;
+      if (
+        removedAudioKey == undefined ||
+        getters.ACTIVE_AUDIO_KEY != undefined ||
+        state.audioKeys.length === 0
+      ) {
+        return;
+      }
+
+      const nextAudioKey = findNearestRemainingAudioKey(
+        previousAudioKeys,
+        removedAudioKey,
+        state.audioKeys,
+      );
+      if (nextAudioKey == undefined) return;
+
+      void actions.SET_ACTIVE_AUDIO_KEY({ audioKey: nextAudioKey });
+      void actions.SET_SELECTED_AUDIO_KEYS({ audioKeys: [nextAudioKey] });
     },
   },
 
