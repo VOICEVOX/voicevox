@@ -82,6 +82,7 @@ const applySongProjectToStore = async (
       }),
     ),
   });
+  await actions.DESELECT_ALL_NOTES();
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
