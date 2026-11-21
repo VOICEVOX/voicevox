@@ -27,3 +27,20 @@
   font-weight: 400;
   src: url("../fonts/material-symbols-outlined-regular.woff2") format("woff2");
 }
+
+// 既存のアイコンの見た目を変えないよう、Outlinedは残し、SongBaseのコンポーネント用にRoundedを別に登録する
+@font-face {
+  font-display: block;
+  font-family: "Material Symbols Rounded";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../fonts/material-symbols-rounded-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-display: block;
+  font-family: "Material Symbols Rounded Filled";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../fonts/material-symbols-rounded-filled.woff2") format("woff2");
+}
