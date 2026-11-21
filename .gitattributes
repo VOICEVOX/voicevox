@@ -4,5 +4,7 @@ openapi.json linguist-generated=true
 **/__snapshots__/**/*.snap linguist-generated=true
 
 *.woff2 linguist-vendored=true
+tools/mise linguist-vendored=true
+tools/mise.cmd linguist-vendored=true
 
 * text=auto eol=lf
