@@ -33,7 +33,6 @@ defineProps<{
   @include song-mixin.focus-ring;
   @include song-mixin.disabled;
 
-  // 色を使わずに選択を区別できるよう、選択中の項目だけを面と影で浮かせる
   &[aria-pressed="true"] {
     background-color: var(--scheme-color-surface-container-highest);
     box-shadow: 0 1px 2px oklch(from var(--scheme-color-shadow) l c h / 10%);
