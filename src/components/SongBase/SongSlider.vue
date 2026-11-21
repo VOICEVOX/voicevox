@@ -25,15 +25,11 @@
     <SliderTrack class="track">
       <SliderRange class="range" />
     </SliderTrack>
-    <SongTooltip
-      :label="formatValue?.(modelValue) ?? ''"
-      :open="formatValue != undefined && dragging"
-      side="top"
-    >
+    <SongTooltip :label="formatValue(modelValue)" :open="dragging" side="top">
       <SliderThumb
         class="thumb"
         :aria-label="label"
-        :aria-valuetext="formatValue?.(modelValue)"
+        :aria-valuetext="formatValue(modelValue)"
       />
     </SongTooltip>
   </SliderRoot>
@@ -57,7 +53,7 @@ const props = withDefaults(
     scrollStep?: number;
     disabled?: boolean;
     modelValue: number;
-    /** 指定すると、ドラッグ中につまみの上に値を表示する。aria-valuetextにもする */
+    /** ドラッグ中に表示する値と、aria-valuetextの書き方 */
     formatValue?: (value: number) => string;
   }>(),
   {
@@ -65,7 +61,7 @@ const props = withDefaults(
     max: 100,
     step: 1,
     scrollStep: undefined,
-    formatValue: undefined,
+    formatValue: (value: number) => String(value),
   },
 );
 

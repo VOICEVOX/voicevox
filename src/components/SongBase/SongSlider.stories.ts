@@ -39,9 +39,9 @@ export const Disabled: Story = {
   },
 };
 
-/** ドラッグ中だけ、つまみの上に値を表示する */
-export const WithValue: Story = {
+/** ドラッグ中に表示する値の書き方を変える例 */
+export const FormatValue: Story = {
   args: {
-    formatValue: (value: number) => String(value),
+    formatValue: (value: number) => `値 ${value}%`,
   },
 };
