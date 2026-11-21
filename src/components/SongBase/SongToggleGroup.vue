@@ -45,6 +45,6 @@ const rekaType = computed(() => {
   height: song-vars.$size-control-small;
   padding: 3px;
   border-radius: song-vars.$radius-full;
-  background: oklch(from var(--scheme-color-on-surface) l c h / 8%);
+  background: var(--scheme-color-surface-container-lowest);
 }
 </style>
