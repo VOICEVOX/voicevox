@@ -19,9 +19,8 @@ import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
-import { snapTickToBeat } from "@/song/rulerHelper";
 import { baseXToTick } from "@/song/viewHelper";
-import { tickToMeasureNumber } from "@/song/music";
+import { getNoteDuration, tickToMeasureNumber } from "@/song/music";
 import type { Tempo, TimeSignature } from "@/domain/project/type";
 import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 import TempoChangeDialog from "@/components/Song/ChangeValueDialog/TempoChangeDialog.vue";
@@ -150,11 +149,11 @@ const onValueChangeClick = async (
     // 空き部分クリック時は、クリック位置から計算してスナップ位置に合わせる
     const baseX = (injectedOffset.value + event.offsetX) / sequencerZoomX.value;
     const baseTick = baseXToTick(baseX, tpqn.value);
-    const snappedTick = snapTickToBeat(
-      baseTick,
-      timeSignatures.value,
+    const snapTicks = getNoteDuration(
+      store.state.sequencerSnapType,
       tpqn.value,
     );
+    const snappedTick = Math.round(baseTick / snapTicks) * snapTicks;
     setPlayheadPosition(snappedTick);
   }
   valueChange.value = newValueChange;
