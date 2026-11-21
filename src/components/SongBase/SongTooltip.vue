@@ -1,13 +1,15 @@
 <template>
-  <TooltipRoot :disabled>
+  <TooltipRoot :disabled :open>
     <TooltipTrigger v-bind="$attrs" asChild>
       <slot />
     </TooltipTrigger>
     <TooltipPortal>
+      <!-- ドラッグで動くつまみなどにも付いていくよう、表示中は毎フレーム位置を計算し直す -->
       <TooltipContent
         class="song-tooltip"
-        side="bottom"
+        :side
         :sideOffset="8"
+        updatePositionStrategy="always"
         avoidCollisions
         :collisionPadding="8"
       >
@@ -33,10 +35,22 @@ defineOptions({
 });
 
 // のちのち統合する可能性があるため、BaseTooltipと共通のpropsは揃える
-defineProps<{
-  label: string;
-  disabled?: boolean;
-}>();
+withDefaults(
+  defineProps<{
+    label: string;
+    disabled?: boolean;
+    /** 指定すると、ホバーやフォーカスではなくこの値で開閉する */
+    open?: boolean;
+    side?: "top" | "bottom";
+  }>(),
+  {
+    disabled: false,
+    // 省略したときにVueがfalseにしないよう、undefinedを既定値にする
+    // falseだと、ホバーやフォーカスで開かなくなってしまう
+    open: undefined,
+    side: "bottom",
+  },
+);
 </script>
 
 <style scoped lang="scss">
@@ -53,6 +67,7 @@ defineProps<{
   padding: 0 song-vars.$space-8;
   box-shadow: song-vars.$shadow-popup;
   font-size: song-vars.$font-size-body;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   user-select: none;
   z-index: vars.$z-index-tooltip;
