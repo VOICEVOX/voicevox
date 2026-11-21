@@ -21,12 +21,19 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted, ref, computed, toRaw, watchEffect } from "vue";
+import {
+  computed,
+  defineAsyncComponent,
+  onMounted,
+  ref,
+  toRaw,
+  watch,
+  watchEffect,
+} from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
 import { TooltipProvider } from "reka-ui";
+import LoadingEditor from "./LoadingEditor.vue";
 import { useCommonMenuBarData } from "./Menu/MenuBar/useCommonMenuBarData";
-import TalkEditor from "@/components/Talk/TalkEditor.vue";
-import SongEditor from "@/components/Song/SongEditor.vue";
 import type { EngineId } from "@/type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
@@ -42,6 +49,17 @@ import { useElectronMenuBarData } from "@/backend/electron/renderer/menuBarData"
 import { removeNullableAndBoolean } from "@/helpers/arrayHelper";
 
 const store = useStore();
+
+const TalkEditor = defineAsyncComponent({
+  loader: () => import("@/components/Talk/TalkEditor.vue"),
+  loadingComponent: LoadingEditor,
+  delay: 0,
+});
+const SongEditor = defineAsyncComponent({
+  loader: () => import("@/components/Song/SongEditor.vue"),
+  loadingComponent: LoadingEditor,
+  delay: 0,
+});
 
 // TODO: useMenuBarData系の関数をcomposableじゃなくする
 const commonMenuBarData = useCommonMenuBarData(store);
