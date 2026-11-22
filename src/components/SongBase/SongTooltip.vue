@@ -38,10 +38,9 @@ withDefaults(
   defineProps<{
     label: string;
     disabled?: boolean;
-    /** 指定すると、ホバーやフォーカスではなくこの値で開閉する */
     open?: boolean;
     side?: "top" | "bottom";
-    /** alwaysにすると、表示中は毎フレーム位置を計算し直す */
+    /** optimizedはスクロールやサイズの変化のときだけ位置を計算し直す。スライダーなど動く要素に付与する場合はalwaysにし、表示中は毎フレーム計算し直す */
     updatePositionStrategy?: "optimized" | "always";
   }>(),
   {

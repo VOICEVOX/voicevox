@@ -25,7 +25,7 @@
     <SliderTrack class="track">
       <SliderRange class="range" />
     </SliderTrack>
-    <!-- ドラッグで動くつまみに付いていくよう、表示中は毎フレーム位置を計算し直す -->
+    <!-- ツールチップはドラッグについていくよう、表示中は毎フレーム位置を計算し直す -->
     <SongTooltip
       :label="formatValue(modelValue)"
       :open="dragging"
@@ -57,7 +57,7 @@ const props = withDefaults(
     scrollStep?: number;
     disabled?: boolean;
     modelValue: number;
-    /** ドラッグ中に表示する値と、aria-valuetextの書き方 */
+    /** ドラッグ中に表示するツールチップ内テキスト */
     formatValue?: (value: number) => string;
   }>(),
   {
@@ -78,19 +78,17 @@ const valueRatio = computed(
   () => (props.modelValue - props.min) / (props.max - props.min),
 );
 
-// SliderRootはドラッグの開始を外に知らせないので、押したときから離すまでをドラッグ中とする
 const dragging = ref(false);
 const onPointerDown = () => {
   if (props.disabled) return;
   dragging.value = true;
 };
 
-// ホイール操作は、止まってから少し待って確定し、連続した変更を1つにまとめる
+// ホイールは回すたびに確定するとアンドゥなど履歴が細かく増えるので、回したあと一定時間待ってまとめて1回確定する
 const WHEEL_COMMIT_DELAY_MS = 300;
 let pendingWheelCommit:
   { value: number; timer: ReturnType<typeof setTimeout> } | undefined;
 
-// ホイールの確定を待っている間にドラッグやキーで確定したら、待っていた古い値が後から届かないよう取り消す
 const commitValue = (value: number) => {
   if (pendingWheelCommit != undefined) {
     clearTimeout(pendingWheelCommit.timer);
@@ -117,7 +115,7 @@ onBeforeUnmount(() => {
 
 const onWheel = (event: WheelEvent) => {
   if (props.disabled) return;
-  // 横スクロールでは値を変えず、ページのスクロールに任せる
+  // 横だけのスクロールでは値を変えず、ページの横スクロールに任せる
   if (event.deltaY === 0) return;
   event.preventDefault();
 
@@ -184,7 +182,6 @@ $thumb-gap: 1.5px;
 
   @include song-mixin.focus-ring;
 
-  // つまみが小さいので、枠を外側に描いて見えるようにする
   &:focus-visible {
     outline-offset: 2px;
   }
