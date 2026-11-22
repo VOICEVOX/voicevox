@@ -19,7 +19,7 @@
       size="small"
       :disabled="disabled || currentValue <= min"
       @pointerdown.prevent
-      @click="stepBy(-1, $event)"
+      @click="stepBy(-1)"
     />
     <SongIconButton
       icon="add"
@@ -27,7 +27,7 @@
       size="small"
       :disabled="disabled || currentValue >= max"
       @pointerdown.prevent
-      @click="stepBy(1, $event)"
+      @click="stepBy(1)"
     />
   </div>
 </template>
@@ -43,7 +43,6 @@ const props = withDefaults(
     min?: number;
     max?: number;
     step?: number;
-    largeStep?: number;
     disabled?: boolean;
     /** flatはツールバーのように、ほかのコンポーネントと並べて置く場所で使う */
     variant?: "default" | "flat";
@@ -52,7 +51,6 @@ const props = withDefaults(
     min: -Infinity,
     max: Infinity,
     step: 1,
-    largeStep: 10,
     disabled: false,
     variant: "default",
   },
@@ -137,9 +135,8 @@ const cancel = () => {
   inputElement.value?.blur();
 };
 
-const stepBy = (direction: 1 | -1, event: MouseEvent) => {
-  const amount = event.shiftKey ? props.largeStep : props.step;
-  const value = clamp(currentValue.value + amount * direction);
+const stepBy = (direction: 1 | -1) => {
+  const value = clamp(currentValue.value + props.step * direction);
   draft.value = undefined;
   if (value !== props.modelValue) {
     emit("update:modelValue", value);
@@ -156,9 +153,8 @@ const onKeydown = (event: KeyboardEvent) => {
   } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
     // 押すたびに確定すると履歴が増えるため、増減は編集中の値にとどめ、確定はEnterかフォーカスを外したときに行う
     event.preventDefault();
-    const amount = event.shiftKey ? props.largeStep : props.step;
     const direction = event.key === "ArrowUp" ? 1 : -1;
-    draft.value = String(clamp(currentValue.value + amount * direction));
+    draft.value = String(clamp(currentValue.value + props.step * direction));
   }
 };
 </script>
