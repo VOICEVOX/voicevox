@@ -17,7 +17,7 @@
       icon="remove"
       :label="`${label}を減らす`"
       size="small"
-      :disabled="disabled || modelValue <= min"
+      :disabled="disabled || currentValue <= min"
       @pointerdown.prevent
       @click="stepBy(-1, $event)"
     />
@@ -25,7 +25,7 @@
       icon="add"
       :label="`${label}を増やす`"
       size="small"
-      :disabled="disabled || modelValue >= max"
+      :disabled="disabled || currentValue >= max"
       @pointerdown.prevent
       @click="stepBy(1, $event)"
     />
@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, ref, useTemplateRef } from "vue";
+import { computed, onBeforeUnmount, ref, useTemplateRef } from "vue";
 import SongIconButton from "./SongIconButton.vue";
 
 const props = withDefaults(
@@ -74,7 +74,8 @@ const draft = ref<string>();
 const clamp = (value: number) =>
   Math.min(props.max, Math.max(props.min, value));
 
-const draftValue = () => {
+// 表示している値。編集中なら入力した値、そうでなければmodelValue
+const currentValue = computed(() => {
   if (draft.value == undefined) {
     return props.modelValue;
   }
@@ -82,7 +83,7 @@ const draftValue = () => {
   return draft.value.trim() !== "" && Number.isFinite(value)
     ? value
     : props.modelValue;
-};
+});
 
 // 増減ボタンを押し終わってから確定するまでの待ち時間。BaseSliderのホイール操作に合わせる
 const COMMIT_DELAY_MS = 300;
@@ -113,8 +114,8 @@ onBeforeUnmount(() => {
   }
 });
 
+// フォーカス中に親から値が変わっても古い値で上書きしないよう、編集中の値はフォーカスでは作らず、入力したときに作る
 const startEditing = () => {
-  draft.value = String(props.modelValue);
   // すぐに打ち直せるよう、フォーカスしたら全体を選ぶ
   inputElement.value?.select();
 };
@@ -123,7 +124,7 @@ const commit = () => {
   if (draft.value == undefined) {
     return;
   }
-  const value = clamp(draftValue());
+  const value = clamp(currentValue.value);
   draft.value = undefined;
   if (value !== props.modelValue) {
     emit("update:modelValue", value);
@@ -138,7 +139,7 @@ const cancel = () => {
 
 const stepBy = (direction: 1 | -1, event: MouseEvent) => {
   const amount = event.shiftKey ? props.largeStep : props.step;
-  const value = clamp(draftValue() + amount * direction);
+  const value = clamp(currentValue.value + amount * direction);
   draft.value = undefined;
   if (value !== props.modelValue) {
     emit("update:modelValue", value);
@@ -157,7 +158,7 @@ const onKeydown = (event: KeyboardEvent) => {
     event.preventDefault();
     const amount = event.shiftKey ? props.largeStep : props.step;
     const direction = event.key === "ArrowUp" ? 1 : -1;
-    draft.value = String(clamp(draftValue() + amount * direction));
+    draft.value = String(clamp(currentValue.value + amount * direction));
   }
 };
 </script>
