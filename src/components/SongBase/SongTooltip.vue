@@ -4,12 +4,12 @@
       <slot />
     </TooltipTrigger>
     <TooltipPortal>
-      <!-- ドラッグで動くつまみなどにも付いていくよう、表示中は毎フレーム位置を計算し直す -->
+      <!-- 外から開閉するときは、ドラッグで動くつまみなどにも付いていくよう、表示中は毎フレーム位置を計算し直す -->
       <TooltipContent
         class="song-tooltip"
         :side
         :sideOffset="8"
-        updatePositionStrategy="always"
+        :updatePositionStrategy="open != undefined ? 'always' : 'optimized'"
         avoidCollisions
         :collisionPadding="8"
       >
