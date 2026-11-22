@@ -17,7 +17,7 @@
       }
     "
     @wheel="onWheel"
-    @valueCommit="$emit('valueCommit', $event[0])"
+    @valueCommit="commitValue($event[0])"
     @pointerdown="onPointerDown"
     @pointerup="dragging = false"
     @lostpointercapture="dragging = false"
@@ -37,10 +37,9 @@
 
 <script setup lang="ts">
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "reka-ui";
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, ref } from "vue";
 import SongTooltip from "./SongTooltip.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { debounce } from "@/helpers/timer";
 
 // のちのち統合する可能性があるため、BaseSliderと共通のpropsとイベントは揃える
 const props = withDefaults(
@@ -81,13 +80,40 @@ const onPointerDown = () => {
   dragging.value = true;
 };
 
-const debounceEmitValueCommit = debounce(
-  (value: number) => emit("valueCommit", value),
-  300,
-);
+// ホイール操作は、止まってから少し待って確定し、連続した変更を1つにまとめる
+const WHEEL_COMMIT_DELAY_MS = 300;
+let pendingWheelCommit:
+  { value: number; timer: ReturnType<typeof setTimeout> } | undefined;
+
+// ホイールの確定を待っている間にドラッグやキーで確定したら、待っていた古い値が後から届かないよう取り消す
+const commitValue = (value: number) => {
+  if (pendingWheelCommit != undefined) {
+    clearTimeout(pendingWheelCommit.timer);
+    pendingWheelCommit = undefined;
+  }
+  emit("valueCommit", value);
+};
+
+const commitValueLater = (value: number) => {
+  if (pendingWheelCommit != undefined) {
+    clearTimeout(pendingWheelCommit.timer);
+  }
+  pendingWheelCommit = {
+    value,
+    timer: setTimeout(() => commitValue(value), WHEEL_COMMIT_DELAY_MS),
+  };
+};
+
+onBeforeUnmount(() => {
+  if (pendingWheelCommit != undefined) {
+    commitValue(pendingWheelCommit.value);
+  }
+});
 
 const onWheel = (event: WheelEvent) => {
   if (props.disabled) return;
+  // 横スクロールでは値を変えず、ページのスクロールに任せる
+  if (event.deltaY === 0) return;
   event.preventDefault();
 
   const delta = event.deltaY > 0 ? -1 : 1;
@@ -100,7 +126,7 @@ const onWheel = (event: WheelEvent) => {
   const clampedValue = Math.min(props.max, Math.max(props.min, value));
 
   emit("update:modelValue", clampedValue);
-  debounceEmitValueCommit(clampedValue);
+  commitValueLater(clampedValue);
 };
 </script>
 
