@@ -1,6 +1,5 @@
 <template>
   <SelectRoot v-model="model" v-model:open="open" :defaultValue :disabled>
-    <!-- labelを省いたときに、呼び出し元が渡したaria-labelを残すよう、$attrsを後に書く -->
     <SelectTrigger
       :aria-label="label"
       v-bind="$attrs"
@@ -58,7 +57,6 @@ defineProps<{
   placeholder?: string;
   defaultValue?: T;
   disabled?: boolean;
-  /** 値の前に表示する項目名。ボタンのaria-labelにもする */
   label?: string;
 }>();
 
@@ -102,7 +100,6 @@ const open = defineModel<boolean>("open");
 :deep(.song-select-content) {
   @include song-mixin.popup-surface;
   min-width: max(120px, var(--reka-select-trigger-width));
-  // 画面の端で開いても末尾の選択肢に届くよう、空いている高さに収めて中をスクロールさせる
   max-height: var(--reka-select-content-available-height);
   padding: song-vars.$space-4;
   border-radius: song-vars.$radius-12;
