@@ -25,7 +25,13 @@
     <SliderTrack class="track">
       <SliderRange class="range" />
     </SliderTrack>
-    <SongTooltip :label="formatValue(modelValue)" :open="dragging" side="top">
+    <!-- ドラッグで動くつまみに付いていくよう、表示中は毎フレーム位置を計算し直す -->
+    <SongTooltip
+      :label="formatValue(modelValue)"
+      :open="dragging"
+      side="top"
+      updatePositionStrategy="always"
+    >
       <SliderThumb
         class="thumb"
         :aria-label="label"
@@ -44,7 +50,6 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 // のちのち統合する可能性があるため、BaseSliderと共通のpropsとイベントは揃える
 const props = withDefaults(
   defineProps<{
-    /** つまみのaria-labelにする */
     label: string;
     min?: number;
     max?: number;

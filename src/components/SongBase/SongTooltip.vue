@@ -4,12 +4,11 @@
       <slot />
     </TooltipTrigger>
     <TooltipPortal>
-      <!-- 外から開閉するときは、ドラッグで動くつまみなどにも付いていくよう、表示中は毎フレーム位置を計算し直す -->
       <TooltipContent
         class="song-tooltip"
         :side
         :sideOffset="8"
-        :updatePositionStrategy="open != undefined ? 'always' : 'optimized'"
+        :updatePositionStrategy
         avoidCollisions
         :collisionPadding="8"
       >
@@ -42,6 +41,8 @@ withDefaults(
     /** 指定すると、ホバーやフォーカスではなくこの値で開閉する */
     open?: boolean;
     side?: "top" | "bottom";
+    /** alwaysにすると、表示中は毎フレーム位置を計算し直す */
+    updatePositionStrategy?: "optimized" | "always";
   }>(),
   {
     disabled: false,
@@ -49,6 +50,7 @@ withDefaults(
     // falseだと、ホバーやフォーカスで開かなくなってしまう
     open: undefined,
     side: "bottom",
+    updatePositionStrategy: "optimized",
   },
 );
 </script>
