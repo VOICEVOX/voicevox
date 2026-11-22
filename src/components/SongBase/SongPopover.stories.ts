@@ -6,9 +6,6 @@ import SongPopover from "./SongPopover.vue";
 
 const meta: Meta<typeof SongPopover> = {
   component: SongPopover,
-  args: {
-    label: "歌い方・声量・音域",
-  },
   render: (args) => ({
     components: { SongPopover, SongIconButton, TooltipProvider },
     setup() {

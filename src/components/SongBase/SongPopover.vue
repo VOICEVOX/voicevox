@@ -6,7 +6,6 @@
     <PopoverPortal>
       <PopoverContent
         class="song-popover"
-        :aria-label="label"
         side="bottom"
         align="start"
         :sideOffset="4"
@@ -33,11 +32,6 @@ import {
 defineOptions({
   inheritAttrs: false,
 });
-
-defineProps<{
-  /** ポップオーバーのaria-labelにする */
-  label: string;
-}>();
 
 const open = defineModel<boolean>("open");
 </script>
