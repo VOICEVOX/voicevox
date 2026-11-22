@@ -32,7 +32,7 @@ export const Default: Story = {};
 
 export const Flat: Story = {
   args: {
-    variant: "flat",
+    flat: true,
   },
 };
 

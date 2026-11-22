@@ -1,5 +1,5 @@
 <template>
-  <div class="song-number-input" :class="variant">
+  <div class="song-number-input" :class="{ flat }">
     <input
       ref="input"
       type="number"
@@ -44,15 +44,15 @@ const props = withDefaults(
     max?: number;
     step?: number;
     disabled?: boolean;
-    /** flatはツールバーのように、ほかのコンポーネントと並べて置く場所で使う */
-    variant?: "default" | "flat";
+    /** ツールバーのように、ほかのコンポーネントと並べて置く場所で使う */
+    flat?: boolean;
   }>(),
   {
     min: -Infinity,
     max: Infinity,
     step: 1,
     disabled: false,
-    variant: "default",
+    flat: false,
   },
 );
 
@@ -192,7 +192,7 @@ const onKeydown = (event: KeyboardEvent) => {
   }
 }
 
-.default {
+.song-number-input:not(.flat) {
   $border-width: 1px;
 
   box-sizing: border-box;
