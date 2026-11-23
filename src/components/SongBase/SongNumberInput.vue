@@ -8,7 +8,7 @@
       :disabled
       :value="draft ?? modelValue"
       @focus="startEditing"
-      @input="draft = ($event.target as HTMLInputElement).value"
+      @input="onInput"
       @keydown="onKeydown"
       @blur="commit"
     />
@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, useTemplateRef } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import SongIconButton from "./SongIconButton.vue";
 
 const props = withDefaults(
@@ -58,10 +58,7 @@ const props = withDefaults(
 
 // 範囲外などで採用されなかった場合も、表示はmodelValueに戻る
 const emit = defineEmits<{
-  /** 表示する値。増減ボタンでは押すたびに通知する */
   "update:modelValue": [value: number];
-  /** 確定した値。増減ボタンでは、連続して押した分を1つにまとめて通知する */
-  valueCommit: [value: number];
 }>();
 
 const inputElement = useTemplateRef<HTMLInputElement>("input");
@@ -83,39 +80,14 @@ const currentValue = computed(() => {
     : props.modelValue;
 });
 
-// 増減ボタンを押し終わってから確定するまでの待ち時間。BaseSliderのホイール操作に合わせる
-const COMMIT_DELAY_MS = 300;
-let pendingCommit:
-  { value: number; timer: ReturnType<typeof setTimeout> } | undefined;
-
-const commitValue = (value: number) => {
-  if (pendingCommit != undefined) {
-    clearTimeout(pendingCommit.timer);
-    pendingCommit = undefined;
-  }
-  emit("valueCommit", value);
-};
-
-const commitValueLater = (value: number) => {
-  if (pendingCommit != undefined) {
-    clearTimeout(pendingCommit.timer);
-  }
-  pendingCommit = {
-    value,
-    timer: setTimeout(() => commitValue(value), COMMIT_DELAY_MS),
-  };
-};
-
-onBeforeUnmount(() => {
-  if (pendingCommit != undefined) {
-    commitValue(pendingCommit.value);
-  }
-});
-
 // フォーカス中に親から値が変わっても古い値で上書きしないよう、編集中の値はフォーカスでは作らず、入力したときに作る
 const startEditing = () => {
   // すぐに打ち直せるよう、フォーカスしたら全体を選ぶ
   inputElement.value?.select();
+};
+
+const onInput = (event: Event) => {
+  draft.value = (event.target as HTMLInputElement).value;
 };
 
 const commit = () => {
@@ -126,7 +98,6 @@ const commit = () => {
   draft.value = undefined;
   if (value !== props.modelValue) {
     emit("update:modelValue", value);
-    commitValue(value);
   }
 };
 
@@ -140,7 +111,6 @@ const stepBy = (direction: 1 | -1) => {
   draft.value = undefined;
   if (value !== props.modelValue) {
     emit("update:modelValue", value);
-    commitValueLater(value);
   }
 };
 
@@ -151,10 +121,9 @@ const onKeydown = (event: KeyboardEvent) => {
   } else if (event.key === "Escape") {
     cancel();
   } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-    // 押すたびに確定すると履歴が増えるため、増減は編集中の値にとどめ、確定はEnterかフォーカスを外したときに行う
+    // ブラウザの増減ではなく、増減ボタンと同じ幅と範囲で動かす
     event.preventDefault();
-    const direction = event.key === "ArrowUp" ? 1 : -1;
-    draft.value = String(clamp(currentValue.value + props.step * direction));
+    stepBy(event.key === "ArrowUp" ? 1 : -1);
   }
 };
 </script>
