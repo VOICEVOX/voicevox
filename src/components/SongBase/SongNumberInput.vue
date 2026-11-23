@@ -17,22 +17,22 @@
       :label="`${label}を減らす`"
       size="small"
       :disabled="disabled || (min != undefined && modelValue <= min)"
-      @pointerdown="startPressing($event, -1)"
+      @pointerdown="startPressing($event, 'decrease')"
       @pointerup="endPressing"
       @pointerleave="endPressing"
       @pointercancel="endPressing"
-      @click="onClick($event, -1)"
+      @click="onClick($event, 'decrease')"
     />
     <SongIconButton
       icon="add"
       :label="`${label}を増やす`"
       size="small"
       :disabled="disabled || (max != undefined && modelValue >= max)"
-      @pointerdown="startPressing($event, 1)"
+      @pointerdown="startPressing($event, 'increase')"
       @pointerup="endPressing"
       @pointerleave="endPressing"
       @pointercancel="endPressing"
-      @click="onClick($event, 1)"
+      @click="onClick($event, 'increase')"
     />
   </div>
 </template>
@@ -70,7 +70,7 @@ const inputElement = useTemplateRef<HTMLInputElement>("input");
 // changeのタイミングはEnterキー・フォーカスを外したとき・矢印キー・増減ボタンを離した時
 // 増減ボタンは、押し続けるとmax/minまで増減可能で、離したらchange
 
-const getInput = () => {
+const getInputOrThrow = () => {
   const input = inputElement.value;
   if (input == undefined) {
     throw new Error("input element is not mounted");
@@ -79,68 +79,69 @@ const getInput = () => {
 };
 
 const commit = () => {
-  const input = getInput();
-  const value = Math.min(
-    props.max ?? Infinity,
-    Math.max(props.min ?? -Infinity, input.valueAsNumber),
-  );
-  if (!Number.isNaN(value) && value !== props.modelValue) {
-    emit("update:modelValue", value);
+  const input = getInputOrThrow();
+  const min = props.min ?? -Infinity;
+  const max = props.max ?? Infinity;
+  const clamped = Math.min(Math.max(input.valueAsNumber, min), max);
+  if (!Number.isNaN(clamped) && clamped !== props.modelValue) {
+    emit("update:modelValue", clamped);
   }
+  // 無効な値を入力された場合はそれが残らないよう、modelValueに戻す
   input.value = String(props.modelValue);
 };
 
-const stepBy = (direction: 1 | -1) => {
-  const input = getInput();
-  const before = input.value;
-  if (direction === 1) {
+type StepDirection = "increase" | "decrease";
+
+const stepBy = (direction: StepDirection) => {
+  const input = getInputOrThrow();
+  if (direction === "increase") {
     input.stepUp();
   } else {
     input.stepDown();
   }
-  return input.value !== before;
 };
 
+// reka-uiのNumberFieldの長押しと同じ間隔にする
 const REPEAT_DELAY_MS = 400;
 const REPEAT_INTERVAL_MS = 60;
-let repeatTimer: ReturnType<typeof setTimeout> | undefined;
+let repeatTimer: ReturnType<typeof setInterval> | undefined;
 let pressing = false;
 
-const startPressing = (event: PointerEvent, direction: 1 | -1) => {
+const startRepeating = (direction: StepDirection) => {
+  repeatTimer = setInterval(() => stepBy(direction), REPEAT_INTERVAL_MS);
+};
+
+const stopRepeating = () => {
+  clearTimeout(repeatTimer);
+  clearInterval(repeatTimer);
+  repeatTimer = undefined;
+};
+
+const startPressing = (event: PointerEvent, direction: StepDirection) => {
   if (event.button !== 0) return;
+  // 多くのブラウザのinput:number同様、ボタンを押したら入力欄にフォーカスする
   event.preventDefault();
-  getInput().focus();
+  getInputOrThrow().focus();
   pressing = true;
-  const repeat = (delay: number) => {
-    repeatTimer = setTimeout(() => {
-      if (stepBy(direction)) {
-        repeat(REPEAT_INTERVAL_MS);
-      }
-    }, delay);
-  };
-  if (stepBy(direction)) {
-    repeat(REPEAT_DELAY_MS);
-  }
+  stepBy(direction);
+  repeatTimer = setTimeout(() => startRepeating(direction), REPEAT_DELAY_MS);
 };
 
 const endPressing = () => {
   if (!pressing) return;
   pressing = false;
-  clearTimeout(repeatTimer);
-  repeatTimer = undefined;
+  stopRepeating();
   commit();
 };
 
-const onClick = (event: MouseEvent, direction: 1 | -1) => {
-  if (event.detail === 0) {
-    stepBy(direction);
-    commit();
-  }
+const onClick = (event: MouseEvent, direction: StepDirection) => {
+  const pressedByKeyboard = event.detail === 0;
+  if (!pressedByKeyboard) return;
+  stepBy(direction);
+  commit();
 };
 
-onBeforeUnmount(() => {
-  clearTimeout(repeatTimer);
-});
+onBeforeUnmount(stopRepeating);
 </script>
 
 <style scoped lang="scss">
