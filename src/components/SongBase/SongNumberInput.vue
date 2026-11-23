@@ -5,35 +5,32 @@
       type="number"
       class="input"
       :aria-label="label"
+      :value="modelValue"
+      :min
+      :max
+      :step
       :disabled
-      :value="draft ?? modelValue"
-      @focus="startEditing"
-      @input="onInput"
-      @keydown="onKeydown"
-      @blur="commit"
+      @change="commit"
     />
-    <!-- 入力中に押しても入力欄からフォーカスを外さず、続けて打てるようにする -->
     <SongIconButton
       icon="remove"
       :label="`${label}を減らす`"
       size="small"
-      :disabled="disabled || currentValue <= min"
-      @pointerdown.prevent
+      :disabled="disabled || (min != undefined && modelValue <= min)"
       @click="stepBy(-1)"
     />
     <SongIconButton
       icon="add"
       :label="`${label}を増やす`"
       size="small"
-      :disabled="disabled || currentValue >= max"
-      @pointerdown.prevent
+      :disabled="disabled || (max != undefined && modelValue >= max)"
       @click="stepBy(1)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { useTemplateRef } from "vue";
 import SongIconButton from "./SongIconButton.vue";
 
 const props = withDefaults(
@@ -44,87 +41,52 @@ const props = withDefaults(
     max?: number;
     step?: number;
     disabled?: boolean;
-    /** ツールバーのように、ほかのコンポーネントと並べて置く場所で使う */
     flat?: boolean;
   }>(),
   {
-    min: -Infinity,
-    max: Infinity,
+    min: undefined,
+    max: undefined,
     step: 1,
     disabled: false,
     flat: false,
   },
 );
 
-// 範囲外などで採用されなかった場合も、表示はmodelValueに戻る
 const emit = defineEmits<{
   "update:modelValue": [value: number];
 }>();
 
 const inputElement = useTemplateRef<HTMLInputElement>("input");
 
-// 編集中の文字列。確定や取り消しで破棄し、表示をmodelValueに戻す
-const draft = ref<string>();
-
-const clamp = (value: number) =>
-  Math.min(props.max, Math.max(props.min, value));
-
-// 表示している値。編集中なら入力した値、そうでなければmodelValue
-const currentValue = computed(() => {
-  if (draft.value == undefined) {
-    return props.modelValue;
-  }
-  const value = Number(draft.value.trim());
-  return draft.value.trim() !== "" && Number.isFinite(value)
-    ? value
-    : props.modelValue;
-});
-
-// フォーカス中に親から値が変わっても古い値で上書きしないよう、編集中の値はフォーカスでは作らず、入力したときに作る
-const startEditing = () => {
-  // すぐに打ち直せるよう、フォーカスしたら全体を選ぶ
-  inputElement.value?.select();
-};
-
-const onInput = (event: Event) => {
-  draft.value = (event.target as HTMLInputElement).value;
-};
-
+// ブラウザのnumber入力と同じく、打った値はEnterかフォーカスを外したとき、矢印キーは押すたびに確定する
 const commit = () => {
-  if (draft.value == undefined) {
-    return;
+  const input = inputElement.value;
+  if (input == undefined) {
+    throw new Error("input element is not mounted");
   }
-  const value = clamp(currentValue.value);
-  draft.value = undefined;
-  if (value !== props.modelValue) {
+  // 打った値はブラウザが範囲に収めないので、ここで収める
+  const value = Math.min(
+    props.max ?? Infinity,
+    Math.max(props.min ?? -Infinity, input.valueAsNumber),
+  );
+  if (!Number.isNaN(value) && value !== props.modelValue) {
     emit("update:modelValue", value);
   }
-};
-
-const cancel = () => {
-  draft.value = undefined;
-  inputElement.value?.blur();
+  // 数値にならなかったときや範囲に収めたときも、表示をmodelValueに戻す
+  input.value = String(props.modelValue);
 };
 
 const stepBy = (direction: 1 | -1) => {
-  const value = clamp(currentValue.value + props.step * direction);
-  draft.value = undefined;
-  if (value !== props.modelValue) {
-    emit("update:modelValue", value);
+  const input = inputElement.value;
+  if (input == undefined) {
+    throw new Error("input element is not mounted");
   }
-};
-
-const onKeydown = (event: KeyboardEvent) => {
-  if (event.key === "Enter") {
-    commit();
-    inputElement.value?.blur();
-  } else if (event.key === "Escape") {
-    cancel();
-  } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-    // ブラウザの増減ではなく、増減ボタンと同じ幅と範囲で動かす
-    event.preventDefault();
-    stepBy(event.key === "ArrowUp" ? 1 : -1);
+  if (direction === 1) {
+    input.stepUp();
+  } else {
+    input.stepDown();
   }
+  commit();
 };
 </script>
 
@@ -189,7 +151,6 @@ const onKeydown = (event: KeyboardEvent) => {
   @include song-mixin.state-layer;
   @include song-mixin.focus-ring;
 
-  // 入力中であることが分かるよう、背景を濃くする
   &:focus {
     background-color: var(--scheme-color-song-control-selected);
   }
