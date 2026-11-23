@@ -18,9 +18,9 @@
     "
     @wheel="onWheel"
     @valueCommit="commitValue($event[0])"
-    @pointerdown="onPointerDown"
-    @pointerup="dragging = false"
-    @lostpointercapture="dragging = false"
+    @pointerdown="startDragging"
+    @pointerup="endDragging"
+    @lostpointercapture="endDragging"
   >
     <SliderTrack class="track">
       <SliderRange class="range" />
@@ -80,9 +80,12 @@ const valueRatio = computed(
 );
 
 const dragging = ref(false);
-const onPointerDown = () => {
+const startDragging = () => {
   if (props.disabled) return;
   dragging.value = true;
+};
+const endDragging = () => {
+  dragging.value = false;
 };
 
 // ホイールは回すたびに確定するとアンドゥなど履歴が細かく増えるので、回したあと一定時間待ってまとめて1回確定する
