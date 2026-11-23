@@ -65,6 +65,7 @@ const props = withDefaults(
     max: 100,
     step: 1,
     scrollStep: undefined,
+    disabled: false,
     formatValue: (value: number) => String(value),
   },
 );
