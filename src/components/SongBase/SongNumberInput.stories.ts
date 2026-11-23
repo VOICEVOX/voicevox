@@ -36,6 +36,20 @@ export const Flat: Story = {
   },
 };
 
+export const FixedWidth: Story = {
+  render: (args) => ({
+    components: { SongNumberInput, TooltipProvider },
+    setup() {
+      const model = ref(Number(args.modelValue));
+      return { args, model };
+    },
+    template: `
+      <TooltipProvider>
+        <SongNumberInput v-bind="args" v-model="model" style="width: 120px" />
+      </TooltipProvider>`,
+  }),
+};
+
 export const Disabled: Story = {
   args: {
     disabled: true,

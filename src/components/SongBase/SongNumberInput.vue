@@ -141,7 +141,7 @@ onBeforeUnmount(stopRepeat);
 @use "@/styles/v2/song-mixin" as song-mixin;
 
 .song-number-input {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: song-vars.$space-2;
   height: song-vars.$size-control;
@@ -149,6 +149,7 @@ onBeforeUnmount(stopRepeat);
 
 .input {
   field-sizing: content;
+  flex-grow: 1;
   min-width: 2ch;
   height: 100%;
   padding: 0 song-vars.$space-6;
