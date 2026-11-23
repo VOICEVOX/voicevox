@@ -17,7 +17,7 @@
       }
     "
     @wheel="onWheel"
-    @valueCommit="commitValue($event[0])"
+    @valueCommit="$emit('valueCommit', $event[0])"
     @pointerdown="startDragging"
     @pointerup="endDragging"
     @lostpointercapture="endDragging"
@@ -43,9 +43,10 @@
 
 <script setup lang="ts">
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "reka-ui";
-import { computed, onBeforeUnmount, ref } from "vue";
+import { computed, ref } from "vue";
 import SongTooltip from "./SongTooltip.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { debounce } from "@/helpers/timer";
 
 // のちのち統合する可能性があるため、BaseSliderと共通のpropsとイベントは揃える
 const props = withDefaults(
@@ -88,34 +89,10 @@ const endDragging = () => {
   dragging.value = false;
 };
 
-// ホイールは回すたびに確定するとアンドゥなど履歴が細かく増えるので、回したあと一定時間待ってまとめて1回確定する
-const WHEEL_COMMIT_DELAY_MS = 300;
-let pendingWheelCommit:
-  { value: number; timer: ReturnType<typeof setTimeout> } | undefined;
-
-const commitValue = (value: number) => {
-  if (pendingWheelCommit != undefined) {
-    clearTimeout(pendingWheelCommit.timer);
-    pendingWheelCommit = undefined;
-  }
-  emit("valueCommit", value);
-};
-
-const commitValueLater = (value: number) => {
-  if (pendingWheelCommit != undefined) {
-    clearTimeout(pendingWheelCommit.timer);
-  }
-  pendingWheelCommit = {
-    value,
-    timer: setTimeout(() => commitValue(value), WHEEL_COMMIT_DELAY_MS),
-  };
-};
-
-onBeforeUnmount(() => {
-  if (pendingWheelCommit != undefined) {
-    commitValue(pendingWheelCommit.value);
-  }
-});
+const debounceEmitValueCommit = debounce(
+  (value: number) => emit("valueCommit", value),
+  300,
+);
 
 const onWheel = (event: WheelEvent) => {
   if (props.disabled) return;
@@ -125,7 +102,7 @@ const onWheel = (event: WheelEvent) => {
 
   const delta = event.deltaY > 0 ? -1 : 1;
   const scrollStep =
-    props.scrollStep != undefined && !isOnCommandOrCtrlKeyDown(event)
+    props.scrollStep && !isOnCommandOrCtrlKeyDown(event)
       ? props.scrollStep
       : props.step;
 
@@ -133,7 +110,7 @@ const onWheel = (event: WheelEvent) => {
   const clampedValue = Math.min(props.max, Math.max(props.min, value));
 
   emit("update:modelValue", clampedValue);
-  commitValueLater(clampedValue);
+  debounceEmitValueCommit(clampedValue);
 };
 </script>
 
