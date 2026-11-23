@@ -17,10 +17,10 @@
       :label="`${label}を減らす`"
       size="small"
       :disabled="disabled || (min != undefined && modelValue <= min)"
-      @pointerdown="startRepeat($event, -1)"
-      @pointerup="stopRepeat"
-      @pointerleave="stopRepeat"
-      @pointercancel="stopRepeat"
+      @pointerdown="startPressing($event, -1)"
+      @pointerup="endPressing"
+      @pointerleave="endPressing"
+      @pointercancel="endPressing"
       @click="onClick($event, -1)"
     />
     <SongIconButton
@@ -28,10 +28,10 @@
       :label="`${label}を増やす`"
       size="small"
       :disabled="disabled || (max != undefined && modelValue >= max)"
-      @pointerdown="startRepeat($event, 1)"
-      @pointerup="stopRepeat"
-      @pointerleave="stopRepeat"
-      @pointercancel="stopRepeat"
+      @pointerdown="startPressing($event, 1)"
+      @pointerup="endPressing"
+      @pointerleave="endPressing"
+      @pointercancel="endPressing"
       @click="onClick($event, 1)"
     />
   </div>
@@ -66,54 +66,49 @@ const emit = defineEmits<{
 
 const inputElement = useTemplateRef<HTMLInputElement>("input");
 
-// ブラウザのnumber入力と同じく、打った値はEnterかフォーカスを外したとき、矢印キーは押すたびに確定する
-// 値が変わったかを返す
-const commit = (): boolean => {
+// ブラウザのinput:numberと同じ操作感にする
+// changeのタイミングはEnterキー・フォーカスを外したとき・矢印キー・増減ボタンを離した時
+// 増減ボタンは、押し続けるとmax/minまで増減可能で、離したらchange
+
+const getInput = () => {
   const input = inputElement.value;
   if (input == undefined) {
     throw new Error("input element is not mounted");
   }
-  // 打った値はブラウザが範囲に収めないので、ここで収める
+  return input;
+};
+
+const commit = () => {
+  const input = getInput();
   const value = Math.min(
     props.max ?? Infinity,
     Math.max(props.min ?? -Infinity, input.valueAsNumber),
   );
-  const changed = !Number.isNaN(value) && value !== props.modelValue;
-  if (changed) {
+  if (!Number.isNaN(value) && value !== props.modelValue) {
     emit("update:modelValue", value);
   }
-  // 数値にならなかったときや範囲に収めたときも、表示をmodelValueに戻す
   input.value = String(props.modelValue);
-  return changed;
 };
 
 const stepBy = (direction: 1 | -1) => {
-  const input = inputElement.value;
-  if (input == undefined) {
-    throw new Error("input element is not mounted");
-  }
+  const input = getInput();
+  const before = input.value;
   if (direction === 1) {
     input.stepUp();
   } else {
     input.stepDown();
   }
-  return commit();
+  return input.value !== before;
 };
 
-// ブラウザの増減ボタンと同じく、押したらすぐ1回動き、押し続けると少し待ってからくり返す
 const REPEAT_DELAY_MS = 400;
 const REPEAT_INTERVAL_MS = 60;
 let repeatTimer: ReturnType<typeof setTimeout> | undefined;
+let pressing = false;
 
-const stopRepeat = () => {
-  clearTimeout(repeatTimer);
-  repeatTimer = undefined;
-};
-
-const startRepeat = (event: PointerEvent, direction: 1 | -1) => {
+const startPressing = (event: PointerEvent, direction: 1 | -1) => {
   if (event.button !== 0) return;
-  stopRepeat();
-  // 端に着いてボタンが無効になると離したことが届かないので、値が変わらなくなったら止める
+  pressing = true;
   const repeat = (delay: number) => {
     repeatTimer = setTimeout(() => {
       if (stepBy(direction)) {
@@ -126,14 +121,24 @@ const startRepeat = (event: PointerEvent, direction: 1 | -1) => {
   }
 };
 
-// マウスやタッチは押したときに動かしているので、キーボードで押したときだけ動かす
+const endPressing = () => {
+  if (!pressing) return;
+  pressing = false;
+  clearTimeout(repeatTimer);
+  repeatTimer = undefined;
+  commit();
+};
+
 const onClick = (event: MouseEvent, direction: 1 | -1) => {
   if (event.detail === 0) {
     stepBy(direction);
+    commit();
   }
 };
 
-onBeforeUnmount(stopRepeat);
+onBeforeUnmount(() => {
+  clearTimeout(repeatTimer);
+});
 </script>
 
 <style scoped lang="scss">
@@ -162,7 +167,6 @@ onBeforeUnmount(stopRepeat);
   @include song-mixin.value-text;
   @include song-mixin.disabled;
 
-  // ブラウザの増減ボタンは小さく狙いにくいので隠し、横のボタンと矢印キーで増減する
   &::-webkit-inner-spin-button,
   &::-webkit-outer-spin-button {
     appearance: none;
@@ -174,7 +178,6 @@ onBeforeUnmount(stopRepeat);
   $border-width: 1px;
 
   box-sizing: border-box;
-  // ボタンの右のすき間を、上下のすき間とそろえる
   padding-right: calc(
     (song-vars.$size-control - song-vars.$size-control-small) / 2 -
       $border-width
