@@ -45,8 +45,6 @@ withDefaults(
   }>(),
   {
     disabled: false,
-    // 省略したときにVueがfalseにしないよう、undefinedを既定値にする
-    // falseだと、ホバーやフォーカスで開かなくなってしまう
     open: undefined,
     side: "bottom",
     updatePositionStrategy: "optimized",
