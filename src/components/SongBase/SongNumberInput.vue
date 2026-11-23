@@ -108,6 +108,8 @@ let pressing = false;
 
 const startPressing = (event: PointerEvent, direction: 1 | -1) => {
   if (event.button !== 0) return;
+  event.preventDefault();
+  getInput().focus();
   pressing = true;
   const repeat = (delay: number) => {
     repeatTimer = setTimeout(() => {
