@@ -17,20 +17,28 @@
       :label="`${label}を減らす`"
       size="small"
       :disabled="disabled || (min != undefined && modelValue <= min)"
-      @click="stepBy(-1)"
+      @pointerdown="startRepeat($event, -1)"
+      @pointerup="stopRepeat"
+      @pointerleave="stopRepeat"
+      @pointercancel="stopRepeat"
+      @click="onClick($event, -1)"
     />
     <SongIconButton
       icon="add"
       :label="`${label}を増やす`"
       size="small"
       :disabled="disabled || (max != undefined && modelValue >= max)"
-      @click="stepBy(1)"
+      @pointerdown="startRepeat($event, 1)"
+      @pointerup="stopRepeat"
+      @pointerleave="stopRepeat"
+      @pointercancel="stopRepeat"
+      @click="onClick($event, 1)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { useTemplateRef } from "vue";
+import { onBeforeUnmount, useTemplateRef } from "vue";
 import SongIconButton from "./SongIconButton.vue";
 
 const props = withDefaults(
@@ -59,7 +67,8 @@ const emit = defineEmits<{
 const inputElement = useTemplateRef<HTMLInputElement>("input");
 
 // ブラウザのnumber入力と同じく、打った値はEnterかフォーカスを外したとき、矢印キーは押すたびに確定する
-const commit = () => {
+// 値が変わったかを返す
+const commit = (): boolean => {
   const input = inputElement.value;
   if (input == undefined) {
     throw new Error("input element is not mounted");
@@ -69,11 +78,13 @@ const commit = () => {
     props.max ?? Infinity,
     Math.max(props.min ?? -Infinity, input.valueAsNumber),
   );
-  if (!Number.isNaN(value) && value !== props.modelValue) {
+  const changed = !Number.isNaN(value) && value !== props.modelValue;
+  if (changed) {
     emit("update:modelValue", value);
   }
   // 数値にならなかったときや範囲に収めたときも、表示をmodelValueに戻す
   input.value = String(props.modelValue);
+  return changed;
 };
 
 const stepBy = (direction: 1 | -1) => {
@@ -86,8 +97,43 @@ const stepBy = (direction: 1 | -1) => {
   } else {
     input.stepDown();
   }
-  commit();
+  return commit();
 };
+
+// ブラウザの増減ボタンと同じく、押したらすぐ1回動き、押し続けると少し待ってからくり返す
+const REPEAT_DELAY_MS = 400;
+const REPEAT_INTERVAL_MS = 60;
+let repeatTimer: ReturnType<typeof setTimeout> | undefined;
+
+const stopRepeat = () => {
+  clearTimeout(repeatTimer);
+  repeatTimer = undefined;
+};
+
+const startRepeat = (event: PointerEvent, direction: 1 | -1) => {
+  if (event.button !== 0) return;
+  stopRepeat();
+  // 端に着いてボタンが無効になると離したことが届かないので、値が変わらなくなったら止める
+  const repeat = (delay: number) => {
+    repeatTimer = setTimeout(() => {
+      if (stepBy(direction)) {
+        repeat(REPEAT_INTERVAL_MS);
+      }
+    }, delay);
+  };
+  if (stepBy(direction)) {
+    repeat(REPEAT_DELAY_MS);
+  }
+};
+
+// マウスやタッチは押したときに動かしているので、キーボードで押したときだけ動かす
+const onClick = (event: MouseEvent, direction: 1 | -1) => {
+  if (event.detail === 0) {
+    stepBy(direction);
+  }
+};
+
+onBeforeUnmount(stopRepeat);
 </script>
 
 <style scoped lang="scss">
