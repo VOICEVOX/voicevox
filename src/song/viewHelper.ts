@@ -6,6 +6,7 @@ const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_SEMITONE = 30;
 
 export const SEQUENCER_MIN_NUM_MEASURES = 32;
+export const SEQUENCER_KEYS_WIDTH = 48;
 export const ZOOM_X_MIN = 0.15;
 export const ZOOM_X_MAX = 2;
 export const ZOOM_X_STEP = 0.05;

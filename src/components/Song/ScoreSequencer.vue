@@ -277,6 +277,7 @@ import {
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
   SEQUENCER_MIN_NUM_MEASURES,
+  SEQUENCER_KEYS_WIDTH,
 } from "@/song/viewHelper";
 import { clamp, getLast } from "@/song/utility";
 import SequencerGrid from "@/components/Song/SequencerGrid/Container.vue";
@@ -1234,7 +1235,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   backface-visibility: hidden;
   display: grid;
   grid-template-rows: 40px 1fr;
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: v-bind("`${SEQUENCER_KEYS_WIDTH}px`") 1fr;
   position: relative;
 }
 
