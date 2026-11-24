@@ -4,12 +4,15 @@
     :class="hitArea"
     :hitAreaMargins
     :disabled
-    @dragging="(isDragging) => emit('dragging', isDragging)"
+    @dragging="onDragging"
+    @keyup="onKeyup"
   />
 </template>
 
 <script setup lang="ts">
+import { inject } from "vue";
 import { SplitterResizeHandle } from "reka-ui";
+import { songSplitterGroupInjectionKey } from "./SongSplitterGroup.vue";
 
 withDefaults(
   defineProps<{
@@ -23,9 +26,33 @@ withDefaults(
   },
 );
 
-const emit = defineEmits<{
-  dragging: [isDragging: boolean];
-}>();
+const group = inject(songSplitterGroupInjectionKey);
+if (group == undefined) {
+  throw new Error(
+    "SongSplitterResizeHandle must be used within SongSplitterGroup",
+  );
+}
+
+const onDragging = (isDragging: boolean) => {
+  if (!isDragging) {
+    group.commit();
+  }
+};
+
+// キー操作ではdraggingが出ないので、キーを離したときに確定させる
+const RESIZE_KEYS = [
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "Home",
+  "End",
+];
+const onKeyup = (event: KeyboardEvent) => {
+  if (RESIZE_KEYS.includes(event.key)) {
+    group.commit();
+  }
+};
 
 // rekaのhitAreaMarginsでの当たり判定は、スクロールバーなど操作できない領域にかぶった場合でも反応してしまうので使わない
 const hitAreaMargins = { coarse: 0, fine: 0 };

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite";
+import { fn } from "storybook/test";
 
 import SongSplitterGroup from "./SongSplitterGroup.vue";
 import SongSplitterPanel from "./SongSplitterPanel.vue";
@@ -8,6 +9,7 @@ type Args = {
   direction: "horizontal" | "vertical";
   hitArea?: "both" | "start" | "end";
   disabled?: boolean;
+  onResizeCommit: (size: number) => void;
 };
 
 const meta: Meta<Args> = {
@@ -15,6 +17,9 @@ const meta: Meta<Args> = {
     keyof typeof SongSplitterGroup,
     unknown
   >,
+  args: {
+    onResizeCommit: fn(),
+  },
   render: (args) => ({
     components: {
       SongSplitterGroup,
@@ -31,7 +36,7 @@ const meta: Meta<Args> = {
             <div style="height: 100%; padding: 8px; box-sizing: border-box">エディタ</div>
           </SongSplitterPanel>
           <SongSplitterResizeHandle :hitArea="args.hitArea" :disabled="args.disabled" />
-          <SongSplitterPanel sizeUnit="px" :defaultSize="160" :minSize="80" :maxSize="300">
+          <SongSplitterPanel sizeUnit="px" :defaultSize="160" :minSize="80" :maxSize="300" @resizeCommit="args.onResizeCommit">
             <div style="height: 100%; padding: 8px; box-sizing: border-box; background: var(--scheme-color-surface-container-highest)">パネル（80〜300px）</div>
           </SongSplitterPanel>
         </SongSplitterGroup>
