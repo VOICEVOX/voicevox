@@ -86,14 +86,12 @@
           <!-- undefinedだと警告が出るのでnullを渡す -->
           <!-- TODO: ちゃんとしたトラックIDを渡す -->
           <SequencerShadowNote
-            v-for="note in notesInOtherTracks"
+            v-for="note in visibleNotesInOtherTracks"
             :key="note.id"
             :note
           />
           <SequencerNote
-            v-for="note in editTarget === 'NOTE'
-              ? notesInSelectedTrackWithPreview
-              : notesInSelectedTrack"
+            v-for="note in visibleNotesInSelectedTrack"
             :key="note.id"
             class="sequencer-note"
             :note
@@ -244,6 +242,7 @@ import {
   ref,
   nextTick,
   onMounted,
+  onUnmounted,
   onActivated,
   onDeactivated,
   watch,
@@ -263,7 +262,11 @@ import {
   tickToMeasureNumber,
   tickToSecond,
 } from "@/song/music";
-import { getEndTicksOfPhrase, getStartTicksOfPhrase } from "@/song/domain";
+import {
+  getDefaultLyric,
+  getEndTicksOfPhrase,
+  getStartTicksOfPhrase,
+} from "@/song/domain";
 import {
   tickToBaseX,
   baseXToTick,
@@ -491,6 +494,57 @@ const setParameterPanelHeight = async (height: number) => {
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 const parameterPanelNeedsAutoScroll = ref(false);
+
+const sequencerSize = ref({ width: 0, height: 0 });
+let sequencerResizeObserver: ResizeObserver | undefined;
+
+onMounted(() => {
+  assertNonNullable(sequencerBody.value);
+  sequencerResizeObserver = new ResizeObserver(([entry]) => {
+    sequencerSize.value = {
+      width: entry.contentRect.width,
+      height: entry.contentRect.height,
+    };
+  });
+  sequencerResizeObserver.observe(sequencerBody.value);
+});
+
+onUnmounted(() => sequencerResizeObserver?.disconnect());
+
+// 画面外のノートを除き、ズーム時のDOM更新とレイアウト計算を抑える。
+const noteIsVisible = (note: Note) => {
+  const margin = 128;
+  const x = tickToBaseX(note.position, tpqn.value) * zoomX.value;
+  const endX =
+    tickToBaseX(note.position + note.duration, tpqn.value) * zoomX.value;
+  const y = noteNumberToBaseY(note.noteNumber + 0.5) * zoomY.value;
+  // 歌詞はノートの右端を越えるため、最大フォントサイズで表示幅を見積もる。
+  const lyric =
+    previewLyrics.value.get(note.id) ??
+    note.lyric ??
+    getDefaultLyric(note.noteNumber, state.defaultLyricMode);
+  const lyricWidth = lyric.length * 16;
+  return (
+    x <= scrollX.value + sequencerSize.value.width + margin &&
+    Math.max(endX, x + lyricWidth) >= scrollX.value - margin &&
+    y <= scrollY.value + sequencerSize.value.height + margin &&
+    y >= scrollY.value - margin
+  );
+};
+
+const visibleNotesInSelectedTrack = computed(() => {
+  const notes =
+    editTarget.value === "NOTE"
+      ? notesInSelectedTrackWithPreview.value
+      : notesInSelectedTrack.value;
+  return notes.filter(
+    (note) => previewNoteIds.value.has(note.id) || noteIsVisible(note),
+  );
+});
+
+const visibleNotesInOtherTracks = computed(() =>
+  notesInOtherTracks.value.filter(noteIsVisible),
+);
 
 // ステートマシン
 const {
