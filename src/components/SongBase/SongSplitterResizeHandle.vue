@@ -56,7 +56,7 @@ const hitAreaMargins = { coarse: 0, fine: 0 };
   &[data-orientation="vertical"] {
     height: calc(var(--hit-area-start) + #{$line} + var(--hit-area-end));
     margin-top: calc(-1 * var(--hit-area-start));
-    margin-bottom: calc(-1 * (#{$line} + var(--hit-area-end)));
+    margin-bottom: calc(-1 * var(--hit-area-end));
 
     &::before {
       inset: var(--hit-area-start) 0 auto;
@@ -67,7 +67,7 @@ const hitAreaMargins = { coarse: 0, fine: 0 };
   &[data-orientation="horizontal"] {
     width: calc(var(--hit-area-start) + #{$line} + var(--hit-area-end));
     margin-left: calc(-1 * var(--hit-area-start));
-    margin-right: calc(-1 * (#{$line} + var(--hit-area-end)));
+    margin-right: calc(-1 * var(--hit-area-end));
 
     &::before {
       inset: 0 auto 0 var(--hit-area-start);
