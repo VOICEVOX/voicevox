@@ -15,6 +15,7 @@
   >
     <template #before>
       <div class="score-sequencer full-height">
+        <SequencerEditToolBar class="sequencer-edit-toolbar" />
         <!-- 左上の角 -->
         <div class="sequencer-corner"></div>
         <!-- ルーラー -->
@@ -196,23 +197,6 @@
           @update:modelValue="setZoomY"
         />
         <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
-        <SequencerToolPalette
-          :editTarget
-          :sequencerNoteTool
-          :sequencerPitchTool
-          @update:sequencerNoteTool="
-            (value) =>
-              store.actions.SET_SEQUENCER_NOTE_TOOL({
-                sequencerNoteTool: value,
-              })
-          "
-          @update:sequencerPitchTool="
-            (value) =>
-              store.actions.SET_SEQUENCER_PITCH_TOOL({
-                sequencerPitchTool: value,
-              })
-          "
-        />
       </div>
     </template>
     <template #after>
@@ -289,7 +273,7 @@ import SequencerPhraseIndicator from "@/components/Song/SequencerPhraseIndicator
 import CharacterPortrait from "@/components/Song/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Song/SequencerPitch.vue";
 import SequencerLyricInput from "@/components/Song/SequencerLyricInput.vue";
-import SequencerToolPalette from "@/components/Song/SequencerToolPalette.vue";
+import SequencerEditToolBar from "@/components/Song/EditToolBar/SequencerEditToolBar/Container.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -539,10 +523,6 @@ const guideLineX = computed(() => {
 
 // 編集対象
 const editTarget = computed(() => store.state.sequencerEditTarget);
-// 選択中のノート編集ツール
-const sequencerNoteTool = computed(() => state.sequencerNoteTool);
-// 選択中のピッチ編集ツール
-const sequencerPitchTool = computed(() => state.sequencerPitchTool);
 
 // カーソル用のCSSクラス名ヘルパー
 const cursorClass = computed(() => {
@@ -1234,40 +1214,44 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .score-sequencer {
   backface-visibility: hidden;
   display: grid;
-  grid-template-rows: 40px 1fr;
+  grid-template-rows: auto 40px 1fr;
   grid-template-columns: v-bind("`${SEQUENCER_KEYS_WIDTH}px`") 1fr;
   position: relative;
 }
 
-.sequencer-corner {
+.sequencer-edit-toolbar {
   grid-row: 1;
+  grid-column: 1 / -1;
+}
+
+.sequencer-corner {
+  grid-row: 2;
   grid-column: 1;
   background: var(--scheme-color-song-ruler-surface);
-  border-radius: 8px 0 0 0;
 }
 
 .sequencer-ruler {
-  grid-row: 1;
+  grid-row: 2;
   grid-column: 2;
 }
 
 .sequencer-keys {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 1;
 }
 
 .sequencer-grid {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
 }
 
 .sequencer-character-portrait {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
 }
 
 .sequencer-guideline-container {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
   position: relative;
   overflow: hidden;
@@ -1282,7 +1266,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .sequencer-body {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
   backface-visibility: hidden;
   overflow: auto;
@@ -1299,12 +1283,12 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .sequencer-pitch {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
 }
 
 .sequencer-overlay {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
   position: relative;
   overflow: hidden;
