@@ -11,13 +11,28 @@ import { assertNonNullable } from "@/type/utility";
 const log = createLogger("WelcomeIpcMainHandle");
 
 class WelcomeIpcMainHandleManager {
+  constructor(private installTarget?: string) {}
+  private installationSucceeded = false;
   private getHandle(): IpcMainHandle<WelcomeIpcIHData> {
     const appStateController = getAppStateController();
     const engineAndVvppController = getEngineAndVvppController();
     const configManager = getConfigManager();
 
     return {
+      GET_STARTUP_OPTIONS: () => ({ target: this.installTarget }),
+      FINISH_AUTO_INSTALL: (_, { exitCode }) => {
+        if (this.installTarget == undefined)
+          throw new Error("Not an automatic installation");
+        appStateController.shutdown(
+          exitCode === 0 && this.installationSucceeded ? 0 : 1,
+        );
+      },
       INSTALL_ENGINE: async (_, obj) => {
+        if (
+          this.installTarget != undefined &&
+          obj.target !== this.installTarget
+        )
+          throw new Error("Unexpected target");
         const welcomeWindowManager = getWelcomeWindowManager();
         const status =
           await engineAndVvppController.fetchEnginePackageLatestInfo(
@@ -56,6 +71,7 @@ class WelcomeIpcMainHandleManager {
             },
           },
         );
+        this.installationSucceeded = true;
       },
       GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: () => {
         return engineAndVvppController.getDownloadableDefaultEnginePackageIds();
@@ -109,8 +125,8 @@ class WelcomeIpcMainHandleManager {
 
 let manager: WelcomeIpcMainHandleManager | undefined;
 
-export function initializeWelcomeIpcMainHandleManager() {
-  manager = new WelcomeIpcMainHandleManager();
+export function initializeWelcomeIpcMainHandleManager(installTarget?: string) {
+  manager = new WelcomeIpcMainHandleManager(installTarget);
 }
 
 export function getWelcomeIpcMainHandleManager(): WelcomeIpcMainHandleManager {

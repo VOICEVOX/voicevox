@@ -44,48 +44,32 @@ test("エディタウィンドウを起動できる", async ({ launchElectronApp
     timeout: 0,
   });
 
-  if (process.platform === "win32") {
-    await test.step("デフォルトエンジンがインストールされる", async () => {
-      await welcomePage.waitForSelector("text=エンジンのセットアップ", {
-        timeout: 60000,
-      });
-
-      await expect(
-        welcomePage.getByText("ダウンロード", { exact: true }),
-      ).toBeVisible({ timeout: 60000 });
-
-      await expect(
-        welcomePage.getByText("インストール", { exact: true }),
-      ).toBeVisible({ timeout: 60000 });
-    });
-  } else {
-    await test.step("デフォルトエンジンをインストールする", async () => {
-      await welcomePage.waitForSelector("text=エンジンのセットアップ", {
-        timeout: 60000,
-      });
-
-      const install = welcomePage.getByText(/インストール（.+?）/);
-      await install.waitFor({
-        timeout: 60000,
-      });
-      await install.click();
-
-      const installed = welcomePage.getByRole("button", {
-        name: "インストール済み",
-      });
-      await installed.waitFor({
-        timeout: 60000,
-      });
+  await test.step("デフォルトエンジンをインストールする", async () => {
+    await welcomePage.waitForSelector("text=エンジンのセットアップ", {
+      timeout: 60000,
     });
 
-    await test.step("エディタを起動する", async () => {
-      const launchEditor = welcomePage.getByText(/エディタを起動/);
-      await expect(launchEditor).toBeEnabled({
-        timeout: 60000,
-      });
-      await launchEditor.click();
+    const install = welcomePage.getByText(/インストール（.+?）/);
+    await install.waitFor({
+      timeout: 60000,
     });
-  }
+    await install.click();
+
+    const installed = welcomePage.getByRole("button", {
+      name: "インストール済み",
+    });
+    await installed.waitFor({
+      timeout: 60000,
+    });
+  });
+
+  await test.step("エディタを起動する", async () => {
+    const launchEditor = welcomePage.getByText(/エディタを起動/);
+    await expect(launchEditor).toBeEnabled({
+      timeout: 60000,
+    });
+    await launchEditor.click();
+  });
 
   await test.step("エディタウィンドウが開く", async () => {
     const editorPage = await editorPagePromise;

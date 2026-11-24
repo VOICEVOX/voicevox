@@ -24,12 +24,18 @@ export class AppStateController {
   private activeWindow: "main" | "welcome" | null = null;
 
   private lock = new Mutex();
+  private exitCode: number | undefined;
 
   /**
    * アプリ起動時の初期化処理を行う。
    * ウェルカムウィンドウまたはメインウィンドウのどちらかを起動する。
    */
-  async startup() {
+  async startup(automaticInstall: boolean) {
+    if (automaticInstall) {
+      log.info("Automatic install mode enabled. Launching welcome window.");
+      await this.launchWelcomeWindow();
+      return;
+    }
     const engineAndVvppController = getEngineAndVvppController();
     if (
       !engineAndVvppController.hasDownloadableDefaultEngine() ||
@@ -174,7 +180,8 @@ export class AppStateController {
   }
 
   /** 編集状態に関わらず終了する */
-  shutdown() {
+  shutdown(exitCode?: number) {
+    this.exitCode = exitCode;
     const mainWindowManager = getMainWindowManager();
     this.quitState = "dirty";
     if (mainWindowManager.isInitialized()) {
@@ -202,7 +209,12 @@ export class AppStateController {
       log.error("Error during app cleanup process:", error);
     } finally {
       this.quitState = "done";
-      this.initiateQuit();
+      if (this.exitCode != undefined) {
+        log.info(`Exiting app with code ${this.exitCode}`);
+        process.exit(this.exitCode);
+      } else {
+        this.initiateQuit();
+      }
     }
   }
 

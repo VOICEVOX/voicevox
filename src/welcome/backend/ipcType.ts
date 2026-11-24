@@ -10,6 +10,11 @@ import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
  * invoke, handle
  */
 export type WelcomeIpcIHData = {
+  GET_STARTUP_OPTIONS: {
+    args: [];
+    return: { target: RuntimeTarget | undefined };
+  };
+  FINISH_AUTO_INSTALL: { args: [obj: { exitCode: 0 | 1 }]; return: void };
   INSTALL_ENGINE: {
     args: [
       obj: {

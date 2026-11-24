@@ -8,7 +8,7 @@ import type {
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
-import { isWindows } from "@/helpers/platform";
+
 import type { EngineId } from "@/type/preload";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
@@ -53,11 +53,14 @@ export type LaunchEditorState =
   { enabled: true } | { enabled: false; reason: string };
 
 function createWelcomeStore() {
+  const automaticInstall = ref(false);
   const allEngineState = ref<AllEngineState>({
     type: "uninitialized",
   });
 
   const launchEditorState = computed<LaunchEditorState>(() => {
+    if (automaticInstall.value)
+      return { enabled: false, reason: "エンジンをインストール中です。" };
     if (
       allEngineState.value.type === "uninitialized" ||
       allEngineState.value.type === "loading"
@@ -244,11 +247,12 @@ function createWelcomeStore() {
         `Engine package ${engineId} installation failed`,
         error,
       );
+      if (automaticInstall.value) throw error;
       await showErrorDialog("エンジンのインストールに失敗しました", error);
       return "failed";
     } finally {
       setEngineProgress(engineId, { type: "idle" });
-      void fetchCurrentEngineInfo(engineId);
+      if (!automaticInstall.value) void fetchCurrentEngineInfo(engineId);
     }
 
     return "succeeded";
@@ -261,73 +265,47 @@ function createWelcomeStore() {
     void window.welcomeBackend.launchMainWindow();
   };
 
-  /**
-   * 条件に合う場合にエンジンを自動インストールしてメインウィンドウを起動する。
-   * 条件は、エンジン未インストールで、候補が１つで、最新情報が取得できていること。
-   */
-  const autoInstallEngineAndLaunchMainWindow = async () => {
-    if (allEngineState.value.type !== "loaded") {
-      throw new UnreachableError();
-    }
-
-    // 既にエンジン導入済みな場合は何もしない
-    const allEngineStateLoaded = allEngineState.value;
-    if (
-      allEngineStateLoaded.engineIds.some(
-        (engineId) =>
-          allEngineStateLoaded.engineStates[engineId].currentInfo.status ===
-          "installed",
-      )
-    ) {
-      return;
-    }
-
-    // 自動インストール候補が２つ以上ある場合は何もしない
-    if (allEngineStateLoaded.engineIds.length > 1) {
-      window.welcomeBackend.logWarn(
-        "Multiple default engines found. Skipping automatic installation.",
-      );
-      return;
-    }
-
-    // 最新情報を取得できていない場合は何もしない
-    if (allEngineStateLoaded.engineIds.length === 0) {
-      throw new UnreachableError();
-    }
-    const [engineId] = allEngineStateLoaded.engineIds;
-    const engineState = allEngineStateLoaded.engineStates[engineId];
-    if (engineState.latestInfo.type !== "fetched") {
-      window.welcomeBackend.logWarn(
-        `Engine package ${engineId} latest info is unavailable. Skipping automatic installation.`,
-      );
-      return;
-    }
-
-    const result = await installEngine(engineId);
-    if (result === "succeeded") {
-      await window.welcomeBackend.launchMainWindow();
-    }
-  };
-
   const startup = async () => {
     window.welcomeBackend.registerIpcHandler({
       updateEngineDownloadProgress: ({ engineId, progress, type }) => {
         setEngineProgress(engineId, { progress, type });
       },
     });
-    void applyThemeFromConfig().then(() => {
-      void window.welcomeBackend.displayReady();
-    });
 
-    await fetchEngineInfos();
-
-    // Windows版インストーラーでインストール開始したあと、追加操作無しでエディターを起動するためのワークアラウンド
-    if (isWindows) {
-      await autoInstallEngineAndLaunchMainWindow();
+    const { target } = await window.welcomeBackend.getStartupOptions();
+    automaticInstall.value = target != undefined;
+    try {
+      await applyThemeFromConfig();
+      await window.welcomeBackend.displayReady();
+      await fetchEngineInfos();
+      if (target == undefined) return;
+      if (
+        allEngineState.value.type !== "loaded" ||
+        allEngineState.value.engineIds.length !== 1
+      )
+        throw new Error("Expected exactly one downloadable default engine");
+      const [engineId] = allEngineState.value.engineIds;
+      const state = allEngineState.value.engineStates[engineId];
+      if (state.latestInfo.type === "fetchError") throw state.latestInfo.error;
+      if (
+        state.latestInfo.type !== "fetched" ||
+        !state.latestInfo.info.availableRuntimeTargets.some(
+          (info) => info.target === target,
+        )
+      )
+        throw new Error(`Unsupported target: ${target}`);
+      setSelectedRuntimeTarget(engineId, target);
+      await installEngine(engineId);
+      await window.welcomeBackend.finishAutoInstall(0);
+    } catch (error) {
+      if (target == undefined) throw error;
+      window.welcomeBackend.logError(error);
+      await window.welcomeBackend.finishAutoInstall(1);
     }
   };
 
   return {
+    automaticInstall,
     allEngineState,
     launchEditorState,
     setSelectedRuntimeTarget,

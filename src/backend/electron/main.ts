@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import { app, dialog, Menu, net, protocol, session, shell } from "electron";
 import electronLog from "electron-log/main";
 import dayjs from "dayjs";
+import yargs from "yargs";
 import { initializeEngineInfoManager } from "./manager/engineInfoManager";
 import { initializeEngineProcessManager } from "./manager/engineProcessManager";
 import { initializeVvppManager, isVvppFile } from "./manager/vvppManager";
@@ -26,10 +27,40 @@ import { assertNonNullable } from "@/type/utility";
 import type { EngineInfo } from "@/type/preload";
 import { isDevelopment, isMac, isProduction, isTest } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
+import { runtimeTargetSchema } from "@/domain/defaultEngine/latestDefaultEngine";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
+  engineInstall?: boolean;
 };
+
+let installTarget: string | undefined;
+let initialFilePath: string | undefined;
+yargs(getArgv())
+  .command(
+    ["$0 [path]", "open [path]"],
+    "Open a file",
+    (yargs) => yargs.positional("path", { type: "string" }),
+    (args) => {
+      initialFilePath = args.path;
+    },
+  )
+  .command(
+    "install-engine",
+    "Install engine",
+    (yargs) =>
+      yargs.option("target", {
+        type: "string",
+        demandOption: true,
+        describe: "Target engine to install",
+        coerce: (arg) => runtimeTargetSchema.parse(arg),
+      }),
+    (args) => {
+      installTarget = args.target;
+    },
+  )
+  .help()
+  .parseSync();
 
 if (isDevelopment && !isTest) {
   app.commandLine.appendSwitch("remote-debugging-port", "9222");
@@ -92,7 +123,7 @@ if (errorForRemoveBeforeUserDataDir != undefined) {
 process.on("uncaughtException", (error) => {
   log.error(error);
 
-  if (isDevelopment) {
+  if (isDevelopment || installTarget != undefined) {
     app.exit(1);
   } else {
     const { message, name } = error;
@@ -109,6 +140,7 @@ process.on("uncaughtException", (error) => {
 });
 process.on("unhandledRejection", (reason) => {
   log.error(reason);
+  if (installTarget != undefined) app.exit(1);
 });
 
 function getAppPaths() {
@@ -249,7 +281,7 @@ initializeIpcMainHandleManager({
   appDirPath,
   initialFilePathGetter: () => initialFilePath,
 });
-initializeWelcomeIpcMainHandleManager();
+initializeWelcomeIpcMainHandleManager(installTarget);
 
 initializeMainWindowManager({
   isDevelopment,
@@ -287,11 +319,9 @@ function checkMultiEngineEnabled(): boolean {
 
 /** コマンドライン引数を取得する */
 function getArgv(): string[] {
-  // 製品版でmacOS以外の場合、引数はargv[1]以降をそのまま
+  // 製品版の場合、引数はargv[1]以降をそのまま
   if (isProduction) {
-    if (!isMac) {
-      return process.argv.slice(1);
-    }
+    return process.argv.slice(1);
   }
   // 開発版の場合、引数は`--`がある場合は`--`以降、無い場合は引数なしとして扱う
   else {
@@ -302,8 +332,6 @@ function getArgv(): string[] {
   }
   return [];
 }
-
-let initialFilePath: string | undefined = getArgv()[0]; // TODO: カプセル化する
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
   {
@@ -371,6 +399,10 @@ app.once("will-finish-launching", () => {
 void app.whenReady().then(async () => {
   await configManager.initialize().catch(async (e) => {
     log.error(e);
+    if (installTarget != undefined) {
+      app.exit(1);
+      throw e;
+    }
 
     const appExit = async () => {
       await configManager?.ensureSaved();
@@ -449,21 +481,6 @@ void app.whenReady().then(async () => {
     }
   });
 
-  // 多重起動防止
-  // TODO: readyを待たずにもっと早く実行すべき
-  if (
-    !isDevelopment &&
-    !isTest &&
-    !app.requestSingleInstanceLock({
-      filePath: initialFilePath,
-    } satisfies SingleInstanceLockData)
-  ) {
-    log.info("VOICEVOX already running. Cancelling launch.");
-    log.info(`File path sent: ${initialFilePath}`);
-    getAppStateController().shutdown();
-    return;
-  }
-
   if (initialFilePath) {
     log.info(`Initial file path provided: ${initialFilePath}`);
     if (isVvppFile(initialFilePath)) {
@@ -485,6 +502,7 @@ void app.whenReady().then(async () => {
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
 app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
   const data = rawData as SingleInstanceLockData;
+  if (installTarget != undefined || data.engineInstall) return;
   const win = mainWindowManager.win;
   if (win == undefined) {
     // TODO: 起動シーケンス中の場合はWindowが作られるまで待つ
