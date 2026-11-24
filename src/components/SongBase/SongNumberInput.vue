@@ -118,7 +118,7 @@ const stopRepeating = () => {
 };
 
 const startPressing = (event: PointerEvent, direction: StepDirection) => {
-  if (event.button !== 0) return;
+  if (props.disabled || event.button !== 0) return;
   // 多くのブラウザのinput:number同様、ボタンを押したら入力欄にフォーカスする
   event.preventDefault();
   getInputOrThrow().focus();
