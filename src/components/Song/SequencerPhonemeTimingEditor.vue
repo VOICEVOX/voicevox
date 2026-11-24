@@ -28,10 +28,6 @@
           :activeNoteId="activePhoneme?.noteId"
         />
       </template>
-      <SequencerPhonemeTimingToolPalette
-        :sequencerPhonemeTimingTool
-        @update:sequencerPhonemeTimingTool="setSequencerPhonemeTimingTool"
-      />
     </div>
   </div>
 </template>
@@ -52,27 +48,15 @@ import {
 import SequencerParameterGrid from "@/components/Song/SequencerParameterGrid.vue";
 import SequencerPhonemeTimings from "@/components/Song/SequencerPhonemeTimings.vue";
 import SequencerNoteTimings from "@/components/Song/SequencerNoteTimings.vue";
-import SequencerPhonemeTimingToolPalette from "@/components/Song/SequencerPhonemeTimingToolPalette.vue";
 import { getPhonemeTimingLayout } from "@/components/Song/SequencerPhonemeTimingEditor/style";
 import { assertNonNullable } from "@/type/utility";
 import {
   computePhonemeTimingInfos,
   getPhraseInfosForTrack,
 } from "@/song/phonemeTimingEditorStateMachine/common";
-import type { PhonemeTimingEditTool } from "@/store/type";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 const store = useStore();
-const sequencerPhonemeTimingTool = computed(
-  () => store.state.sequencerPhonemeTimingTool,
-);
-
-const setSequencerPhonemeTimingTool = (tool: PhonemeTimingEditTool) => {
-  void store.actions.SET_SEQUENCER_PHONEME_TIMING_TOOL({
-    sequencerPhonemeTimingTool: tool,
-  });
-};
-
 const props = defineProps<{
   viewportInfo: ViewportInfo;
 }>();

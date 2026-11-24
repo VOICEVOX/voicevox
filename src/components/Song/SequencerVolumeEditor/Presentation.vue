@@ -40,11 +40,6 @@
     <div class="volume-grid-labels" aria-hidden="true">
       <div class="volume-grid-label" :style="{ top: zeroLinePosition }">0</div>
     </div>
-    <SequencerVolumeToolPalette
-      class="volume-tool-palette"
-      :sequencerVolumeTool="props.tool"
-      @update:sequencerVolumeTool="emit('update:tool', $event)"
-    />
     <ContextMenu
       ref="contextMenu"
       :menudata="contextMenuData"
@@ -79,7 +74,6 @@ import { VOLUME_EDITOR_LAYOUT } from "./style";
 import ContextMenu, {
   type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
-import SequencerVolumeToolPalette from "@/components/Song/SequencerVolumeToolPalette.vue";
 import type { Note, Tempo, VolumeEditValue } from "@/domain/project/type";
 import { secondToTick } from "@/song/music";
 import {

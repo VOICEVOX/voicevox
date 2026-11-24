@@ -1,10 +1,6 @@
 <template>
   <div class="parameter-panel">
-    <div class="tool-area">
-      パラメータ
-      <!-- 仮のSwitcher -->
-      <ParameterPanelEditTargetSwitcher :editTarget :changeEditTarget />
-    </div>
+    <ParameterPanelEditToolBar />
     <div class="edit-area">
       <SequencerPhonemeTimingEditor
         v-if="editTarget === 'PHONEME_TIMING'"
@@ -33,8 +29,7 @@
 import { computed } from "vue";
 import SequencerVolumeEditor from "@/components/Song/SequencerVolumeEditor/Container.vue";
 import { useStore } from "@/store";
-import type { ParameterPanelEditTarget } from "@/store/type";
-import ParameterPanelEditTargetSwitcher from "@/components/Song/ParameterPanelEditTargetSwitcher.vue";
+import ParameterPanelEditToolBar from "@/components/Song/EditToolBar/ParameterPanelEditToolBar/Container.vue";
 import SequencerPhonemeTimingEditor from "@/components/Song/SequencerPhonemeTimingEditor.vue";
 import type { ViewportInfo } from "@/song/viewHelper";
 
@@ -49,10 +44,6 @@ const emit = defineEmits<{
 const store = useStore();
 
 const editTarget = computed(() => store.state.parameterPanelEditTarget);
-
-const changeEditTarget = (editTarget: ParameterPanelEditTarget) => {
-  void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({ editTarget });
-};
 </script>
 
 <style scoped lang="scss">
@@ -65,18 +56,7 @@ const changeEditTarget = (editTarget: ParameterPanelEditTarget) => {
 
   overflow: hidden;
   display: grid;
-  grid-template-rows: 48px 1fr;
-}
-
-.tool-area {
-  grid-column: 1;
-  grid-row: 1;
-  border-bottom: solid 1px var(--scheme-color-song-piano-keys-right-border);
-
-  display: flex;
-  align-items: center;
-  padding-left: 8px;
-  column-gap: 8px;
+  grid-template-rows: auto 1fr;
 }
 
 .edit-area {
