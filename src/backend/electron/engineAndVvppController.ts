@@ -1,4 +1,4 @@
-import { dialog } from "electron";
+import { dialog, net } from "electron";
 
 import { getConfigManager } from "./electronConfig";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
@@ -299,7 +299,10 @@ export class EngineAndVvppController {
 
     let latestInfo: Awaited<ReturnType<typeof fetchLatestDefaultEngineInfo>>;
     try {
-      latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
+      latestInfo = await fetchLatestDefaultEngineInfo(
+        latestUrl,
+        net.fetch.bind(net),
+      );
     } catch (cause) {
       throw new DisplayableError(
         "ネットワークエラーにより最新のエンジン情報を取得できませんでした。インターネット接続を確認して、再試行してください。",
