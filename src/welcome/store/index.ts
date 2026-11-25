@@ -12,6 +12,7 @@ import { themes } from "@/domain/theme";
 import type { EngineId } from "@/type/preload";
 import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
+import { failure, success } from "@/type/result";
 
 type LatestInfoState =
   | { type: "loading" }
@@ -296,11 +297,11 @@ function createWelcomeStore() {
         throw new Error(`Unsupported target: ${target}`);
       setSelectedRuntimeTarget(engineId, target);
       await installEngine(engineId);
-      await window.welcomeBackend.finishAutoInstall(0);
+      await window.welcomeBackend.finishAutoInstall(success(undefined));
     } catch (error) {
       if (target == undefined) throw error;
       window.welcomeBackend.logError(error);
-      await window.welcomeBackend.finishAutoInstall(1);
+      await window.welcomeBackend.finishAutoInstall(failure(error as Error));
     }
   };
 

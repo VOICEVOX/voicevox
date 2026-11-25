@@ -9,7 +9,7 @@ import type { Result } from "@/type/result";
 
 export interface WelcomeSandbox {
   getStartupOptions(): Promise<{ target: RuntimeTarget | undefined }>;
-  finishAutoInstall(result: Result<void, string>): Promise<void>;
+  finishAutoInstall(result: Result<void>): Promise<void>;
   installEngine(obj: {
     engineId: EngineId;
     target: RuntimeTarget;

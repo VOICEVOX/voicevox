@@ -34,33 +34,17 @@ type SingleInstanceLockData = {
   engineInstall?: boolean;
 };
 
-let installTarget: string | undefined;
-let initialFilePath: string | undefined;
-yargs(getArgv())
-  .command(
-    ["$0 [path]", "open [path]"],
-    "Open a file",
-    (yargs) => yargs.positional("path", { type: "string" }),
-    (args) => {
-      initialFilePath = args.path;
-    },
-  )
-  .command(
-    "install-engine",
-    "Install engine",
-    (yargs) =>
-      yargs.option("target", {
-        type: "string",
-        demandOption: true,
-        describe: "Target engine to install",
-        coerce: (arg) => runtimeTargetSchema.parse(arg),
-      }),
-    (args) => {
-      installTarget = args.target;
-    },
-  )
-  .help()
-  .parseSync();
+type Argv =
+  | {
+      type: "start";
+      path: string | undefined;
+    }
+  | {
+      type: "install-engine";
+      target: string;
+    };
+
+const argv = parseArgv(getArgv());
 
 if (isDevelopment && !isTest) {
   app.commandLine.appendSwitch("remote-debugging-port", "9222");
@@ -123,7 +107,7 @@ if (errorForRemoveBeforeUserDataDir != undefined) {
 process.on("uncaughtException", (error) => {
   log.error(error);
 
-  if (isDevelopment || installTarget != undefined) {
+  if (isDevelopment || argv.type === "install-engine") {
     app.exit(1);
   } else {
     const { message, name } = error;
@@ -140,7 +124,9 @@ process.on("uncaughtException", (error) => {
 });
 process.on("unhandledRejection", (reason) => {
   log.error(reason);
-  if (installTarget != undefined) app.exit(1);
+  if (argv.type === "install-engine") {
+    app.exit(1);
+  }
 });
 
 function getAppPaths() {
@@ -279,9 +265,11 @@ initializeAppStateController();
 initializeIpcMainHandleManager({
   staticDirPath: staticDir,
   appDirPath,
-  initialFilePathGetter: () => initialFilePath,
+  initialFilePathGetter: () => (argv.type === "start" ? argv.path : undefined),
 });
-initializeWelcomeIpcMainHandleManager(installTarget);
+initializeWelcomeIpcMainHandleManager(
+  argv.type === "install-engine" ? argv.target : undefined,
+);
 
 initializeMainWindowManager({
   isDevelopment,
@@ -331,6 +319,42 @@ function getArgv(): string[] {
     }
   }
   return [];
+}
+
+function parseArgv(argv: string[]): Argv {
+  let installTarget: string | undefined;
+  let initialFilePath: string | undefined;
+  yargs(argv)
+    .command(
+      ["$0 [path]", "open [path]"],
+      "Open a file",
+      (yargs) => yargs.positional("path", { type: "string" }),
+      (args) => {
+        initialFilePath = args.path;
+      },
+    )
+    .command(
+      "install-engine",
+      "Install engine",
+      (yargs) =>
+        yargs.option("target", {
+          type: "string",
+          demandOption: true,
+          describe: "Target engine to install",
+          coerce: (arg) => runtimeTargetSchema.parse(arg),
+        }),
+      (args) => {
+        installTarget = args.target;
+      },
+    )
+    .help()
+    .parseSync();
+
+  if (installTarget != undefined) {
+    return { type: "install-engine", target: installTarget };
+  } else {
+    return { type: "start", path: initialFilePath };
+  }
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
@@ -392,14 +416,16 @@ app.once("will-finish-launching", () => {
   // macOS only
   app.once("open-file", (event, filePath) => {
     event.preventDefault();
-    initialFilePath = filePath;
+    if (argv.type === "start") {
+      argv.path = filePath;
+    }
   });
 });
 
 void app.whenReady().then(async () => {
   await configManager.initialize().catch(async (e) => {
     log.error(e);
-    if (installTarget != undefined) {
+    if (argv.type === "install-engine") {
       app.exit(1);
       throw e;
     }
@@ -481,14 +507,14 @@ void app.whenReady().then(async () => {
     }
   });
 
-  if (initialFilePath) {
-    log.info(`Initial file path provided: ${initialFilePath}`);
-    if (isVvppFile(initialFilePath)) {
-      log.info(`vvpp file install: ${initialFilePath}`);
+  if (argv.type === "start" && argv.path) {
+    log.info(`Initial file path provided: ${argv.path}`);
+    if (isVvppFile(argv.path)) {
+      log.info(`vvpp file install: ${argv.path}`);
       // FIXME: GUI側に合流させる
       if (checkMultiEngineEnabled()) {
         await engineAndVvppController.installVvppEngineWithWarning({
-          vvppPath: initialFilePath,
+          vvppPath: argv.path,
           asDefaultVvppEngine: false,
           reloadNeeded: false,
         });
@@ -496,13 +522,13 @@ void app.whenReady().then(async () => {
     }
   }
 
-  await appStateController.startup();
+  await appStateController.startup(argv.type === "install-engine");
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
 app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
   const data = rawData as SingleInstanceLockData;
-  if (installTarget != undefined || data.engineInstall) return;
+  if (argv.type === "install-engine" || data.engineInstall) return;
   const win = mainWindowManager.win;
   if (win == undefined) {
     // TODO: 起動シーケンス中の場合はWindowが作られるまで待つ

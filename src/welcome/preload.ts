@@ -34,8 +34,9 @@ const ipcRendererInvokeProxy = new Proxy(
 
 const api: WelcomeSandbox = {
   getStartupOptions: () => ipcRendererInvokeProxy.GET_STARTUP_OPTIONS(),
-  finishAutoInstall: (exitCode) =>
-    ipcRendererInvokeProxy.FINISH_AUTO_INSTALL({ exitCode }),
+  finishAutoInstall: (result) =>
+    ipcRendererInvokeProxy.FINISH_AUTO_INSTALL(result),
+
   installEngine: (obj) => {
     return ipcRendererInvokeProxy.INSTALL_ENGINE(obj);
   },

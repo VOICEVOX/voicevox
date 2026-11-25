@@ -14,7 +14,7 @@ export type WelcomeIpcIHData = {
     args: [];
     return: { target: RuntimeTarget | undefined };
   };
-  FINISH_AUTO_INSTALL: { args: [obj: { exitCode: 0 | 1 }]; return: void };
+  FINISH_AUTO_INSTALL: { args: [result: Result<void>]; return: void };
   INSTALL_ENGINE: {
     args: [
       obj: {
