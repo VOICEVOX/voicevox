@@ -8,11 +8,14 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { spawn } from "node:child_process";
 import { app } from "electron";
+import * as shlex from "shlex";
 import { ExtractedEngineFiles } from "./ExtractedEngineFiles";
+import { isPathWithinDirectory } from "./fileHelper";
 import {
   minimumEngineManifestSchema,
   type MinimumEngineManifestType,
 } from "@/type/preload";
+import { DisplayableError } from "@/helpers/errorHelper";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { assertNonNullable } from "@/type/utility";
@@ -121,7 +124,17 @@ export class VvppFileExtractor {
       await this.unarchive(archiveFileParts[0]);
     }
 
-    return await this.readManifest();
+    const manifest = await this.readManifest();
+    const [command] = shlex.split(manifest.command);
+    const commandPath = path.resolve(this.outputDir, command);
+    const existsCommand = await fs.promises
+      .access(commandPath)
+      .then(() => true)
+      .catch(() => false);
+    if (!existsCommand || !isPathWithinDirectory(this.outputDir, commandPath)) {
+      throw new DisplayableError("マニフェストファイルが不正です。");
+    }
+    return manifest;
   }
 
   private async concatenateAndUnarchive(archiveFileParts: string[]) {

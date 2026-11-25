@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { dialog } from "electron";
+import * as shlex from "shlex";
 import type { ExtractedEngineFiles } from "../ExtractedEngineFiles";
 import type {
   EngineId,
@@ -8,6 +9,7 @@ import type {
   MinimumEngineManifestType,
 } from "@/type/preload";
 import { errorToMessage } from "@/helpers/errorHelper";
+import { isPathWithinDirectory } from "@/backend/electron/fileHelper";
 import { VvppFileExtractor } from "@/backend/electron/vvppFile";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
@@ -140,7 +142,8 @@ export class VvppManager {
     }).extract();
 
     const manifest = extractedEngineFiles.getManifest();
-    await this.applyExecutablePermissions(extractedEngineDir, manifest.command);
+    const [commandPath] = shlex.split(manifest.command);
+    await this.applyExecutablePermissions(extractedEngineDir, commandPath);
 
     return extractedEngineFiles;
   }
@@ -155,7 +158,16 @@ export class VvppManager {
     commandPath: string,
   ) {
     if (!isWindows) {
-      await fs.promises.chmod(path.join(engineDirectory, commandPath), "755");
+      // commandPathの実体がengineDirectoryの中に含まれている場合のみ実行権限を付与する
+      const commandFullPath = path.join(engineDirectory, commandPath);
+      if (
+        isPathWithinDirectory(
+          engineDirectory,
+          await fs.promises.realpath(commandFullPath),
+        )
+      ) {
+        await fs.promises.chmod(commandFullPath, "755");
+      }
     }
   }
 
