@@ -1,4 +1,4 @@
-import { getLast } from "@/song/utility";
+import { getLast } from "./utility";
 
 /**
  * mipmapのレベル。バケットサイズと、各バケットのmin/max値を保持する。

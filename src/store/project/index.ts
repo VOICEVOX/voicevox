@@ -1,17 +1,18 @@
 import { createPartialStore, type DotNotationDispatch } from "../vuex";
+import { createUILockAction } from "../ui";
+import type {
+  AllActions,
+  AudioItem,
+  ProjectStoreState,
+  ProjectStoreTypes,
+} from "../type";
+import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "../utility";
 import {
   executeWritePromiseOrDialog,
   promptProjectSaveFilePath,
   markCurrentProjectAsSaved,
   writeProjectFile,
 } from "./saveProjectHelper";
-import { createUILockAction } from "@/store/ui";
-import type {
-  AllActions,
-  AudioItem,
-  ProjectStoreState,
-  ProjectStoreTypes,
-} from "@/store/type";
 import { TrackId } from "@/type/preload";
 import path from "@/helpers/path";
 import { getValueOrThrow, ResultError } from "@/type/result";
@@ -31,7 +32,6 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
-import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "@/store/utility";
 import type { Track } from "@/domain/project/type";
 import { migrateProjectFileObject } from "@/infrastructures/projectFile/migration";
 import { toEditorTrack } from "@/infrastructures/projectFile/conversion";

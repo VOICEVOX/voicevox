@@ -1,4 +1,4 @@
-import { clamp, round } from "@/song/utility";
+import { clamp, round } from "./utility";
 
 export type VolumeValueScale = {
   minDb: number;

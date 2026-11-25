@@ -1,10 +1,10 @@
 import { computed } from "vue";
-import type { Store } from "@/store";
-import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import type {
   MaybeComputedMenuBarContent,
   MenuBarContent,
-} from "@/components/Menu/MenuBar/menuBarData";
+} from "../Menu/MenuBar/menuBarData";
+import type { Store } from "@/store";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 
 export const useMenuBarData = (store: Store): MaybeComputedMenuBarContent => {
   // 「ファイル」メニュー

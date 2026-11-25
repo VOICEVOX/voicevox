@@ -116,9 +116,9 @@
 <script setup lang="ts">
 import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
-import CharacterButton from "@/components/CharacterButton.vue";
-import type { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
-import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
+import CharacterButton from "../CharacterButton.vue";
+import type { MenuItemButton, MenuItemSeparator } from "../Menu/type";
+import ContextMenu from "../Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import type { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";

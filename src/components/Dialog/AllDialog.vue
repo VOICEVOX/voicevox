@@ -47,22 +47,22 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import SettingDialog from "@/components/Dialog/SettingDialog/SettingDialog.vue";
-import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
-import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
-import DefaultStyleListDialog from "@/components/Dialog/OldDefaultStyleListDialog.vue";
-import CharacterListDialog from "@/components/Dialog/CharacterListDialog.vue";
-import CharacterOrderDialog from "@/components/Dialog/OldCharacterOrderDialog.vue";
-import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptDialog/AcceptRetrieveTelemetryDialog.vue";
-import AcceptTermsDialog from "@/components/Dialog/AcceptDialog/AcceptTermsDialog.vue";
-import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog/DictionaryManageDialog.vue";
-import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
-import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
-import EngineUpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/EngineContainer.vue";
-import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
-import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
-import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
-import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
+import SettingDialog from "./SettingDialog/SettingDialog.vue";
+import HotkeySettingDialog from "./HotkeySettingDialog.vue";
+import ToolBarCustomDialog from "./ToolBarCustomDialog.vue";
+import DefaultStyleListDialog from "./OldDefaultStyleListDialog.vue";
+import CharacterListDialog from "./CharacterListDialog.vue";
+import CharacterOrderDialog from "./OldCharacterOrderDialog.vue";
+import AcceptRetrieveTelemetryDialog from "./AcceptDialog/AcceptRetrieveTelemetryDialog.vue";
+import AcceptTermsDialog from "./AcceptDialog/AcceptTermsDialog.vue";
+import DictionaryManageDialog from "./DictionaryManageDialog/DictionaryManageDialog.vue";
+import EngineManageDialog from "./EngineManageDialog.vue";
+import UpdateNotificationDialogContainer from "./UpdateNotificationDialog/Container.vue";
+import EngineUpdateNotificationDialogContainer from "./UpdateNotificationDialog/EngineContainer.vue";
+import ImportSongProjectDialog from "./ImportSongProjectDialog.vue";
+import ExportSongAudioDialog from "./ExportSongAudioDialog/Container.vue";
+import PresetManageDialog from "./PresetManageDialog.vue";
+import HelpDialog from "./HelpDialog/HelpDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 

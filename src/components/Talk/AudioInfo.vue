@@ -315,7 +315,7 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef, watchEffect } from "vue";
 import type { QSelect, QSelectProps } from "quasar";
-import CharacterButton from "@/components/CharacterButton.vue";
+import CharacterButton from "../CharacterButton.vue";
 import { useStore } from "@/store";
 
 import type {

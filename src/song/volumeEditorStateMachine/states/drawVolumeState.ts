@@ -5,14 +5,14 @@ import type {
   PositionOnVolumeEditor,
   VolumeEditorIdleStateId,
 } from "../common";
-import type { SetNextState, State } from "@/song/stateMachine";
-import type { TrackId } from "@/type/preload";
-import { createArray, linearInterpolation } from "@/song/utility";
-import { getButton } from "@/song/viewHelper";
+import type { SetNextState, State } from "../../stateMachine";
+import { createArray, linearInterpolation } from "../../utility";
+import { getButton } from "../../viewHelper";
 import {
   countVolumeEditDataPoints,
   maskVolumeEditDataByEditableRanges,
-} from "@/song/volumeEditRanges";
+} from "../../volumeEditRanges";
+import type { TrackId } from "@/type/preload";
 
 export class DrawVolumeState implements State<
   VolumeEditorStateDefinitions,

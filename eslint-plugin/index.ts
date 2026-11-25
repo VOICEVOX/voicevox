@@ -1,9 +1,11 @@
 import type { FlatConfig } from "@typescript-eslint/utils/ts-eslint";
 import noStrictNullable from "./no-strict-nullable";
 import noUselessNonNullAssertion from "./no-useless-non-null-assertion";
+import consistentImportPath from "./consistent-import-path";
 import pkg from "./package.json" with { type: "json" };
 
 const rules: FlatConfig.Plugin["rules"] = {
+  "consistent-import-path": consistentImportPath,
   "no-strict-nullable": noStrictNullable,
   "no-useless-non-null-assertion": noUselessNonNullAssertion,
 };
@@ -22,6 +24,7 @@ const voicevoxPlugin = {
           "@voicevox": plugin,
         },
         rules: {
+          "@voicevox/consistent-import-path": "error",
           "@voicevox/no-strict-nullable": "error",
         },
       },

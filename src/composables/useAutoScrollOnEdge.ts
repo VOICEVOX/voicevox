@@ -1,5 +1,5 @@
 import { type ComputedRef, onMounted, onUnmounted, type Ref, watch } from "vue";
-import { useMounted } from "@/composables/useMounted";
+import { useMounted } from "./useMounted";
 import {
   calcMinimumDistanceVectorRectAndPoint,
   type Rect,

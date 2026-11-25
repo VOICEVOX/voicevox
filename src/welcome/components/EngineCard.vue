@@ -84,6 +84,7 @@
 <script setup lang="ts">
 import semver from "semver";
 import { computed, ref } from "vue";
+import { useStore } from "../store";
 import EngineRuntimeTargetSelect from "./EngineRuntimeTargetSelect.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import type {
@@ -93,7 +94,6 @@ import type {
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
 import { assertNonNullable } from "@/type/utility";
 import type { EngineId } from "@/type/preload";
-import { useStore } from "@/welcome/store";
 import type {
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,

@@ -38,22 +38,22 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import SequencerParameterGrid from "./SequencerParameterGrid.vue";
+import SequencerPhonemeTimings from "./SequencerPhonemeTimings.vue";
+import SequencerNoteTimings from "./SequencerNoteTimings.vue";
+import SequencerPhonemeTimingToolPalette from "./SequencerPhonemeTimingToolPalette.vue";
+import { getPhonemeTimingLayout } from "./SequencerPhonemeTimingEditor/style";
+import {
+  onMountedOrActivated,
+  onUnmountedOrDeactivated,
+} from "@/composables/onMountOrActivate";
+import { usePhonemeTimingEditorStateMachine } from "@/composables/usePhonemeTimingEditorStateMachine";
+import { useStore } from "@/store";
 import {
   getXInBorderBox,
   getYInBorderBox,
   type ViewportInfo,
 } from "@/song/viewHelper";
-import { useStore } from "@/store";
-import { usePhonemeTimingEditorStateMachine } from "@/composables/usePhonemeTimingEditorStateMachine";
-import {
-  onMountedOrActivated,
-  onUnmountedOrDeactivated,
-} from "@/composables/onMountOrActivate";
-import SequencerParameterGrid from "@/components/Song/SequencerParameterGrid.vue";
-import SequencerPhonemeTimings from "@/components/Song/SequencerPhonemeTimings.vue";
-import SequencerNoteTimings from "@/components/Song/SequencerNoteTimings.vue";
-import SequencerPhonemeTimingToolPalette from "@/components/Song/SequencerPhonemeTimingToolPalette.vue";
-import { getPhonemeTimingLayout } from "@/components/Song/SequencerPhonemeTimingEditor/style";
 import { assertNonNullable } from "@/type/utility";
 import {
   computePhonemeTimingInfos,

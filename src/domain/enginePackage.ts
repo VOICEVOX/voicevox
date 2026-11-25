@@ -1,7 +1,7 @@
 import type {
   PackageInfo,
   RuntimeTarget,
-} from "@/domain/defaultEngine/latestDefaultEngine";
+} from "./defaultEngine/latestDefaultEngine";
 
 /** アプリに埋め込まれたパッケージ定義情報 */
 export type EnginePackageEmbeddedInfo = {

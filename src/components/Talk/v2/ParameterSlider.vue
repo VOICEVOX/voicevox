@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
-import BaseSlider from "@/components/Base/BaseSlider.vue";
+import BaseSlider from "../../Base/BaseSlider.vue";
 
 const props = defineProps<{
   sliderKey: string;

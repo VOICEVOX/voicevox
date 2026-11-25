@@ -29,12 +29,12 @@
 import { computed, ref, onUnmounted, inject } from "vue";
 import { offsetInjectionKey } from "../Container.vue";
 import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
+import type { ContextMenuItemData } from "../../../Menu/ContextMenu/Presentation.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
 import { baseXToTick } from "@/song/viewHelper";
 import { getMeasureDuration, getNoteDuration } from "@/song/music";
-import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 
 defineOptions({
   name: "LoopLaneContainer",

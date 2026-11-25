@@ -1,11 +1,8 @@
 import path from "node:path";
 import fs from "node:fs";
 import { app } from "electron";
+import { BaseConfigManager, type Metadata } from "../common/ConfigManager";
 import { writeFileSafely } from "./fileHelper";
-import {
-  BaseConfigManager,
-  type Metadata,
-} from "@/backend/common/ConfigManager";
 import type { ConfigType } from "@/type/preload";
 import { isMac } from "@/helpers/platform";
 

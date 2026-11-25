@@ -14,9 +14,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { inject } from "vue";
+import { numMeasuresInjectionKey } from "../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
-import { numMeasuresInjectionKey } from "@/components/Song/ScoreSequencer.vue";
 
 defineOptions({
   name: "SequencerGrid",

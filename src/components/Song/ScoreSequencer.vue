@@ -249,21 +249,22 @@ import {
   watch,
   provide,
 } from "vue";
-import SequencerParameterPanel from "@/components/Song/SequencerParameterPanel.vue";
-import SequencerGridSpacer from "@/components/Song/SequencerGridSpacer.vue";
 import ContextMenu, {
   type ContextMenuItemData,
-} from "@/components/Menu/ContextMenu/Container.vue";
-import { useStore } from "@/store";
-import type { Note } from "@/domain/project/type";
-import {
-  getNoteDuration,
-  getTimeSignaturePositions,
-  noteNumberToFrequency,
-  tickToMeasureNumber,
-  tickToSecond,
-} from "@/song/music";
-import { getEndTicksOfPhrase, getStartTicksOfPhrase } from "@/song/domain";
+} from "../Menu/ContextMenu/Container.vue";
+import SequencerGridSpacer from "./SequencerGridSpacer.vue";
+import SequencerParameterPanel from "./SequencerParameterPanel.vue";
+import SequencerGrid from "./SequencerGrid/Container.vue";
+import SequencerRuler from "./SequencerRuler/Container.vue";
+import SequencerKeys from "./SequencerKeys.vue";
+import SequencerNote from "./SequencerNote.vue";
+import SequencerShadowNote from "./SequencerShadowNote.vue";
+import SequencerPhraseIndicator from "./SequencerPhraseIndicator.vue";
+import CharacterPortrait from "./CharacterPortrait.vue";
+import SequencerPitch from "./SequencerPitch.vue";
+import SequencerLyricInput from "./SequencerLyricInput.vue";
+import SequencerToolPalette from "./SequencerToolPalette.vue";
+import { clamp, getLast } from "@/song/utility";
 import {
   tickToBaseX,
   baseXToTick,
@@ -278,17 +279,16 @@ import {
   PREVIEW_SOUND_DURATION,
   SEQUENCER_MIN_NUM_MEASURES,
 } from "@/song/viewHelper";
-import { clamp, getLast } from "@/song/utility";
-import SequencerGrid from "@/components/Song/SequencerGrid/Container.vue";
-import SequencerRuler from "@/components/Song/SequencerRuler/Container.vue";
-import SequencerKeys from "@/components/Song/SequencerKeys.vue";
-import SequencerNote from "@/components/Song/SequencerNote.vue";
-import SequencerShadowNote from "@/components/Song/SequencerShadowNote.vue";
-import SequencerPhraseIndicator from "@/components/Song/SequencerPhraseIndicator.vue";
-import CharacterPortrait from "@/components/Song/CharacterPortrait.vue";
-import SequencerPitch from "@/components/Song/SequencerPitch.vue";
-import SequencerLyricInput from "@/components/Song/SequencerLyricInput.vue";
-import SequencerToolPalette from "@/components/Song/SequencerToolPalette.vue";
+import { getEndTicksOfPhrase, getStartTicksOfPhrase } from "@/song/domain";
+import {
+  getNoteDuration,
+  getTimeSignaturePositions,
+  noteNumberToFrequency,
+  tickToMeasureNumber,
+  tickToSecond,
+} from "@/song/music";
+import { useStore } from "@/store";
+import type { Note } from "@/domain/project/type";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";

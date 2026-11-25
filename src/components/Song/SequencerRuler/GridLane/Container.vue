@@ -14,8 +14,8 @@
 
 <script setup lang="ts">
 import { computed, inject } from "vue";
-import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
 import { offsetInjectionKey } from "../Container.vue";
+import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";

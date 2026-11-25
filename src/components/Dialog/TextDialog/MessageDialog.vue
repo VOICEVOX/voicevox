@@ -26,9 +26,9 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
 import { computed } from "vue";
+import BaseDialog from "../../Base/BaseDialog.vue";
+import BaseButton from "../../Base/BaseButton.vue";
 import { type DialogType, getColor, getIcon } from "./common";
-import BaseDialog from "@/components/Base/BaseDialog.vue";
-import BaseButton from "@/components/Base/BaseButton.vue";
 
 const modelValue = defineModel<boolean>({ default: false });
 const props = withDefaults(

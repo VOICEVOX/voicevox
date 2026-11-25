@@ -4,6 +4,9 @@
 import semver from "semver";
 import type { z } from "zod";
 
+import { projectFileSchema } from "./schema";
+import { ProjectFileFormatError } from "./type";
+import { validateTalkProject } from "./validation";
 import type { AccentPhrase } from "@/openapi";
 import {
   EngineId,
@@ -20,9 +23,6 @@ import {
   DEFAULT_TRACK_NAME,
 } from "@/song/domain";
 import { uuid4 } from "@/helpers/random";
-import { projectFileSchema } from "@/infrastructures/projectFile/schema";
-import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
-import { validateTalkProject } from "@/infrastructures/projectFile/validation";
 import { getAppInfos } from "@/domain/appInfo";
 
 const DEFAULT_SAMPLING_RATE = 24000;

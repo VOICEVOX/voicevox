@@ -1,4 +1,3 @@
-import type { SetNextState, State } from "@/song/stateMachine";
 import type {
   PhonemeTimingEditorContext,
   PhonemeTimingEditorIdleStateId,
@@ -6,14 +5,15 @@ import type {
   PhonemeTimingEditorStateDefinitions,
   PhonemeTimingInfo,
   PhraseInfo,
-} from "@/song/phonemeTimingEditorStateMachine/common";
+} from "../common";
+import { isInPhonemeBandHitArea } from "../common";
+import type { SetNextState, State } from "../../stateMachine";
+import { baseXToTick, getButton } from "../../viewHelper";
+import { tickToSecond } from "../../music";
+import { clamp, getPrev } from "../../utility";
 import { NoteId, TrackId } from "@/type/preload";
-import { baseXToTick, getButton } from "@/song/viewHelper";
-import { tickToSecond } from "@/song/music";
-import { clamp, getPrev } from "@/song/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { assertNonNullable } from "@/type/utility";
-import { isInPhonemeBandHitArea } from "@/song/phonemeTimingEditorStateMachine/common";
 
 export class MovePhonemeTimingState implements State<
   PhonemeTimingEditorStateDefinitions,

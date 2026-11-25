@@ -1,11 +1,11 @@
-import type { VolumeEditValue } from "@/domain/project/type";
-import type { VolumePreviewEdit } from "@/song/volumeEditorStateMachine/common";
+import type { VolumePreviewEdit } from "./volumeEditorStateMachine/common";
 import {
   getOverlappingVolumeEditableFrameRanges,
   maskVolumeEditDataByEditableRanges,
   type VolumeEditFrameRange,
   type VolumeEditableFrameRange,
-} from "@/song/volumeEditRanges";
+} from "./volumeEditRanges";
+import type { VolumeEditValue } from "@/domain/project/type";
 import { ExhaustiveError } from "@/type/utility";
 
 export type VolumeEditDisplayData = {

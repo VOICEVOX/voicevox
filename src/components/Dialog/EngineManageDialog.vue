@@ -270,11 +270,11 @@
 import { computed, ref, watch } from "vue";
 import BaseToggleGroup from "../Base/BaseToggleGroup.vue";
 import BaseToggleGroupItem from "../Base/BaseToggleGroupItem.vue";
-import BaseButton from "@/components/Base/BaseButton.vue";
-import BaseListItem from "@/components/Base/BaseListItem.vue";
-import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
-import BaseTextField from "@/components/Base/BaseTextField.vue";
-import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseButton from "../Base/BaseButton.vue";
+import BaseListItem from "../Base/BaseListItem.vue";
+import BaseNavigationView from "../Base/BaseNavigationView.vue";
+import BaseTextField from "../Base/BaseTextField.vue";
+import BaseScrollArea from "../Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
 import { type EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";

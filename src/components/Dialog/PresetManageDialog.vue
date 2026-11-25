@@ -156,14 +156,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
+import BaseListItem from "../Base/BaseListItem.vue";
+import BaseNavigationView from "../Base/BaseNavigationView.vue";
+import BaseScrollArea from "../Base/BaseScrollArea.vue";
+import BaseIconButton from "../Base/BaseIconButton.vue";
+import BaseTextField from "../Base/BaseTextField.vue";
+import CharacterButton from "../CharacterButton.vue";
+import ParameterSlider from "../Talk/v2/ParameterSlider.vue";
 import { useStore } from "@/store";
-import BaseListItem from "@/components/Base/BaseListItem.vue";
-import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
-import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
-import BaseIconButton from "@/components/Base/BaseIconButton.vue";
-import BaseTextField from "@/components/Base/BaseTextField.vue";
-import CharacterButton from "@/components/CharacterButton.vue";
-import ParameterSlider from "@/components/Talk/v2/ParameterSlider.vue";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import type {
   CharacterInfo,

@@ -63,6 +63,10 @@ import {
   toRef,
   watch,
 } from "vue";
+import SequencerVolumeToolPalette from "../SequencerVolumeToolPalette.vue";
+import ContextMenu, {
+  type ContextMenuItemData,
+} from "../../Menu/ContextMenu/Presentation.vue";
 import Tooltip from "./Tooltip.vue";
 import {
   useVolumeEditorPointerInput,
@@ -76,10 +80,6 @@ import {
   type VolumeEditorBaseXRange,
 } from "./renderer";
 import { VOLUME_EDITOR_LAYOUT } from "./style";
-import ContextMenu, {
-  type ContextMenuItemData,
-} from "@/components/Menu/ContextMenu/Presentation.vue";
-import SequencerVolumeToolPalette from "@/components/Song/SequencerVolumeToolPalette.vue";
 import type { Note, Tempo, VolumeEditValue } from "@/domain/project/type";
 import { secondToTick } from "@/song/music";
 import {

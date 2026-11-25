@@ -63,9 +63,9 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import BaseDocumentView from "../../Base/BaseDocumentView.vue";
+import BaseScrollArea from "../../Base/BaseScrollArea.vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
-import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{

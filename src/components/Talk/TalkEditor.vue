@@ -140,14 +140,14 @@ import {
 } from "vue";
 import Draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
+import ProgressView from "../ProgressView.vue";
+import EngineStartupOverlay from "../EngineStartupOverlay.vue";
 import AudioCell from "./AudioCell.vue";
 import AudioDetail from "./AudioDetail.vue";
 import AudioInfo from "./AudioInfo.vue";
 import CharacterPortrait from "./CharacterPortrait.vue";
 import ToolBar from "./ToolBar.vue";
 import { useStore } from "@/store";
-import ProgressView from "@/components/ProgressView.vue";
-import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import type { AudioItem } from "@/store/type";
 import type {
   AudioKey,

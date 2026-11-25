@@ -1,7 +1,7 @@
+import type { PresetStoreState, PresetStoreTypes, State } from "./type";
 import { createPartialStore } from "./vuex";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { uuid4 } from "@/helpers/random";
-import type { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
 import { type Preset, PresetKey, type Voice, VoiceId } from "@/type/preload";
 
 /**

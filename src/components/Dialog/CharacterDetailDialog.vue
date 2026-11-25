@@ -120,9 +120,9 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import BaseIconButton from "@/components/Base/BaseIconButton.vue";
-import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
-import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseIconButton from "../Base/BaseIconButton.vue";
+import BaseDocumentView from "../Base/BaseDocumentView.vue";
+import BaseScrollArea from "../Base/BaseScrollArea.vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";

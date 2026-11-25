@@ -114,12 +114,12 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { lockUiWhile, uiLocked } from "./common";
+import BaseListItem from "../../Base/BaseListItem.vue";
+import BaseIconButton from "../../Base/BaseIconButton.vue";
+import BaseNavigationView from "../../Base/BaseNavigationView.vue";
+import BaseButton from "../../Base/BaseButton.vue";
 import WordEditor from "./WordEditor.vue";
-import BaseListItem from "@/components/Base/BaseListItem.vue";
-import BaseIconButton from "@/components/Base/BaseIconButton.vue";
-import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
-import BaseButton from "@/components/Base/BaseButton.vue";
+import { lockUiWhile, uiLocked } from "./common";
 import { useStore } from "@/store";
 import type { UserDictWord } from "@/openapi";
 import { UnreachableError } from "@/type/utility";

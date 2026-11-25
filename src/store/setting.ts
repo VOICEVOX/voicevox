@@ -1,6 +1,6 @@
-import type { SettingStoreState, SettingStoreTypes } from "./type";
-import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
+import type { SettingStoreState, SettingStoreTypes } from "./type";
 import { themes } from "@/domain/theme";
 import {
   hideAllLoadingScreen,

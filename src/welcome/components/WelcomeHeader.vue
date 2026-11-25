@@ -23,8 +23,8 @@
 </template>
 
 <script setup lang="ts">
+import { useStore } from "../store";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
-import { useStore } from "@/welcome/store";
 
 const store = useStore();
 const { launchEditorState } = store;

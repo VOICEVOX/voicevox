@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
+import { Color } from "./lineStrip";
 import type { VolumeEditValue } from "@/domain/project/type";
-import { Color } from "@/song/graphics/lineStrip";
 
 export type VolumePoint = {
   readonly baseX: number;
