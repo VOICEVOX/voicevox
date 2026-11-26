@@ -88,6 +88,9 @@ import { createLogger } from "@/helpers/log";
 import { getAppInfos } from "@/domain/appInfo";
 import type { OssLicenseInfo } from "@/domain/staticAssets";
 
+/** `createPageItem`以外でPageItemを作れないようにするための印 */
+const pageItemBrand = Symbol("PageItem");
+
 type PageItem = {
   type: "item";
   name: string;
@@ -95,18 +98,20 @@ type PageItem = {
   component: Component;
   props?: Record<string, unknown>;
   shouldShowOpenLogDirectoryButton?: boolean;
+  [pageItemBrand]: true;
 };
 /**
  * ページの項目を作る。
  * componentに渡すpropsの型が合っていない場合は型エラーになる。
+ * PageItemはこの関数でしか作れない。
  */
 function createPageItem<C extends Component>(
-  item: Omit<PageItem, "component" | "props"> & {
+  item: Omit<PageItem, "component" | "props" | typeof pageItemBrand> & {
     component: C;
     props: ComponentProps<C>;
   },
 ): PageItem {
-  return item;
+  return { ...item, [pageItemBrand]: true };
 }
 
 type PageSeparator = {
@@ -165,11 +170,12 @@ const pagedata = computed(() => {
         markdown: policy.value,
       },
     }),
-    {
+    createPageItem({
       type: "item",
       name: "音声ライブラリの利用規約",
       component: LibraryPolicy,
-    },
+      props: {},
+    }),
     createPageItem({
       type: "item",
       name: "使い方",
