@@ -8,16 +8,6 @@ import {
 } from "@/backend/electron/fileHelper";
 import { uuid4 } from "@/helpers/random";
 
-let tmpDir: string;
-
-beforeAll(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), uuid4()));
-});
-
-afterAll(() => {
-  fs.rmSync(tmpDir, { recursive: true });
-});
-
 describe("isPathWithinDirectory", () => {
   const rootDir = process.platform === "win32" ? "C:" : "/";
   test("ファイルパスが指定したディレクトリ内にある", () => {
@@ -87,6 +77,16 @@ describe("isPathWithinDirectory", () => {
 });
 
 describe("writeFileSafely", () => {
+  let tmpDir: string;
+
+  beforeAll(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), uuid4()));
+  });
+
+  afterAll(() => {
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
   test("ファイルを書き込める", async () => {
     const filePath = path.join(tmpDir, uuid4());
     const content = "Hello World";
