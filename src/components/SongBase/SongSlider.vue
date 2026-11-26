@@ -102,7 +102,7 @@ const onWheel = (event: WheelEvent) => {
 
   const delta = event.deltaY > 0 ? -1 : 1;
   const scrollStep =
-    props.scrollStep && !isOnCommandOrCtrlKeyDown(event)
+    props.scrollStep != undefined && !isOnCommandOrCtrlKeyDown(event)
       ? props.scrollStep
       : props.step;
 
