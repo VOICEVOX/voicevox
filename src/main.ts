@@ -7,6 +7,7 @@ import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
 import App from "@/components/App.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { i18n } from "@/i18n";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
@@ -18,6 +19,7 @@ window.dataLayer = [];
 
 createApp(App)
   .use(store, storeKey)
+  .use(i18n)
   .use(
     createGtm({
       id: import.meta.env.VITE_GTM_CONTAINER_ID ?? "GTM-DUMMY",

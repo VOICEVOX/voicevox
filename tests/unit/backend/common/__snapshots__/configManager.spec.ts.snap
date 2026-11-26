@@ -208,6 +208,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     },
   ],
   "inheritAudioInfo": true,
+  "locale": "ja",
   "openedEditor": "talk",
   "playheadPositionDisplayFormat": "MINUTES_SECONDS",
   "presets": {

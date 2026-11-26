@@ -376,9 +376,13 @@ export type ConfirmedTips = {
   streamingUnrecommended: boolean; // ストリーミング再生で生成が再生に追いつかない場合の通知
 };
 
+export const localeSchema = z.enum(["ja", "en", "zh-CN"]);
+export type Locale = z.infer<typeof localeSchema>;
+
 // ルート直下にある雑多な設定値
 export const rootMiscSettingSchema = z.object({
   openedEditor: z.enum(["talk", "song"]).default("talk"),
+  locale: localeSchema.default("ja"),
   editorFont: z.enum(["default", "os"]).default("default"),
   showTextLineNumber: z.boolean().default(false),
   showAddAudioItemButton: z.boolean().default(true),
