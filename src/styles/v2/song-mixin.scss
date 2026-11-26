@@ -1,0 +1,55 @@
+@use "./song-variables" as song-vars;
+
+// 背景色の上に重ねて描くので、選択中や設定がオンのコンポーネントでも、ホバーと押下が分かる
+@mixin state-layer(
+  $hovered: var(--scheme-color-song-control-hovered),
+  $pressed: var(--scheme-color-song-control-pressed)
+) {
+  &:hover:not(:disabled, [data-disabled]) {
+    background-image: linear-gradient($hovered, $hovered);
+  }
+
+  &:active:not(:disabled, [data-disabled]) {
+    background-image: linear-gradient($pressed, $pressed);
+  }
+}
+
+// 隣のコンポーネントと詰めて並べても隠れないよう、枠を内側に描く
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--scheme-color-primary);
+    outline-offset: -2px;
+  }
+}
+
+@mixin disabled {
+  &:disabled,
+  &[data-disabled] {
+    opacity: song-vars.$opacity-disabled;
+    cursor: default;
+  }
+}
+
+// 太さ500の文字は別のフォント名で用意しているので、エディターのフォントが標準のときだけ、そのフォントに切り替える
+@mixin font-medium {
+  font-weight: 500;
+
+  body[data-editor-font="default"] & {
+    font-family: "Unhinted Rounded M+ 1p Medium", sans-serif;
+  }
+}
+
+@mixin popup-surface {
+  border: 1px solid var(--scheme-color-song-border);
+  border-radius: song-vars.$radius-8;
+  background: var(--scheme-color-surface-container-highest);
+  color: var(--scheme-color-on-surface);
+}
+
+// 値が変わっても桁の位置がずれないよう、数字の幅をそろえる
+@mixin value-text {
+  color: var(--scheme-color-on-surface);
+  font-size: song-vars.$font-size-value;
+  font-variant-numeric: tabular-nums;
+  @include font-medium;
+}

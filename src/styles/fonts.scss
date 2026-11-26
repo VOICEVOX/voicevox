@@ -5,8 +5,7 @@
   font-weight: normal;
 }
 
-// TODO: 今後500ウェイトを使う箇所には、このフォントを適用する。
-// 既存のボタンやタブの表示を変えないよう別名で登録し、現時点ではパラメーターパネルのレーン内の文字に限定する。
+// 同じフォント名で太さ500として登録すると、同じく太さ500を指定しているQuasarのボタンやタブの表示が変わるので、別名で登録する
 @font-face {
   font-family: "Unhinted Rounded M+ 1p Medium";
   src: url("../fonts/unhinted-rounded-mplus-1p-medium.woff2");
@@ -27,4 +26,21 @@
   font-style: normal;
   font-weight: 400;
   src: url("../fonts/material-symbols-outlined-regular.woff2") format("woff2");
+}
+
+// 既存のアイコンの見た目を変えないよう、Outlinedは残し、SongBaseのコンポーネント用にRoundedを別に登録する
+@font-face {
+  font-display: block;
+  font-family: "Material Symbols Rounded";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../fonts/material-symbols-rounded-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-display: block;
+  font-family: "Material Symbols Rounded Filled";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../fonts/material-symbols-rounded-filled.woff2") format("woff2");
 }

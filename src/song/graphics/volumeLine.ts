@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import type { VolumeEditValue } from "@/domain/project/type";
 import { Color } from "@/song/graphics/lineStrip";
 
 export type VolumePoint = {
@@ -7,6 +8,45 @@ export type VolumePoint = {
 };
 
 export type VolumeSegment = VolumePoint[];
+
+export const buildVolumeSegments = (
+  framewiseData: readonly VolumeEditValue[],
+  options: {
+    frameToBaseX: (frame: number) => number;
+    valueToNormalizedY: (value: number) => number;
+  },
+) => {
+  const segments: VolumeSegment[] = [];
+  let current: VolumeSegment | undefined;
+
+  for (const [frame, value] of framewiseData.entries()) {
+    if (value == null) {
+      if (current != undefined && current.length >= 2) {
+        segments.push(current);
+      }
+      current = undefined;
+      continue;
+    }
+
+    const baseX = options.frameToBaseX(frame);
+    if (!Number.isFinite(baseX)) {
+      throw new Error("baseX must be finite.");
+    }
+
+    if (current == undefined) {
+      current = [];
+    }
+    current.push({
+      baseX,
+      normalizedY: options.valueToNormalizedY(value),
+    });
+  }
+
+  if (current != undefined && current.length >= 2) {
+    segments.push(current);
+  }
+  return segments;
+};
 
 export type VolumeViewInfo = {
   readonly viewportWidth: number;

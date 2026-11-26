@@ -1,7 +1,6 @@
 import type { ComputedRef, Ref } from "vue";
 import type { Store } from "@/store";
 import type { StateDefinitions } from "@/song/stateMachine";
-import type { CursorState } from "@/song/viewHelper";
 import type { VolumeEditMode } from "@/song/volumeEditMode";
 import type { VolumeEditableFrameRange } from "@/song/volumeEditRanges";
 import type { TrackId } from "@/type/preload";
@@ -11,35 +10,18 @@ export type PositionOnVolumeEditor = {
   readonly db: number;
 };
 
-/**
- * ポインタが指すフレームとdB、ボリュームエディター内の座標。
- * dbは、ボリュームエディターの縦軸の目盛りと同じ単位で表す。
- */
-export type VolumeEditorPointerInfo = {
-  readonly frame: number;
-  readonly db: number;
-  readonly x: number;
-  readonly y: number;
-};
-
-export type VolumeEditorTooltipData = {
-  readonly db: number;
-  readonly pointerX: number;
-  readonly pointerY: number;
-};
-
 export type VolumeEditorInput =
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "VolumeEditorArea";
       readonly pointerEvent: PointerEvent;
-      readonly pointerInfo: VolumeEditorPointerInfo;
+      readonly pointerInfo: PositionOnVolumeEditor;
     }
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "Window";
       readonly pointerEvent: PointerEvent;
-      readonly pointerInfo: VolumeEditorPointerInfo;
+      readonly pointerInfo: PositionOnVolumeEditor;
     };
 
 export type VolumePreviewEdit =
@@ -51,28 +33,6 @@ export type VolumeEditorPreviewMode = "IDLE" | "VOLUME_DRAW" | "VOLUME_ERASE";
 export type VolumeEditorRefs = {
   readonly previewVolumeEdit: Ref<VolumePreviewEdit | undefined>;
   readonly previewMode: Ref<VolumeEditorPreviewMode>;
-  readonly cursorState: Ref<CursorState>;
-  /**
-   * 描画ツールの区間強調とホバー点を表示するか。
-   * cursorStateはカーソルの見た目専用なので、表示条件はこちらで持つ。
-   */
-  readonly showDrawFeedback: Ref<boolean>;
-  readonly tooltipData: Ref<VolumeEditorTooltipData | undefined>;
-  /**
-   * ハイライトする編集可能区間を指し示すフレーム。
-   * このフレームが属する編集可能区間の全体がハイライトされる。
-   * 区間そのものを持たないのは、歌唱ボリュームのレンダリングが進むと編集可能区間が
-   * 増減し、区間の値を保持すると既に消えた区間や動く前の境界を指し続けるため。
-   */
-  readonly highlightedFrame: Ref<number | undefined>;
-  /**
-   * ホバー中のポインタの画面座標。
-   * ツールチップの値はここでは持たず、highlightedFrameのその時点のカーブの値から導く。
-   * 値を保持すると、ポインタを動かさずにUndoなどでカーブが変わったときに古いままになるため。
-   */
-  readonly hoverPointer: Ref<
-    { readonly x: number; readonly y: number } | undefined
-  >;
 };
 
 export type VolumeEditorComputedRefs = {
@@ -111,7 +71,6 @@ export type VolumeEditorStateDefinitions = StateDefinitions<
       id: "drawVolume";
       factoryArgs: {
         startPosition: PositionOnVolumeEditor;
-        startTooltipData: VolumeEditorTooltipData;
         targetTrackId: TrackId;
         returnStateId: VolumeEditorIdleStateId;
       };
