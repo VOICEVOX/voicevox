@@ -15,7 +15,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  fs.rmdirSync(tmpDir, { recursive: true });
+  fs.rmSync(tmpDir, { recursive: true });
 });
 
 describe("isPathWithinDirectory", () => {
