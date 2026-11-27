@@ -33,13 +33,14 @@ if (sendResizeEnd == undefined) {
   );
 }
 
+// ドラッグ終了時に、リサイズ完了をGroupを介してPanelへ通知する
 const onDragging = (isDragging: boolean) => {
   if (!isDragging) {
     sendResizeEnd();
   }
 };
 
-// キー操作ではdraggingが出ないので、キーを離したときに確定させる
+// キー操作ではdraggingが出ないので、キーを離したときもリサイズ完了を通知する
 const RESIZE_KEYS = [
   "ArrowUp",
   "ArrowDown",

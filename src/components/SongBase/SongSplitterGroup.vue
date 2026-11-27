@@ -25,6 +25,7 @@ defineProps<{
   direction: "horizontal" | "vertical";
 }>();
 
+// リサイズ完了の通知をHandleからPanelへ中継する
 const resizeEndListeners = new Set<() => void>();
 
 provide(resizeEndSenderInjectionKey, () => {

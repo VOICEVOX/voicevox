@@ -45,6 +45,7 @@ const onResize = (newSize: number) => {
   emit("resize", newSize);
 };
 
+// Handleからリサイズ完了の通知を受けたとき、パネルサイズが変わっていれば確定する
 const onResizeEnd = () => {
   if (size == undefined || size === committedSize) return;
   committedSize = size;
