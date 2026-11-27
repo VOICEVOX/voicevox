@@ -86,11 +86,9 @@ import { computed } from "vue";
 import { useQuasar } from "quasar";
 import MinMaxCloseButtons from "./MinMaxCloseButtons.vue";
 import { useStore } from "@/store";
-import { useI18n } from "vue-i18n";
 
 const $q = useQuasar();
 const store = useStore();
-const { t } = useI18n();
 
 const changePinWindow = () => {
   window.backend.changePinWindow();

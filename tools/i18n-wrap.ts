@@ -90,7 +90,6 @@ function walkTemplate(
     }
   }
 
-
   // ElementNode の静的属性
   if (node.type === 1) {
     for (const prop of node.props ?? []) {
@@ -255,9 +254,4 @@ if (files.length === 0) {
 
 for (const file of files) {
   processFile(path.resolve(file), write);
-}
-
-function readLocale(file: string): Record<string, string> | undefined {
-  if (!fs.existsSync(file)) return undefined;
-  return JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, string>;
 }

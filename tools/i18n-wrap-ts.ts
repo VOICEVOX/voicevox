@@ -113,9 +113,7 @@ function processFile(file: string, write: boolean): void {
   // import がなければ追加
   if (!/from\s+["']@\/i18n\/translate["']/.test(sourceText)) {
     const imports = source.statements.filter(ts.isImportDeclaration);
-    const pos = imports.length
-      ? imports[imports.length - 1].getEnd()
-      : 0;
+    const pos = imports.length ? imports[imports.length - 1].getEnd() : 0;
     edits.push({ start: pos, end: pos, text: `\n${IMPORT_LINE}` });
   }
 
@@ -142,9 +140,7 @@ const write = args.includes("--write");
 const files = args.filter((arg) => !arg.startsWith("--"));
 
 if (files.length === 0) {
-  console.error(
-    "usage: pnpm tsx tools/i18n-wrap-ts.ts <file.ts> [--write]",
-  );
+  console.error("usage: pnpm tsx tools/i18n-wrap-ts.ts <file.ts> [--write]");
   process.exit(1);
 }
 

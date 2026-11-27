@@ -9,14 +9,14 @@
     <QLayout container view="hHh Lpr lff" class="bg-background">
       <QHeader class="q-py-sm">
         <QToolbar>
-          <QToolbarTitle class="text-display"
-            >設定 / キー割り当て</QToolbarTitle
-          >
+          <QToolbarTitle class="text-display">{{
+            $t("設定 / キー割り当て")
+          }}</QToolbarTitle>
           <QInput
             v-model="hotkeyFilter"
             hideBottomSpace
             dense
-            placeholder="検索"
+            :placeholder="$t('検索')"
             color="display"
             class="q-mr-sm search-box"
           >
@@ -50,8 +50,8 @@
               <div class="table">
                 <div class="table-header">
                   <div class="table-cell"></div>
-                  <div class="table-cell">操作</div>
-                  <div class="table-cell">ショートカットキー</div>
+                  <div class="table-cell">{{ $t("操作") }}</div>
+                  <div class="table-cell">{{ $t("ショートカットキー") }}</div>
                 </div>
                 <div
                   v-for="hotkeySetting in hotkeySettings.filter(
@@ -66,7 +66,7 @@
                 >
                   <div class="table-cell"></div>
                   <div class="table-cell hotkey-name">
-                    {{ hotkeySetting.action }}
+                    {{ $t(hotkeySetting.action) }}
                   </div>
                   <div class="table-cell key-button">
                     <BaseButton
@@ -90,7 +90,7 @@
                   <div class="table-cell icon-buttons">
                     <BaseIconButton
                       icon="settings_backup_restore"
-                      label="デフォルトに戻す"
+                      :label="$t('デフォルトに戻す')"
                       :disabled="
                         checkHotkeyReadonly(hotkeySetting.action) ||
                         isDefaultCombination(hotkeySetting.action)
@@ -121,6 +121,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import HotkeyRecordingDialog from "./HotkeyRecordingDialog.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
@@ -146,6 +147,8 @@ const hotkeySettings = computed(() => store.state.hotkeySettings);
 
 const lastAction = ref("");
 const lastRecord = ref(HotkeyCombination(""));
+
+const { t } = useI18n();
 
 // FIXME: HotkeyRecordingDialog内に移動する
 const recordCombination = (event: KeyboardEvent) => {
@@ -190,8 +193,8 @@ const deleteHotkey = (action: string) => {
 };
 
 const getHotkeyText = (action: string, combo: string) => {
-  if (checkHotkeyReadonly(action)) return "（読み取り専用）" + combo;
-  if (combo == "") return "未割り当て";
+  if (checkHotkeyReadonly(action)) return t("（読み取り専用）") + combo;
+  if (combo == "") return t("未割り当て");
   return combo;
 };
 
@@ -228,9 +231,11 @@ const isDefaultCombination = (action: string) => {
 
 const resetHotkey = async (action: string) => {
   const result = await store.actions.SHOW_CONFIRM_DIALOG({
-    title: "デフォルトに戻しますか？",
-    message: `${action}のショートカットキーをデフォルトに戻します。`,
-    actionName: "デフォルトに戻す",
+    title: t("デフォルトに戻しますか？"),
+    message: t("{action}のショートカットキーをデフォルトに戻します。", {
+      action: t(action),
+    }),
+    actionName: t("デフォルトに戻す"),
   });
 
   if (result !== "OK") return;
