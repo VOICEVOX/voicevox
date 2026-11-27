@@ -16,7 +16,7 @@
       icon="remove"
       :label="`${label}を減らす`"
       size="small"
-      :disabled="disabled || (min != undefined && modelValue <= min)"
+      :disabled="isStepDisabled('decrease')"
       @pointerdown="startPressing($event, 'decrease')"
       @pointerup="endPressing"
       @pointerleave="endPressing"
@@ -27,7 +27,7 @@
       icon="add"
       :label="`${label}を増やす`"
       size="small"
-      :disabled="disabled || (max != undefined && modelValue >= max)"
+      :disabled="isStepDisabled('increase')"
       @pointerdown="startPressing($event, 'increase')"
       @pointerup="endPressing"
       @pointerleave="endPressing"
@@ -92,6 +92,27 @@ const commit = () => {
 
 type StepDirection = "increase" | "decrease";
 
+const isStepDisabled = (direction: StepDirection) => {
+  if (props.disabled) {
+    return true;
+  }
+  if (
+    direction === "increase" &&
+    props.max != undefined &&
+    props.modelValue >= props.max
+  ) {
+    return true;
+  }
+  if (
+    direction === "decrease" &&
+    props.min != undefined &&
+    props.modelValue <= props.min
+  ) {
+    return true;
+  }
+  return false;
+};
+
 const stepBy = (direction: StepDirection) => {
   const input = getInputOrThrow();
   if (direction === "increase") {
@@ -118,7 +139,7 @@ const stopRepeating = () => {
 };
 
 const startPressing = (event: PointerEvent, direction: StepDirection) => {
-  if (props.disabled || event.button !== 0) return;
+  if (isStepDisabled(direction) || event.button !== 0) return;
   // 多くのブラウザのinput:number同様、ボタンを押したら入力欄にフォーカスする
   event.preventDefault();
   getInputOrThrow().focus();
