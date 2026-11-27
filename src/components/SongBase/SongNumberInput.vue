@@ -125,16 +125,16 @@ const stepBy = (direction: StepDirection) => {
 // reka-uiのNumberFieldの長押しと同じ間隔にする
 const REPEAT_DELAY_MS = 400;
 const REPEAT_INTERVAL_MS = 60;
-let repeatTimer: ReturnType<typeof setInterval> | undefined;
+let repeatTimer: number | undefined;
 let pressing = false;
 
 const startRepeating = (direction: StepDirection) => {
-  repeatTimer = setInterval(() => stepBy(direction), REPEAT_INTERVAL_MS);
+  repeatTimer = window.setInterval(() => stepBy(direction), REPEAT_INTERVAL_MS);
 };
 
 const stopRepeating = () => {
-  clearTimeout(repeatTimer);
-  clearInterval(repeatTimer);
+  window.clearTimeout(repeatTimer);
+  window.clearInterval(repeatTimer);
   repeatTimer = undefined;
 };
 
@@ -145,7 +145,10 @@ const startPressing = (event: PointerEvent, direction: StepDirection) => {
   getInputOrThrow().focus();
   pressing = true;
   stepBy(direction);
-  repeatTimer = setTimeout(() => startRepeating(direction), REPEAT_DELAY_MS);
+  repeatTimer = window.setTimeout(
+    () => startRepeating(direction),
+    REPEAT_DELAY_MS,
+  );
 };
 
 const endPressing = () => {
