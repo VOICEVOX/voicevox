@@ -2,11 +2,15 @@ import fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import http from "node:http";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { MultiDownloader } from "@/backend/electron/multiDownloader";
 
 // TODO: setTimeoutを使うとテストの実行時間が伸びたりテストが不安定になってしまうので、
 // setTimeoutを使わないテストに変更する
+
+vi.mock("electron", () => ({
+  net: { fetch: fetch },
+}));
 
 function isClientDisconnectedError(err: unknown): boolean {
   return (
