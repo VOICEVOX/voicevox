@@ -5,6 +5,7 @@ import type {
 } from "@/domain/enginePackage";
 import type { EngineId } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
+import type { Result } from "@/type/result";
 
 /**
  * invoke, handle
