@@ -22,6 +22,7 @@ import {
 import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { initializeIpcMainHandleManager } from "./manager/ipcMainHandleManager";
 import { initializeWelcomeIpcMainHandleManager } from "./manager/welcomeIpcMainHandleManager";
+import { isPathWithinDirectory } from "./fileHelper";
 import { assertNonNullable } from "@/type/utility";
 import type { EngineInfo } from "@/type/preload";
 import { isDevelopment, isMac, isProduction, isTest } from "@/helpers/platform";
@@ -145,12 +146,7 @@ void app.whenReady().then(() => {
     // ref: https://www.electronjs.org/ja/docs/latest/api/protocol#protocolhandlescheme-handler
     const { pathname } = new URL(request.url);
     const pathToServe = path.join(import.meta.dirname, pathname);
-    const relativePath = path.relative(import.meta.dirname, pathToServe);
-    const isUnsafe =
-      path.isAbsolute(relativePath) ||
-      relativePath.startsWith("..") ||
-      relativePath === "";
-    if (isUnsafe) {
+    if (!isPathWithinDirectory(import.meta.dirname, pathToServe)) {
       log.error(`Bad Request URL: ${request.url}`);
       return new Response("bad", {
         status: 400,
