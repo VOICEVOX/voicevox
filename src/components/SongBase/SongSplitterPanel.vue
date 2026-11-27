@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import { inject, onUnmounted } from "vue";
 import { SplitterPanel } from "reka-ui";
-import { songSplitterGroupInjectionKey } from "./SongSplitterGroup.vue";
+import { resizeEndReceiverInjectionKey } from "./SongSplitterGroup.vue";
 
 defineProps<{
   order?: number;
@@ -30,8 +30,8 @@ const emit = defineEmits<{
   resizeCommit: [size: number];
 }>();
 
-const group = inject(songSplitterGroupInjectionKey);
-if (group == undefined) {
+const resizeEndReceiver = inject(resizeEndReceiverInjectionKey);
+if (resizeEndReceiver == undefined) {
   throw new Error("SongSplitterPanel must be used within SongSplitterGroup");
 }
 
@@ -45,14 +45,14 @@ const onResize = (newSize: number) => {
   emit("resize", newSize);
 };
 
-const commit = () => {
+const onResizeEnd = () => {
   if (size == undefined || size === committedSize) return;
   committedSize = size;
   emit("resizeCommit", size);
 };
 
-group.commitListeners.add(commit);
-onUnmounted(() => group.commitListeners.delete(commit));
+resizeEndReceiver.addListener(onResizeEnd);
+onUnmounted(() => resizeEndReceiver.deleteListener(onResizeEnd));
 </script>
 
 <style scoped lang="scss">

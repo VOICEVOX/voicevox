@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import { inject } from "vue";
 import { SplitterResizeHandle } from "reka-ui";
-import { songSplitterGroupInjectionKey } from "./SongSplitterGroup.vue";
+import { resizeEndSenderInjectionKey } from "./SongSplitterGroup.vue";
 
 withDefaults(
   defineProps<{
@@ -26,8 +26,8 @@ withDefaults(
   },
 );
 
-const group = inject(songSplitterGroupInjectionKey);
-if (group == undefined) {
+const sendResizeEnd = inject(resizeEndSenderInjectionKey);
+if (sendResizeEnd == undefined) {
   throw new Error(
     "SongSplitterResizeHandle must be used within SongSplitterGroup",
   );
@@ -35,7 +35,7 @@ if (group == undefined) {
 
 const onDragging = (isDragging: boolean) => {
   if (!isDragging) {
-    group.commit();
+    sendResizeEnd();
   }
 };
 
@@ -50,7 +50,7 @@ const RESIZE_KEYS = [
 ];
 const onKeyup = (event: KeyboardEvent) => {
   if (RESIZE_KEYS.includes(event.key)) {
-    group.commit();
+    sendResizeEnd();
   }
 };
 

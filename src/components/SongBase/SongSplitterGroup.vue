@@ -7,10 +7,14 @@
 <script lang="ts">
 import type { InjectionKey } from "vue";
 
-export const songSplitterGroupInjectionKey: InjectionKey<{
-  commitListeners: Set<() => void>;
-  commit: () => void;
-}> = Symbol("songSplitterGroup");
+export const resizeEndSenderInjectionKey: InjectionKey<() => void> = Symbol(
+  "songSplitterResizeEndSender",
+);
+
+export const resizeEndReceiverInjectionKey: InjectionKey<{
+  addListener: (listener: () => void) => void;
+  deleteListener: (listener: () => void) => void;
+}> = Symbol("songSplitterResizeEndReceiver");
 </script>
 
 <script setup lang="ts">
@@ -21,14 +25,19 @@ defineProps<{
   direction: "horizontal" | "vertical";
 }>();
 
-const commitListeners = new Set<() => void>();
+const resizeEndListeners = new Set<() => void>();
 
-provide(songSplitterGroupInjectionKey, {
-  commitListeners,
-  commit: () => {
-    for (const listener of commitListeners) {
-      listener();
-    }
+provide(resizeEndSenderInjectionKey, () => {
+  for (const listener of resizeEndListeners) {
+    listener();
+  }
+});
+provide(resizeEndReceiverInjectionKey, {
+  addListener: (listener) => {
+    resizeEndListeners.add(listener);
+  },
+  deleteListener: (listener) => {
+    resizeEndListeners.delete(listener);
   },
 });
 </script>
