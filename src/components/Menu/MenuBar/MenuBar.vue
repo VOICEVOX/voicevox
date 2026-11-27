@@ -38,6 +38,7 @@ import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { getAppInfos } from "@/domain/appInfo";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
   /** メニューバーの全サブメニューデータ */
@@ -48,6 +49,7 @@ const props = defineProps<{
 
 const $q = useQuasar();
 const store = useStore();
+const { t } = useI18n();
 
 /** 追加のバージョン情報。コミットハッシュなどを書ける。 */
 const extraVersionInfo = import.meta.env.VITE_EXTRA_VERSION_INFO;
@@ -83,7 +85,7 @@ const titleText = computed(
     "VOICEVOX" +
     (" - Ver. " + getAppInfos().version) +
     (extraVersionInfo ? ` (${extraVersionInfo})` : "") +
-    (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
+    (isMultiEngineOffMode.value ? ` - ${t("マルチエンジンオフ")}` : "") +
     (defaultEngineAltPortTo.value != null
       ? ` - Port: ${defaultEngineAltPortTo.value}`
       : ""),
@@ -97,42 +99,42 @@ watch(titleText, (newTitle) => {
 const menudata = computed<(MenuItemButton | MenuItemRoot)[]>(() => [
   {
     type: "root",
-    label: "ファイル",
+    label: t("ファイル"),
     subMenu: props.subMenuData.file,
     disabled: props.subMenuData.file.length === 0,
     disableWhenUiLocked: false,
   },
   {
     type: "root",
-    label: "編集",
+    label: t("編集"),
     subMenu: props.subMenuData.edit,
     disabled: props.subMenuData.edit.length === 0,
     disableWhenUiLocked: false,
   },
   {
     type: "root",
-    label: "表示",
+    label: t("表示"),
     subMenu: props.subMenuData.view,
     disabled: props.subMenuData.view.length === 0,
     disableWhenUiLocked: false,
   },
   {
     type: "root",
-    label: "エンジン",
+    label: t("エンジン"),
     subMenu: props.subMenuData.engine,
     disabled: props.subMenuData.engine.length === 0,
     disableWhenUiLocked: false,
   },
   {
     type: "root",
-    label: "設定",
+    label: t("設定"),
     subMenu: props.subMenuData.setting,
     disabled: props.subMenuData.setting.length === 0,
     disableWhenUiLocked: false,
   },
   {
     type: "button",
-    label: "ヘルプ",
+    label: t("ヘルプ"),
     onClick: () => {
       void store.actions.SET_DIALOG_OPEN({
         isHelpDialogOpen: true,

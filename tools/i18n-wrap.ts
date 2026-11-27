@@ -23,6 +23,8 @@ const WRAP_PROPS = new Set([
   "ok",
 ]);
 
+const TARGET_LOCALES = ["en", "zh-CN"];
+
 type Edit = { start: number; end: number; text: string };
 
 function singleQuote(value: string): string {
@@ -64,19 +66,19 @@ function walkTemplate(
 
   // TextNode
   if (node.type === 2 && typeof node.content === "string") {
-    const raw = node.content;
-    if (JA.test(raw)) {
-      const text = raw.trim();
+    const span = node.loc.source;
+    if (JA.test(span)) {
+      const text = span.trim();
       if (text !== "") {
         const start = offsetOf(node.loc, base, source);
-        const end = start + node.loc.source.length;
+        const end = start + span.length;
 
-        if (source.slice(start, end) !== raw) {
-          throw new Error(`text mismatch: ${JSON.stringify(raw)}`);
+        if (source.slice(start, end) !== span) {
+          throw new Error(`text mismatch: ${JSON.stringify(span)}`);
         }
 
-        const leading = raw.match(/^\s*/)?.[0]?.length ?? 0;
-        const trailing = raw.match(/\s*$/)?.[0]?.length ?? 0;
+        const leading = span.match(/^\s*/)?.[0]?.length ?? 0;
+        const trailing = span.match(/\s*$/)?.[0]?.length ?? 0;
 
         keys.add(text);
         edits.push({
@@ -87,6 +89,7 @@ function walkTemplate(
       }
     }
   }
+
 
   // ElementNode の静的属性
   if (node.type === 1) {
@@ -158,33 +161,41 @@ function walkScript(
   }
 }
 
-function updateJaJson(keys: Set<string>): void {
-  const file = "src/i18n/locales/ja.json";
-  if (!fs.existsSync(file)) {
-    console.warn(`skip: ${file} not found`);
-    return;
-  }
+function updateLocaleFiles(keys: Set<string>): void {
+  const files = [
+    "src/i18n/locales/ja.json",
+    ...TARGET_LOCALES.map((locale) => `src/i18n/locales/${locale}.json`),
+  ];
 
-  const json = JSON.parse(fs.readFileSync(file, "utf8")) as Record<
-    string,
-    string
-  >;
-  let added = 0;
-
-  for (const key of keys) {
-    if (key in json) continue;
-    if (key.includes("|")) {
-      console.warn(`skip unsafe key: ${JSON.stringify(key)}`);
+  for (const file of files) {
+    if (!fs.existsSync(file)) {
+      console.warn(`skip: ${file} not found`);
       continue;
     }
-    json[key] = key;
-    added++;
-  }
 
-  if (added > 0) {
-    fs.writeFileSync(file, `${JSON.stringify(json, null, 2)}\n`);
+    const json = JSON.parse(fs.readFileSync(file, "utf8")) as Record<
+      string,
+      string
+    >;
+    let added = 0;
+
+    for (const key of keys) {
+      if (key in json) continue;
+      if (key.includes("|")) {
+        console.warn(`skip unsafe key: ${JSON.stringify(key)}`);
+        continue;
+      }
+
+      // ja は identity、それ以外は日文原文を仮置き
+      json[key] = key;
+      added++;
+    }
+
+    if (added > 0) {
+      fs.writeFileSync(file, `${JSON.stringify(json, null, 2)}\n`);
+    }
+    console.log(`${file}: +${added} keys`);
   }
-  console.log(`${file}: +${added} keys`);
 }
 
 function processFile(file: string, write: boolean): void {
@@ -230,7 +241,7 @@ function processFile(file: string, write: boolean): void {
   }
 
   fs.writeFileSync(file, output);
-  updateJaJson(keys);
+  updateLocaleFiles(keys);
 }
 
 const args = process.argv.slice(2);
@@ -244,4 +255,9 @@ if (files.length === 0) {
 
 for (const file of files) {
   processFile(path.resolve(file), write);
+}
+
+function readLocale(file: string): Record<string, string> | undefined {
+  if (!fs.existsSync(file)) return undefined;
+  return JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, string>;
 }

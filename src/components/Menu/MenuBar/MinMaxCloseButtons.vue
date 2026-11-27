@@ -10,7 +10,7 @@
       flat
       icon="minimize"
       class="title-bar-buttons"
-      aria-label="最小化"
+      :aria-label="$t('最小化')"
       @click="minimizeWindow()"
     ></QBtn>
 
@@ -20,7 +20,7 @@
       flat
       :icon="mdiWindowRestore"
       class="title-bar-buttons"
-      aria-label="最大化"
+      :aria-label="$t('最大化')"
       @click="toggleMaximizeWindow()"
     >
     </QBtn>
@@ -31,7 +31,7 @@
       flat
       icon="crop_square"
       class="title-bar-buttons"
-      aria-label="最大化"
+      :aria-label="$t('最大化')"
       @click="toggleMaximizeWindow()"
     ></QBtn>
 
@@ -40,7 +40,7 @@
       flat
       icon="close"
       class="title-bar-buttons close"
-      aria-label="閉じる"
+      :aria-label="$t('閉じる')"
       @click="closeWindow()"
     ></QBtn>
   </QBadge>

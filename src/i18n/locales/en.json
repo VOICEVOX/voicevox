@@ -109,5 +109,18 @@
   "一部のエンジンではこの機能を利用できません。": "Some engines cannot use this feature.",
   "ソフトウェア利用状況のデータ収集の無効化": "Disable software usage data collection",
   "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります": "To completely disable software usage data collection, you need to restart VOICEVOX.",
-  "書き出し先のフォルダを選択": "Select export destination folder"
+  "書き出し先のフォルダを選択": "Select export destination folder",
+  "ファイル": "File",
+  "編集": "Edit",
+  "表示": "View",
+  "設定": "Settings",
+  "ヘルプ": "Help",
+  "マルチエンジンオフ": "Multi-engine off",
+  "最小化": "Minimize",
+  "最大化": "Maximize",
+  "閉じる": "Close",
+  "最前面固定を解除": "Unfix first note",
+  "最前面に固定": "Fix first note to front",
+  "トーク": "Talk",
+  "ソング": "Song"
 }
