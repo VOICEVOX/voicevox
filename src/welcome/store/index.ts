@@ -10,7 +10,7 @@ import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
 
 import type { EngineId } from "@/type/preload";
-import { assertNonNullable, UnreachableError } from "@/type/utility";
+import { assertNonNullable, ensureNotNullish, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 import { failure, success } from "@/type/result";
 
@@ -266,6 +266,48 @@ function createWelcomeStore() {
     void window.welcomeBackend.launchMainWindow();
   };
 
+  /**
+   * 条件に合う場合にエンジンを自動インストールしてメインウィンドウを起動する。
+   * 条件は、エンジン未インストールで、候補が１つで、最新情報が取得できていること。
+   */
+  const autoInstallEngineAndLaunchMainWindow = async (
+    target: RuntimeTarget,
+  ) => {
+    if (allEngineState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+
+    // 今のところはデフォルトエンジンが複数あることはないとする
+    const allEngineStateLoaded = allEngineState.value;
+    if (allEngineStateLoaded.engineIds.length !== 1) {
+      throw new Error("Expected exactly one engine to be available");
+    }
+
+    const [engineId] = allEngineStateLoaded.engineIds;
+    const state = allEngineState.value.engineStates[engineId];
+    if (state.latestInfo.type === "fetchError") throw state.latestInfo.error;
+    if (
+      state.latestInfo.type !== "fetched" ||
+      !state.latestInfo.info.availableRuntimeTargets.some(
+        (info) => info.target === target,
+      )
+    )
+      throw new Error(`Unsupported target: ${target}`);
+    setSelectedRuntimeTarget(engineId, target);
+
+    const engineState = allEngineStateLoaded.engineStates[engineId];
+    if (engineState.latestInfo.type !== "fetched") {
+      throw new Error(
+        `Expected latest info to be fetched for engine ${engineId}`,
+      );
+    }
+
+    const result = await installEngine(engineId);
+    if (result !== "succeeded") {
+      throw new Error(`Engine installation failed for engine ${engineId}`);
+    }
+  };
+
   const startup = async () => {
     window.welcomeBackend.registerIpcHandler({
       updateEngineDownloadProgress: ({ engineId, progress, type }) => {
@@ -275,28 +317,18 @@ function createWelcomeStore() {
 
     const { target } = await window.welcomeBackend.getStartupOptions();
     automaticInstall.value = target != undefined;
-    try {
-      await applyThemeFromConfig();
-      await window.welcomeBackend.displayReady();
+    void applyThemeFromConfig().then(() => {
+      void window.welcomeBackend.displayReady();
+    });
+
+    if (!automaticInstall.value) {
       await fetchEngineInfos();
-      if (target == undefined) return;
-      if (
-        allEngineState.value.type !== "loaded" ||
-        allEngineState.value.engineIds.length !== 1
-      )
-        throw new Error("Expected exactly one downloadable default engine");
-      const [engineId] = allEngineState.value.engineIds;
-      const state = allEngineState.value.engineStates[engineId];
-      if (state.latestInfo.type === "fetchError") throw state.latestInfo.error;
-      if (
-        state.latestInfo.type !== "fetched" ||
-        !state.latestInfo.info.availableRuntimeTargets.some(
-          (info) => info.target === target,
-        )
-      )
-        throw new Error(`Unsupported target: ${target}`);
-      setSelectedRuntimeTarget(engineId, target);
-      await installEngine(engineId);
+      return;
+    }
+
+    try {
+      await fetchEngineInfos();
+      await autoInstallEngineAndLaunchMainWindow(ensureNotNullish(target));
       await window.welcomeBackend.finishAutoInstall(success(undefined));
     } catch (error) {
       if (target == undefined) throw error;
