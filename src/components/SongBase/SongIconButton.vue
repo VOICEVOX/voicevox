@@ -72,7 +72,7 @@ const filled = computed(() => props.pressed !== false);
   &.small {
     width: song-vars.$size-control-small;
     height: song-vars.$size-control-small;
-    border-radius: song-vars.$radius-12;
+    border-radius: song-vars.$radius-6;
   }
 
   &.default[aria-pressed="true"] {
