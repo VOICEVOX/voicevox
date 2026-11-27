@@ -98,7 +98,8 @@ class WelcomeIpcMainHandleManager {
         welcomeWindowManager.toggleMaximizeWindow();
       },
       CLOSE_WINDOW: () => {
-        appStateController.shutdown();
+        const welcomeWindowManager = getWelcomeWindowManager();
+        welcomeWindowManager.close();
       },
       IS_MAXIMIZED_WINDOW: () => {
         const welcomeWindowManager = getWelcomeWindowManager();

@@ -22,6 +22,8 @@ export class AppStateController {
     "unconfirmed";
   /** 現在アクティブなウィンドウ */
   private activeWindow: "main" | "welcome" | null = null;
+  /** 自動インストールモードで起動したかどうか */
+  private isAutomaticInstall: boolean = false;
 
   private lock = new Mutex();
   private exitCode: number | undefined;
@@ -32,6 +34,7 @@ export class AppStateController {
    */
   async startup(automaticInstall: boolean) {
     if (automaticInstall) {
+      this.isAutomaticInstall = true;
       log.info("Automatic install mode enabled. Launching welcome window.");
       await this.launchWelcomeWindow();
       return;
@@ -118,6 +121,11 @@ export class AppStateController {
           await using _lock = await this.lock.acquire();
           if (this.activeWindow === "main") {
             this.checkUnsavedEdit();
+          } else if (this.isAutomaticInstall) {
+            log.info(
+              "Unconfirmed quit request received during automatic install. Exiting with code 1.",
+            );
+            this.shutdown(1);
           } else {
             log.info("Main window is not active. Proceeding to shutdown.");
             this.shutdown();
@@ -181,7 +189,9 @@ export class AppStateController {
 
   /** 編集状態に関わらず終了する */
   shutdown(exitCode?: number) {
-    this.exitCode = exitCode;
+    if (exitCode != undefined) {
+      this.exitCode = exitCode;
+    }
     const mainWindowManager = getMainWindowManager();
     this.quitState = "dirty";
     if (mainWindowManager.isInitialized()) {

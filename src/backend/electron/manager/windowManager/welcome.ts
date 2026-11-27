@@ -214,6 +214,10 @@ class WelcomeWindowManager {
     return this.getWindow().isMaximized();
   }
 
+  public close() {
+    this.getWindow().close();
+  }
+
   public showOpenDialogSync(options: OpenDialogSyncOptions) {
     return this._win == undefined
       ? dialog.showOpenDialogSync(options)

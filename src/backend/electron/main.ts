@@ -507,6 +507,20 @@ void app.whenReady().then(async () => {
     }
   });
 
+  // 多重起動防止
+  if (
+    !isDevelopment &&
+    !isTest &&
+    !app.requestSingleInstanceLock({
+      filePath: argv.type === "start" ? argv.path : undefined,
+      engineInstall: argv.type === "install-engine",
+    } satisfies SingleInstanceLockData)
+  ) {
+    log.info("VOICEVOX already running. Cancelling launch.");
+    appStateController.shutdown(argv.type === "install-engine" ? 1 : undefined);
+    return;
+  }
+
   if (argv.type === "start" && argv.path) {
     log.info(`Initial file path provided: ${argv.path}`);
     if (isVvppFile(argv.path)) {
