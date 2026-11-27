@@ -10,7 +10,11 @@ import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
 
 import type { EngineId } from "@/type/preload";
-import { assertNonNullable, ensureNotNullish, UnreachableError } from "@/type/utility";
+import {
+  assertNonNullable,
+  ensureNotNullish,
+  UnreachableError,
+} from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 import { failure, success } from "@/type/result";
 
