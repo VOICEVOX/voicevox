@@ -70,6 +70,8 @@ const hitAreaMargins = { coarse: 0, fine: 0 };
 
   position: relative;
   z-index: 1;
+  // NOTE: Quasarがaria-controlsを持つ要素にcursor: pointerを付けるため、それを打ち消す
+  cursor: auto;
   @include song-mixin.focus-ring;
 
   &.start {
