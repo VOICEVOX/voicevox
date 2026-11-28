@@ -1,19 +1,6 @@
 <template>
-  <QSplitter
-    :modelValue="isParameterPanelOpen ? parameterPanelHeight : 0"
-    reverse
-    unit="px"
-    horizontal
-    :disable="!isParameterPanelOpen"
-    :separatorStyle="{
-      display: isParameterPanelOpen ? 'block' : 'none',
-      // NOTE: 当たり判定を小さくする
-      overflow: 'hidden',
-      height: '4px',
-    }"
-    @update:modelValue="setParameterPanelHeight"
-  >
-    <template #before>
+  <SongSplitterGroup direction="vertical">
+    <SongSplitterPanel :order="1">
       <div class="score-sequencer full-height">
         <!-- 左上の角 -->
         <div class="sequencer-corner"></div>
@@ -214,19 +201,28 @@
           "
         />
       </div>
+    </SongSplitterPanel>
+    <template v-if="isParameterPanelOpen">
+      <SongSplitterResizeHandle hitArea="end" />
+      <SongSplitterPanel
+        :order="2"
+        sizeUnit="px"
+        :defaultSize="parameterPanelHeight"
+        :minSize="MIN_PARAMETER_PANEL_HEIGHT"
+        :maxSize="MAX_PARAMETER_PANEL_HEIGHT"
+        @resizeCommit="setParameterPanelHeight"
+      >
+        <SequencerParameterPanel
+          :viewportInfo
+          @update:needsAutoScroll="
+            (value) => (parameterPanelNeedsAutoScroll = value)
+          "
+          @panTimeline="panTimelineBy"
+          @zoomTimeline="zoomTimelineAt"
+        />
+      </SongSplitterPanel>
     </template>
-    <template #after>
-      <SequencerParameterPanel
-        v-if="isParameterPanelOpen"
-        :viewportInfo
-        @update:needsAutoScroll="
-          (value) => (parameterPanelNeedsAutoScroll = value)
-        "
-        @panTimeline="panTimelineBy"
-        @zoomTimeline="zoomTimelineAt"
-      />
-    </template>
-  </QSplitter>
+  </SongSplitterGroup>
 </template>
 
 <script lang="ts">
@@ -250,6 +246,9 @@ import {
   provide,
 } from "vue";
 import SequencerParameterPanel from "@/components/Song/SequencerParameterPanel.vue";
+import SongSplitterGroup from "@/components/SongBase/SongSplitterGroup.vue";
+import SongSplitterPanel from "@/components/SongBase/SongSplitterPanel.vue";
+import SongSplitterResizeHandle from "@/components/SongBase/SongSplitterResizeHandle.vue";
 import SequencerGridSpacer from "@/components/Song/SequencerGridSpacer.vue";
 import ContextMenu, {
   type ContextMenuItemData,
@@ -277,6 +276,7 @@ import {
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
   SEQUENCER_MIN_NUM_MEASURES,
+  SEQUENCER_KEYS_WIDTH,
 } from "@/song/viewHelper";
 import { clamp, getLast } from "@/song/utility";
 import SequencerGrid from "@/components/Song/SequencerGrid/Container.vue";
@@ -476,8 +476,8 @@ watch(
   { immediate: true },
 );
 
-const setParameterPanelHeight = async (height: number) => {
-  if (!isParameterPanelOpen.value) return;
+const setParameterPanelHeight = async (size: number) => {
+  const height = Math.round(size);
   parameterPanelHeight.value = height;
   await store.actions.SET_ROOT_MISC_SETTING({
     key: "splitterPosition",
@@ -1234,7 +1234,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   backface-visibility: hidden;
   display: grid;
   grid-template-rows: 40px 1fr;
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: v-bind("`${SEQUENCER_KEYS_WIDTH}px`") 1fr;
   position: relative;
 }
 

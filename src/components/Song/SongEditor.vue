@@ -116,6 +116,8 @@ onetimeWatch(
 }
 .song-main {
   display: flex;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   position: relative;
 }
