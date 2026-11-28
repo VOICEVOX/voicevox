@@ -5,6 +5,7 @@ import { ensureNotNullish } from "@/type/utility";
 import { useHotkeyManager, type HotkeyAction } from "@/plugins/hotkeyPlugin";
 import type { Store } from "@/store";
 import { isProduction } from "@/helpers/platform";
+import { translate } from "@/i18n/translate";
 
 export const useCommonMenuBarData = (store: Store) => {
   const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -73,31 +74,22 @@ export const useCommonMenuBarData = (store: Store) => {
   const updateRecentProjects = async () => {
     const recentlyUsedProjects =
       await store.actions.GET_RECENTLY_USED_PROJECTS();
-    recentProjectsSubMenuData.value =
-      recentlyUsedProjects.length === 0
-        ? [
-            {
-              type: "button",
-              label: "最近使ったプロジェクトはありません",
-              onClick: () => {
-                // 何もしない
-              },
-              disabled: true,
-              disableWhenUiLocked: false,
-            },
-          ]
-        : recentlyUsedProjects.map((projectFilePath) => ({
-            type: "button",
-            label: projectFilePath,
-            onClick: () => {
-              void store.actions.LOAD_PROJECT_FILE({
-                type: "path",
-                filePath: projectFilePath,
-              });
-            },
-            disableWhenUiLocked: false,
-          }));
+
+    recentProjectsSubMenuData.value = recentlyUsedProjects.map(
+      (projectFilePath) => ({
+        type: "button",
+        label: projectFilePath,
+        onClick: () => {
+          void store.actions.LOAD_PROJECT_FILE({
+            type: "path",
+            filePath: projectFilePath,
+          });
+        },
+        disableWhenUiLocked: false,
+      }),
+    );
   };
+
   const projectFilePath = computed(() => store.state.projectFilePath);
   watch(projectFilePath, updateRecentProjects, {
     immediate: true,
@@ -162,13 +154,13 @@ export const useCommonMenuBarData = (store: Store) => {
       project: [
         {
           type: "button",
-          label: "新規プロジェクト",
+          label: translate("新規プロジェクト"),
           onClick: createNewProject,
           disableWhenUiLocked: true,
         },
         {
           type: "button",
-          label: "プロジェクトを上書き保存",
+          label: translate("プロジェクトを上書き保存"),
           onClick: async () => {
             await saveProject();
           },
@@ -176,7 +168,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
-          label: "プロジェクトを名前を付けて保存",
+          label: translate("プロジェクトを名前を付けて保存"),
           onClick: async () => {
             await saveProjectAs();
           },
@@ -184,7 +176,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
-          label: "プロジェクトの複製を保存",
+          label: translate("プロジェクトの複製を保存"),
           onClick: async () => {
             await saveProjectCopy();
           },
@@ -192,7 +184,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
-          label: "プロジェクトを読み込む",
+          label: translate("プロジェクトを読み込む"),
           onClick: () => {
             importProject();
           },
@@ -200,9 +192,22 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "root",
-          label: "最近使ったプロジェクト",
+          label: translate("最近使ったプロジェクト"),
           disableWhenUiLocked: true,
-          subMenu: recentProjectsSubMenuData.value,
+          subMenu:
+            recentProjectsSubMenuData.value.length === 0
+              ? [
+                  {
+                    type: "button",
+                    label: translate("最近使ったプロジェクトはありません"),
+                    onClick: () => {
+                      // 何もしない
+                    },
+                    disabled: true,
+                    disableWhenUiLocked: false,
+                  },
+                ]
+              : recentProjectsSubMenuData.value,
         },
       ],
     },
@@ -211,7 +216,7 @@ export const useCommonMenuBarData = (store: Store) => {
       undoRedo: [
         {
           type: "button",
-          label: "元に戻す",
+          label: translate("元に戻す"),
           onClick: async () => {
             if (!uiLocked.value) {
               await store.actions.UNDO({
@@ -224,7 +229,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
-          label: "やり直す",
+          label: translate("やり直す"),
           onClick: async () => {
             if (!uiLocked.value) {
               await store.actions.REDO({
@@ -237,7 +242,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
-          label: "すべて選択",
+          label: translate("すべて選択"),
           onClick: async () => {
             if (!uiLocked.value) {
               await store.actions.SET_SELECTED_AUDIO_KEYS({
@@ -254,13 +259,13 @@ export const useCommonMenuBarData = (store: Store) => {
       window: [
         {
           type: "button",
-          label: "全画面表示を切り替え",
+          label: translate("全画面表示を切り替え"),
           onClick: toggleFullScreen,
           disableWhenUiLocked: false,
         },
         {
           type: "button",
-          label: "拡大",
+          label: translate("拡大"),
           onClick: () => {
             void zoomIn();
           },
@@ -268,7 +273,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
-          label: "縮小",
+          label: translate("縮小"),
           onClick: () => {
             void zoomOut();
           },
@@ -276,7 +281,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
-          label: "拡大率のリセット",
+          label: translate("拡大率のリセット"),
           onClick: () => {
             void zoomReset();
           },
@@ -289,7 +294,7 @@ export const useCommonMenuBarData = (store: Store) => {
       subOptions: [
         {
           type: "button",
-          label: "キー割り当て",
+          label: translate("キー割り当て"),
           onClick() {
             void store.actions.SET_DIALOG_OPEN({
               isHotkeySettingDialogOpen: true,
@@ -299,7 +304,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
-          label: "ツールバーのカスタマイズ",
+          label: translate("ツールバーのカスタマイズ"),
           onClick() {
             void store.actions.SET_DIALOG_OPEN({
               isToolbarSettingDialogOpen: true,
@@ -311,7 +316,7 @@ export const useCommonMenuBarData = (store: Store) => {
           ? [
               {
                 type: "button",
-                label: "キャラクター＆スタイルの管理",
+                label: translate("キャラクター＆スタイルの管理"),
                 onClick() {
                   void store.actions.SET_DIALOG_OPEN({
                     isCharacterListDialogOpen: true,
@@ -323,7 +328,7 @@ export const useCommonMenuBarData = (store: Store) => {
           : []),
         {
           type: "button",
-          label: "キャラクター並び替え・試聴",
+          label: translate("キャラクター並び替え・試聴"),
           onClick() {
             void store.actions.SET_DIALOG_OPEN({
               isOldCharacterOrderDialogOpen: true,
@@ -333,7 +338,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
-          label: "デフォルトスタイル",
+          label: translate("デフォルトスタイル"),
           onClick() {
             void store.actions.SET_DIALOG_OPEN({
               isOldDefaultStyleSelectDialogOpen: true,
@@ -343,7 +348,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
-          label: "読み方＆アクセント辞書",
+          label: translate("読み方＆アクセント辞書"),
           onClick() {
             void store.actions.SET_DIALOG_OPEN({
               isDictionaryManageDialogOpen: true,
@@ -355,7 +360,7 @@ export const useCommonMenuBarData = (store: Store) => {
       options: [
         {
           type: "button",
-          label: "オプション",
+          label: translate("オプション"),
           onClick() {
             void store.actions.SET_DIALOG_OPEN({
               isSettingDialogOpen: true,

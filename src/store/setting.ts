@@ -21,6 +21,7 @@ import type { HotkeySettingType } from "@/domain/hotkeyAction";
 
 export const settingStoreState: SettingStoreState = {
   openedEditor: undefined,
+  locale: "ja",
   savingSetting: {
     fileEncoding: "UTF-8",
     fileNamePattern: "",
@@ -142,6 +143,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       }
 
       const rootMiscSettingKeys = [
+        "locale",
         "editorFont",
         "showTextLineNumber",
         "showAddAudioItemButton",

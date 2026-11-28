@@ -40,8 +40,17 @@ import { setFontToCss, setThemeToCss } from "@/domain/dom";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useStore } from "@/store";
 import type { EngineId } from "@/type/preload";
+import { setI18nLocale } from "@/i18n";
 
 const store = useStore();
+
+watch(
+  () => store.state.locale,
+  (locale) => {
+    setI18nLocale(locale);
+  },
+  { immediate: true },
+);
 
 // TODO: useMenuBarData系の関数をcomposableじゃなくする
 const commonMenuBarData = useCommonMenuBarData(store);

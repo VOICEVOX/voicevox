@@ -3,6 +3,7 @@ import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import App from "./components/App.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { i18n } from "@/i18n";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
@@ -15,6 +16,7 @@ import "./backend/apiLoader";
 window.dataLayer = [];
 
 createApp(App)
+  .use(i18n)
   .use(Quasar, {
     config: {
       brand: {
