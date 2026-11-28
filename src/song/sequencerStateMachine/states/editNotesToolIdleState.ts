@@ -1,4 +1,3 @@
-import type { SetNextState, State } from "@/song/stateMachine";
 import {
   type Context,
   getGuideLineTicks,
@@ -7,8 +6,9 @@ import {
   selectOnlyThisNoteAndPlayPreviewSound,
   type SequencerStateDefinitions,
   toggleNoteSelection,
-} from "@/song/sequencerStateMachine/common";
-import { getButton, isSelfEventTarget } from "@/song/viewHelper";
+} from "../common";
+import type { SetNextState, State } from "../../stateMachine";
+import { getButton, isSelfEventTarget } from "../../viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import type { Note } from "@/domain/project/type";
 

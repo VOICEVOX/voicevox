@@ -168,10 +168,10 @@
 </template>
 <script setup lang="ts">
 import { computed, watchEffect, ref } from "vue";
-import CharacterSelectMenu from "@/components/Song/CharacterMenuButton/CharacterSelectMenu.vue";
-import SingerIcon from "@/components/Song/SingerIcon.vue";
-import { useStore } from "@/store";
+import CharacterSelectMenu from "../CharacterMenuButton/CharacterSelectMenu.vue";
+import SingerIcon from "../SingerIcon.vue";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
+import { useStore } from "@/store";
 import { shouldPlayTracks } from "@/song/domain";
 import type { CharacterInfo, StyleInfo, TrackId } from "@/type/preload";
 

@@ -1,9 +1,9 @@
+import { createPartialStore } from "./vuex";
 import type {
   ProxyStoreState,
   ProxyStoreTypes,
   EditorAudioQuery,
 } from "./type";
-import { createPartialStore } from "./vuex";
 import { createEngineUrl } from "@/domain/url";
 import { isElectron, isProduction } from "@/helpers/platform";
 import {

@@ -1,6 +1,3 @@
-import type { State, SetNextState } from "@/song/stateMachine";
-import { getButton, PREVIEW_SOUND_DURATION } from "@/song/viewHelper";
-import type { NoteId, TrackId } from "@/type/preload";
 import {
   type Context,
   getGuideLineTicks,
@@ -9,7 +6,10 @@ import {
   type PositionOnSequencer,
   type SequencerStateDefinitions,
   shouldStartDrag,
-} from "@/song/sequencerStateMachine/common";
+} from "../common";
+import type { State, SetNextState } from "../../stateMachine";
+import { getButton, PREVIEW_SOUND_DURATION } from "../../viewHelper";
+import type { NoteId, TrackId } from "@/type/preload";
 import type { Note } from "@/domain/project/type";
 import { getOrThrow } from "@/helpers/mapHelper";
 

@@ -30,8 +30,8 @@ import { computed, ref, watch } from "vue";
 import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";
+import ExportOverlay from "./ExportOverlay.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
-import ExportOverlay from "@/components/Song/ExportOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import {

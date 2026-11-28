@@ -1,7 +1,7 @@
 // showDirectoryPicker などのAPIをブラウザで使用するためにimportしている
 import "@types/wicg-file-system-access";
-import type { WelcomeSandbox, welcomeSandboxKey } from "../welcome/preloadType";
 import type { Sandbox, SandboxKey } from "./preload";
+import type { WelcomeSandbox, welcomeSandboxKey } from "@/welcome/preloadType";
 
 declare global {
   interface HTMLAudioElement {

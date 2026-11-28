@@ -26,9 +26,9 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, toRaw, watch } from "vue";
+import SequencerParameterGrid from "../SequencerParameterGrid.vue";
 import Presentation from "./Presentation.vue";
 import type { VolumeEditorPointerEvent } from "./useVolumeEditorPointerInput";
-import SequencerParameterGrid from "@/components/Song/SequencerParameterGrid.vue";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";

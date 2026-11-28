@@ -1,8 +1,3 @@
-import { getOrThrow } from "@/helpers/mapHelper";
-import type { State, SetNextState } from "@/song/stateMachine";
-import { getButton, PREVIEW_SOUND_DURATION } from "@/song/viewHelper";
-import type { Note } from "@/domain/project/type";
-import type { TrackId, NoteId } from "@/type/preload";
 import {
   type Context,
   getGuideLineTicks,
@@ -11,8 +6,13 @@ import {
   type PositionOnSequencer,
   type SequencerStateDefinitions,
   shouldStartDrag,
-} from "@/song/sequencerStateMachine/common";
-import { clamp } from "@/song/utility";
+} from "../common";
+import type { State, SetNextState } from "../../stateMachine";
+import { getButton, PREVIEW_SOUND_DURATION } from "../../viewHelper";
+import { clamp } from "../../utility";
+import { getOrThrow } from "@/helpers/mapHelper";
+import type { Note } from "@/domain/project/type";
+import type { TrackId, NoteId } from "@/type/preload";
 
 export class ResizeNoteLeftState implements State<
   SequencerStateDefinitions,

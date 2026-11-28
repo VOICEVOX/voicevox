@@ -1,4 +1,4 @@
-import { Color } from "@/song/graphics/lineStrip";
+import { Color } from "./lineStrip";
 import { ensureNotNullish } from "@/type/utility";
 
 // 色の解決ごとにcanvasを生成しないよう、1x1の描画コンテキストを使い回す。

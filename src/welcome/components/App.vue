@@ -27,13 +27,13 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { TooltipProvider } from "reka-ui";
+import { provideWelcomeStore } from "../store";
 import MenuBar from "./MenuBar.vue";
 import WelcomeHeader from "./WelcomeHeader.vue";
 import EngineList from "./EngineList.vue";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
-import { provideWelcomeStore } from "@/welcome/store";
 
 const store = provideWelcomeStore();
 

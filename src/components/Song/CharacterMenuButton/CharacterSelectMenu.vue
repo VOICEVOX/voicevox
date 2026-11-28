@@ -107,10 +107,10 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { debounce } from "quasar";
+import SingerIcon from "../SingerIcon.vue";
 import { useStore } from "@/store";
 import type { SpeakerId, StyleId, TrackId } from "@/type/preload";
 import { getStyleDescription } from "@/song/viewHelper";
-import SingerIcon from "@/components/Song/SingerIcon.vue";
 import { useEngineIcons } from "@/composables/useEngineIcons";
 
 defineOptions({

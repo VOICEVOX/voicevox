@@ -1,14 +1,14 @@
+import { StateMachine } from "../stateMachine";
 import type {
   PhonemeTimingEditorStateDefinitions,
   PhonemeTimingEditorInput,
   PhonemeTimingEditorContext,
   PhonemeTimingEditorIdleStateId,
-} from "@/song/phonemeTimingEditorStateMachine/common";
-import { MovePhonemeTimingToolIdleState } from "@/song/phonemeTimingEditorStateMachine/states/movePhonemeTimingToolIdleState";
-import { MovePhonemeTimingState } from "@/song/phonemeTimingEditorStateMachine/states/movePhonemeTimingState";
-import { ErasePhonemeTimingToolIdleState } from "@/song/phonemeTimingEditorStateMachine/states/erasePhonemeTimingToolIdleState";
-import { ErasePhonemeTimingState } from "@/song/phonemeTimingEditorStateMachine/states/erasePhonemeTimingState";
-import { StateMachine } from "@/song/stateMachine";
+} from "./common";
+import { MovePhonemeTimingToolIdleState } from "./states/movePhonemeTimingToolIdleState";
+import { MovePhonemeTimingState } from "./states/movePhonemeTimingState";
+import { ErasePhonemeTimingToolIdleState } from "./states/erasePhonemeTimingToolIdleState";
+import { ErasePhonemeTimingState } from "./states/erasePhonemeTimingState";
 
 export const createPhonemeTimingEditorStateMachine = (
   context: PhonemeTimingEditorContext,
