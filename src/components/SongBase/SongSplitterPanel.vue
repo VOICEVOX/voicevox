@@ -39,7 +39,7 @@ let size: number | undefined;
 let committedSize: number | undefined;
 
 const onResize = (newSize: number) => {
-  // 初期化時の大きさは操作で変わったものではないので、確定済みとして扱う
+  // 初期化時にonResizeが呼ばれるので、そのときのnewSizeの値をcommittedSizeの初期値として設定する
   committedSize ??= newSize;
   size = newSize;
   emit("resize", newSize);
