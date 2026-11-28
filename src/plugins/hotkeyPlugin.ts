@@ -295,6 +295,19 @@ export const hotkeyPlugin: Plugin = {
     const hotkeyManager = new HotkeyManager();
 
     app.provide(hotkeyManagerKey, hotkeyManager);
+
+    // QBtnはマウスやタッチで押されると、ボタン内のフォーカス用要素にフォーカスを移す。
+    // フォーカスが残っているとQBtnがSpaceやEnterを処理してしまい、Spaceでの再生などのショートカットキーが効かない。
+    // キーボードで移動したときはボタン本体にフォーカスが当たるので、この要素のフォーカスだけ外す。
+    document.addEventListener("focusin", (event) => {
+      const element = event.target;
+      if (
+        element instanceof HTMLElement &&
+        element.matches(".q-btn > .q-focus-helper")
+      ) {
+        element.blur();
+      }
+    });
   },
 };
 
