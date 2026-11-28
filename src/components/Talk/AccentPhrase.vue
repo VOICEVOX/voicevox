@@ -208,10 +208,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { MenuItemButton, MenuItemSeparator } from "../Menu/type";
-import ContextMenu from "../Menu/ContextMenu/Container.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
+import type { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
+import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import type { AudioKey, MoraDataType } from "@/type/preload";
 import type { Mora } from "@/openapi/models/Mora";

@@ -1,9 +1,9 @@
 import { computed } from "vue";
-import { notifyResult } from "../Dialog/Dialog";
+import { notifyResult } from "@/components/Dialog/Dialog";
 import type {
   MaybeComputedMenuBarContent,
   MenuBarContent,
-} from "../Menu/MenuBar/menuBarData";
+} from "@/components/Menu/MenuBar/menuBarData";
 import type { Store } from "@/store";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import type { ExportSongProjectFileType } from "@/store/type";

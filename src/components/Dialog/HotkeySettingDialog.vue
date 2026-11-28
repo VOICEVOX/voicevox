@@ -121,10 +121,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import BaseButton from "../Base/BaseButton.vue";
-import BaseIconButton from "../Base/BaseIconButton.vue";
-import BaseScrollArea from "../Base/BaseScrollArea.vue";
 import HotkeyRecordingDialog from "./HotkeyRecordingDialog.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseIconButton from "@/components/Base/BaseIconButton.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
 import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
 import {

@@ -34,9 +34,9 @@
 import { type QBtn, useDialogPluginComponent } from "quasar";
 import { computed, onMounted, useTemplateRef } from "vue";
 import type { QuestionDialogButtonColor } from "../Dialog";
-import BaseDialog from "../../Base/BaseDialog.vue";
-import BaseButton from "../../Base/BaseButton.vue";
 import { getIcon, getColor, type DialogType } from "./common";
+import BaseDialog from "@/components/Base/BaseDialog.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
 import { ExhaustiveError } from "@/type/utility";
 
 const modelValue = defineModel<boolean>({ default: false });

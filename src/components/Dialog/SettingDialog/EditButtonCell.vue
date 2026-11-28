@@ -8,8 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import BaseRowCard from "../../Base/BaseRowCard.vue";
-import BaseButton from "../../Base/BaseButton.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
 
 const props = defineProps<{
   title: string;

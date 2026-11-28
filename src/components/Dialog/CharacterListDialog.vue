@@ -103,11 +103,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
-import BaseToggleGroup from "../Base/BaseToggleGroup.vue";
-import BaseToggleGroupItem from "../Base/BaseToggleGroupItem.vue";
-import BaseScrollArea from "../Base/BaseScrollArea.vue";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import CharacterDetailDialog from "./CharacterDetailDialog.vue";
+import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
+import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
 import type {
   CharacterInfo,

@@ -6,6 +6,13 @@ import { createRule } from "./create-rule";
 
 const SRC_DIR = path.resolve(import.meta.dirname, "..", "src");
 
+const boundaryDirectories = [
+  ...fs.readdirSync(SRC_DIR, { withFileTypes: true }),
+  ...fs.readdirSync(path.join(SRC_DIR, "components"), { withFileTypes: true }),
+]
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => path.join(entry.parentPath, entry.name));
+
 const RESOLVE_EXTENSIONS = [
   ".ts",
   ".tsx",
@@ -79,25 +86,6 @@ function isInside(filePath: string, directory: string): boolean {
   );
 }
 
-/** src 直下のディレクトリ名。src 直下のファイルなら undefined。 */
-function topLevelDirectory(filePath: string): string | undefined {
-  const relative = path.relative(SRC_DIR, filePath);
-  if (
-    relative === "" ||
-    relative.startsWith("..") ||
-    path.isAbsolute(relative)
-  ) {
-    return undefined;
-  }
-
-  const [first, ...rest] = relative.split(path.sep);
-  return rest.length > 0 ? first : undefined;
-}
-
-function isSameDirectory(a: string, b: string): boolean {
-  return path.dirname(a) === path.dirname(b);
-}
-
 function toRelativeSpecifier(fromFile: string, targetFile: string): string {
   const relative = stripIndexSuffix(
     stripScriptExtension(
@@ -121,7 +109,7 @@ export default createRule({
     fixable: "code",
     docs: {
       description:
-        "Enforce relative imports within the same top-level directory under src, and @/ absolute imports otherwise.",
+        "Enforce @/ imports when leaving specific directories, and relative imports otherwise.",
     },
     schema: [],
     messages: {
@@ -133,7 +121,9 @@ export default createRule({
     const filename = context.filename;
     if (!isInside(filename, SRC_DIR)) return {};
 
-    const currentTopLevel = topLevelDirectory(filename);
+    const currentBoundaryDirectories = boundaryDirectories.filter((directory) =>
+      isInside(filename, directory),
+    );
 
     function checkSource(source: TSESTree.Node | null | undefined): void {
       if (
@@ -156,14 +146,12 @@ export default createRule({
       const targetFile = resolveTarget(basePath);
       if (targetFile == null || !isInside(targetFile, SRC_DIR)) return;
 
-      const sameTopLevel =
-        currentTopLevel != null &&
-        currentTopLevel === topLevelDirectory(targetFile);
-
-      const expected =
-        isSameDirectory(filename, targetFile) || sameTopLevel
-          ? toRelativeSpecifier(filename, targetFile)
-          : toAbsoluteSpecifier(targetFile);
+      const leavesDirectory = currentBoundaryDirectories.some(
+        (directory) => !isInside(targetFile, directory),
+      );
+      const expected = leavesDirectory
+        ? toAbsoluteSpecifier(targetFile)
+        : toRelativeSpecifier(filename, targetFile);
 
       if (expected === specifier) return;
 

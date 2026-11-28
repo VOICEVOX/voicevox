@@ -105,10 +105,10 @@
 <script setup lang="ts">
 import { computed, ref, watch, type Ref } from "vue";
 import Draggable from "vuedraggable";
-import BaseSwitch from "../Base/BaseSwitch.vue";
-import BaseScrollArea from "../Base/BaseScrollArea.vue";
-import BaseRowCard from "../Base/BaseRowCard.vue";
-import BaseTooltip from "../Base/BaseTooltip.vue";
+import BaseSwitch from "@/components/Base/BaseSwitch.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { useStore } from "@/store";
 import type { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";

@@ -31,10 +31,10 @@
 
 <script setup lang="ts" generic="T extends AcceptableValue">
 import type { AcceptableValue } from "reka-ui";
-import BaseRowCard from "../../Base/BaseRowCard.vue";
-import BaseToggleGroup from "../../Base/BaseToggleGroup.vue";
-import BaseToggleGroupItem from "../../Base/BaseToggleGroupItem.vue";
-import BaseTooltip from "../../Base/BaseTooltip.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
+import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 
 defineProps<{
   title: string;

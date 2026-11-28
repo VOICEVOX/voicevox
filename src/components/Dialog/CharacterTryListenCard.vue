@@ -46,9 +46,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import BaseIconButton from "../Base/BaseIconButton.vue";
-import BaseButton from "../Base/BaseButton.vue";
-import BaseTooltip from "../Base/BaseTooltip.vue";
+import BaseIconButton from "@/components/Base/BaseIconButton.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import type {
   CharacterInfo,
   SpeakerId,

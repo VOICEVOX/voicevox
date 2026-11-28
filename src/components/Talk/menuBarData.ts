@@ -2,7 +2,7 @@ import { computed } from "vue";
 import type {
   MaybeComputedMenuBarContent,
   MenuBarContent,
-} from "../Menu/MenuBar/menuBarData";
+} from "@/components/Menu/MenuBar/menuBarData";
 import type { Store } from "@/store";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 

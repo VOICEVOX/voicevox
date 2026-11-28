@@ -75,12 +75,12 @@
 import { computed, ref } from "vue";
 import type { Component } from "vue";
 import type { ComponentProps } from "vue-component-type-helpers";
-import BaseListItem from "../../Base/BaseListItem.vue";
-import BaseNavigationView from "../../Base/BaseNavigationView.vue";
 import MarkdownView from "./HelpMarkdownViewSection.vue";
 import OssLicense from "./HelpOssLicenseSection.vue";
 import UpdateInfo from "./HelpUpdateInfoSection.vue";
 import LibraryPolicy from "./HelpLibraryPolicySection.vue";
+import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
+import BaseListItem from "@/components/Base/BaseListItem.vue";
 import { type UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";

@@ -47,10 +47,10 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from "vue";
+import type { ValueChange } from "./Container.vue";
 import ContextMenu, {
   type ContextMenuItemData,
-} from "../../../Menu/ContextMenu/Presentation.vue";
-import type { ValueChange } from "./Container.vue";
+} from "@/components/Menu/ContextMenu/Presentation.vue";
 import { createLogger } from "@/helpers/log";
 import { type FontSpecification, predictTextWidth } from "@/helpers/textWidth";
 

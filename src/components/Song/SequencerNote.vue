@@ -67,7 +67,7 @@
 import { computed, ref } from "vue";
 import ContextMenu, {
   type ContextMenuItemData,
-} from "../Menu/ContextMenu/Container.vue";
+} from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import type { Note } from "@/domain/project/type";
 import { getDefaultLyric } from "@/song/domain";

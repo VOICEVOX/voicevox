@@ -131,12 +131,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import BaseButton from "../../Base/BaseButton.vue";
-import BaseSlider from "../../Base/BaseSlider.vue";
-import BaseTextField from "../../Base/BaseTextField.vue";
-import BaseScrollArea from "../../Base/BaseScrollArea.vue";
-import AudioAccent from "../../Talk/AudioAccent.vue";
 import { uiLocked } from "./common";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseSlider from "@/components/Base/BaseSlider.vue";
+import BaseTextField from "@/components/Base/BaseTextField.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import {
   convertHiraToKana,
   convertLongVowel,

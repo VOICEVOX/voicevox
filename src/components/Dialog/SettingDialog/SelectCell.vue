@@ -30,9 +30,9 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import BaseRowCard from "../../Base/BaseRowCard.vue";
-import BaseSelect from "../../Base/BaseSelect.vue";
-import BaseSelectItem from "../../Base/BaseSelectItem.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseSelect from "@/components/Base/BaseSelect.vue";
+import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
 
 defineProps<{
   title: string;

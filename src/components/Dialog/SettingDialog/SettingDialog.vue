@@ -510,18 +510,18 @@
 
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
-import BaseRowCard from "../../Base/BaseRowCard.vue";
-import BaseButton from "../../Base/BaseButton.vue";
-import BaseScrollArea from "../../Base/BaseScrollArea.vue";
-import BaseSelect from "../../Base/BaseSelect.vue";
-import BaseSelectItem from "../../Base/BaseSelectItem.vue";
-import BaseCheckbox from "../../Base/BaseCheckbox.vue";
-import BaseTooltip from "../../Base/BaseTooltip.vue";
 import SelectCell from "./SelectCell.vue";
 import EditButtonCell from "./EditButtonCell.vue";
 import ButtonToggleCell from "./ButtonToggleCell.vue";
 import ToggleCell from "./ToggleCell.vue";
 import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseSelect from "@/components/Base/BaseSelect.vue";
+import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
+import BaseCheckbox from "@/components/Base/BaseCheckbox.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { useStore } from "@/store";
 import {
   DEFAULT_AUDIO_FILE_NAME_TEMPLATE,

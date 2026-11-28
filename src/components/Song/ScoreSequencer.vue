@@ -249,9 +249,6 @@ import {
   watch,
   provide,
 } from "vue";
-import ContextMenu, {
-  type ContextMenuItemData,
-} from "../Menu/ContextMenu/Container.vue";
 import SequencerGridSpacer from "./SequencerGridSpacer.vue";
 import SequencerParameterPanel from "./SequencerParameterPanel.vue";
 import SequencerGrid from "./SequencerGrid/Container.vue";
@@ -264,6 +261,9 @@ import CharacterPortrait from "./CharacterPortrait.vue";
 import SequencerPitch from "./SequencerPitch.vue";
 import SequencerLyricInput from "./SequencerLyricInput.vue";
 import SequencerToolPalette from "./SequencerToolPalette.vue";
+import ContextMenu, {
+  type ContextMenuItemData,
+} from "@/components/Menu/ContextMenu/Container.vue";
 import { clamp, getLast } from "@/song/utility";
 import {
   tickToBaseX,

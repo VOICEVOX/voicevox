@@ -110,7 +110,7 @@
 import { computed } from "vue";
 import ContextMenu, {
   type ContextMenuItemData,
-} from "../../../Menu/ContextMenu/Presentation.vue";
+} from "@/components/Menu/ContextMenu/Presentation.vue";
 import type { TimeSignature } from "@/domain/project/type";
 
 defineOptions({

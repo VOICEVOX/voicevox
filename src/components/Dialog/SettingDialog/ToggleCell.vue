@@ -14,8 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import BaseRowCard from "../../Base/BaseRowCard.vue";
-import BaseSwitch from "../../Base/BaseSwitch.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseSwitch from "@/components/Base/BaseSwitch.vue";
 
 defineProps<{
   title: string;
