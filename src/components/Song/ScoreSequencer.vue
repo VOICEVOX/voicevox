@@ -291,7 +291,7 @@ import { useStore } from "@/store";
 import type { Note } from "@/domain/project/type";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { isTextbox, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine";
 import type {
   PositionOnSequencer,
@@ -816,6 +816,10 @@ const handleKeydown = (event: KeyboardEvent) => {
 
   // プレビュー中の操作は想定外の挙動をしそうなので防止
   if (nowPreviewing.value) {
+    return;
+  }
+  // テンポ欄などへの入力中はノートを操作しない
+  if (isTextbox(event.target)) {
     return;
   }
   switch (event.key) {
