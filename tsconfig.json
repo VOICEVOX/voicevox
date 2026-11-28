@@ -21,6 +21,12 @@
     },
     "lib": ["esnext", "dom", "dom.iterable"]
   },
+  "contentMappers": [
+    {
+      "package": "vize",
+      "extensions": [".vue"]
+    }
+  ],
   "include": [
     ".storybook/**/*.ts",
     "**/*.js",

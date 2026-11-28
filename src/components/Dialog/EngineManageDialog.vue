@@ -211,9 +211,7 @@
                   >
                     <li
                       v-for="(value, feature) in engineManifests[selectedId]
-                        .supportedFeatures != null
-                        ? engineManifests[selectedId].supportedFeatures
-                        : null"
+                        .supportedFeatures"
                       :key="feature"
                       :class="value ? '' : 'text-warning'"
                     >

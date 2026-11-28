@@ -1,7 +1,7 @@
 allowBuilds:
-  '@nestjs/core': true
-  '@openapitools/openapi-generator-cli': true
-  '@parcel/watcher': false
+  "@nestjs/core": true
+  "@openapitools/openapi-generator-cli": true
+  "@parcel/watcher": false
   electron-winstaller: false
   esbuild: true
   tldjs: false
@@ -11,5 +11,12 @@ allowBuilds:
 engineStrict: true
 
 minimumReleaseAge: 10080
+
+minimumReleaseAgeExclude:
+  - "@vizejs/*"
+  - "@typescript/*"
+  - vize
+  - vue
+  - electron
 
 saveExact: true

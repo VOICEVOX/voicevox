@@ -5,7 +5,8 @@ import BaseToggleGroup from "./BaseToggleGroup.vue";
 import BaseToggleGroupItem from "./BaseToggleGroupItem.vue";
 
 const meta: Meta<typeof BaseToggleGroup> = {
-  component: BaseToggleGroup as Record<keyof typeof BaseToggleGroup, unknown>,
+  // @ts-expect-error: StorybookとVueのGenericsつきコンポーネントは相性が悪い
+  component: BaseToggleGroup,
 };
 
 export default meta;
