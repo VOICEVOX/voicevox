@@ -60,9 +60,38 @@
               <BaseScrollArea>
                 <div v-if="selected" class="inner">
                   <div class="parameter-list">
-                    <h2 class="preset-name">
-                      {{ selected.preset.name }}
-                    </h2>
+                    <div class="preset-title">
+                      <h2 class="preset-name">
+                        {{ selected.preset.name }}
+                      </h2>
+                      <QBtn
+                        round
+                        flat
+                        dense
+                        icon="more_vert"
+                        aria-label="プリセットのメニュー"
+                      >
+                        <QMenu transitionDuration="100">
+                          <QList>
+                            <QItem
+                              v-close-popup
+                              clickable
+                              :disable="appliedAudioItemCount === 0"
+                              @click="reapplyPreset"
+                            >
+                              <QItemSection>
+                                <QItemLabel>再適用</QItemLabel>
+                                <QItemLabel caption>
+                                  このプリセットが設定された{{
+                                    appliedAudioItemCount
+                                  }}件のテキスト欄に適用し直します
+                                </QItemLabel>
+                              </QItemSection>
+                            </QItem>
+                          </QList>
+                        </QMenu>
+                      </QBtn>
+                    </div>
                     <div class="preset-field">
                       <label for="preset-name">プリセット名</label>
                       <BaseTextField
@@ -291,6 +320,34 @@ const deletePreset = async (key: PresetKey) => {
   }
 };
 
+// 選択中のプリセットが設定されているテキスト欄の数
+const appliedAudioItemCount = computed(() => {
+  const key = selected.value?.key;
+  if (key == undefined) return 0;
+  return store.state.audioKeys.filter(
+    (audioKey) => store.state.audioItems[audioKey]?.presetKey === key,
+  ).length;
+});
+
+const reapplyPreset = async () => {
+  if (selected.value == undefined) {
+    throw new Error("No preset is selected");
+  }
+  const { key, preset } = selected.value;
+
+  // 編集内容はdebounceで保存されるため、未保存の変更があっても反映されるよう先に保存する
+  if (preset.name != "") {
+    await store.actions.UPDATE_PRESET({
+      presetData: cloneWithUnwrapProxy(preset),
+      presetKey: key,
+    });
+  }
+
+  await store.actions.COMMAND_FULLY_APPLY_AUDIO_ITEM_PRESET({
+    presetKey: key,
+  });
+};
+
 const shouldShowMorphing = computed(
   () => store.state.experimentalSetting.enableMorphing,
 );
@@ -404,9 +461,16 @@ const handleSelectedVoiceUpdate = (event: Voice | undefined) => {
   max-width: 480px;
 }
 
+.preset-title {
+  display: flex;
+  align-items: flex-start;
+  gap: vars.$gap-1;
+}
+
 .preset-name {
   @include mixin.headline-1;
   word-break: break-all;
+  flex: 1;
 }
 
 .preset-field {
