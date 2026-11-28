@@ -49,7 +49,7 @@
       :engineId="props.engineId"
       :availableRuntimeTargets="cardState.availableRuntimeTargets"
       :modelValue="cardState.selectedRuntimeTarget"
-      :disabled="cardState.status !== 'idle'"
+      :disabled="store.automaticInstall.value || cardState.status !== 'idle'"
       @update:modelValue="handleRuntimeTargetChange"
     />
     <div v-if="cardState.type !== 'loading'" class="engine-actions">
@@ -72,7 +72,10 @@
         <BaseButton
           v-if="cardState.type === 'fetched'"
           :label="cardState.installationButton.label"
-          :disabled="cardState.installationButton.disabled"
+          :disabled="
+            store.automaticInstall.value ||
+            cardState.installationButton.disabled
+          "
           :variant="cardState.installationButton.variant"
           @click="handleInstallEngine"
         />

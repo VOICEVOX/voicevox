@@ -11,12 +11,17 @@ import { assertNonNullable } from "@/type/utility";
 const log = createLogger("WelcomeIpcMainHandle");
 
 class WelcomeIpcMainHandleManager {
+  constructor(private installTarget?: string) {}
   private getHandle(): IpcMainHandle<WelcomeIpcIHData> {
     const appStateController = getAppStateController();
     const engineAndVvppController = getEngineAndVvppController();
     const configManager = getConfigManager();
 
     return {
+      GET_STARTUP_OPTIONS: () => ({ target: this.installTarget }),
+      FINISH_AUTO_INSTALL: (_, result) => {
+        appStateController.shutdown(result.ok ? 0 : 1);
+      },
       INSTALL_ENGINE: async (_, obj) => {
         const welcomeWindowManager = getWelcomeWindowManager();
         const status =
@@ -93,7 +98,8 @@ class WelcomeIpcMainHandleManager {
         welcomeWindowManager.toggleMaximizeWindow();
       },
       CLOSE_WINDOW: () => {
-        appStateController.shutdown();
+        const welcomeWindowManager = getWelcomeWindowManager();
+        welcomeWindowManager.close();
       },
       IS_MAXIMIZED_WINDOW: () => {
         const welcomeWindowManager = getWelcomeWindowManager();
@@ -109,8 +115,8 @@ class WelcomeIpcMainHandleManager {
 
 let manager: WelcomeIpcMainHandleManager | undefined;
 
-export function initializeWelcomeIpcMainHandleManager() {
-  manager = new WelcomeIpcMainHandleManager();
+export function initializeWelcomeIpcMainHandleManager(installTarget?: string) {
+  manager = new WelcomeIpcMainHandleManager(installTarget);
 }
 
 export function getWelcomeIpcMainHandleManager(): WelcomeIpcMainHandleManager {

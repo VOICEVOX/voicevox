@@ -5,8 +5,11 @@ import type {
 } from "@/domain/enginePackage";
 import type { EngineId } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
+import type { Result } from "@/type/result";
 
 export interface WelcomeSandbox {
+  getStartupOptions(): Promise<{ target: RuntimeTarget | undefined }>;
+  finishAutoInstall(result: Result<void>): Promise<void>;
   installEngine(obj: {
     engineId: EngineId;
     target: RuntimeTarget;

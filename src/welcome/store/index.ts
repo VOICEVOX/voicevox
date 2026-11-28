@@ -8,10 +8,15 @@ import type {
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
-import { isWindows } from "@/helpers/platform";
+
 import type { EngineId } from "@/type/preload";
-import { assertNonNullable, UnreachableError } from "@/type/utility";
+import {
+  assertNonNullable,
+  ensureNotNullish,
+  UnreachableError,
+} from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
+import { failure, success } from "@/type/result";
 
 type LatestInfoState =
   | { type: "loading" }
@@ -53,11 +58,14 @@ export type LaunchEditorState =
   { enabled: true } | { enabled: false; reason: string };
 
 function createWelcomeStore() {
+  const automaticInstall = ref(false);
   const allEngineState = ref<AllEngineState>({
     type: "uninitialized",
   });
 
   const launchEditorState = computed<LaunchEditorState>(() => {
+    if (automaticInstall.value)
+      return { enabled: false, reason: "エンジンをインストール中です。" };
     if (
       allEngineState.value.type === "uninitialized" ||
       allEngineState.value.type === "loading"
@@ -244,11 +252,12 @@ function createWelcomeStore() {
         `Engine package ${engineId} installation failed`,
         error,
       );
+      if (automaticInstall.value) throw error;
       await showErrorDialog("エンジンのインストールに失敗しました", error);
       return "failed";
     } finally {
       setEngineProgress(engineId, { type: "idle" });
-      void fetchCurrentEngineInfo(engineId);
+      if (!automaticInstall.value) void fetchCurrentEngineInfo(engineId);
     }
 
     return "succeeded";
@@ -265,47 +274,41 @@ function createWelcomeStore() {
    * 条件に合う場合にエンジンを自動インストールしてメインウィンドウを起動する。
    * 条件は、エンジン未インストールで、候補が１つで、最新情報が取得できていること。
    */
-  const autoInstallEngineAndLaunchMainWindow = async () => {
+  const autoInstallEngineAndLaunchMainWindow = async (
+    target: RuntimeTarget,
+  ) => {
     if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
 
-    // 既にエンジン導入済みな場合は何もしない
+    // 今のところはデフォルトエンジンが複数あることはないとする
     const allEngineStateLoaded = allEngineState.value;
-    if (
-      allEngineStateLoaded.engineIds.some(
-        (engineId) =>
-          allEngineStateLoaded.engineStates[engineId].currentInfo.status ===
-          "installed",
-      )
-    ) {
-      return;
+    if (allEngineStateLoaded.engineIds.length !== 1) {
+      throw new Error("Expected exactly one engine to be available");
     }
 
-    // 自動インストール候補が２つ以上ある場合は何もしない
-    if (allEngineStateLoaded.engineIds.length > 1) {
-      window.welcomeBackend.logWarn(
-        "Multiple default engines found. Skipping automatic installation.",
-      );
-      return;
-    }
-
-    // 最新情報を取得できていない場合は何もしない
-    if (allEngineStateLoaded.engineIds.length === 0) {
-      throw new UnreachableError();
-    }
     const [engineId] = allEngineStateLoaded.engineIds;
+    const state = allEngineState.value.engineStates[engineId];
+    if (state.latestInfo.type === "fetchError") throw state.latestInfo.error;
+    if (
+      state.latestInfo.type !== "fetched" ||
+      !state.latestInfo.info.availableRuntimeTargets.some(
+        (info) => info.target === target,
+      )
+    )
+      throw new Error(`Unsupported target: ${target}`);
+    setSelectedRuntimeTarget(engineId, target);
+
     const engineState = allEngineStateLoaded.engineStates[engineId];
     if (engineState.latestInfo.type !== "fetched") {
-      window.welcomeBackend.logWarn(
-        `Engine package ${engineId} latest info is unavailable. Skipping automatic installation.`,
+      throw new Error(
+        `Expected latest info to be fetched for engine ${engineId}`,
       );
-      return;
     }
 
     const result = await installEngine(engineId);
-    if (result === "succeeded") {
-      await window.welcomeBackend.launchMainWindow();
+    if (result !== "succeeded") {
+      throw new Error(`Engine installation failed for engine ${engineId}`);
     }
   };
 
@@ -315,19 +318,31 @@ function createWelcomeStore() {
         setEngineProgress(engineId, { progress, type });
       },
     });
+
+    const { target } = await window.welcomeBackend.getStartupOptions();
+    automaticInstall.value = target != undefined;
     void applyThemeFromConfig().then(() => {
       void window.welcomeBackend.displayReady();
     });
 
-    await fetchEngineInfos();
+    if (!automaticInstall.value) {
+      await fetchEngineInfos();
+      return;
+    }
 
-    // Windows版インストーラーでインストール開始したあと、追加操作無しでエディターを起動するためのワークアラウンド
-    if (isWindows) {
-      await autoInstallEngineAndLaunchMainWindow();
+    try {
+      await fetchEngineInfos();
+      await autoInstallEngineAndLaunchMainWindow(ensureNotNullish(target));
+      await window.welcomeBackend.finishAutoInstall(success(undefined));
+    } catch (error) {
+      if (target == undefined) throw error;
+      window.welcomeBackend.logError(error);
+      await window.welcomeBackend.finishAutoInstall(failure(error as Error));
     }
   };
 
   return {
+    automaticInstall,
     allEngineState,
     launchEditorState,
     setSelectedRuntimeTarget,

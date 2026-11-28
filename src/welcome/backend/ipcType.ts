@@ -5,11 +5,17 @@ import type {
 } from "@/domain/enginePackage";
 import type { EngineId } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
+import type { Result } from "@/type/result";
 
 /**
  * invoke, handle
  */
 export type WelcomeIpcIHData = {
+  GET_STARTUP_OPTIONS: {
+    args: [];
+    return: { target: RuntimeTarget | undefined };
+  };
+  FINISH_AUTO_INSTALL: { args: [result: Result<void>]; return: void };
   INSTALL_ENGINE: {
     args: [
       obj: {
