@@ -1,4 +1,3 @@
-import type { SetNextState, State } from "@/song/stateMachine";
 import {
   type Context,
   getGuideLineTicks,
@@ -7,16 +6,17 @@ import {
   selectOnlyThisNoteAndPlayPreviewSound,
   type SequencerStateDefinitions,
   toggleNoteSelection,
-} from "@/song/sequencerStateMachine/common";
+} from "../common";
+import type { SetNextState, State } from "../../stateMachine";
 import {
   getButton,
   isSelfEventTarget,
   PREVIEW_SOUND_DURATION,
-} from "@/song/viewHelper";
+} from "../../viewHelper";
+import { clamp } from "../../utility";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import type { Note } from "@/domain/project/type";
 import { NoteId } from "@/type/preload";
-import { clamp } from "@/song/utility";
 import { uuid4 } from "@/helpers/random";
 
 export class SelectNotesToolIdleState implements State<

@@ -1,8 +1,8 @@
 import type { ComputedRef, Ref } from "vue";
+import type { StateDefinitions } from "../stateMachine";
+import type { VolumeEditMode } from "../volumeEditMode";
+import type { VolumeEditableFrameRange } from "../volumeEditRanges";
 import type { Store } from "@/store";
-import type { StateDefinitions } from "@/song/stateMachine";
-import type { VolumeEditMode } from "@/song/volumeEditMode";
-import type { VolumeEditableFrameRange } from "@/song/volumeEditRanges";
 import type { TrackId } from "@/type/preload";
 
 export type PositionOnVolumeEditor = {

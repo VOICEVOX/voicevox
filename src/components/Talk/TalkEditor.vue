@@ -145,9 +145,9 @@ import AudioDetail from "./AudioDetail.vue";
 import AudioInfo from "./AudioInfo.vue";
 import CharacterPortrait from "./CharacterPortrait.vue";
 import ToolBar from "./ToolBar.vue";
-import { useStore } from "@/store";
-import ProgressView from "@/components/ProgressView.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
+import ProgressView from "@/components/ProgressView.vue";
+import { useStore } from "@/store";
 import type { AudioItem } from "@/store/type";
 import type {
   AudioKey,

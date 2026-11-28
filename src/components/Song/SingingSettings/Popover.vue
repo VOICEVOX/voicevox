@@ -75,7 +75,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import SingerIcon from "@/components/Song/SingerIcon.vue";
+import SingerIcon from "../SingerIcon.vue";
 import { getOrThrow } from "@/helpers/mapHelper";
 import {
   isValidKeyRangeAdjustment,

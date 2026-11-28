@@ -30,6 +30,11 @@
 <script setup lang="ts">
 import { ref, watch, computed, onUnmounted, onMounted, toRaw } from "vue";
 import * as PIXI from "pixi.js";
+import {
+  PHONEME_TIMING_LAYOUT,
+  PHONEME_LABEL_FONT,
+  type PhonemeTimingLayout,
+} from "./SequencerPhonemeTimingEditor/style";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
 import { secondToTick } from "@/song/music";
@@ -48,11 +53,6 @@ import {
 } from "@/song/phonemeTimingDisplay";
 import { createThemeColorResolver } from "@/song/graphics/cssColor";
 import type { Color } from "@/song/graphics/lineStrip";
-import {
-  PHONEME_TIMING_LAYOUT,
-  PHONEME_LABEL_FONT,
-  type PhonemeTimingLayout,
-} from "@/components/Song/SequencerPhonemeTimingEditor/style";
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;

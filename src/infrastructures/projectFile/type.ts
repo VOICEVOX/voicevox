@@ -1,8 +1,5 @@
 import type { z } from "zod";
-import type {
-  projectFileSchema,
-  projectFileTrackSchema,
-} from "@/infrastructures/projectFile/schema";
+import type { projectFileSchema, projectFileTrackSchema } from "./schema";
 
 export type ProjectFileTrack = z.infer<typeof projectFileTrackSchema>;
 

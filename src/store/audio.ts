@@ -1,16 +1,15 @@
 import { toBase64 } from "fast-base64";
-import { createUILockAction } from "./ui";
+import { convertAudioQueryFromEngineToEditor } from "./proxy";
 import {
-  type AudioItem,
-  type SaveResultObject,
-  type State,
-  type AudioStoreState,
-  type AudioCommandStoreState,
-  type AudioStoreTypes,
-  type AudioCommandStoreTypes,
-  transformCommandStore,
-  type EditorAudioQuery,
-} from "./type";
+  generateUniqueIdAndQuery,
+  NotMorphableError,
+  generateLabFromAudioQuery,
+  handlePossiblyNotMorphableError,
+  isMorphable,
+  type AudioUniqueId,
+} from "./audioGenerate";
+import { determineNextPresetKey } from "./preset";
+import { createPartialStore } from "./vuex";
 import {
   buildAudioFileNameFromRawData,
   isAccentPhrasesTextDifferent,
@@ -24,17 +23,18 @@ import {
   DEFAULT_PROJECT_NAME,
   generateUniqueFilePath,
 } from "./utility";
-import { createPartialStore } from "./vuex";
-import { determineNextPresetKey } from "./preset";
 import {
-  generateUniqueIdAndQuery,
-  NotMorphableError,
-  generateLabFromAudioQuery,
-  handlePossiblyNotMorphableError,
-  isMorphable,
-  type AudioUniqueId,
-} from "./audioGenerate";
-import { convertAudioQueryFromEngineToEditor } from "./proxy";
+  type AudioItem,
+  type SaveResultObject,
+  type State,
+  type AudioStoreState,
+  type AudioCommandStoreState,
+  type AudioStoreTypes,
+  type AudioCommandStoreTypes,
+  transformCommandStore,
+  type EditorAudioQuery,
+} from "./type";
+import { createUILockAction } from "./ui";
 import { LruCache } from "@/helpers/lruCache";
 import {
   convertHiraToKana,

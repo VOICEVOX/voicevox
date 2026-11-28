@@ -1,13 +1,13 @@
-import type { SetNextState, State } from "@/song/stateMachine";
 import type {
   Context,
   IdleStateId,
   Input,
   SequencerStateDefinitions,
-} from "@/song/sequencerStateMachine/common";
+} from "../common";
+import type { SetNextState, State } from "../../stateMachine";
+import { splitLyricsByMoras } from "../../domain";
 import type { NoteId, TrackId } from "@/type/preload";
 import type { Note } from "@/domain/project/type";
-import { splitLyricsByMoras } from "@/song/domain";
 
 export class EditLyricState implements State<
   SequencerStateDefinitions,

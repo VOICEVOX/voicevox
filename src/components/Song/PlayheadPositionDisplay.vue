@@ -15,10 +15,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { useStore } from "@/store";
 import ContextMenu, {
   type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
+import { useStore } from "@/store";
 import {
   getTimeSignaturePositions,
   type MeasuresBeats,

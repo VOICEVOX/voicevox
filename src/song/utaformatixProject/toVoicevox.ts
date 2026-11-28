@@ -1,11 +1,11 @@
 import type { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
-import type { VoicevoxScore } from "./common";
 import {
   DEFAULT_TPQN,
   createDefaultTempo,
   createDefaultTimeSignature,
   createDefaultTrack,
-} from "@/song/domain";
+} from "../domain";
+import type { VoicevoxScore } from "./common";
 import { NoteId } from "@/type/preload";
 import type { Note, Tempo, TimeSignature, Track } from "@/domain/project/type";
 import { uuid4 } from "@/helpers/random";

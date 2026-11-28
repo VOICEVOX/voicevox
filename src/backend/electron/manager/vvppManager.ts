@@ -2,13 +2,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { dialog } from "electron";
 import type { ExtractedEngineFiles } from "../ExtractedEngineFiles";
+import { VvppFileExtractor } from "../vvppFile";
 import type {
   EngineId,
   EngineInfo,
   MinimumEngineManifestType,
 } from "@/type/preload";
 import { errorToMessage } from "@/helpers/errorHelper";
-import { VvppFileExtractor } from "@/backend/electron/vvppFile";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { isWindows } from "@/helpers/platform";

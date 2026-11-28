@@ -1,7 +1,15 @@
 import { ref } from "vue";
-import { getAudioContext, isAudioContextAvailable } from "./audioContext";
-import { createPartialStore, type StorePlugins } from "./vuex";
-import { createUILockAction } from "./ui";
+import {
+  buildSongTrackAudioFileNameFromRawData,
+  currentDateString,
+  DEFAULT_PROJECT_NAME,
+  DEFAULT_STYLE_NAME,
+  findInitialSingingTeacher,
+  generateLabelFileData,
+  type PhonemeTimingLabel,
+  sanitizeFileName,
+  generateUniqueFilePath,
+} from "./utility";
 import {
   type SongStoreState,
   type SongStoreTypes,
@@ -24,17 +32,9 @@ import {
   type SingingPitchKey,
   type SingingPitch,
 } from "./type";
-import {
-  buildSongTrackAudioFileNameFromRawData,
-  currentDateString,
-  DEFAULT_PROJECT_NAME,
-  DEFAULT_STYLE_NAME,
-  findInitialSingingTeacher,
-  generateLabelFileData,
-  type PhonemeTimingLabel,
-  sanitizeFileName,
-  generateUniqueFilePath,
-} from "./utility";
+import { createUILockAction } from "./ui";
+import { createPartialStore, type StorePlugins } from "./vuex";
+import { getAudioContext, isAudioContextAvailable } from "./audioContext";
 import {
   type CharacterInfo,
   type EngineId,

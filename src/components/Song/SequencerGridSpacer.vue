@@ -4,10 +4,10 @@
 
 <script setup lang="ts">
 import { computed, inject } from "vue";
+import { numMeasuresInjectionKey } from "./ScoreSequencer.vue";
 import { getKeyBaseHeight, getNumKeys, tickToBaseX } from "@/song/viewHelper";
 import { useStore } from "@/store";
 import { measureNumberToTick } from "@/song/music";
-import { numMeasuresInjectionKey } from "@/components/Song/ScoreSequencer.vue";
 
 const injectedValue = inject(numMeasuresInjectionKey);
 if (injectedValue == undefined) {

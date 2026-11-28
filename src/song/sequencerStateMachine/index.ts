@@ -1,23 +1,23 @@
+import { StateMachine } from "../stateMachine";
 import type {
   Context,
   IdleStateId,
   Input,
   SequencerStateDefinitions,
-} from "@/song/sequencerStateMachine/common";
-import { StateMachine } from "@/song/stateMachine";
+} from "./common";
 
-import { SelectNotesToolIdleState } from "@/song/sequencerStateMachine/states/selectNotesToolIdleState";
-import { EditNotesToolIdleState } from "@/song/sequencerStateMachine/states/editNotesToolIdleState";
-import { DrawPitchToolIdleState } from "@/song/sequencerStateMachine/states/drawPitchToolIdleState";
-import { ErasePitchToolIdleState } from "@/song/sequencerStateMachine/states/erasePitchToolIdleState";
-import { AddNoteState } from "@/song/sequencerStateMachine/states/addNoteState";
-import { MoveNoteState } from "@/song/sequencerStateMachine/states/moveNoteState";
-import { ResizeNoteLeftState } from "@/song/sequencerStateMachine/states/resizeNoteLeftState";
-import { ResizeNoteRightState } from "@/song/sequencerStateMachine/states/resizeNoteRightState";
-import { SelectNotesWithRectState } from "@/song/sequencerStateMachine/states/selectNotesWithRectState";
-import { EditLyricState } from "@/song/sequencerStateMachine/states/editLyricState";
-import { DrawPitchState } from "@/song/sequencerStateMachine/states/drawPitchState";
-import { ErasePitchState } from "@/song/sequencerStateMachine/states/erasePitchState";
+import { SelectNotesToolIdleState } from "./states/selectNotesToolIdleState";
+import { EditNotesToolIdleState } from "./states/editNotesToolIdleState";
+import { DrawPitchToolIdleState } from "./states/drawPitchToolIdleState";
+import { ErasePitchToolIdleState } from "./states/erasePitchToolIdleState";
+import { AddNoteState } from "./states/addNoteState";
+import { MoveNoteState } from "./states/moveNoteState";
+import { ResizeNoteLeftState } from "./states/resizeNoteLeftState";
+import { ResizeNoteRightState } from "./states/resizeNoteRightState";
+import { SelectNotesWithRectState } from "./states/selectNotesWithRectState";
+import { EditLyricState } from "./states/editLyricState";
+import { DrawPitchState } from "./states/drawPitchState";
+import { ErasePitchState } from "./states/erasePitchState";
 
 export const createSequencerStateMachine = (
   context: Context,

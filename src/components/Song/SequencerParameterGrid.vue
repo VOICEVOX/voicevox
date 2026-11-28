@@ -7,10 +7,10 @@
 <script setup lang="ts">
 import { ref, watch, computed, onUnmounted, onMounted, inject } from "vue";
 import * as PIXI from "pixi.js";
+import { numMeasuresInjectionKey } from "./ScoreSequencer.vue";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
 import { tickToBaseX, type ViewportInfo } from "@/song/viewHelper";
-import { numMeasuresInjectionKey } from "@/components/Song/ScoreSequencer.vue";
 import {
   getBeatDuration,
   getMeasureDuration,

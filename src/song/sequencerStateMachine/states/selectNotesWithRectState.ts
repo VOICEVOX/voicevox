@@ -1,15 +1,15 @@
-import type { SetNextState, State } from "@/song/stateMachine";
 import type {
   Context,
   IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/song/sequencerStateMachine/common";
-import { getButton, noteNumberToBaseY, tickToBaseX } from "@/song/viewHelper";
+} from "../common";
+import type { SetNextState, State } from "../../stateMachine";
+import { getButton, noteNumberToBaseY, tickToBaseX } from "../../viewHelper";
+import { frequencyToNoteNumber } from "../../music";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import type { NoteId } from "@/type/preload";
-import { frequencyToNoteNumber } from "@/song/music";
 
 export class SelectNotesWithRectState implements State<
   SequencerStateDefinitions,

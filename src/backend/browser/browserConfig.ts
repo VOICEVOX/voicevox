@@ -1,9 +1,6 @@
+import { BaseConfigManager, type Metadata } from "../common/ConfigManager";
 import { defaultEngine, directoryHandleStoreKey } from "./contract";
 
-import {
-  BaseConfigManager,
-  type Metadata,
-} from "@/backend/common/ConfigManager";
 import { type ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
 import { UnreachableError, ensureNotNullish } from "@/type/utility";
 import { isMac } from "@/helpers/platform";

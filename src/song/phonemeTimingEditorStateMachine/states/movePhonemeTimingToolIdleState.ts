@@ -1,13 +1,13 @@
-import type { SetNextState, State } from "@/song/stateMachine";
 import type {
   PhonemeTimingEditorContext,
   PhonemeTimingEditorInput,
   PhonemeTimingEditorStateDefinitions,
   PhonemeTimingInfo,
-} from "@/song/phonemeTimingEditorStateMachine/common";
-import { isInPhonemeBandHitArea } from "@/song/phonemeTimingEditorStateMachine/common";
-import { getButton, tickToBaseX } from "@/song/viewHelper";
-import { secondToTick } from "@/song/music";
+} from "../common";
+import { isInPhonemeBandHitArea } from "../common";
+import type { SetNextState, State } from "../../stateMachine";
+import { getButton, tickToBaseX } from "../../viewHelper";
+import { secondToTick } from "../../music";
 
 export class MovePhonemeTimingToolIdleState implements State<
   PhonemeTimingEditorStateDefinitions,

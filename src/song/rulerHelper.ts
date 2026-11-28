@@ -4,13 +4,13 @@
 /**
  * シーケンサーのルーラーに関する共通ロジック
  */
-import type { TimeSignature } from "@/domain/project/type";
 import {
   getBeatDuration,
   getMeasureDuration,
   getTimeSignaturePositions,
-} from "@/song/music";
-import { tickToBaseX } from "@/song/viewHelper";
+} from "./music";
+import { tickToBaseX } from "./viewHelper";
+import type { TimeSignature } from "@/domain/project/type";
 
 /**
  * 指定されたティックを直近の拍に合わせる

@@ -1,7 +1,15 @@
 import type { ComputedRef, Ref } from "vue";
+import type { StateDefinitions } from "../stateMachine";
+import type { CursorState, ViewportInfo } from "../viewHelper";
+import {
+  adjustPhonemeTimings,
+  applyPhonemeTimingEdit,
+  computePhonemeIndicesInNote,
+  toPhonemes,
+  toPhonemeTimings,
+} from "../domain";
+import { getPrev } from "../utility";
 import type { Store } from "@/store";
-import type { StateDefinitions } from "@/song/stateMachine";
-import type { CursorState, ViewportInfo } from "@/song/viewHelper";
 import { NoteId, TrackId } from "@/type/preload";
 import type { PhonemeTimingEditData, Tempo } from "@/domain/project/type";
 import type {
@@ -11,14 +19,6 @@ import type {
   PhraseKey,
 } from "@/store/type";
 import { getOrThrow } from "@/helpers/mapHelper";
-import {
-  adjustPhonemeTimings,
-  applyPhonemeTimingEdit,
-  computePhonemeIndicesInNote,
-  toPhonemes,
-  toPhonemeTimings,
-} from "@/song/domain";
-import { getPrev } from "@/song/utility";
 
 // 音素タイミング編集のプレビューデータ
 export type PhonemeTimingPreview =

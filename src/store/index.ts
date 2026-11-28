@@ -39,6 +39,14 @@ import { proxyStore, proxyStoreState } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { engineStoreState, engineStore } from "./engine";
 import { filterCharacterInfosByStyleType } from "./utility";
+import { isProduction } from "@/helpers/platform";
+import {
+  type DefaultStyleId,
+  EngineId,
+  SpeakerId,
+  StyleId,
+  type Voice,
+} from "@/type/preload";
 import {
   loadContactText,
   loadHowToUseText,
@@ -49,14 +57,6 @@ import {
   loadQAndAText,
   loadUpdateInfos,
 } from "@/domain/staticAssets";
-import {
-  type DefaultStyleId,
-  EngineId,
-  SpeakerId,
-  StyleId,
-  type Voice,
-} from "@/type/preload";
-import { isProduction } from "@/helpers/platform";
 
 export type Store = BaseStore<State, AllGetters, AllActions, AllMutations>;
 export const storeKey: InjectionKey<Store> = Symbol();
