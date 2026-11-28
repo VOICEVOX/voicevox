@@ -71,7 +71,8 @@ export default defineConfig((options) => {
   }
   process.env.VITE_7Z_BIN_NAME =
     (mode !== "production"
-      ? path.join(import.meta.dirname, "vendored", "7z") + path.sep
+      ? path.join(import.meta.dirname, ".mise", "installs", "7zip", "latest") +
+        path.sep
       : "") + sevenZipBinName;
   process.env.VITE_APP_VERSION = process.env.npm_package_version;
 

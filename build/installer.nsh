@@ -110,7 +110,7 @@
   StrCpy $archiveSize $0
 
   ; 展開後の合計サイズを取得
-  File /oname=$PLUGINSDIR\7za.exe "${PROJECT_DIR}\vendored\7z\7za.exe"
+  File /oname=$PLUGINSDIR\7za.exe "${PROJECT_DIR}\.mise\installs\7zip\latest\7za.exe"
   ${getUncompressedSizeFrom7z} $0 $1
   ${If} $0 == "Failed to execute 7za.exe"
   ${OrIf} $0 == "Failed to open file list"
