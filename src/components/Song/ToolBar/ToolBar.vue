@@ -101,7 +101,6 @@
     </div>
     <!-- settings for edit controls -->
     <div class="song-controls">
-      <EditTargetSwitcher :editTarget :changeEditTarget />
       <QBtn
         flat
         dense
@@ -124,20 +123,6 @@
       </QBtn>
       <QIcon name="volume_up" size="xs" class="song-volume-icon" />
       <QSlider v-model.number="volume" trackSize="2px" class="song-volume" />
-      <QSelect
-        v-model="snapTypeSelectModel"
-        :options="snapTypeSelectOptions"
-        dense
-        outlined
-        hideBottomSpace
-        optionsDense
-        hideDropdownIcon
-        unelevated
-        label="スナップ"
-        transitionShow="none"
-        transitionHide="none"
-        class="song-snap"
-      />
     </div>
   </QToolbar>
 </template>
@@ -146,7 +131,6 @@
 import { computed } from "vue";
 import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
 import SingerRow from "../TrackCard/SingerRow.vue";
-import EditTargetSwitcher from "./EditTargetSwitcher.vue";
 import { useStore } from "@/store";
 
 import {
@@ -154,14 +138,11 @@ import {
   getMeasureDuration,
   getNoteDuration,
   getTimeSignaturePositions,
-  isTriplet,
   isValidBeats,
   isValidBeatType,
   isValidBpm,
 } from "@/song/music";
-import { getSnapTypes } from "@/song/domain";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import type { SequencerEditTarget } from "@/store/type";
 import { UnreachableError } from "@/type/utility";
 
 const store = useStore();
@@ -208,12 +189,6 @@ const undo = () => {
 };
 const redo = () => {
   void store.actions.REDO({ editor });
-};
-
-const editTarget = computed(() => store.state.sequencerEditTarget);
-
-const changeEditTarget = (editTarget: SequencerEditTarget) => {
-  void store.actions.SET_EDIT_TARGET({ editTarget });
 };
 
 const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
@@ -393,40 +368,6 @@ const volume = computed({
   },
   set(value: number) {
     void store.actions.SET_VOLUME({ volume: value / 100 });
-  },
-});
-
-const snapTypeSelectOptions = computed(() => {
-  const tpqn = store.state.tpqn;
-  return getSnapTypes(tpqn)
-    .sort((a, b) => {
-      if (isTriplet(a) === isTriplet(b)) {
-        return a - b;
-      } else {
-        return isTriplet(a) ? 1 : -1;
-      }
-    })
-    .map((snapType) => {
-      if (isTriplet(snapType)) {
-        return { snapType, label: `1/${(snapType / 3) * 2} T` };
-      } else {
-        return { snapType, label: `1/${snapType}` };
-      }
-    });
-});
-const snapTypeSelectModel = computed({
-  get() {
-    const snapType = store.state.sequencerSnapType;
-    const selectOptions = snapTypeSelectOptions.value;
-    return (
-      selectOptions.find((value) => value.snapType === snapType) ??
-      selectOptions[0]
-    );
-  },
-  set(value) {
-    void store.actions.SET_SNAP_TYPE({
-      snapType: value.snapType,
-    });
   },
 });
 </script>
@@ -671,25 +612,6 @@ const snapTypeSelectModel = computed({
 
   :deep(.q-slider__thumb) {
     color: var(--scheme-color-primary-fixed-dim);
-  }
-}
-
-.song-snap {
-  min-width: 64px;
-  height: 40px;
-
-  &:deep(.q-field__control:before) {
-    height: 40px;
-    border: 1px solid var(--scheme-color-outline-variant);
-  }
-
-  :deep(.q-field__control:hover:before) {
-    border-color: var(--scheme-color-outline);
-  }
-
-  :deep(.q-field__label) {
-    font-size: 12px;
-    color: var(--scheme-color-on-surface-variant);
   }
 }
 </style>

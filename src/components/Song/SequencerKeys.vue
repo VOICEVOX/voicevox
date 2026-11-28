@@ -89,7 +89,11 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
-import { keyInfos, getKeyBaseHeight } from "@/song/viewHelper";
+import {
+  keyInfos,
+  getKeyBaseHeight,
+  SEQUENCER_KEYS_WIDTH,
+} from "@/song/viewHelper";
 
 const props = withDefaults(
   defineProps<{
@@ -102,7 +106,7 @@ const props = withDefaults(
   },
 );
 const store = useStore();
-const width = ref(48);
+const width = ref(SEQUENCER_KEYS_WIDTH);
 const zoomY = computed(() => store.state.sequencerZoomY);
 const keyBaseHeight = getKeyBaseHeight();
 const whiteKeyInfos = keyInfos.filter((value) => value.color === "white");
