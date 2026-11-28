@@ -48,8 +48,10 @@ import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import type { UpdateInfo } from "@/type/preload";
 
 const props = defineProps<{
-  latestVersion: string;
-  downloadLink: string;
+  /** isUpdateAvailableがtrueのときのみ使う */
+  latestVersion?: string;
+  /** isUpdateAvailableがtrueのときのみ使う */
+  downloadLink?: string;
   updateInfos: UpdateInfo[];
   isUpdateAvailable: boolean;
 }>();

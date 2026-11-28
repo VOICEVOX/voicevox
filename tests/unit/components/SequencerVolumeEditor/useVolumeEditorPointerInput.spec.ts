@@ -5,12 +5,10 @@ import {
   useVolumeEditorPointerInput,
   type VolumeEditorPointerEvent,
 } from "@/components/Song/SequencerVolumeEditor/useVolumeEditorPointerInput";
-import type { VolumeEditorPreviewMode } from "@/song/volumeEditorStateMachine/common";
 import { relativeVolumeValueScale } from "@/song/volumeValueScale";
 
 describe("useVolumeEditorPointerInput", () => {
   it("ポインタイベントをエディタのフレームとdBへ変換する", () => {
-    const previewMode = ref<VolumeEditorPreviewMode>("IDLE");
     const onPointerEvent = vi.fn<(event: VolumeEditorPointerEvent) => void>();
     let pointerInput:
       ReturnType<typeof useVolumeEditorPointerInput> | undefined;
@@ -21,7 +19,6 @@ describe("useVolumeEditorPointerInput", () => {
           const canvasContainer = ref<HTMLElement | null>(null);
           const mountedPointerInput = useVolumeEditorPointerInput({
             canvasContainer,
-            previewMode,
             viewportInfo: ref({
               scaleX: 1,
               scaleY: 1,
@@ -52,7 +49,7 @@ describe("useVolumeEditorPointerInput", () => {
       clientX: 100,
       clientY: 50,
     });
-    pointerInput.onSurfacePointerDown(pointerEvent);
+    pointerInput.onPointerDown(pointerEvent);
 
     expect(onPointerEvent).toHaveBeenCalledWith({
       pointerEvent,

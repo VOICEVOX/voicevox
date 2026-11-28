@@ -31,6 +31,7 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
+import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "@/store/utility";
 import type { Track } from "@/domain/project/type";
 import { migrateProjectFileObject } from "@/infrastructures/projectFile/migration";
 import { toEditorTrack } from "@/infrastructures/projectFile/conversion";
@@ -98,6 +99,32 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       return state.projectFilePath
         ? path.basename(state.projectFilePath, ".vvproj")
         : undefined;
+    },
+  },
+
+  DEFAULT_PROJECT_FILE_BASE_NAME: {
+    getter: (state) => {
+      // NOTE: 起動時にソングエディタが開かれた場合、トークの初期化が行われずAudioCellが作成されない
+      // TODO: ソングエディタが開かれてい場合はこの関数を呼ばないようにし、warningを出す
+      if (state.audioKeys.length === 0) {
+        return DEFAULT_PROJECT_NAME;
+      }
+
+      const headItemText = state.audioItems[state.audioKeys[0]].text;
+
+      const tailItemText =
+        state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
+
+      const headTailItemText =
+        state.audioKeys.length === 1
+          ? headItemText
+          : headItemText + "..." + tailItemText;
+
+      const defaultFileBaseName = sanitizeFileName(headTailItemText);
+
+      return defaultFileBaseName === ""
+        ? DEFAULT_PROJECT_NAME
+        : defaultFileBaseName;
     },
   },
 
