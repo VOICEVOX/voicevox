@@ -31,11 +31,11 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import SequencerVolumeEditor from "@/components/Song/SequencerVolumeEditor/Container.vue";
+import SequencerVolumeEditor from "./SequencerVolumeEditor/Container.vue";
+import ParameterPanelEditTargetSwitcher from "./ParameterPanelEditTargetSwitcher.vue";
+import SequencerPhonemeTimingEditor from "./SequencerPhonemeTimingEditor.vue";
 import { useStore } from "@/store";
 import type { ParameterPanelEditTarget } from "@/store/type";
-import ParameterPanelEditTargetSwitcher from "@/components/Song/ParameterPanelEditTargetSwitcher.vue";
-import SequencerPhonemeTimingEditor from "@/components/Song/SequencerPhonemeTimingEditor.vue";
 import type { ViewportInfo } from "@/song/viewHelper";
 
 defineProps<{ viewportInfo: ViewportInfo }>();

@@ -1,12 +1,12 @@
 import { computed } from "vue";
-import type { Store } from "@/store";
-import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
-import type { ExportSongProjectFileType } from "@/store/type";
 import { notifyResult } from "@/components/Dialog/Dialog";
 import type {
   MaybeComputedMenuBarContent,
   MenuBarContent,
 } from "@/components/Menu/MenuBar/menuBarData";
+import type { Store } from "@/store";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
+import type { ExportSongProjectFileType } from "@/store/type";
 
 export const useMenuBarData = (store: Store): MaybeComputedMenuBarContent => {
   const uiLocked = computed(() => store.getters.UI_LOCKED);

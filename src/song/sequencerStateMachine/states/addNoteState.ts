@@ -1,4 +1,3 @@
-import type { SetNextState, State } from "@/song/stateMachine";
 import {
   type Context,
   getGuideLineTicks,
@@ -6,11 +5,12 @@ import {
   type Input,
   type PositionOnSequencer,
   type SequencerStateDefinitions,
-} from "@/song/sequencerStateMachine/common";
+} from "../common";
+import type { SetNextState, State } from "../../stateMachine";
+import { getButton, PREVIEW_SOUND_DURATION } from "../../viewHelper";
+import { clamp } from "../../utility";
 import { NoteId, type TrackId } from "@/type/preload";
 import type { Note } from "@/domain/project/type";
-import { getButton, PREVIEW_SOUND_DURATION } from "@/song/viewHelper";
-import { clamp } from "@/song/utility";
 import { uuid4 } from "@/helpers/random";
 
 export class AddNoteState implements State<

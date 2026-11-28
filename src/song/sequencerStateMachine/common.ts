@@ -1,12 +1,12 @@
 import type { ComputedRef, Ref } from "vue";
-import type { StateDefinitions } from "@/song/stateMachine";
-import type { Rect } from "@/song/utility";
+import type { StateDefinitions } from "../stateMachine";
+import type { Rect } from "../utility";
 import {
   type CursorState,
   PREVIEW_SOUND_DURATION,
   type PreviewMode,
   type ViewportInfo,
-} from "@/song/viewHelper";
+} from "../viewHelper";
 import type { Store } from "@/store";
 import type { SequencerEditTarget } from "@/store/type";
 import type { NoteId, TrackId } from "@/type/preload";

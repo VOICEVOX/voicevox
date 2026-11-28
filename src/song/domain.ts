@@ -1,9 +1,12 @@
+import { getDoremiFromNoteNumber } from "./viewHelper";
 import {
   applySmoothTransitions,
   calculateHash,
   getNext,
   getPrev,
-} from "@/song/utility";
+} from "./utility";
+import { getRepresentableNoteTypes, isValidNotes } from "./music";
+import { decibelToLinear } from "./audio";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
   type Phrase,
@@ -20,10 +23,7 @@ import type {
   Track,
   VolumeEditValue,
 } from "@/domain/project/type";
-import { getDoremiFromNoteNumber } from "@/song/viewHelper";
 import { ExhaustiveError } from "@/type/utility";
-import { getRepresentableNoteTypes, isValidNotes } from "@/song/music";
-import { decibelToLinear } from "@/song/audio";
 
 const MAX_SNAP_TYPE = 32;
 

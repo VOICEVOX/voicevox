@@ -1,7 +1,7 @@
 import {
   relativeVolumeValueScale,
   type VolumeValueScale,
-} from "@/song/volumeValueScale";
+} from "./volumeValueScale";
 
 /**
  * ボリューム編集の入力と表示の定義。

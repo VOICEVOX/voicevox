@@ -8,10 +8,10 @@ import {
   type OpenDialogSyncOptions,
   type SaveDialogOptions,
 } from "electron";
+import { getWelcomeIpcMainHandleManager } from "../welcomeIpcMainHandleManager";
 import { getConfigManager } from "../../electronConfig";
 import { getAppStateController } from "../../appStateController";
 import { createIpcSendProxy, type IpcSendProxy } from "../../ipc";
-import { getWelcomeIpcMainHandleManager } from "../welcomeIpcMainHandleManager";
 import { themes } from "@/domain/theme";
 import type { WelcomeIpcSOData } from "@/welcome/backend/ipcType";
 

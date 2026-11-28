@@ -1,6 +1,6 @@
-import { decibelToLinear, linearToDecibel } from "@/song/audio";
-import { noteNumberToFrequency } from "@/song/music";
-import { Timer } from "@/song/utility";
+import { decibelToLinear, linearToDecibel } from "./audio";
+import { noteNumberToFrequency } from "./music";
+import { Timer } from "./utility";
 
 /**
  * オーディオコンテキストで最も早くスケジュール可能な時刻を取得します。

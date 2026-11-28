@@ -1,10 +1,6 @@
-import type { SetNextState, State } from "@/song/stateMachine";
-import type {
-  Context,
-  Input,
-  SequencerStateDefinitions,
-} from "@/song/sequencerStateMachine/common";
-import { getButton } from "@/song/viewHelper";
+import type { Context, Input, SequencerStateDefinitions } from "../common";
+import type { SetNextState, State } from "../../stateMachine";
+import { getButton } from "../../viewHelper";
 
 export class ErasePitchToolIdleState implements State<
   SequencerStateDefinitions,

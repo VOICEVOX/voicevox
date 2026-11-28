@@ -7,13 +7,13 @@ import type {
   CommandStoreTypes,
   State,
 } from "./type";
-import { applyPatches } from "@/store/immerPatchUtility";
+import { applyPatches } from "./immerPatchUtility";
 import {
   createPartialStore,
   type Mutation,
   type MutationsBase,
   type MutationTree,
-} from "@/store/vuex";
+} from "./vuex";
 import { CommandId, type EditorType } from "@/type/preload";
 import { uuid4 } from "@/helpers/random";
 import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";

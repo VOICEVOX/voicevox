@@ -5,10 +5,10 @@ import type {
   PositionOnVolumeEditor,
   VolumeEditorIdleStateId,
 } from "../common";
-import type { SetNextState, State } from "@/song/stateMachine";
+import type { SetNextState, State } from "../../stateMachine";
+import { getButton } from "../../viewHelper";
+import { getOverlappingVolumeEditableFrameRanges } from "../../volumeEditRanges";
 import type { TrackId } from "@/type/preload";
-import { getButton } from "@/song/viewHelper";
-import { getOverlappingVolumeEditableFrameRanges } from "@/song/volumeEditRanges";
 
 export class EraseVolumeState implements State<
   VolumeEditorStateDefinitions,

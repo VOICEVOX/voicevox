@@ -1,6 +1,6 @@
 import { z } from "zod";
+import type { Result } from "./result";
 import type { AltPortInfos } from "@/store/type";
-import type { Result } from "@/type/result";
 import {
   type HotkeySettingType,
   hotkeySettingSchema,

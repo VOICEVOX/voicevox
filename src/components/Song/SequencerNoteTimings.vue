@@ -20,6 +20,10 @@
 <script setup lang="ts">
 import { ref, watch, computed, onUnmounted, onMounted, toRaw } from "vue";
 import * as PIXI from "pixi.js";
+import {
+  PHONEME_TIMING_LAYOUT,
+  type PhonemeTimingLayout,
+} from "./SequencerPhonemeTimingEditor/style";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
 import { tickToBaseX, type ViewportInfo } from "@/song/viewHelper";
@@ -27,10 +31,6 @@ import { getDefaultLyric } from "@/song/domain";
 import { assertNonNullable } from "@/type/utility";
 import type { NoteId } from "@/type/preload";
 import { createThemeColorResolver } from "@/song/graphics/cssColor";
-import {
-  PHONEME_TIMING_LAYOUT,
-  type PhonemeTimingLayout,
-} from "@/components/Song/SequencerPhonemeTimingEditor/style";
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;

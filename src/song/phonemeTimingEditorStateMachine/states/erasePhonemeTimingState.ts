@@ -1,13 +1,13 @@
-import type { SetNextState, State } from "@/song/stateMachine";
 import type {
   PhonemeTimingEditorContext,
   PhonemeTimingEditorIdleStateId,
   PhonemeTimingEditorInput,
   PhonemeTimingEditorStateDefinitions,
-} from "@/song/phonemeTimingEditorStateMachine/common";
+} from "../common";
+import type { SetNextState, State } from "../../stateMachine";
+import { getButton, tickToBaseX } from "../../viewHelper";
+import { secondToTick } from "../../music";
 import { NoteId, TrackId } from "@/type/preload";
-import { getButton, tickToBaseX } from "@/song/viewHelper";
-import { secondToTick } from "@/song/music";
 
 export class ErasePhonemeTimingState implements State<
   PhonemeTimingEditorStateDefinitions,

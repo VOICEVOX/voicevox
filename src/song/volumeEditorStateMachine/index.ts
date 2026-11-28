@@ -1,3 +1,4 @@
+import { StateMachine } from "../stateMachine";
 import type {
   VolumeEditorStateDefinitions,
   VolumeEditorInput,
@@ -8,7 +9,6 @@ import { DrawVolumeIdleState } from "./states/drawVolumeIdleState";
 import { EraseVolumeIdleState } from "./states/eraseVolumeIdleState";
 import { DrawVolumeState } from "./states/drawVolumeState";
 import { EraseVolumeState } from "./states/eraseVolumeState";
-import { StateMachine } from "@/song/stateMachine";
 
 export const createVolumeEditorStateMachine = (
   context: VolumeEditorContext,

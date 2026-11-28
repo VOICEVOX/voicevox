@@ -1,9 +1,9 @@
-import type { NoteId } from "@/type/preload";
 import type {
   PhonemeTimingInfo,
   PhonemeTimingPreview,
-} from "@/song/phonemeTimingEditorStateMachine/common";
-import { getNext } from "@/song/utility";
+} from "./phonemeTimingEditorStateMachine/common";
+import { getNext } from "./utility";
+import type { NoteId } from "@/type/preload";
 
 /** 画面に表示する音素境界の位置と状態 */
 export type PhonemeBoundaryDisplay = PhonemeTimingInfo & {

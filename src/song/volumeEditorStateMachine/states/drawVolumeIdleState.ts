@@ -3,9 +3,9 @@ import type {
   VolumeEditorInput,
   VolumeEditorContext,
 } from "../common";
-import type { SetNextState, State } from "@/song/stateMachine";
-import { getButton } from "@/song/viewHelper";
-import { isFrameInVolumeEditableRange } from "@/song/volumeEditRanges";
+import type { SetNextState, State } from "../../stateMachine";
+import { getButton } from "../../viewHelper";
+import { isFrameInVolumeEditableRange } from "../../volumeEditRanges";
 
 export class DrawVolumeIdleState implements State<
   VolumeEditorStateDefinitions,
