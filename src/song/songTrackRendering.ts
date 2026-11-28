@@ -1,5 +1,23 @@
-import { getNoteDuration, secondToTick, tickToSecond } from "@/song/music";
-import { decibelToLinear } from "@/song/audio";
+import {
+  adjustPhonemeTimings,
+  applyPhonemeTimingEdit,
+  applyPitchEdit,
+  applyVolumeEdit,
+  calculatePhraseKey,
+  toPhonemeTimings,
+  toPhonemes,
+  selectPriorPhrase,
+  getDefaultLyric,
+} from "./domain";
+import {
+  calculateHash,
+  getLast,
+  getNext,
+  getPrev,
+  linearInterpolation,
+} from "./utility";
+import { decibelToLinear } from "./audio";
+import { getNoteDuration, secondToTick, tickToSecond } from "./music";
 import {
   type EditorFrameAudioQuery,
   EditorFrameAudioQueryKey,
@@ -11,24 +29,6 @@ import {
   type SingingVolume,
   SingingVolumeKey,
 } from "@/store/type";
-import {
-  calculateHash,
-  getLast,
-  getNext,
-  getPrev,
-  linearInterpolation,
-} from "@/song/utility";
-import {
-  adjustPhonemeTimings,
-  applyPhonemeTimingEdit,
-  applyPitchEdit,
-  applyVolumeEdit,
-  calculatePhraseKey,
-  toPhonemeTimings,
-  toPhonemes,
-  selectPriorPhrase,
-  getDefaultLyric,
-} from "@/song/domain";
 import type { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import type { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";

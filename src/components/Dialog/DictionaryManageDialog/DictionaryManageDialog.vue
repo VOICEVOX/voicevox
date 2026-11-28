@@ -114,8 +114,8 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { lockUiWhile, uiLocked } from "./common";
 import WordEditor from "./WordEditor.vue";
+import { lockUiWhile, uiLocked } from "./common";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";

@@ -9,7 +9,7 @@ import type {
   timeSignatureSchema,
   trackSchema,
   volumeEditValueSchema,
-} from "@/domain/project/schema";
+} from "./schema";
 import type { NoteId } from "@/type/preload";
 
 export type Tempo = z.infer<typeof tempoSchema>;

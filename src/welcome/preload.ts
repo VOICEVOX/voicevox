@@ -6,11 +6,11 @@ import {
 } from "./backend/apiLoader";
 import type { WelcomeIpcIHData } from "./backend/ipcType";
 import type { WelcomeSandbox } from "./preloadType";
+import type { EngineId } from "@/type/preload";
 import {
   getOrThrowTransferableResult,
   wrapToTransferableResult,
 } from "@/backend/electron/transferableResultHelper";
-import type { EngineId } from "@/type/preload";
 
 type WelcomeIpcRendererInvoke = {
   [K in keyof WelcomeIpcIHData]: (

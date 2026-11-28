@@ -1,21 +1,21 @@
-import type { SetNextState, State } from "@/song/stateMachine";
 import type {
   Context,
   IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/song/sequencerStateMachine/common";
-import type { TrackId } from "@/type/preload";
+} from "../common";
+import type { SetNextState, State } from "../../stateMachine";
 import {
   applyGaussianFilter,
   applySmoothTransitions,
   createArray,
   linearInterpolation,
-} from "@/song/utility";
-import { getButton } from "@/song/viewHelper";
+} from "../../utility";
+import { getButton } from "../../viewHelper";
+import { VALUE_INDICATING_NO_DATA } from "../../domain";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { VALUE_INDICATING_NO_DATA } from "@/song/domain";
+import type { TrackId } from "@/type/preload";
 
 export class DrawPitchState implements State<
   SequencerStateDefinitions,

@@ -1,6 +1,7 @@
 import type { Patch } from "immer";
 import { z } from "zod";
 import type { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
+import { createCommandMutationTree, type PayloadRecipeTree } from "./command";
 import type {
   MutationTree,
   MutationsBase,
@@ -11,7 +12,6 @@ import type {
   Store,
   DotNotationActionContext,
 } from "./vuex";
-import { createCommandMutationTree, type PayloadRecipeTree } from "./command";
 import type { WavStream } from "@/domain/wavStream";
 import type {
   AccentPhrase,

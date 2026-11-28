@@ -103,8 +103,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
-import CharacterDetailDialog from "./CharacterDetailDialog.vue";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
+import CharacterDetailDialog from "./CharacterDetailDialog.vue";
 import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
 import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";

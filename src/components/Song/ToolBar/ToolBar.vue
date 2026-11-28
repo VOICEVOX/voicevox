@@ -130,6 +130,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
+import SingerRow from "../TrackCard/SingerRow.vue";
 import { useStore } from "@/store";
 
 import {
@@ -141,7 +142,6 @@ import {
   isValidBeatType,
   isValidBpm,
 } from "@/song/music";
-import SingerRow from "@/components/Song/TrackCard/SingerRow.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { UnreachableError } from "@/type/utility";
 

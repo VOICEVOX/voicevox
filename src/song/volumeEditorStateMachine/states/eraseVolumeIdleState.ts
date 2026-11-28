@@ -3,8 +3,8 @@ import type {
   VolumeEditorInput,
   VolumeEditorContext,
 } from "../common";
-import type { SetNextState, State } from "@/song/stateMachine";
-import { getButton } from "@/song/viewHelper";
+import type { SetNextState, State } from "../../stateMachine";
+import { getButton } from "../../viewHelper";
 
 export class EraseVolumeIdleState implements State<
   VolumeEditorStateDefinitions,

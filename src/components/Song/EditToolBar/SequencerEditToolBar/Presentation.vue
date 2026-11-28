@@ -56,7 +56,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import EditToolBar from "@/components/Song/EditToolBar/EditToolBar.vue";
+import EditToolBar from "../EditToolBar.vue";
 import SongToggleGroup from "@/components/SongBase/SongToggleGroup.vue";
 import SongToggleGroupItem from "@/components/SongBase/SongToggleGroupItem.vue";
 import SongIconButton from "@/components/SongBase/SongIconButton.vue";

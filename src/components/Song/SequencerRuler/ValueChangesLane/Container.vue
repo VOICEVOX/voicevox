@@ -16,16 +16,16 @@ import { computed, ref, inject } from "vue";
 import { Dialog } from "quasar";
 import { offsetInjectionKey } from "../Container.vue";
 import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
+import TempoChangeDialog from "../../ChangeValueDialog/TempoChangeDialog.vue";
+import TimeSignatureChangeDialog from "../../ChangeValueDialog/TimeSignatureChangeDialog.vue";
 import Presentation from "./Presentation.vue";
+import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
 import { snapTickToBeat } from "@/song/rulerHelper";
 import { baseXToTick } from "@/song/viewHelper";
 import { tickToMeasureNumber } from "@/song/music";
 import type { Tempo, TimeSignature } from "@/domain/project/type";
-import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
-import TempoChangeDialog from "@/components/Song/ChangeValueDialog/TempoChangeDialog.vue";
-import TimeSignatureChangeDialog from "@/components/Song/ChangeValueDialog/TimeSignatureChangeDialog.vue";
 
 export type ValueChange = {
   position: number;

@@ -1,13 +1,13 @@
-import type { SetNextState, State } from "@/song/stateMachine";
 import type {
   Context,
   IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/song/sequencerStateMachine/common";
+} from "../common";
+import type { SetNextState, State } from "../../stateMachine";
+import { getButton } from "../../viewHelper";
 import type { TrackId } from "@/type/preload";
-import { getButton } from "@/song/viewHelper";
 
 export class ErasePitchState implements State<
   SequencerStateDefinitions,

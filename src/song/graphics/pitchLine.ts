@@ -1,7 +1,7 @@
 import { z } from "zod";
 import * as PIXI from "pixi.js";
-import { calculateHash, getLast } from "@/song/utility";
-import { type Color, LineStrip } from "@/song/graphics/lineStrip";
+import { calculateHash, getLast } from "../utility";
+import { type Color, LineStrip } from "./lineStrip";
 
 export type PitchData = {
   readonly baseX: number;

@@ -65,6 +65,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import ContextMenu, {
+  type ContextMenuItemData,
+} from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import type { Note } from "@/domain/project/type";
 import { getDefaultLyric } from "@/song/domain";
@@ -74,9 +77,6 @@ import {
   noteNumberToBaseY,
   type PreviewMode,
 } from "@/song/viewHelper";
-import ContextMenu, {
-  type ContextMenuItemData,
-} from "@/components/Menu/ContextMenu/Container.vue";
 
 const props = defineProps<{
   note: Note;

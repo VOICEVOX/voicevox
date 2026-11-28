@@ -19,8 +19,8 @@
 </template>
 
 <script setup lang="ts">
+import { useStore } from "../store";
 import EngineCard from "./EngineCard.vue";
-import { useStore } from "@/welcome/store";
 
 const store = useStore();
 const { allEngineState } = store;
